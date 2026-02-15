@@ -54,6 +54,8 @@ The agent prompt should look like this (fill in the actual values):
 ```
 You are a math problem solver. Your task is to solve the following math problem and produce a single self-contained HTML solution file.
 
+IMPORTANT: The entire solution — all headings, explanations, labels, button text, canvas text, metadata title, and topic tags — MUST be written in Serbian (Srpski, Latin script). No English except for fixed metadata enum values (subject, unit).
+
 ## Solving Instructions
 
 {SOLVING_PROMPT}

@@ -115,6 +115,10 @@ warm tones sparingly and only for warnings or small labels (e.g. #e09468 for pit
 a. **Title & Subtitle**
    - h1 with gradient text for the problem title
    - Subtitle paragraph in muted color describing the topic area
+   - IMPORTANT: Do NOT include any problem metadata in the HTML output — no year, date,
+     university name, faculty name, exam name, problem order number, or source reference.
+     The title and subtitle must describe only the math content (e.g. "Quadratic Equation"
+     not "ETF 2023 Problem 3"). Keep the solution purely about the math.
 
 b. **Problem Statement** (first content section)
    - Card with h2 in accent blue: "Problem Statement" (or equivalent in target language)

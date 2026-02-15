@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspored proizvoda tri fabrike u niz</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: 3 different products from factory A, 4 different from B, 5 different from C.
+  Arrange all 12 products in a row such that:
+    - All B products are adjacent (form a block)
+    - All C products are adjacent (form a block)
+    - No two A products are adjacent
+
+  Key insight: Since B and C must each form contiguous blocks, treat them as
+  two "super-items". These 2 super-items can be arranged in 2! = 2 ways.
+
+  Now consider the gaps: with 2 blocks in a row, there are 3 gaps:
+    ___ [Block] ___ [Block] ___
+  (before, between, after)
+
+  We need to place 3 A-products such that no two are adjacent.
+  Since each A-product goes into a gap and there are exactly 3 gaps for 3 items,
+  we must place exactly one A-product in each gap.
+
+  The number of ways to assign 3 distinct A-products to 3 gaps = 3! = 6
+  (This is a bijection: which product goes in which gap.)
+
+  Internal arrangements:
+    - B-block: 4 different products can be arranged in 4! ways
+    - C-block: 5 different products can be arranged in 5! ways
+
+  Total = 2! x 3! x 4! x 5!
+        = 2 x 6 x 24 x 120
+        = 34 560
+
+  Answer: D) 2! * 3! * 4! * 5!
+
+  Verification:
+    2! = 2 (arrangements of the two blocks)
+    3! = 6 (placing A-products in gaps, one per gap)
+    4! = 24 (internal arrangement of B-products)
+    5! = 120 (internal arrangement of C-products)
+    Total = 2 * 6 * 24 * 120 = 34 560
+
+  Why not 3!4!5! (option C)?
+    That would ignore the 2! arrangements of the B-block and C-block.
+    The two blocks are distinguishable, so their order matters.
+
+  Why not just 5! (option A)?
+    That vastly undercounts -- it only accounts for one factor.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-option {
+  color: #34d399;
+  font-size: 1.2rem;
+  margin-top: 8px;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .options-grid {
+    flex-direction: column;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Raspored proizvoda tri fabrike u niz</h1>
+  <p class="subtitle">Kombinatorika — permutacije sa ogranicenjima, blok-metoda</p>
+
+  <!-- Problem Statement -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <div class="problem-statement">
+      <p>Data su tri razlicita proizvoda fabrike A, cetiri razlicita proizvoda fabrike B i pet razlicitih proizvoda fabrike C. Na koliko razlicitih nacina se svi proizvodi mogu poredati u niz uz sledece uslove: proizvodi fabrike B su jedan pored drugog, proizvodi fabrike C su jedan pored drugog, nijedna dva proizvoda fabrike A nisu jedan pored drugog?</p>
+      <div class="options-grid">
+        <div class="option">A) \( 5! \)</div>
+        <div class="option">B) \( 4!\cdot 5! \)</div>
+        <div class="option">C) \( 3!\cdot 4!\cdot 5! \)</div>
+        <div class="option correct">D) \( 2!\cdot 3!\cdot 4!\cdot 5! \)</div>
+        <div class="option">E) \( 12\cdot 3! \)</div>
+        <div class="option">N) Ne znam</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan resavanja</div>
+    <p class="plan-text">
+      Koristicemo blok-metodu: posto proizvodi fabrike B moraju biti zajedno, a takodje i proizvodi fabrike C, tretiramo svaku grupu kao jedan "super-element". Zatim analiziramo gde mogu da stanu proizvodi fabrike A izmedju i oko tih blokova tako da nijedna dva nisu susedna. Na kraju, interno rasporedimo proizvode unutar svakog bloka.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Blok-metoda i raspored u praznine (klikni da otvoris)</summary>
+      <div class="detail-content">
+        <p><strong>Blok-metoda:</strong> Kada se trazi da odredjena grupa elemenata bude zajedno (susedna), posmatramo celu grupu kao jedan element — "blok". Zatim brojimo raspored blokova, a posebno interno uredjenje unutar svakog bloka.</p>
+        <div class="step-math">
+          \[ \text{Broj permutacija bloka od } k \text{ razlicitih elemenata} = k! \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Metoda praznina (gap method):</strong> Kada se trazi da nijedna dva elementa odredjene vrste ne budu susedna, prvo rasporedimo ostale elemente, a zatim umetnemo trazene elemente u praznine (gaps) izmedju i oko vec postavljenih.</p>
+        <p style="margin-top: 8px;">Ako imamo \( n \) vec postavljenih objekata u nizu, to stvara \( n + 1 \) praznina:</p>
+        <div class="step-math">
+          \[ \underset{1}{\rule{1cm}{0.15mm}} \; [\text{obj}] \; \underset{2}{\rule{1cm}{0.15mm}} \; [\text{obj}] \; \underset{3}{\rule{1cm}{0.15mm}} \; \cdots \; [\text{obj}] \; \underset{n+1}{\rule{1cm}{0.15mm}} \]
+        </div>
+        <p style="margin-top: 8px;"><strong>Princip mnozenja:</strong> Ako se jedan izbor moze napraviti na \( m \) nacina, a drugi nezavisno na \( n \) nacina, onda se oba izbora zajedno mogu napraviti na \( m \cdot n \) nacina.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Vizuelni prikaz</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="800" height="420"></canvas>
+    </div>
+    <p class="canvas-caption">Blok-metoda: dva bloka (B i C) formiraju 3 praznine u koje postavljamo 3 proizvoda fabrike A</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Formiranje blokova za fabrike B i C</div>
+        <p>Posto svi proizvodi fabrike B moraju biti jedan pored drugog, posmatramo ih kao jedan blok \([B]\). Isto tako, svi proizvodi fabrike C formiraju blok \([C]\).</p>
+        <p style="margin-top: 8px;">Sada umesto 12 pojedinacnih proizvoda imamo privremeno samo <strong>2 super-elementa</strong>: blok \([B]\) i blok \([C]\).</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zasto proizvode fabrike A ne stavljamo u blok?</summary>
+            <div class="detail-content">
+              Zato sto je uslov za A upravo suprotan — nijedna dva proizvoda fabrike A ne smeju da budu susedna. Dakle, A-proizvodi se ne grupisu, vec se rasporeduju pojedinacno u praznine izmedju blokova.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Raspored blokova: koliko nacina za poredak \([B]\) i \([C]\)?</div>
+        <p>Dva bloka se mogu rasporediti u nizu na:</p>
+        <div class="step-math">
+          \[ 2! = 2 \text{ nacina} \]
+        </div>
+        <p>Odnosno, imamo dva moguca rasporeda:</p>
+        <div class="step-math">
+          \[ [B] \;\; [C] \qquad \text{ili} \qquad [C] \;\; [B] \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Odredjivanje praznina za proizvode fabrike A</div>
+        <p>Kada postavimo 2 bloka u niz, izmedju i oko njih nastaju <strong>3 praznine</strong>:</p>
+        <div class="step-math">
+          \[ \underset{\text{praznina 1}}{\rule{1.2cm}{0.15mm}} \;\; [\text{Blok}] \;\; \underset{\text{praznina 2}}{\rule{1.2cm}{0.15mm}} \;\; [\text{Blok}] \;\; \underset{\text{praznina 3}}{\rule{1.2cm}{0.15mm}} \]
+        </div>
+        <p>Imamo tacno <strong>3 proizvoda fabrike A</strong> i tacno <strong>3 praznine</strong>. Da nijedna dva proizvoda fabrike A ne bi bila susedna, u svaku prazninu mora da ide tacno po jedan proizvod.</p>
+        <p style="margin-top: 8px;">Posto su A-proizvodi razliciti, broj nacina da ih rasporedimo u 3 praznine (po jedan u svaku) je:</p>
+        <div class="step-math">
+          \[ 3! = 6 \text{ nacina} \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zasto mora tacno po jedan u svaku prazninu?</summary>
+            <div class="detail-content">
+              <p>Ako bi dve praznine dobile po jedan proizvod, a jedna dva — onda bi ta dva proizvoda fabrike A u istoj praznini bila susedna, sto krsi uslov zadatka. Posto imamo tacno 3 praznine i tacno 3 proizvoda, jedini nacin da ispunimo uslov je: po jedan proizvod u svaku prazninu.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Interno uredjenje unutar blokova</div>
+        <p>Blok \([B]\) sadrzi 4 razlicita proizvoda. Oni se unutar svog bloka mogu rasporediti na:</p>
+        <div class="step-math">
+          \[ 4! = 24 \text{ nacina} \]
+        </div>
+        <p>Blok \([C]\) sadrzi 5 razlicitih proizvoda. Oni se unutar svog bloka mogu rasporediti na:</p>
+        <div class="step-math">
+          \[ 5! = 120 \text{ nacina} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Primena principa mnozenja</div>
+        <p>Svi izbori su medjusobno nezavisni, pa po principu mnozenja ukupan broj rasporeda je:</p>
+        <div class="step-math">
+          \[ \underbrace{2!}_{\text{raspored blokova}} \times \underbrace{3!}_{\text{A u praznine}} \times \underbrace{4!}_{\text{unutar B}} \times \underbrace{5!}_{\text{unutar C}} \]
+        </div>
+        <p>Izracunajmo numericki:</p>
+        <div class="step-math">
+          \[ 2! \cdot 3! \cdot 4! \cdot 5! = 2 \cdot 6 \cdot 24 \cdot 120 = 34\,560 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Korak po korak racun</summary>
+            <div class="detail-content">
+              <p>\( 2 \cdot 6 = 12 \)</p>
+              <p>\( 12 \cdot 24 = 288 \)</p>
+              <p>\( 288 \cdot 120 = 34\,560 \)</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Kljucni uvid</div>
+    <p>Ovaj zadatak kombinuje dva klasicna kombinatorna principa: <strong>blok-metodu</strong> (grupiranje elemenata koji moraju biti zajedno) i <strong>metodu praznina</strong> (rasporedjivanje elemenata koji ne smeju biti susedni u praznine izmedju vec postavljenih). Kljucno zapazanje je da 2 bloka stvaraju tacno 3 praznine, a posto imamo tacno 3 proizvoda fabrike A, svaka praznina dobija tacno po jedan proizvod — nema slobode u izboru koliko ih ide gde, samo koji ide gde.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( 2! \cdot 3! \cdot 4! \cdot 5! = 34\,560 \)</div>
+    <div class="answer-option">Tacan odgovor je D) \( 2!\cdot 3!\cdot 4!\cdot 5! \)</div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Ceste greske</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Zaboravljanje rasporeda blokova (odgovor C):</strong> Mnogi ucenici izracunaju \( 3! \cdot 4! \cdot 5! \), ali zaborave da se blokovi \([B]\) i \([C]\) mogu medjusobno zameniti. Redosled blokova je bitan jer su to razlicite fabrike — treba pomnoziti sa \( 2! \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Tretiranje A-proizvoda kao bloka:</strong> Uslov za A je da <em>ne budu</em> susedni. Staviti ih u blok bi znacilo da jesu susedni — upravo suprotno od zahteva. Proizvodi A se rasporeduju pojedinacno u praznine.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Pogresno brojanje praznina:</strong> Dva bloka u nizu ne stvaraju 2 praznine, vec 3 (pre prvog, izmedju, posle drugog). Opcenito, \( n \) objekata u nizu daje \( n + 1 \) praznina.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Stavljanje vise A-proizvoda u istu prazninu:</strong> Ako bi dva A-proizvoda zavrsila u istoj praznini, oni bi bili susedni. Posto imamo tacno 3 praznine i 3 proizvoda, distribucija mora biti (1, 1, 1).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Kako bi se promenio odgovor da fabrika A ima <strong>2</strong> proizvoda umesto 3 (a ostalo isto)? Sada ne moraju svih 3 praznine biti popunjene.</p>
+    <details>
+      <summary>Pogledaj odgovor</summary>
+      <div class="detail-content">
+        <p>Sa 2 proizvoda fabrike A i 3 praznine, biramo 2 od 3 praznine za smestanje proizvoda (po jedan u svaku), a zatim rasporedimo 2 proizvoda u izabrane praznine:</p>
+        <p style="margin-top: 8px;">\( \displaystyle \binom{3}{2} \cdot 2! = 3 \cdot 2 = 6 \) nacina za raspored A-proizvoda.</p>
+        <p style="margin-top: 8px;">Alternativno, to je isto sto i permutacija: \( P(3, 2) = \frac{3!}{(3-2)!} = 6 \).</p>
+        <p style="margin-top: 8px;">Ukupno: \( 2! \cdot 6 \cdot 4! \cdot 5! = 2 \cdot 6 \cdot 24 \cdot 120 = 34\,560 \).</p>
+        <p style="margin-top: 8px;">Zanimljivo — numericki rezultat je isti! To je zato sto \( P(3, 2) = 3! = 6 \), ali iz drugog razloga (kombinacija puta permutacija, umesto ciste permutacije svih 3).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function roundRect(x, y, w, h, r, fillStyle, strokeStyle, lineWidth) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (fillStyle) {
+      ctx.fillStyle = fillStyle;
+      ctx.fill();
+    }
+    if (strokeStyle) {
+      ctx.strokeStyle = strokeStyle;
+      ctx.lineWidth = lineWidth || 2;
+      ctx.stroke();
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Raspored u nizu: dva bloka formiraju 3 praznine', W / 2, 28);
+
+    // --- Row 1: The blocks and gaps ---
+    var rowY = 60;
+    var blockH = 70;
+    var bBlockW = 200;
+    var cBlockW = 240;
+    var gapW = 80;
+    var totalW = gapW + bBlockW + gapW + cBlockW + gapW;
+    var startX = (W - totalW) / 2;
+
+    // Gap 1
+    var g1x = startX;
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(g1x + 5, rowY, gapW - 10, blockH);
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('A\u2081', g1x + gapW / 2, rowY + blockH / 2 + 5);
+
+    // B block
+    var bx = g1x + gapW;
+    roundRect(bx, rowY, bBlockW, blockH, 12, 'rgba(96, 165, 250, 0.15)', '#60a5fa', 2.5);
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('[B] = B\u2081 B\u2082 B\u2083 B\u2084', bx + bBlockW / 2, rowY + blockH / 2 + 5);
+    // Label
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('4! nacina', bx + bBlockW / 2, rowY + blockH + 18);
+
+    // Gap 2
+    var g2x = bx + bBlockW;
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(g2x + 5, rowY, gapW - 10, blockH);
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('A\u2082', g2x + gapW / 2, rowY + blockH / 2 + 5);
+
+    // C block
+    var cx = g2x + gapW;
+    roundRect(cx, rowY, cBlockW, blockH, 12, 'rgba(167, 139, 250, 0.15)', '#a78bfa', 2.5);
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('[C] = C\u2081 C\u2082 C\u2083 C\u2084 C\u2085', cx + cBlockW / 2, rowY + blockH / 2 + 5);
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('5! nacina', cx + cBlockW / 2, rowY + blockH + 18);
+
+    // Gap 3
+    var g3x = cx + cBlockW;
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(g3x + 5, rowY, gapW - 10, blockH);
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('A\u2083', g3x + gapW / 2, rowY + blockH / 2 + 5);
+
+    // Gap labels below
+    ctx.fillStyle = '#34d399';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('praznina 1', g1x + gapW / 2, rowY + blockH + 18);
+    ctx.fillText('praznina 2', g2x + gapW / 2, rowY + blockH + 18);
+    ctx.fillText('praznina 3', g3x + gapW / 2, rowY + blockH + 18);
+
+    // --- Row 2: Swap indicator (2! for block order) ---
+    var row2Y = rowY + blockH + 50;
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u2194  Blokovi [B] i [C] se mogu zameniti: 2! = 2 nacina', W / 2, row2Y);
+
+    // --- Row 3: Summary multiplication ---
+    var row3Y = row2Y + 50;
+
+    // Draw factor boxes
+    var factors = [
+      { label: '2!', desc: 'raspored\nblokova', color: '#f472b6' },
+      { label: '3!', desc: 'A u\npraznine', color: '#34d399' },
+      { label: '4!', desc: 'unutar\n[B]', color: '#60a5fa' },
+      { label: '5!', desc: 'unutar\n[C]', color: '#a78bfa' }
+    ];
+
+    var fBoxW = 100;
+    var fBoxH = 70;
+    var fGap = 30;
+    var fTotalW = factors.length * fBoxW + (factors.length - 1) * fGap;
+    var fStartX = (W - fTotalW) / 2;
+
+    for (var i = 0; i < factors.length; i++) {
+      var fx = fStartX + i * (fBoxW + fGap);
+      roundRect(fx, row3Y, fBoxW, fBoxH, 10, 'rgba(30, 41, 59, 0.9)', factors[i].color, 2);
+
+      ctx.fillStyle = factors[i].color;
+      ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(factors[i].label, fx + fBoxW / 2, row3Y + 28);
+
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      var lines = factors[i].desc.split('\n');
+      for (var l = 0; l < lines.length; l++) {
+        ctx.fillText(lines[l], fx + fBoxW / 2, row3Y + 46 + l * 14);
+      }
+
+      // Multiply sign between boxes
+      if (i < factors.length - 1) {
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+        ctx.fillText('\u00D7', fx + fBoxW + fGap / 2, row3Y + fBoxH / 2 + 4);
+      }
+    }
+
+    // --- Row 4: Equals result ---
+    var row4Y = row3Y + fBoxH + 30;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('=', W / 2, row4Y);
+
+    var row5Y = row4Y + 30;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 24px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('2 \u00D7 6 \u00D7 24 \u00D7 120 = 34 560', W / 2, row5Y);
+
+    // Answer badge
+    var row6Y = row5Y + 35;
+    roundRect(W / 2 - 90, row6Y - 18, 180, 32, 16, 'rgba(52, 211, 153, 0.2)', '#34d399', 2);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Odgovor: D)', W / 2, row6Y + 3);
+  }
+
+  draw();
+
+  var resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Raspored proizvoda tri fabrike u niz",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["permutacije", "blok-metoda", "metoda praznina", "princip mnozenja", "kombinatorika sa ogranicenjima"]
+}
+BRAINSPARK_META-->

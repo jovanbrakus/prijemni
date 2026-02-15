@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nejednacina sa korenom - Analiza znaka</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Find all real x such that (x-1)*sqrt(x^2 - x - 2) >= 0.
+
+  Step 1: Determine the domain.
+    The expression under the square root must be non-negative:
+    x^2 - x - 2 >= 0
+    Factor: (x - 2)(x + 1) >= 0
+    Solution: x <= -1 or x >= 2
+    Domain: (-inf, -1] union [2, +inf)
+
+  Step 2: Analyze the sign of the product on the domain.
+    sqrt(x^2 - x - 2) >= 0 always (square root is non-negative by definition).
+
+    Case A: sqrt(x^2 - x - 2) = 0
+      This happens when x^2 - x - 2 = 0, i.e., x = -1 or x = 2.
+      At x = -1: (x-1)*0 = (-2)*0 = 0 >= 0. Valid.
+      At x = 2: (x-1)*0 = (1)*0 = 0 >= 0. Valid.
+
+    Case B: sqrt(x^2 - x - 2) > 0
+      This happens when x^2 - x - 2 > 0, i.e., x < -1 or x > 2.
+      For the product to be >= 0, we need (x - 1) >= 0, i.e., x >= 1.
+      Intersection with "x < -1 or x > 2":
+        - x < -1 AND x >= 1: impossible (empty set)
+        - x > 2 AND x >= 1: gives x > 2
+
+  Step 3: Combine all valid x values.
+    From Case A: x = -1, x = 2
+    From Case B: x > 2
+    Union: {-1} union [2, +inf)
+
+  Answer: C) {-1} union [2, +inf)
+
+  Verification:
+    x = -1: sqrt(1 + 1 - 2) = sqrt(0) = 0, product = (-2)(0) = 0 >= 0. OK.
+    x = -2: sqrt(4 + 2 - 2) = sqrt(4) = 2, product = (-3)(2) = -6 < 0. NOT in solution. OK.
+    x = 2: sqrt(4 - 2 - 2) = sqrt(0) = 0, product = (1)(0) = 0 >= 0. OK.
+    x = 3: sqrt(9 - 3 - 2) = sqrt(4) = 2, product = (2)(2) = 4 >= 0. OK.
+    x = 0: x^2 - x - 2 = -2 < 0, not in domain. OK.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-option {
+  color: #34d399;
+  font-size: 1.2rem;
+  margin-top: 8px;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .options-grid {
+    flex-direction: column;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Nejednacina sa korenom i analiza znaka</h1>
+  <p class="subtitle">Iracionalne nejednacine — odredjivanje domena i analiza znaka proizvoda</p>
+
+  <!-- Problem Statement -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <div class="problem-statement">
+      <p>Skup svih realnih brojeva \( x \) za koje vazi \( (x-1)\sqrt{x^2 - x - 2} \geq 0 \) je:</p>
+      <div class="options-grid">
+        <div class="option">A) \( (0,\, 1) \)</div>
+        <div class="option">B) \( (-\infty,\, -2) \)</div>
+        <div class="option correct">C) \( \{-1\} \cup [2,\, +\infty) \)</div>
+        <div class="option">D) \( (1,\, 2) \)</div>
+        <div class="option">E) \( \left(\frac{1}{2},\, 1\right) \)</div>
+        <div class="option">N) Ne znam</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan resavanja</div>
+    <p class="plan-text">
+      Prvo odredjujemo domen — vrednosti \( x \) za koje je izraz pod korenom nenegativan. Zatim na tom domenu analiziramo znak celokupnog proizvoda \( (x-1) \cdot \sqrt{x^2 - x - 2} \). Posto je kvadratni koren uvek nenegativan, dovoljno je razmotriti dva slucaja: kada je koren nula i kada je strogo pozitivan.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Kvadratni koren i analiza znaka proizvoda (klikni da otvoris)</summary>
+      <div class="detail-content">
+        <p>Kljucne cinjenice za ovaj zadatak:</p>
+        <div class="step-math">
+          \[ \sqrt{f(x)} \text{ je definisano samo kada } f(x) \geq 0 \]
+        </div>
+        <p style="margin-top: 12px;">Kvadratni koren je uvek nenegativan: \( \sqrt{f(x)} \geq 0 \). Dakle, za proizvod \( A \cdot \sqrt{f(x)} \geq 0 \) imamo:</p>
+        <ul style="margin: 12px 0 0 20px;">
+          <li>Ako je \( \sqrt{f(x)} = 0 \), proizvod je \( 0 \) bez obzira na \( A \) — uvek zadovoljeno.</li>
+          <li>Ako je \( \sqrt{f(x)} > 0 \), potrebno je \( A \geq 0 \).</li>
+        </ul>
+        <p style="margin-top: 12px;">Za resavanje kvadratne nejednacine koristimo <strong>tablicu znakova</strong> ili faktorizaciju:</p>
+        <div class="step-math">
+          \[ ax^2 + bx + c = a(x - x_1)(x - x_2) \]
+        </div>
+        <p style="margin-top: 8px;">Proizvod dva linearna faktora je nenegativan kada su oba istog znaka (ili bar jedan jednak nuli).</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid: Number Line Canvas -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Brojevna prava — skup resenja</div>
+    <div class="canvas-wrapper">
+      <canvas id="numberline" width="700" height="300"></canvas>
+    </div>
+    <p class="canvas-caption">Brojevna prava sa oznacenim domenom, znakom faktora \( (x-1) \), i konacnim skupom resenja</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Odredimo domen (uslov pod korenom)</div>
+        <p>Da bi izraz \( \sqrt{x^2 - x - 2} \) bio definisan, mora da vazi:</p>
+        <div class="step-math">
+          \[ x^2 - x - 2 \geq 0 \]
+        </div>
+        <p>Faktorisemo kvadratni trinom. Trazimo nule: \( x^2 - x - 2 = 0 \).</p>
+        <div class="step-math">
+          \[ x = \frac{1 \pm \sqrt{1 + 8}}{2} = \frac{1 \pm 3}{2} \implies x_1 = -1, \quad x_2 = 2 \]
+        </div>
+        <p>Dakle:</p>
+        <div class="step-math">
+          \[ x^2 - x - 2 = (x + 1)(x - 2) \geq 0 \]
+        </div>
+        <p>Proizvod \( (x+1)(x-2) \) je nenegativan kada su oba faktora istog znaka:</p>
+        <div class="step-math">
+          \[ x \leq -1 \quad \text{ili} \quad x \geq 2 \]
+        </div>
+        <p>Domen je: \( \mathcal{D} = (-\infty,\, -1] \cup [2,\, +\infty) \).</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zasto su granice -1 i 2 ukljucene u domen?</summary>
+            <div class="detail-content">
+              Zato sto za \( x = -1 \) i \( x = 2 \) vazi \( x^2 - x - 2 = 0 \), pa je \( \sqrt{0} = 0 \) — koren je definisan i jednak nuli.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Slucaj A: Kada je \( \sqrt{x^2 - x - 2} = 0 \)</div>
+        <p>Koren je nula kada je podkoreni izraz nula:</p>
+        <div class="step-math">
+          \[ x^2 - x - 2 = 0 \implies x = -1 \quad \text{ili} \quad x = 2 \]
+        </div>
+        <p>U oba slucaja, proizvod \( (x-1) \cdot 0 = 0 \geq 0 \), sto je zadovoljeno bez obzira na vrednost \( x - 1 \).</p>
+        <p>Proverimo:</p>
+        <ul style="margin: 8px 0 0 20px;">
+          <li>\( x = -1 \): \( (-1 - 1) \cdot \sqrt{0} = (-2) \cdot 0 = 0 \geq 0 \) ✓</li>
+          <li>\( x = 2 \): \( (2 - 1) \cdot \sqrt{0} = 1 \cdot 0 = 0 \geq 0 \) ✓</li>
+        </ul>
+        <p style="margin-top: 10px;"><strong>Obe tacke pripadaju skupu resenja.</strong></p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Slucaj B: Kada je \( \sqrt{x^2 - x - 2} > 0 \)</div>
+        <p>To se desava kada je \( x^2 - x - 2 > 0 \), tj. \( x < -1 \) ili \( x > 2 \) (stroge nejednakosti).</p>
+        <p>Posto je \( \sqrt{x^2 - x - 2} > 0 \), da bi proizvod bio nenegativan, potrebno je:</p>
+        <div class="step-math">
+          \[ x - 1 \geq 0 \implies x \geq 1 \]
+        </div>
+        <p>Sada presecamo uslov \( x \geq 1 \) sa domenom \( x < -1 \) ili \( x > 2 \):</p>
+        <ul style="margin: 8px 0 0 20px;">
+          <li>\( x < -1 \) i \( x \geq 1 \) — nemoguci istovremeno (prazan presek)</li>
+          <li>\( x > 2 \) i \( x \geq 1 \) — presek daje \( x > 2 \)</li>
+        </ul>
+        <p style="margin-top: 10px;"><strong>Iz ovog slucaja dobijamo: \( x > 2 \), tj. \( (2,\, +\infty) \).</strong></p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zasto za \( x < -1 \) proizvod nije nenegativan?</summary>
+            <div class="detail-content">
+              Za \( x < -1 \), vazi \( x - 1 < -2 < 0 \), a \( \sqrt{x^2 - x - 2} > 0 \). Proizvod negativnog i pozitivnog broja je negativan. Na primer, za \( x = -2 \): \( (-2 - 1)\sqrt{4 + 2 - 2} = (-3)\sqrt{4} = (-3)(2) = -6 < 0 \).
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Ujedinjujemo sva resenja</div>
+        <p>Kombinujemo rezultate iz oba slucaja:</p>
+        <ul style="margin: 8px 0 0 20px;">
+          <li>Slucaj A (koren = 0): \( x = -1 \) i \( x = 2 \)</li>
+          <li>Slucaj B (koren > 0): \( x > 2 \)</li>
+        </ul>
+        <p style="margin-top: 10px;">Unija:</p>
+        <div class="step-math">
+          \[ \{-1\} \cup \{2\} \cup (2,\, +\infty) = \{-1\} \cup [2,\, +\infty) \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Verifikacija na konkretnim vrednostima</summary>
+            <div class="detail-content">
+              <p>Proverimo na nekoliko tacaka:</p>
+              <ul>
+                <li>\( x = -1 \): \( (-2)\sqrt{0} = 0 \geq 0 \) ✓ (u skupu resenja)</li>
+                <li>\( x = -2 \): \( (-3)\sqrt{4} = -6 < 0 \) ✗ (nije u skupu resenja)</li>
+                <li>\( x = 0 \): nije u domenu (\( 0 - 0 - 2 = -2 < 0 \)) ✗</li>
+                <li>\( x = 1 \): nije u domenu (\( 1 - 1 - 2 = -2 < 0 \)) ✗</li>
+                <li>\( x = 2 \): \( (1)\sqrt{0} = 0 \geq 0 \) ✓ (u skupu resenja)</li>
+                <li>\( x = 3 \): \( (2)\sqrt{4} = 4 \geq 0 \) ✓ (u skupu resenja)</li>
+                <li>\( x = 5 \): \( (4)\sqrt{18} > 0 \) ✓ (u skupu resenja)</li>
+              </ul>
+              <p style="margin-top: 8px;">Sve se slaze sa nasim odgovorom!</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Kljucni uvid</div>
+    <p>Kljuc za resavanje ovog zadatka je <strong>razdvajanje analize na dva slucaja</strong> prema vrednosti korena. Kada je koren nula, proizvod je automatski nula (nenegativan) — bez obzira na znak drugog faktora. Kada je koren strogo pozitivan, on ne utice na znak proizvoda, pa samo analiziramo znak faktora \( (x - 1) \). Cesta greska je zaboraviti da ukljucimo tacke gde je koren nula (posebno \( x = -1 \), gde je \( x - 1 < 0 \), ali je proizvod ipak nula).</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( \{-1\} \cup [2,\, +\infty) \)</div>
+    <div class="answer-option">Tacan odgovor je C) \( \{-1\} \cup [2,\, +\infty) \)</div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Ceste greske</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Zaboravljanje tacke \( x = -1 \):</strong> Mnogi ucenici zakljuce da za \( x \leq -1 \) vazi \( x - 1 < 0 \), pa iskljuce ceo taj deo. Medjutim, za \( x = -1 \) sam koren je nula, pa je proizvod \( 0 \), sto zadovoljava nejednacinu \( \geq 0 \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Ignorisanje domena:</strong> Ne sme se zaboraviti da \( \sqrt{x^2 - x - 2} \) nije definisano za \( -1 < x < 2 \). Ponudjeni odgovori A), D) i E) leze upravo u tom intervalu, gde izraz uopste ne postoji.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Kvadriranje nejednacine:</strong> Neki ucenici pokusavaju da kvadriraju obe strane. To moze uneti lazna resenja i komplikuje analizu. Direktna analiza znaka je mnogo cistiji pristup.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Resiti nejednacinu \( (x - 3)\sqrt{x^2 - 4x + 3} \leq 0 \). Kako se pristup razlikuje kada je nejednakost \( \leq 0 \) umesto \( \geq 0 \)?</p>
+    <details>
+      <summary>Pogledaj odgovor</summary>
+      <div class="detail-content">
+        <p>Domen: \( x^2 - 4x + 3 = (x-1)(x-3) \geq 0 \implies x \leq 1 \) ili \( x \geq 3 \).</p>
+        <p style="margin-top: 8px;">Koren = 0: \( x = 1 \) ili \( x = 3 \). U oba slucaja proizvod je \( 0 \leq 0 \) ✓.</p>
+        <p style="margin-top: 8px;">Koren > 0: potrebno \( x - 3 \leq 0 \implies x \leq 3 \). Presek sa domenom \( x < 1 \) ili \( x > 3 \): dobijamo \( x < 1 \).</p>
+        <p style="margin-top: 8px;">Resenje: \( (-\infty,\, 1] \cup \{3\} \).</p>
+        <p style="margin-top: 8px;">Princip je analogan: samo obrnemo uslov za znak linearnog faktora!</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('numberline');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Number line parameters
+    const lineY = 80;
+    const leftX = 60;
+    const rightX = W - 60;
+    const lineLen = rightX - leftX;
+
+    // Map x-values to pixel positions
+    // Show range from -4 to 6
+    const xMin = -4;
+    const xMax = 6;
+    function xToPixel(x) {
+      return leftX + ((x - xMin) / (xMax - xMin)) * lineLen;
+    }
+
+    // --- Row 1: Domain ---
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Domen: x\u00B2 \u2212 x \u2212 2 \u2265 0', leftX, lineY - 38);
+
+    // Draw main number line
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(leftX, lineY);
+    ctx.lineTo(rightX, lineY);
+    ctx.stroke();
+
+    // Arrow tips
+    ctx.fillStyle = '#475569';
+    // Left arrow
+    ctx.beginPath();
+    ctx.moveTo(leftX, lineY);
+    ctx.lineTo(leftX + 10, lineY - 5);
+    ctx.lineTo(leftX + 10, lineY + 5);
+    ctx.fill();
+    // Right arrow
+    ctx.beginPath();
+    ctx.moveTo(rightX, lineY);
+    ctx.lineTo(rightX - 10, lineY - 5);
+    ctx.lineTo(rightX - 10, lineY + 5);
+    ctx.fill();
+
+    // Tick marks and labels
+    ctx.strokeStyle = '#475569';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = xMin; i <= xMax; i++) {
+      const px = xToPixel(i);
+      ctx.beginPath();
+      ctx.moveTo(px, lineY - 5);
+      ctx.lineTo(px, lineY + 5);
+      ctx.stroke();
+      ctx.fillText(String(i), px, lineY + 20);
+    }
+
+    // Highlight domain: (-inf, -1] in cyan-ish
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.15)';
+    ctx.fillRect(leftX, lineY - 12, xToPixel(-1) - leftX, 24);
+    // Highlight domain: [2, +inf) in cyan-ish
+    ctx.fillRect(xToPixel(2), lineY - 12, rightX - xToPixel(2), 24);
+
+    // Non-domain region: strikethrough
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.08)';
+    ctx.fillRect(xToPixel(-1), lineY - 12, xToPixel(2) - xToPixel(-1), 24);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(xToPixel(-1), lineY);
+    ctx.lineTo(xToPixel(2), lineY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label non-domain
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('nije definisano', (xToPixel(-1) + xToPixel(2)) / 2, lineY + 36);
+
+    // Key points: -1 and 2 (filled circles = included)
+    [[-1, '#60a5fa'], [2, '#60a5fa']].forEach(([x, color]) => {
+      ctx.beginPath();
+      ctx.arc(xToPixel(x), lineY, 6, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+
+    // Point x = 1 (reference, open circle, not in domain)
+    ctx.beginPath();
+    ctx.arc(xToPixel(1), lineY, 5, 0, Math.PI * 2);
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('x=1', xToPixel(1), lineY - 16);
+
+    // --- Row 2: Sign analysis ---
+    const row2Y = lineY + 68;
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Znak (x \u2212 1):', leftX, row2Y);
+
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    // x < -1: negative
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('\u2212', (leftX + xToPixel(-1)) / 2, row2Y + 22);
+    // x = -1 to x = 2: not in domain, skip
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2014', (xToPixel(-1) + xToPixel(2)) / 2, row2Y + 22);
+    // x > 2: positive
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('+', (xToPixel(2) + rightX) / 2, row2Y + 22);
+
+    // --- Row 3: Sign of sqrt ---
+    const row3Y = row2Y + 50;
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Znak \u221A(...):', leftX, row3Y);
+
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    // x < -1: positive
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('+', (leftX + xToPixel(-1)) / 2, row3Y + 22);
+    // x = -1: zero
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('0', xToPixel(-1), row3Y + 22);
+    // not in domain
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2014', (xToPixel(-1) + xToPixel(2)) / 2, row3Y + 22);
+    // x = 2: zero
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('0', xToPixel(2), row3Y + 22);
+    // x > 2: positive
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('+', (xToPixel(2) + rightX) / 2, row3Y + 22);
+
+    // --- Row 4: Sign of product = RESULT ---
+    const row4Y = row3Y + 50;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Proizvod:', leftX, row4Y);
+
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    // x < -1: (-)(+) = negative
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('\u2212', (leftX + xToPixel(-1)) / 2, row4Y + 22);
+    // x = -1: 0
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('0', xToPixel(-1), row4Y + 22);
+    // not in domain
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2014', (xToPixel(-1) + xToPixel(2)) / 2, row4Y + 22);
+    // x = 2: 0
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('0', xToPixel(2), row4Y + 22);
+    // x > 2: (+)(+) = positive
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('+', (xToPixel(2) + rightX) / 2, row4Y + 22);
+
+    // Solution highlighting on bottom line
+    const solY = row4Y + 50;
+
+    // Draw solution number line
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(leftX, solY);
+    ctx.lineTo(rightX, solY);
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Resenje: {-1} \u222A [2, +\u221E)', leftX, solY - 10);
+
+    // Mark {-1}: filled green dot
+    ctx.beginPath();
+    ctx.arc(xToPixel(-1), solY, 7, 0, Math.PI * 2);
+    ctx.fillStyle = '#34d399';
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Mark [2, +inf): thick green line with filled dot at 2
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(xToPixel(2), solY);
+    ctx.lineTo(rightX - 10, solY);
+    ctx.stroke();
+
+    // Filled dot at 2
+    ctx.beginPath();
+    ctx.arc(xToPixel(2), solY, 7, 0, Math.PI * 2);
+    ctx.fillStyle = '#34d399';
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Arrow at right end
+    ctx.fillStyle = '#34d399';
+    ctx.beginPath();
+    ctx.moveTo(rightX - 5, solY);
+    ctx.lineTo(rightX - 15, solY - 6);
+    ctx.lineTo(rightX - 15, solY + 6);
+    ctx.fill();
+  }
+
+  draw();
+
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Nejednacina sa korenom - analiza znaka proizvoda",
+  "subject": "math",
+  "unit": "iracionalne nejednacine",
+  "topic_tags": ["iracionalne nejednacine", "domen funkcije", "analiza znaka", "kvadratni koren", "kvadratna nejednacina", "tablica znakova"]
+}
+BRAINSPARK_META-->

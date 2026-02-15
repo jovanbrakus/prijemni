@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir repjunit brojeva</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Find the sum S = 1 + 11 + 111 + ... + underbrace{11...1}_{n digits}
+
+  Key observation: Each term with k digits consists of k ones.
+  We can express each such "repunit" in closed form:
+    underbrace{11...1}_{k} = (10^k - 1) / 9
+
+  Verification:
+    k=1: (10-1)/9 = 9/9 = 1 ✓
+    k=2: (100-1)/9 = 99/9 = 11 ✓
+    k=3: (1000-1)/9 = 999/9 = 111 ✓
+
+  So the sum becomes:
+    S = sum_{k=1}^{n} (10^k - 1)/9
+      = (1/9) * sum_{k=1}^{n} (10^k - 1)
+      = (1/9) * [ sum_{k=1}^{n} 10^k  -  sum_{k=1}^{n} 1 ]
+      = (1/9) * [ (10 + 10^2 + ... + 10^n) - n ]
+
+  The geometric sum:
+    sum_{k=1}^{n} 10^k = 10 * (10^n - 1) / (10 - 1) = 10(10^n - 1)/9 = (10^{n+1} - 10)/9
+
+  Therefore:
+    S = (1/9) * [ (10^{n+1} - 10)/9 - n ]
+      = (1/9) * [ (10^{n+1} - 10 - 9n) / 9 ]
+      = (10^{n+1} - 10 - 9n) / 81
+
+  Answer: A) (1/81)(10^{n+1} - 10 - 9n)
+
+  Verification for small n:
+    n=1: S = 1. Formula: (100 - 10 - 9)/81 = 81/81 = 1 ✓
+    n=2: S = 1 + 11 = 12. Formula: (1000 - 10 - 18)/81 = 972/81 = 12 ✓
+    n=3: S = 1 + 11 + 111 = 123. Formula: (10000 - 10 - 27)/81 = 9963/81 = 123 ✓
+
+  Check other options for n=1:
+    B) (1/9)(10 - 9 + 8) = 9/9 = 1 ✓ for n=1 — need to check n=2
+    B) (1/9)(100 - 18 + 8) = 90/9 = 10 ≠ 12 ✗ — eliminated
+    C) (1/81)(100 - 19) = 81/81 = 1 ✓ for n=1, check n=2
+    C) (1/81)(1000 - 38) = 962/81 ≈ 11.88 ≠ 12 ✗ — eliminated
+    D) (1/9)(100 - 40 - 50) = 10/9 ≠ 1 ✗ — eliminated
+    E) (1/11)(11 - 1 + 1) = 11/11 = 1 ✓ for n=1, check n=2
+    E) (1/11)(121 - 2 + 1) = 120/11 ≈ 10.9 ≠ 12 ✗ — eliminated
+
+  Only A survives all checks.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-option {
+  color: #34d399;
+  font-size: 1.2rem;
+  margin-top: 8px;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .options-grid {
+    flex-direction: column;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Zbir repjunit brojeva</h1>
+  <p class="subtitle">Nizovi i redovi — geometrijski red, zatvorene forme</p>
+
+  <!-- Problem Statement -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <div class="problem-statement">
+      <p>Zbir \( 1 + 11 + 111 + \cdots + \underbrace{11\ldots1}_{n} \) je jednak:</p>
+      <div class="options-grid">
+        <div class="option correct">A) \( \dfrac{1}{81}\left(10^{n+1} - 10 - 9n\right) \)</div>
+        <div class="option">B) \( \dfrac{1}{9}\left(10^n - 9n + 8\right) \)</div>
+        <div class="option">C) \( \dfrac{1}{81}\left(10^{n+1} - 19n\right) \)</div>
+        <div class="option">D) \( \dfrac{1}{9}\left(10^{2n} - 40n - 50\right) \)</div>
+        <div class="option">E) \( \dfrac{1}{11}\left(11^n - n + 1\right) \)</div>
+        <div class="option">N) Ne znam</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan resavanja</div>
+    <p class="plan-text">
+      Svaki clan zbira sa \( k \) cifara (sve jedinice) mozemo izraziti kao \( \frac{10^k - 1}{9} \). Tada ceo zbir postaje suma koja se moze rastaviti na geometrijski red i konstantni deo. Izracunacemo geometrijski red i srediti izraz.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Repjunit brojevi i geometrijski red (klikni da otvoris)</summary>
+      <div class="detail-content">
+        <p><strong>Repjunit broj</strong> (od engleskog "repeated unit") je broj koji se sastoji samo od jedinica. Broj sa \( k \) jedinica oznacavamo \( R_k \):</p>
+        <div class="step-math">
+          \[ R_k = \underbrace{11\ldots1}_{k} = \frac{10^k - 1}{9} \]
+        </div>
+        <p style="margin-top: 12px;">Ovo sledi iz formule za zbir geometrijskog niza:</p>
+        <div class="step-math">
+          \[ 1 + 10 + 10^2 + \cdots + 10^{k-1} = \frac{10^k - 1}{10 - 1} = \frac{10^k - 1}{9} \]
+        </div>
+        <p style="margin-top: 12px;">Takodje, zbir geometrijskog niza sa prvim clanom \( a_1 \), kolicnikom \( q \neq 1 \) i \( n \) clanova:</p>
+        <div class="step-math">
+          \[ S_n = a_1 \cdot \frac{q^n - 1}{q - 1} \]
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Vizuelni prikaz</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="700" height="420"></canvas>
+    </div>
+    <p class="canvas-caption">Rastavljanje svakog repjunit broja na \( (10^k - 1)/9 \) i sumiranje</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Izrazimo svaki clan u zatvorenoj formi</div>
+        <p>Svaki clan zbira je broj koji se sastoji samo od jedinica. Broj sa \( k \) jedinica mozemo zapisati kao:</p>
+        <div class="step-math">
+          \[ \underbrace{11\ldots1}_{k} = 1 + 10 + 10^2 + \cdots + 10^{k-1} = \frac{10^k - 1}{9} \]
+        </div>
+        <p>Na primer: \( 1 = \frac{10-1}{9} = 1 \), \( 11 = \frac{100-1}{9} = \frac{99}{9} = 11 \), \( 111 = \frac{1000-1}{9} = \frac{999}{9} = 111 \).</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zasto vazi ova formula?</summary>
+            <div class="detail-content">
+              Broj \( \underbrace{11\ldots1}_{k} \) je u stvari zbir geometrijskog niza \( 1 + 10 + 100 + \cdots + 10^{k-1} \), gde je prvi clan \( a_1 = 1 \), kolicnik \( q = 10 \), i ima \( k \) clanova. Po formuli: \( S = \frac{10^k - 1}{10 - 1} = \frac{10^k - 1}{9} \).
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Zapisimo ceo zbir koristeci zatvorenu formu</div>
+        <p>Nas zbir \( S \) sadrzi \( n \) clanova: prvi clan ima 1 cifru, drugi ima 2 cifre, ..., \( n \)-ti clan ima \( n \) cifara:</p>
+        <div class="step-math">
+          \[ S = \sum_{k=1}^{n} \underbrace{11\ldots1}_{k} = \sum_{k=1}^{n} \frac{10^k - 1}{9} \]
+        </div>
+        <p>Iznesimo \( \frac{1}{9} \) ispred sume:</p>
+        <div class="step-math">
+          \[ S = \frac{1}{9} \sum_{k=1}^{n} \left(10^k - 1\right) = \frac{1}{9}\left[\sum_{k=1}^{n} 10^k \;-\; \sum_{k=1}^{n} 1\right] \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Izracunajmo svaku od dve sume</div>
+        <p><strong>Druga suma</strong> je trivijalna — sabiramo \( n \) jedinica:</p>
+        <div class="step-math">
+          \[ \sum_{k=1}^{n} 1 = n \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Prva suma</strong> je geometrijski red sa prvim clanom \( 10 \), kolicnikom \( 10 \) i \( n \) clanova:</p>
+        <div class="step-math">
+          \[ \sum_{k=1}^{n} 10^k = 10 + 10^2 + \cdots + 10^n = 10 \cdot \frac{10^n - 1}{10 - 1} = \frac{10\left(10^n - 1\right)}{9} = \frac{10^{n+1} - 10}{9} \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Brza provera za n = 2</summary>
+            <div class="detail-content">
+              Za \( n = 2 \): \( 10 + 100 = 110 \). Po formuli: \( \frac{10^3 - 10}{9} = \frac{1000 - 10}{9} = \frac{990}{9} = 110 \). Tacno!
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Spojimo sve zajedno</div>
+        <p>Uvrstimo obe sume nazad u izraz za \( S \):</p>
+        <div class="step-math">
+          \[ S = \frac{1}{9}\left[\frac{10^{n+1} - 10}{9} - n\right] \]
+        </div>
+        <p>Svedimo na zajednicki imenilac u zagradi:</p>
+        <div class="step-math">
+          \[ S = \frac{1}{9} \cdot \frac{10^{n+1} - 10 - 9n}{9} = \frac{10^{n+1} - 10 - 9n}{81} \]
+        </div>
+        <p>Sto mozemo zapisati kao:</p>
+        <div class="step-math">
+          \[ \boxed{S = \frac{1}{81}\left(10^{n+1} - 10 - 9n\right)} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Verifikacija za male vrednosti n</div>
+        <p>Proverimo formulu za nekoliko konkretnih vrednosti:</p>
+        <p style="margin-top: 8px;"><strong>\( n = 1 \):</strong> \( S = 1 \). Formula: \( \frac{10^2 - 10 - 9}{81} = \frac{100 - 10 - 9}{81} = \frac{81}{81} = 1 \) &#10003;</p>
+        <p style="margin-top: 4px;"><strong>\( n = 2 \):</strong> \( S = 1 + 11 = 12 \). Formula: \( \frac{10^3 - 10 - 18}{81} = \frac{1000 - 28}{81} = \frac{972}{81} = 12 \) &#10003;</p>
+        <p style="margin-top: 4px;"><strong>\( n = 3 \):</strong> \( S = 1 + 11 + 111 = 123 \). Formula: \( \frac{10^4 - 10 - 27}{81} = \frac{10000 - 37}{81} = \frac{9963}{81} = 123 \) &#10003;</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zasto je korisna ova verifikacija?</summary>
+            <div class="detail-content">
+              Verifikacija za konkretne vrednosti \( n \) ne dokazuje da je formula tacna za sve \( n \), ali je izuzetno korisna za otkrivanje racunskih gresaka. Ako formula ne radi za \( n = 1, 2, 3 \), sigurno smo negde pogresili. Takodje, ove provere eliminisu pogresne ponudjene odgovore — od svih ponudjenih opcija, samo opcija A daje tacne rezultate za sve testne vrednosti.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Kljucni uvid</div>
+    <p>Trik ovog zadatka je u prepoznavanju da svaki "repjunit" broj \( \underbrace{11\ldots1}_{k} \) nije nista drugo nego <strong>zbir geometrijskog niza stepena broja 10</strong>, tj. \( \frac{10^k - 1}{9} \). Kada to uocimo, originalni zbir se svodi na <strong>dvostruku primenu formule za geometrijski red</strong> — jednom za rastavljanje repjunit brojeva, i drugi put za sumiranje stepena desetke. Rezultat \( \frac{1}{81} = \frac{1}{9^2} \) u imeniocu je karakteristican znak da smo primenili ovu formulu dva puta.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( S = \dfrac{1}{81}\left(10^{n+1} - 10 - 9n\right) \)</div>
+    <div class="answer-option">Tacan odgovor je A)</div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Ceste greske</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Brkanje indeksa geometrijskog niza:</strong> Suma \( \sum_{k=1}^{n} 10^k \) pocinje od \( 10^1 \), ne od \( 10^0 \). Ako krenete od \( 10^0 = 1 \), dobicete \( \frac{10^{n+1}-1}{9} \) umesto \( \frac{10^{n+1}-10}{9} \), sto daje pogresan rezultat.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Zaboravljanje clana \( -n \):</strong> U izrazu \( \sum (10^k - 1) \), cest je propust da se oduzme \( \sum 1 = n \). Ovo dovodi do formule bez clana \( 9n \) u brojiocu, sto odgovara pogresnoj opciji.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Greska pri svodjenju na zajednicki imenilac:</strong> Kada od \( \frac{10^{n+1}-10}{9} \) oduzimamo \( n \), moramo \( n \) zapisati kao \( \frac{9n}{9} \) pre oduzimanja. Cest propust je da se \( n \) oduzme direktno bez svodjenja.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Nadji zatvorenu formu za zbir \( S' = 2 + 22 + 222 + \cdots + \underbrace{22\ldots2}_{n} \). A za \( 3 + 33 + 333 + \cdots + \underbrace{33\ldots3}_{n} \)?</p>
+    <details>
+      <summary>Pogledaj odgovor</summary>
+      <div class="detail-content">
+        <p>Svaki clan \( \underbrace{dd\ldots d}_{k} = d \cdot \underbrace{11\ldots1}_{k} = d \cdot \frac{10^k - 1}{9} \).</p>
+        <p style="margin-top: 8px;">Zato je zbir jednostavno \( d \) puta nas rezultat:</p>
+        <p style="margin-top: 4px;">\( S' = d \cdot \frac{1}{81}\left(10^{n+1} - 10 - 9n\right) = \frac{d}{81}\left(10^{n+1} - 10 - 9n\right) \)</p>
+        <p style="margin-top: 8px;">Za \( d = 2 \): \( S' = \frac{2}{81}\left(10^{n+1} - 10 - 9n\right) \)</p>
+        <p>Za \( d = 3 \): \( S' = \frac{3}{81}\left(10^{n+1} - 10 - 9n\right) = \frac{1}{27}\left(10^{n+1} - 10 - 9n\right) \)</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const rows = [
+      { k: 1, repunit: '1', expanded: '(10\u00B9 \u2212 1)/9', value: '1' },
+      { k: 2, repunit: '11', expanded: '(10\u00B2 \u2212 1)/9', value: '11' },
+      { k: 3, repunit: '111', expanded: '(10\u00B3 \u2212 1)/9', value: '111' },
+      { k: 4, repunit: '1111', expanded: '(10\u2074 \u2212 1)/9', value: '1111' },
+      { k: 'n', repunit: '11...1', expanded: '(10\u207F \u2212 1)/9', value: '' }
+    ];
+
+    const startY = 40;
+    const rowH = 60;
+    const colX = [60, 180, 380, 560];
+
+    // Header
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('k', colX[0], startY);
+    ctx.fillText('Clan', colX[1], startY);
+    ctx.fillText('= (10\u1D4F \u2212 1) / 9', colX[2], startY);
+    ctx.fillText('Vrednost', colX[3], startY);
+
+    // Header line
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(20, startY + 12);
+    ctx.lineTo(W - 20, startY + 12);
+    ctx.stroke();
+
+    // Rows
+    ctx.font = '15px Segoe UI, system-ui, sans-serif';
+    rows.forEach(function(row, i) {
+      var y = startY + (i + 1) * rowH;
+
+      if (i === rows.length - 1) {
+        // Dots row
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText('\u22EE', colX[0], y - 18);
+        ctx.fillText('\u22EE', colX[1], y - 18);
+        ctx.fillText('\u22EE', colX[2], y - 18);
+        ctx.fillText('\u22EE', colX[3], y - 18);
+        y += 10;
+      }
+
+      // k column
+      ctx.fillStyle = '#a78bfa';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(String(row.k), colX[0], y);
+
+      // Repunit column
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '15px Courier New, monospace';
+      ctx.fillText(row.repunit, colX[1], y);
+
+      // Expanded column
+      ctx.fillStyle = '#34d399';
+      ctx.font = '15px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(row.expanded, colX[2], y);
+
+      // Value column
+      ctx.fillStyle = '#f472b6';
+      ctx.font = '15px Courier New, monospace';
+      ctx.fillText(row.value, colX[3], y);
+    });
+
+    // Brace and sum indication
+    var braceX = W - 60;
+    var braceTop = startY + rowH - 10;
+    var braceBot = startY + rows.length * rowH + 10;
+
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(braceX, braceTop);
+    ctx.lineTo(braceX + 15, braceTop);
+    ctx.lineTo(braceX + 15, braceBot);
+    ctx.lineTo(braceX, braceBot);
+    ctx.stroke();
+
+    // Sum label
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('\u03A3', braceX + 22, (braceTop + braceBot) / 2 + 5);
+
+    // Bottom result box
+    var boxY = H - 60;
+    var boxW = 500;
+    var boxH = 40;
+    var boxX = (W - boxW) / 2;
+
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.1)';
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('S = (1/81) \u00D7 (10\u207F\u207A\u00B9 \u2212 10 \u2212 9n)', W / 2, boxY + 26);
+  }
+
+  draw();
+
+  var resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir repjunit brojeva",
+  "subject": "math",
+  "unit": "nizovi i redovi",
+  "topic_tags": ["geometrijski red", "repjunit brojevi", "sumiranje", "zatvorena forma", "nizovi"]
+}
+BRAINSPARK_META-->

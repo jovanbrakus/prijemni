@@ -42,7 +42,6 @@ List of faculties in focus form "Uniterzitet u Beograd":
  * Prirodno Matematiski fakultet
  * Masinski fakultet
  * Tehnolosko Metalurski fakultet
- * Fakultet za Fizicku Hemiju
 
 Years of interest: **2000 to present**.
 

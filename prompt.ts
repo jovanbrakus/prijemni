@@ -130,9 +130,9 @@ b. **Problem Statement** (first content section)
    - "Given" data displayed in a responsive grid of small cards showing label, value, and unit
    - If any detail is unclear (especially from images), include an "Assumptions" card
      listing assumptions explicitly. Do not invent unreadable text.
-   - **Answer Options (mandatory for multiple-choice problems):** At the end of the problem
-     statement card, display the possible answers as a row of small cards using the
-     \`given-grid\` layout. Each answer option MUST use the CSS class \`answer-option\` (in
+   - **Answer Options (CRITICAL — mandatory for multiple-choice problems):** At the end of
+     the problem statement card, display the possible answers as a row of small cards using
+     the \`given-grid\` layout. Each answer option MUST use the CSS class \`answer-option\` (in
      addition to \`given-item\`) and a \`data-option\` attribute with the option letter, e.g.:
      \`<div class="given-item answer-option" data-option="A">\`
      The label inside each option should show only the letter in parentheses — "(A)", "(B)",
@@ -149,6 +149,13 @@ b. **Problem Statement** (first content section)
        </div>
        <!-- ... etc for all options -->
      </div>
+     \`\`\`
+     **DO NOT** render answer options as plain text, inline spans, or custom grids.
+     For example, this is WRONG:
+     \`\`\`html
+     <!-- WRONG: no given-grid, no given-item, no data-option -->
+     <span class="answer-option">(A) \\(0\\)</span>
+     <span class="answer-option">(B) \\(1\\)</span>
      \`\`\`
    - **Ignore "Ne znam" option:** Many Serbian entrance exams include a default answer
      option "(N) Ne znam" ("I don't know"). This is NOT a real answer option — it is a
@@ -290,6 +297,15 @@ BRAINSPARK_META-->
 Notes:
 - "subject" and "unit" MUST use the fixed enum values shown above (keep them in English for consistent indexing).
 - "title" and "topic_tags" MUST be in the specified language.
+
+## Output Validation Checklist (verify before finalizing)
+
+Before outputting the HTML, verify these structural requirements:
+1. Problem statement uses \`<div class="card problem-statement">\` (both classes required)
+2. Answer options use \`given-grid\` > \`given-item answer-option\` with \`data-option\` attributes
+3. No inline event handlers (no onclick, onmouseover, etc.)
+4. No problem metadata in title/subtitle (no year, faculty, exam name)
+5. Logic scratchpad is present and complete in <head>
 
 ## Language
 

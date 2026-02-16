@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broj uredjenih parova podskupova</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Dat je skup A = {a1, a2, ..., a11}. Koliko ima uredjenih parova (X, Y) takvih da je
+X podskup od A, Y podskup od A, |X| = 8, |Y| = 7 i |X presek Y| = 5?
+
+KORAK 1: Odredjivanje velicine unije
+|X unija Y| = |X| + |Y| - |X presek Y| = 8 + 7 - 5 = 10
+
+Posto |A| = 11, tacno 1 element iz A nije ni u X ni u Y.
+
+KORAK 2: Particionisanje skupa A
+Svaki element skupa A pripada tacno jednoj od cetiri grupe:
+  - X presek Y: 5 elemenata
+  - X \ Y (samo u X): |X| - 5 = 3 elementa
+  - Y \ X (samo u Y): |Y| - 5 = 2 elementa
+  - A \ (X unija Y) (ni u jednom): 11 - 10 = 1 element
+
+KORAK 3: Brojanje kombinacija
+Biramo redom:
+  1. Koji 5 od 11 elemenata idu u X presek Y: C(11, 5)
+  2. Koji 3 od preostalih 6 idu samo u X: C(6, 3)
+  3. Koji 2 od preostalih 3 idu samo u Y: C(3, 2)
+  4. Preostali 1 element ide u komplement: C(1, 1)
+
+KORAK 4: Racunanje
+C(11, 5) = 462
+C(6, 3) = 20
+C(3, 2) = 3
+C(1, 1) = 1
+
+Ukupno = 462 * 20 * 3 * 1 = 27720
+
+Odgovor: (C) 27720
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement .problem-text {
+  font-size: 1.1rem;
+  line-height: 1.9;
+  margin-bottom: 20px;
+}
+
+.math-highlight {
+  background: rgba(56, 189, 248, 0.08);
+  padding: 2px 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(96, 165, 250, 0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+  transition: border-color 0.2s;
+}
+
+.given-item.answer-option {
+  cursor: default;
+}
+
+.given-item.answer-option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+details {
+  background: rgba(96, 165, 250, 0.04);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.step {
+  margin-bottom: 24px;
+  padding-left: 0;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.step-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.step-content {
+  margin-left: 48px;
+  color: #cbd5e1;
+  line-height: 1.9;
+}
+
+.step-content .math-highlight {
+  margin: 8px 0;
+  display: block;
+  padding: 10px 16px;
+}
+
+.key-insight {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.key-insight .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  text-align: center;
+  padding: 30px;
+}
+
+.final-answer-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.final-option {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  transition: all 0.2s;
+}
+
+.final-option.correct-option {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  margin-top: 16px;
+  font-size: 0.95rem;
+}
+
+.pitfall-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: #f472b6;
+}
+
+.pitfall-icon {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.pitfall-text {
+  color: #cbd5e1;
+}
+
+.challenge-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 700px;
+  border-radius: 12px;
+  touch-action: none;
+}
+
+.canvas-caption {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+  h1 { font-size: 1.4rem; }
+  .card { padding: 16px; }
+  .given-grid { grid-template-columns: 1fr 1fr; }
+  .step-content { margin-left: 0; margin-top: 8px; }
+  .final-answer-value { font-size: 1.7rem; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 8px 14px; font-size: 0.95rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- NASLOV -->
+  <h1>Broj uredjenih parova podskupova</h1>
+  <p class="subtitle">Kombinatorika, preseci skupova i princip particije</p>
+
+  <!-- TEKST ZADATKA -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Dat je skup \(A = \{a_1, a_2, \ldots, a_{11}\}\). Koliko ima uredjenih parova \((X, Y)\) takvih da je \(X \subset A\), \(Y \subset A\), a broj elemenata u skupovima je \(|X| = 8\), \(|Y| = 7\) i \(|X \cap Y| = 5\)?
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">(A) 1024</div>
+      <div class="given-item answer-option" data-option="B">(B) 3245</div>
+      <div class="given-item answer-option correct" data-option="C">(C) 27720</div>
+      <div class="given-item answer-option" data-option="D">(D) 87512</div>
+      <div class="given-item answer-option" data-option="E">(E) Nijedan od ponudjenih</div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan resavanja</div>
+    <p class="plan-text">
+      1. Odrediti velicinu unije \(|X \cup Y|\) pomocu formule ukljucenja-iskljucenja.<br>
+      2. Particionisati skup \(A\) na cetiri disjunktne grupe prema pripadnosti skupovima \(X\) i \(Y\).<br>
+      3. Odrediti koliko elemenata mora biti u svakoj grupi.<br>
+      4. Izracunati ukupan broj uredjenih parova kao proizvod binomnih koeficijenata.
+    </p>
+  </div>
+
+  <!-- TEORIJA -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Formula ukljucenja-iskljucenja</summary>
+      <p style="margin-top: 8px;">
+        Za bilo koja dva konacna skupa \(X\) i \(Y\) vazi:
+        \[|X \cup Y| = |X| + |Y| - |X \cap Y|\]
+        Ova formula nam omogucava da odredimo velicinu unije ako znamo velicine skupova i njihovog preseka.
+      </p>
+    </details>
+    <details>
+      <summary>Princip particije skupa</summary>
+      <p style="margin-top: 8px;">
+        Kada imamo dva podskupa \(X\) i \(Y\) skupa \(A\), svaki element od \(A\) pripada tacno jednoj od cetiri grupe:
+        \[A = (X \cap Y) \;\cup\; (X \setminus Y) \;\cup\; (Y \setminus X) \;\cup\; (A \setminus (X \cup Y))\]
+        Ove grupe su medjusobno disjunktne i njihova unija je ceo skup \(A\).
+      </p>
+    </details>
+    <details>
+      <summary>Binomni koeficijent \(\binom{n}{k}\)</summary>
+      <p style="margin-top: 8px;">
+        Broj nacina da se iz skupa od \(n\) elemenata izabere \(k\) elemenata (bez obzira na redosled):
+        \[\binom{n}{k} = \frac{n!}{k!(n-k)!}\]
+        Princip uzastopnog biranja: ako biramo redom iz sve manjeg skupa, ukupan broj nacina je proizvod pojedinacnih binomnih koeficijenata.
+      </p>
+    </details>
+  </div>
+
+  <!-- VIZUELNI PRIKAZ -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz</div>
+    <canvas id="diagram-canvas" width="700" height="420"></canvas>
+    <p class="canvas-caption">Venov dijagram: particija skupa A na 4 disjunktne grupe prema pripadnosti skupovima X i Y</p>
+  </div>
+
+  <!-- KORAK PO KORAK -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Korak 1 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <div class="step-title">Odredjivanje velicine unije \(X \cup Y\)</div>
+      </div>
+      <div class="step-content">
+        <p>Primenom formule ukljucenja-iskljucenja:</p>
+        <div class="math-highlight">
+          \[|X \cup Y| = |X| + |Y| - |X \cap Y| = 8 + 7 - 5 = 10\]
+        </div>
+        <p>
+          Posto \(|A| = 11\), a \(|X \cup Y| = 10\), tacno <strong>jedan element</strong> skupa \(A\) ne pripada ni \(X\) ni \(Y\).
+        </p>
+      </div>
+    </div>
+
+    <!-- Korak 2 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <div class="step-title">Particionisanje skupa \(A\) na cetiri grupe</div>
+      </div>
+      <div class="step-content">
+        <p>Svaki od 11 elemenata skupa \(A\) pripada tacno jednoj grupi:</p>
+        <div class="math-highlight">
+          \[\begin{aligned}
+          &\text{Grupa 1: } X \cap Y &&\text{— elementi koji su i u } X \text{ i u } Y &&\Rightarrow 5 \text{ elemenata} \\
+          &\text{Grupa 2: } X \setminus Y &&\text{— elementi samo u } X &&\Rightarrow |X| - 5 = 3 \text{ elementa} \\
+          &\text{Grupa 3: } Y \setminus X &&\text{— elementi samo u } Y &&\Rightarrow |Y| - 5 = 2 \text{ elementa} \\
+          &\text{Grupa 4: } A \setminus (X \cup Y) &&\text{— elementi ni u jednom} &&\Rightarrow 11 - 10 = 1 \text{ element}
+          \end{aligned}\]
+        </div>
+        <p>Proverimo: \(5 + 3 + 2 + 1 = 11 = |A|\). Sve se slaze.</p>
+
+        <details>
+          <summary>&#9989; Proveri sebe: Zasto je \(|X \setminus Y| = 3\)?</summary>
+          <p style="margin-top: 8px;">
+            Skup \(X\) ima 8 elemenata. Od njih, 5 pripada i skupu \(Y\) (to je presek \(X \cap Y\)).
+            Preostalih \(8 - 5 = 3\) elemenata pripada iskljucivo skupu \(X\), ali ne i skupu \(Y\).
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Korak 3 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <div class="step-title">Uzastopno biranje elemenata za svaku grupu</div>
+      </div>
+      <div class="step-content">
+        <p>Biramo redom koji elementi idu u koju grupu:</p>
+
+        <p style="margin-top: 12px;"><strong>Korak 3a:</strong> Biramo 5 elemenata od 11 za presek \(X \cap Y\):</p>
+        <div class="math-highlight">
+          \[\binom{11}{5} = \frac{11!}{5! \cdot 6!} = \frac{11 \cdot 10 \cdot 9 \cdot 8 \cdot 7}{5 \cdot 4 \cdot 3 \cdot 2 \cdot 1} = \frac{55440}{120} = 462\]
+        </div>
+
+        <p><strong>Korak 3b:</strong> Od preostalih 6 elemenata biramo 3 za skup \(X \setminus Y\):</p>
+        <div class="math-highlight">
+          \[\binom{6}{3} = \frac{6!}{3! \cdot 3!} = \frac{6 \cdot 5 \cdot 4}{3 \cdot 2 \cdot 1} = 20\]
+        </div>
+
+        <p><strong>Korak 3c:</strong> Od preostalih 3 elementa biramo 2 za skup \(Y \setminus X\):</p>
+        <div class="math-highlight">
+          \[\binom{3}{2} = 3\]
+        </div>
+
+        <p><strong>Korak 3d:</strong> Preostali 1 element automatski ide u komplement \(A \setminus (X \cup Y)\):</p>
+        <div class="math-highlight">
+          \[\binom{1}{1} = 1\]
+        </div>
+
+        <details>
+          <summary>&#9989; Proveri sebe: Zasto se koeficijenti mnoze?</summary>
+          <p style="margin-top: 8px;">
+            Za svaki od \(\binom{11}{5} = 462\) nacina da izaberemo presek, imamo \(\binom{6}{3} = 20\) nacina
+            da izaberemo elemente samo u \(X\), pa za svaku od tih kombinacija \(\binom{3}{2} = 3\) nacina
+            za elemente samo u \(Y\). Po pravilu proizvoda, ukupan broj nacina je proizvod svih.
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Korak 4 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <div class="step-title">Izracunavanje ukupnog broja uredjenih parova</div>
+      </div>
+      <div class="step-content">
+        <p>Po pravilu proizvoda:</p>
+        <div class="math-highlight">
+          \[\text{Broj parova } (X, Y) = \binom{11}{5} \cdot \binom{6}{3} \cdot \binom{3}{2} \cdot \binom{1}{1}\]
+        </div>
+        <div class="math-highlight">
+          \[= 462 \cdot 20 \cdot 3 \cdot 1 = 462 \cdot 60 = 27720\]
+        </div>
+
+        <details>
+          <summary>&#9989; Proveri sebe: Alternativna provera pomocu multinomnog koeficijenta</summary>
+          <p style="margin-top: 8px;">
+            Ovo je ekvivalentno multinomnom koeficijentu:
+            \[\frac{11!}{5! \cdot 3! \cdot 2! \cdot 1!} = \frac{39916800}{120 \cdot 6 \cdot 2 \cdot 1} = \frac{39916800}{1440} = 27720\]
+            Broj \(11!\) delimo faktorijellima velicina svake od cetiri grupe. Rezultat se poklapa.
+          </p>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- KLJUCNI UVID -->
+  <div class="key-insight">
+    <div class="card-title"><span class="icon">&#128161;</span> Kljucni uvid</div>
+    <p>
+      Kljuc ovog zadatka je <strong>tehnika particionisanja</strong>: umesto da direktno biramo skupove \(X\) i \(Y\),
+      posmatramo kako se svaki element skupa \(A\) razvrstava u jednu od cetiri kategorije (u oba, samo u \(X\),
+      samo u \(Y\), ni u jedan). Ovo svodi problem na jedno uzastopno biranje, cime se izbegava komplikovano
+      uslovljavanje i prebrojavanje sa preklapanjima. Isti princip se koristi u mnogim kombinatornim zadacima
+      sa vise skupova.
+    </p>
+  </div>
+
+  <!-- KONACAN ODGOVOR -->
+  <div class="card final-answer-box">
+    <div class="card-title" style="justify-content: center;"><span class="icon">&#127919;</span> Konacan odgovor</div>
+    <div class="final-answer-value">\(27720\)</div>
+    <div class="final-options">
+      <div class="final-option">(A) 1024</div>
+      <div class="final-option">(B) 3245</div>
+      <div class="final-option correct-option">(C) 27720</div>
+      <div class="final-option">(D) 87512</div>
+      <div class="final-option">(E) Nijedan od ponudjenih</div>
+    </div>
+    <p class="verification-note">Verifikacija: \(\dbinom{11}{5} \cdot \dbinom{6}{3} \cdot \dbinom{3}{2} \cdot \dbinom{1}{1} = 462 \cdot 20 \cdot 3 \cdot 1 = 27720\) &#10004;</p>
+  </div>
+
+  <!-- CESTE GRESKE -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">&#10060;</span>
+      <div>
+        <strong style="color: #f472b6;">Samostalno biranje \(X\) i \(Y\) bez kontrole preseka:</strong>
+        <span class="pitfall-text">
+          Ako bismo samo izabrali \(X\) sa 8 elemenata i \(Y\) sa 7 elemenata (\(\binom{11}{8} \cdot \binom{11}{7}\)),
+          ne bismo kontrolisali velicinu preseka \(|X \cap Y| = 5\). Dobili bismo mnogo vise parova
+          nego sto ih zaista ima sa zadatim uslovom.
+        </span>
+      </div>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">&#10060;</span>
+      <div>
+        <strong style="color: #f472b6;">Zaboravljanje da su parovi uredjeni:</strong>
+        <span class="pitfall-text">
+          Par \((X, Y)\) je uredjen, sto znaci da su \((X, Y)\) i \((Y, X)\) razliciti parovi
+          (osim ako su \(X\) i \(Y\) jednaki, sto ovde nije moguce jer imaju razlicit broj elemenata).
+          U ovom zadatku to ne menja racun jer vec biramo za \(X\) i \(Y\) odvojeno, ali je vazno
+          razumeti da je redosled bitan.
+        </span>
+      </div>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">&#10060;</span>
+      <div>
+        <strong style="color: #f472b6;">Greska u odredjivanju broja elemenata po grupama:</strong>
+        <span class="pitfall-text">
+          Cesta greska je pogresno izracunati \(|X \setminus Y|\) ili \(|Y \setminus X|\). Treba paziti:
+          \(|X \setminus Y| = |X| - |X \cap Y| = 8 - 5 = 3\), a ne \(8 - 7 = 1\) ili neka druga vrednost.
+          Slicno, \(|Y \setminus X| = 7 - 5 = 2\).
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DODATNI IZAZOV -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127947;</span> Dodatni izazov</div>
+    <p class="challenge-text">
+      Koliko ima uredjenih parova \((X, Y)\) takvih da je \(X \subset A\), \(Y \subset A\),
+      \(|X| = 8\), \(|Y| = 7\), ali bez uslova na velicinu preseka? Proveriti da li se
+      dobija zbir po svim mogucim vrednostima \(|X \cap Y|\) od 4 do 7.
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="margin-top: 8px;">
+        Bez uslova na presek, odgovor je prosto \(\binom{11}{8} \cdot \binom{11}{7} = 165 \cdot 330 = 54450\).
+        Moguce vrednosti preseka su \(|X \cap Y| \in \{4, 5, 6, 7\}\) (jer \(|X| + |Y| - |A| = 8 + 7 - 11 = 4\)
+        je minimum, a \(\min(|X|, |Y|) = 7\) je maksimum). Proveriti:
+        \[\sum_{k=4}^{7} \frac{11!}{k! \cdot (8-k)! \cdot (7-k)! \cdot (k-4)!} = 54450\]
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = rect.height;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // --- Venn Diagram ---
+    const cx = W * 0.5;
+    const cy = H * 0.5;
+    const rX = Math.min(W * 0.22, H * 0.32);
+    const rY = Math.min(W * 0.20, H * 0.30);
+    const offset = rX * 0.55;
+
+    const cxX = cx - offset * 0.45;
+    const cxY = cx + offset * 0.45;
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Particija skupa A = {a\u2081, a\u2082, \u2026, a\u2081\u2081}', cx, 24);
+
+    // Universal set rectangle
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    const rectPad = 24;
+    const rectX = cx - rX - offset - rectPad;
+    const rectY = cy - rY - rectPad - 10;
+    const rectW = 2 * (rX + offset + rectPad);
+    const rectH = 2 * (rY + rectPad + 10);
+    ctx.beginPath();
+    ctx.roundRect(rectX, rectY, rectW, rectH, 12);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label A
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('A (11 elemenata)', rectX + 10, rectY + 18);
+
+    // Circle X (left)
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(cxX, cy, rX, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // Fill X only region (subtle)
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#60a5fa';
+    ctx.beginPath();
+    ctx.arc(cxX, cy, rX, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+
+    // Circle Y (right)
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(cxY, cy, rY, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // Fill Y only region (subtle)
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#a78bfa';
+    ctx.beginPath();
+    ctx.arc(cxY, cy, rY, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+
+    // Fill intersection (brighter)
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = '#34d399';
+    ctx.beginPath();
+    ctx.arc(cxX, cy, rX, 0, 2 * Math.PI);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.arc(cxY, cy, rY, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+
+    // Labels for each region
+    const midX = (cxX + cxY) / 2;
+
+    // X cap Y (center)
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('5', midX, cy - 2);
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('X \u2229 Y', midX, cy + 18);
+
+    // X \ Y (left)
+    const xOnlyX = cxX - rX * 0.45;
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('3', xOnlyX, cy - 2);
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('X \\ Y', xOnlyX, cy + 18);
+
+    // Y \ X (right)
+    const yOnlyX = cxY + rY * 0.45;
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('2', yOnlyX, cy - 2);
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Y \\ X', yOnlyX, cy + 18);
+
+    // Outside (neither) - top right corner of the rectangle
+    const outsideX = rectX + rectW - 40;
+    const outsideY = rectY + 40;
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('1', outsideX, outsideY);
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('ni X ni Y', outsideX, outsideY + 16);
+
+    // Circle labels
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('X (|X|=8)', cxX, cy - rX - 10);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('Y (|Y|=7)', cxY, cy - rY - 10);
+
+    // Bottom: formula
+    const formulaY = H - 26;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Broj parova = C(11,5) \u00B7 C(6,3) \u00B7 C(3,2) \u00B7 C(1,1) = 462 \u00B7 20 \u00B7 3 \u00B7 1 = 27720', cx, formulaY);
+
+    // Arrows with binomial labels
+    const arrowData = [
+      { label: 'C(11,5)', x: midX, y: cy + 38, color: '#34d399' },
+      { label: 'C(6,3)', x: xOnlyX, y: cy + 38, color: '#60a5fa' },
+      { label: 'C(3,2)', x: yOnlyX, y: cy + 38, color: '#a78bfa' },
+      { label: 'C(1,1)', x: outsideX, y: outsideY + 30, color: '#fbbf24' }
+    ];
+
+    arrowData.forEach(function(d) {
+      ctx.fillStyle = d.color;
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(d.label, d.x, d.y);
+    });
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Broj uredjenih parova podskupova sa zadatim presekom",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "podskupovi", "binomni koeficijent", "princip particije", "Venov dijagram", "multinomni koeficijent"]
+}
+BRAINSPARK_META-->

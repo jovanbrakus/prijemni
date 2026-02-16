@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prebrojavanje uređenih parova sa uslovom |x - y| >= 2</title>
+
+  <script type="text/info" id="logic-scratchpad">
+    PROBLEM:
+    Dat je skup A = {1, 2, ..., 2019} i B = {(x, y) iz A x A | |x - y| >= 2}.
+    Traženo: broj elemenata skupa B.
+
+    REŠENJE:
+    Strategija: Komplementarno prebrojavanje.
+    Ukupan broj uređenih parova (x, y) u A x A je 2019^2.
+    Prebrojaćemo parove za koje uslov NIJE ispunjen, tj. |x - y| < 2, pa oduzeti od ukupnog broja.
+
+    |x - y| < 2 znači |x - y| ∈ {0, 1}.
+
+    Slučaj 1: |x - y| = 0, tj. x = y.
+    Broj ovakvih parova: 2019 (dijagonala: (1,1), (2,2), ..., (2019,2019)).
+
+    Slučaj 2: |x - y| = 1, tj. x - y = 1 ili y - x = 1.
+    - Parovi (x, y) gde je x - y = 1:
+      x može biti 2, 3, ..., 2019, a y = x - 1.
+      Broj parova: 2018.
+    - Parovi (x, y) gde je y - x = 1:
+      x može biti 1, 2, ..., 2018, a y = x + 1.
+      Broj parova: 2018.
+    Ukupno za |x - y| = 1: 2 * 2018 = 4036.
+
+    Broj parova koji NE ispunjavaju uslov:
+    2019 + 4036 = 6055.
+
+    Broj elemenata skupa B:
+    |B| = 2019^2 - 6055
+        = 2019^2 - 2019 - 4036
+        = 2019(2019 - 1) - 4036
+        = 2019 * 2018 - 4036
+        = 2019 * 2018 - 2 * 2018
+        = 2018 * (2019 - 2)
+        = 2018 * 2017
+
+    ODGOVOR: 2018 * 2017
+    Tačan odgovor je (C).
+
+    VERIFIKACIJA:
+    Proverimo na malom primeru. Neka je A = {1, 2, 3} (n = 3).
+    A x A ima 9 parova.
+    B = {(x,y) | |x-y| >= 2}.
+    Parovi: (1,3) i (3,1) — to su jedini parovi sa |x-y| >= 2.
+    |B| = 2.
+    Formula: (n-1)(n-2) = 2*1 = 2. Tačno!
+
+    Neka je A = {1, 2, 3, 4} (n = 4).
+    Parovi sa |x-y| >= 2: (1,3),(1,4),(2,4),(3,1),(4,1),(4,2) = 6.
+    Formula: 3*2 = 6. Tačno!
+
+    Ponuđeni odgovori:
+    (A) 2019^2 — netačno (to je ukupan broj svih parova)
+    (B) 2^2019 — netačno (nema veze sa brojem parova)
+    (C) 2018 * 2017 — TAČNO
+    (D) 2018! — netačno (drastično prevelik broj)
+    (E) C(2018, 2) — netačno (to je 2018*2017/2, polovina tačnog odgovora)
+  </script>
+
+  <script>
+  MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]']]
+    },
+    svg: { fontCache: 'global' }
+  };
+  </script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    .card h2 {
+      color: #60a5fa;
+      font-size: 1.4rem;
+      margin-bottom: 16px;
+    }
+
+    .card h3 {
+      color: #e2e8f0;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .given-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .given-item {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px 18px;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .given-item .label {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+
+    .given-item .value {
+      color: #e2e8f0;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .answer-option {
+      transition: border-color 0.2s;
+    }
+
+    .answer-option:hover {
+      border-color: #60a5fa;
+    }
+
+    .math-block {
+      background: rgba(56,189,248,0.08);
+      border: 1px solid rgba(56,189,248,0.15);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 12px 0;
+      font-family: 'Courier New', monospace;
+      overflow-x: auto;
+    }
+
+    .plan-card {
+      border-left: 3px solid #a78bfa;
+    }
+
+    .plan-card p {
+      color: #e2e8f0;
+      font-size: 1.05rem;
+    }
+
+    details {
+      margin: 15px 0;
+    }
+
+    details summary {
+      cursor: pointer;
+      color: #60a5fa;
+      font-weight: 600;
+      font-size: 1.05rem;
+      padding: 8px 0;
+      user-select: none;
+    }
+
+    details summary:hover {
+      color: #93c5fd;
+    }
+
+    details[open] summary {
+      margin-bottom: 12px;
+    }
+
+    .theory-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .theory-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+      color: #e2e8f0;
+    }
+
+    .theory-list li:last-child {
+      border-bottom: none;
+    }
+
+    .step-container {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .step-container:hover,
+    .step-container.active {
+      background: rgba(96, 165, 250, 0.05);
+      border-left-color: #4ade80;
+    }
+
+    .step-badge {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-content p {
+      margin-bottom: 8px;
+    }
+
+    .note {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    .checkpoint {
+      background: rgba(96, 165, 250, 0.06);
+      border: 1px solid rgba(96, 165, 250, 0.15);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 15px 0;
+    }
+
+    .checkpoint summary {
+      color: #a78bfa;
+      font-size: 0.95rem;
+    }
+
+    .checkpoint p {
+      color: #e2e8f0;
+      margin-top: 8px;
+    }
+
+    .insight-box {
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .insight-box h2 {
+      color: #a78bfa;
+      margin-bottom: 14px;
+    }
+
+    .insight-formula {
+      font-size: 1.4rem;
+      color: #4ade80;
+      margin: 12px 0;
+    }
+
+    .final-answer-card {
+      border: 2px solid #4ade80;
+      text-align: center;
+    }
+
+    .final-answer-card h2 {
+      color: #4ade80;
+    }
+
+    .final-answer-value {
+      font-size: 1.8rem;
+      color: #4ade80;
+      font-weight: 800;
+      margin: 16px 0;
+    }
+
+    .options-final {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .option-final {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 2px solid #334155;
+      background: rgba(30, 41, 59, 0.5);
+      color: #94a3b8;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .option-final.correct {
+      border-color: #4ade80;
+      background: rgba(52, 211, 153, 0.1);
+      color: #4ade80;
+      font-weight: 700;
+    }
+
+    .verification {
+      background: rgba(52, 211, 153, 0.06);
+      border: 1px solid rgba(52, 211, 153, 0.15);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 16px;
+      text-align: left;
+    }
+
+    .verification h3 {
+      color: #34d399;
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    .pitfall-card {
+      border-left: 3px solid #e09468;
+    }
+
+    .pitfall-card h2 {
+      color: #e09468;
+    }
+
+    .pitfall-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .pitfall-list li {
+      padding: 8px 0;
+      color: #e2e8f0;
+    }
+
+    .pitfall-list li::before {
+      content: "!";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(224, 148, 104, 0.2);
+      color: #e09468;
+      font-weight: 700;
+      font-size: 0.8rem;
+      margin-right: 10px;
+    }
+
+    .challenge-card {
+      border-left: 3px solid #f472b6;
+    }
+
+    .challenge-card h2 {
+      color: #f472b6;
+    }
+
+    canvas {
+      touch-action: none;
+      border-radius: 12px;
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+
+    .canvas-hint {
+      color: #94a3b8;
+      text-align: center;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .slider-container label {
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+
+    .slider-container input[type="range"] {
+      width: 200px;
+      accent-color: #60a5fa;
+    }
+
+    .slider-container .slider-value {
+      color: #60a5fa;
+      font-weight: 700;
+      font-size: 1rem;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    @media (max-width: 700px) {
+      h1 { font-size: 1.6rem; }
+      .container { padding: 16px 12px; }
+      .card { padding: 16px; }
+      .given-grid { gap: 8px; }
+      .given-item { min-width: 80px; padding: 10px 12px; }
+      .step-container { padding: 10px; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- a. Title & Subtitle -->
+    <h1>Prebrojavanje uređenih parova u Dekartovom proizvodu</h1>
+    <p class="subtitle">Kombinatorika — komplementarno prebrojavanje uređenih parova sa uslovom na apsolutnu razliku</p>
+
+    <!-- b. Problem Statement -->
+    <div class="card problem-statement">
+      <h2>Postavka zadatka</h2>
+      <p>Neka je \(A = \{1, 2, \ldots, 2019\}\) i \(B = \{(x, y) \in A \times A \mid |x - y| \geq 2\}\). Broj elemenata skupa \(B\) jeste:</p>
+
+      <div class="given-grid">
+        <div class="given-item">
+          <div class="label">Skup</div>
+          <div class="value">\(A = \{1, 2, \ldots, 2019\}\)</div>
+        </div>
+        <div class="given-item">
+          <div class="label">Uslov</div>
+          <div class="value">\(|x - y| \geq 2\)</div>
+        </div>
+        <div class="given-item">
+          <div class="label">Traži se</div>
+          <div class="value">\(|B| = \, ?\)</div>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 20px; color: #94a3b8; font-size: 0.95rem;">Ponuđeni odgovori:</h3>
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">
+          <div class="label">(A)</div>
+          <div class="value">\(2019^2\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="B">
+          <div class="label">(B)</div>
+          <div class="value">\(2^{2019}\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="C">
+          <div class="label">(C)</div>
+          <div class="value">\(2018 \cdot 2017\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="D">
+          <div class="label">(D)</div>
+          <div class="value">\(2018!\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="E">
+          <div class="label">(E)</div>
+          <div class="value">\(\displaystyle\binom{2018}{2}\)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- c. Plan -->
+    <div class="card plan-card">
+      <h2>Plan rešavanja</h2>
+      <p>Koristićemo <strong>komplementarno prebrojavanje</strong>: od ukupnog broja uređenih parova u \(A \times A\) oduzećemo one koji ne zadovoljavaju uslov, tj. parove za koje je \(|x - y| < 2\). To su parovi sa \(|x - y| = 0\) ili \(|x - y| = 1\).</p>
+    </div>
+
+    <!-- d. Theory Refresher -->
+    <div class="card">
+      <details>
+        <summary>Ključne formule i teoreme</summary>
+        <ul class="theory-list">
+          <li><strong>Dekartov proizvod:</strong> \(A \times A\) je skup svih uređenih parova \((x, y)\) gde su \(x, y \in A\). Ako \(|A| = n\), tada \(|A \times A| = n^2\).</li>
+          <li><strong>Komplementarno prebrojavanje:</strong> \(|B| = |A \times A| - |B^c|\), gde je \(B^c\) skup parova koji ne zadovoljavaju uslov.</li>
+          <li><strong>Apsolutna vrednost razlike:</strong> \(|x - y| < 2\) znači \(-2 < x - y < 2\), tj. \(x - y \in \{-1, 0, 1\}\).</li>
+          <li><strong>Prebrojavanje dijagonala u matrici:</strong> Glavna dijagonala (gde \(x = y\)) ima \(n\) elemenata. Sporedne dijagonale (gde \(|x-y| = 1\)) imaju po \(n-1\) elemenata.</li>
+        </ul>
+      </details>
+    </div>
+
+    <!-- e. Visual Aid — Interactive Canvas -->
+    <div class="card">
+      <h2>Vizuelni prikaz — Matrica parova</h2>
+      <canvas id="mainCanvas" width="700" height="520"></canvas>
+      <div class="slider-container">
+        <label for="nSlider">Veličina skupa \(n\):</label>
+        <input type="range" id="nSlider" min="3" max="10" value="6">
+        <span class="slider-value" id="nValue">6</span>
+      </div>
+      <p class="canvas-hint">Pomerajte klizač da vidite kako se broj parova menja sa veličinom skupa. Plavi parovi zadovoljavaju uslov \(|x - y| \geq 2\).</p>
+    </div>
+
+    <!-- f. Step-by-Step Solution -->
+    <div class="card">
+      <h2>Rešenje korak po korak</h2>
+
+      <div class="step-container" id="step1">
+        <div class="step-badge">1</div>
+        <div class="step-content">
+          <h3>Odredimo ukupan broj parova u \(A \times A\)</h3>
+          <p>Skup \(A\) ima \(2019\) elemenata. Dekartov proizvod \(A \times A\) sadrži sve uređene parove \((x, y)\), gde su \(x\) i \(y\) nezavisno birani iz \(A\).</p>
+          <div class="math-block">
+            \[|A \times A| = 2019 \cdot 2019 = 2019^2\]
+          </div>
+        </div>
+      </div>
+
+      <div class="step-container" id="step2">
+        <div class="step-badge">2</div>
+        <div class="step-content">
+          <h3>Definišemo komplement — parovi koji NE zadovoljavaju uslov</h3>
+          <p>Uslov je \(|x - y| \geq 2\). Komplement ovog uslova je \(|x - y| < 2\), što znači da je \(|x - y| \in \{0, 1\}\).</p>
+          <p>Označimo sa \(B^c\) skup parova koji ne ulaze u \(B\):</p>
+          <div class="math-block">
+            \[B^c = \{(x, y) \in A \times A \mid |x - y| = 0\} \cup \{(x, y) \in A \times A \mid |x - y| = 1\}\]
+          </div>
+        </div>
+      </div>
+
+      <div class="step-container" id="step3">
+        <div class="step-badge">3</div>
+        <div class="step-content">
+          <h3>Prebrojimo parove sa \(|x - y| = 0\)</h3>
+          <p>Uslov \(|x - y| = 0\) znači \(x = y\). To su parovi na glavnoj dijagonali:</p>
+          <div class="math-block">
+            \[(1,1),\; (2,2),\; (3,3),\; \ldots,\; (2019,2019)\]
+          </div>
+          <p>Takvih parova ima tačno:</p>
+          <div class="math-block">
+            \[2019\]
+          </div>
+        </div>
+      </div>
+
+      <details class="checkpoint">
+        <summary>Proveri sebe: U skupu \(A = \{1, 2, 3, 4\}\), koliko parova zadovoljava \(x = y\)?</summary>
+        <p>Tačno 4 para: \((1,1), (2,2), (3,3), (4,4)\). Uvek ih ima koliko i elemenata skupa.</p>
+      </details>
+
+      <div class="step-container" id="step4">
+        <div class="step-badge">4</div>
+        <div class="step-content">
+          <h3>Prebrojimo parove sa \(|x - y| = 1\)</h3>
+          <p>Ovaj uslov obuhvata dva slučaja:</p>
+          <p><strong>Slučaj \(x - y = 1\):</strong> To znači \(x = y + 1\). Kako \(y\) može biti \(1, 2, \ldots, 2018\), a tada je \(x = 2, 3, \ldots, 2019\).</p>
+          <div class="math-block">
+            \[\text{Broj parova sa } x - y = 1: \quad 2018\]
+          </div>
+          <p><strong>Slučaj \(y - x = 1\):</strong> To znači \(y = x + 1\). Kako \(x\) može biti \(1, 2, \ldots, 2018\), a tada je \(y = 2, 3, \ldots, 2019\).</p>
+          <div class="math-block">
+            \[\text{Broj parova sa } y - x = 1: \quad 2018\]
+          </div>
+          <p>Ukupno parova sa \(|x - y| = 1\):</p>
+          <div class="math-block">
+            \[2018 + 2018 = 2 \cdot 2018 = 4036\]
+          </div>
+          <p class="note">Ovo su parovi na dve „sporedne dijagonale" neposredno uz glavnu dijagonalu matrice.</p>
+        </div>
+      </div>
+
+      <details class="checkpoint">
+        <summary>Proveri sebe: Koliko je ukupno parova u \(B^c\) (koji ne zadovoljavaju uslov)?</summary>
+        <p>\(|B^c| = 2019 + 4036 = 6055\). To su svi parovi sa \(|x - y| = 0\) ili \(|x - y| = 1\).</p>
+      </details>
+
+      <div class="step-container" id="step5">
+        <div class="step-badge">5</div>
+        <div class="step-content">
+          <h3>Izračunamo \(|B|\) komplementarnim prebrojavanjem</h3>
+          <p>Sada od ukupnog broja parova oduzimamo one koji ne zadovoljavaju uslov:</p>
+          <div class="math-block">
+            \[|B| = |A \times A| - |B^c| = 2019^2 - 2019 - 4036\]
+          </div>
+        </div>
+      </div>
+
+      <div class="step-container" id="step6">
+        <div class="step-badge">6</div>
+        <div class="step-content">
+          <h3>Pojednostavimo izraz</h3>
+          <p>Izdvajamo zajednički faktor korak po korak:</p>
+          <div class="math-block">
+            \[2019^2 - 2019 - 4036\]
+          </div>
+          <p>Primetimo da je \(2019^2 - 2019 = 2019 \cdot (2019 - 1) = 2019 \cdot 2018\):</p>
+          <div class="math-block">
+            \[= 2019 \cdot 2018 - 4036\]
+          </div>
+          <p>Takođe, \(4036 = 2 \cdot 2018\), pa možemo izdvojiti \(2018\):</p>
+          <div class="math-block">
+            \[= 2019 \cdot 2018 - 2 \cdot 2018 = 2018 \cdot (2019 - 2) = 2018 \cdot 2017\]
+          </div>
+        </div>
+      </div>
+
+      <details class="checkpoint">
+        <summary>Proveri sebe: Da li je \(\binom{2018}{2}\) isti rezultat kao \(2018 \cdot 2017\)?</summary>
+        <p>Ne! \(\binom{2018}{2} = \dfrac{2018 \cdot 2017}{2} = 1009 \cdot 2017\). To je tačno polovina od \(2018 \cdot 2017\). Binomni koeficijent broji <em>neuređene</em> parove, dok mi brojimo <em>uređene</em> parove \((x, y)\).</p>
+      </details>
+    </div>
+
+    <!-- g. Key Insight -->
+    <div class="insight-box">
+      <h2>Ključni uvid</h2>
+      <p>U matrici \(A \times A\), skup \(B^c\) (komplement) čine tri dijagonale: glavna dijagonala (\(x = y\)) i dve sporedne (\(|x - y| = 1\)). Sve ostale ćelije pripadaju skupu \(B\).</p>
+      <div class="insight-formula">
+        \[|B| = n^2 - n - 2(n-1) = n^2 - 3n + 2 = (n-1)(n-2)\]
+      </div>
+      <p style="color: #94a3b8;">Za \(n = 2019\): \(\;|B| = 2018 \cdot 2017\)</p>
+    </div>
+
+    <!-- h. Final Answer -->
+    <div class="card final-answer-card">
+      <h2>Konačan odgovor</h2>
+      <div class="final-answer-value">\(|B| = 2018 \cdot 2017\)</div>
+
+      <div class="options-final">
+        <div class="option-final">(A) \(2019^2\)</div>
+        <div class="option-final">(B) \(2^{2019}\)</div>
+        <div class="option-final correct">(C) \(2018 \cdot 2017\)</div>
+        <div class="option-final">(D) \(2018!\)</div>
+        <div class="option-final">(E) \(\binom{2018}{2}\)</div>
+      </div>
+
+      <div class="verification">
+        <h3>Verifikacija</h3>
+        <p>Proverimo formulu \(|B| = (n-1)(n-2)\) na malom primeru. Neka je \(A = \{1, 2, 3\}\), tj. \(n = 3\).</p>
+        <p>Svi parovi u \(A \times A\) (ukupno 9):</p>
+        <div class="math-block">
+          \[(1,1),\, (1,2),\, (1,3),\, (2,1),\, (2,2),\, (2,3),\, (3,1),\, (3,2),\, (3,3)\]
+        </div>
+        <p>Parovi sa \(|x - y| \geq 2\): samo \((1,3)\) i \((3,1)\). Dakle, \(|B| = 2\).</p>
+        <div class="math-block">
+          \[(n-1)(n-2) = 2 \cdot 1 = 2 \quad \checkmark\]
+        </div>
+        <p>Za \(n = 5\): ručno prebrojimo — parovi sa \(|x-y| \geq 2\) su: \((1,3), (1,4), (1,5), (2,4), (2,5), (3,5), (3,1), (4,1), (4,2), (5,1), (5,2), (5,3)\) — ukupno 12.</p>
+        <div class="math-block">
+          \[(n-1)(n-2) = 4 \cdot 3 = 12 \quad \checkmark\]
+        </div>
+        <p style="color: #94a3b8; margin-top: 8px;">Napomena: Odgovor (E) \(\binom{2018}{2} = \frac{2018 \cdot 2017}{2}\) bio bi tačan da se traže neuređeni parovi \(\{x, y\}\), ali pošto je \(B \subseteq A \times A\), parovi su uređeni — redosled je bitan!</p>
+      </div>
+    </div>
+
+    <!-- i. Common Pitfalls -->
+    <div class="card pitfall-card">
+      <h2>Najčešće greške</h2>
+      <ul class="pitfall-list">
+        <li>Izabrati odgovor \(\binom{2018}{2}\) misleći da su parovi neuređeni. Pošto je \(B \subseteq A \times A\), par \((1, 5)\) i par \((5, 1)\) su dva <em>različita</em> elementa skupa \(B\). Zato je tačan odgovor dvostruko veći od binomnog koeficijenta.</li>
+        <li>Zaboraviti da je \(|x - y| = 1\) dvosmerno — obuhvata i \(x - y = 1\) i \(y - x = 1\). Ako se prebroji samo jedan smer, dobija se 2018 umesto 4036, što dovodi do pogrešnog rezultata.</li>
+      </ul>
+    </div>
+
+    <!-- j. Optional Challenge -->
+    <div class="card challenge-card">
+      <h2>Dodatni izazov</h2>
+      <p>Za skup \(A = \{1, 2, \ldots, n\}\), koliko ima uređenih parova \((x, y) \in A \times A\) takvih da je \(|x - y| \geq k\), gde je \(k\) proizvoljan prirodan broj \((1 \leq k \leq n)\)?</p>
+      <details>
+        <summary>Hint</summary>
+        <p>Koristite isti pristup: komplementarno prebrojavanje. Komplement obuhvata parove sa \(|x - y| \in \{0, 1, 2, \ldots, k-1\}\). Za svaku fiksiranu razliku \(d\), parova sa \(|x-y| = d\) ima \(2(n - d)\) (osim za \(d = 0\), gde ih ima \(n\)). Sumirajte i oduzimajte od \(n^2\). Rezultat je \((n - k + 1)(n - k)\).</p>
+      </details>
+    </div>
+
+  </div>
+
+  <script>
+  (() => {
+    // Step click interaction
+    const steps = document.querySelectorAll('.step-container');
+    steps.forEach(step => {
+      step.addEventListener('click', () => {
+        steps.forEach(s => s.classList.remove('active'));
+        step.classList.add('active');
+      });
+    });
+
+    // Canvas diagram — interactive grid visualization
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    const slider = document.getElementById('nSlider');
+    const nValueSpan = document.getElementById('nValue');
+
+    function drawGrid(n) {
+      ctx.clearRect(0, 0, W, H);
+
+      // Background
+      ctx.fillStyle = '#0c1222';
+      ctx.fillRect(0, 0, W, H);
+
+      // Calculate cell size and offset for centering
+      const maxGridSize = Math.min(W - 120, H - 140);
+      const cellSize = Math.floor(maxGridSize / n);
+      const gridSize = cellSize * n;
+      const offsetX = Math.floor((W - gridSize) / 2) + 30;
+      const offsetY = 60;
+
+      // Title
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Matrica parova A \u00D7 A  (n = ' + n + ')', W / 2, 28);
+
+      // Axis labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('x', offsetX + gridSize / 2, offsetY - 20);
+      ctx.save();
+      ctx.translate(offsetX - 30, offsetY + gridSize / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('y', 0, 0);
+      ctx.restore();
+
+      // Count categories
+      let countB = 0;
+      let countDiag = 0;
+      let countAdj = 0;
+
+      // Draw cells
+      for (let x = 1; x <= n; x++) {
+        for (let y = 1; y <= n; y++) {
+          const cx = offsetX + (x - 1) * cellSize;
+          const cy = offsetY + (y - 1) * cellSize;
+          const diff = Math.abs(x - y);
+
+          let fillColor;
+          if (diff === 0) {
+            fillColor = 'rgba(244, 114, 182, 0.35)'; // Pink — diagonal (x = y)
+            countDiag++;
+          } else if (diff === 1) {
+            fillColor = 'rgba(167, 139, 250, 0.30)'; // Purple — |x-y| = 1
+            countAdj++;
+          } else {
+            fillColor = 'rgba(96, 165, 250, 0.25)'; // Blue — |x-y| >= 2 (in B)
+            countB++;
+          }
+
+          ctx.fillStyle = fillColor;
+          ctx.fillRect(cx + 1, cy + 1, cellSize - 2, cellSize - 2);
+
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(cx, cy, cellSize, cellSize);
+
+          // Draw cell labels for small grids
+          if (n <= 8) {
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = (cellSize > 40 ? '11' : '9') + 'px "Segoe UI", system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('(' + x + ',' + y + ')', cx + cellSize / 2, cy + cellSize / 2);
+          }
+        }
+      }
+
+      // Row/Column headers
+      ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
+      ctx.textBaseline = 'middle';
+      for (let i = 1; i <= n; i++) {
+        // X-axis header
+        ctx.fillStyle = '#60a5fa';
+        ctx.textAlign = 'center';
+        ctx.fillText(i.toString(), offsetX + (i - 1) * cellSize + cellSize / 2, offsetY - 8);
+        // Y-axis header
+        ctx.fillStyle = '#60a5fa';
+        ctx.textAlign = 'right';
+        ctx.fillText(i.toString(), offsetX - 8, offsetY + (i - 1) * cellSize + cellSize / 2);
+      }
+
+      // Legend
+      const legendY = offsetY + gridSize + 30;
+      const legendItems = [
+        { color: 'rgba(96, 165, 250, 0.5)', label: '|x \u2212 y| \u2265 2  (u skupu B)', count: countB },
+        { color: 'rgba(244, 114, 182, 0.6)', label: '|x \u2212 y| = 0  (x = y)', count: countDiag },
+        { color: 'rgba(167, 139, 250, 0.5)', label: '|x \u2212 y| = 1', count: countAdj },
+      ];
+
+      const legendSpacing = 220;
+      const legendStartX = W / 2 - (legendItems.length * legendSpacing) / 2 + 20;
+
+      legendItems.forEach((item, i) => {
+        const lx = legendStartX + i * legendSpacing;
+
+        ctx.fillStyle = item.color;
+        ctx.fillRect(lx, legendY, 16, 16);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(lx, legendY, 16, 16);
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(item.label + ': ' + item.count, lx + 22, legendY + 8);
+      });
+
+      // Summary
+      const summaryY = legendY + 40;
+      ctx.textAlign = 'center';
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText('Ukupno parova: ' + (n * n) + '   |   B\u1D9C = ' + countDiag + ' + ' + countAdj + ' = ' + (countDiag + countAdj), W / 2, summaryY);
+
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 15px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText('|B| = ' + (n * n) + ' \u2212 ' + (countDiag + countAdj) + ' = ' + countB + '   =   (n\u22121)(n\u22122) = ' + (n - 1) + ' \u00D7 ' + (n - 2) + ' = ' + ((n - 1) * (n - 2)), W / 2, summaryY + 24);
+    }
+
+    function update() {
+      var n = parseInt(slider.value, 10);
+      nValueSpan.textContent = n;
+      drawGrid(n);
+    }
+
+    slider.addEventListener('input', update);
+    update();
+  })();
+  </script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Prebrojavanje uređenih parova sa uslovom na apsolutnu razliku",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "Dekartov proizvod", "komplementarno prebrojavanje", "uređeni parovi", "apsolutna vrednost"]
+}
+BRAINSPARK_META-->

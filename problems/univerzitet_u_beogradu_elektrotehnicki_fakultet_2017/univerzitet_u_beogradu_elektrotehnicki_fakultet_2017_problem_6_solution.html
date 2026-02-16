@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Izvod kompozitne funkcije</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Data je f(x) = x - sin(pi*x)*cos(pi*x) + ln(2x)/x + e^(tan(2*pi*x))
+Naci f'(1/2).
+
+Korak 1: Razbijmo f(x) na cetiri sabirka:
+  g1(x) = x
+  g2(x) = -sin(pi*x)*cos(pi*x)
+  g3(x) = ln(2x)/x
+  g4(x) = e^(tan(2*pi*x))
+
+Korak 2: Izvod g1(x) = x
+  g1'(x) = 1
+  g1'(1/2) = 1
+
+Korak 3: Izvod g2(x) = -sin(pi*x)*cos(pi*x)
+  Koristimo identitet: sin(a)*cos(a) = (1/2)*sin(2a)
+  g2(x) = -(1/2)*sin(2*pi*x)
+  g2'(x) = -(1/2)*cos(2*pi*x)*2*pi = -pi*cos(2*pi*x)
+  g2'(1/2) = -pi*cos(2*pi*(1/2)) = -pi*cos(pi) = -pi*(-1) = pi
+
+Korak 4: Izvod g3(x) = ln(2x)/x
+  Koristimo pravilo kolicnika: (u/v)' = (u'v - uv')/v^2
+  u = ln(2x), u' = 1/(2x)*2 = 1/x
+  v = x, v' = 1
+  g3'(x) = (1/x * x - ln(2x)*1) / x^2 = (1 - ln(2x)) / x^2
+  g3'(1/2) = (1 - ln(2*(1/2))) / (1/2)^2 = (1 - ln(1)) / (1/4) = (1 - 0) / (1/4) = 4
+
+Korak 5: Izvod g4(x) = e^(tan(2*pi*x))
+  g4'(x) = e^(tan(2*pi*x)) * (1/cos^2(2*pi*x)) * 2*pi
+  Na x = 1/2:
+    tan(2*pi*(1/2)) = tan(pi) = 0
+    cos(2*pi*(1/2)) = cos(pi) = -1
+    g4'(1/2) = e^0 * (1/(-1)^2) * 2*pi = 1 * 1 * 2*pi = 2*pi
+
+Korak 6: Zbir
+  f'(1/2) = g1'(1/2) + g2'(1/2) + g3'(1/2) + g4'(1/2)
+           = 1 + pi + 4 + 2*pi
+           = 5 + 3*pi
+
+Odgovor: (B) 5 + 3*pi
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  overflow-x: auto;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.18);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.given-item:hover {
+  transform: translateY(-2px);
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+}
+
+/* Plan card */
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card h2 {
+  color: #a78bfa;
+}
+
+/* Details/collapsible */
+details {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+details ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+details li {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+details li:last-child {
+  border-bottom: none;
+}
+
+/* Canvas card */
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  width: 100%;
+  max-width: 700px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+/* Steps */
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+/* Checkpoint */
+.checkpoint {
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.18);
+}
+
+.checkpoint summary {
+  color: #34d399;
+}
+
+/* Key insight */
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.25);
+}
+
+.insight-card h2 {
+  color: #a78bfa;
+}
+
+/* Final answer */
+.final-answer {
+  border: 2px solid rgba(74,222,128,0.3);
+  background: linear-gradient(135deg, rgba(74,222,128,0.06), rgba(52,211,153,0.04));
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.answer-big {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.option-box {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  text-align: center;
+  min-width: 90px;
+  transition: transform 0.2s;
+}
+
+.option-box.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  transform: scale(1.05);
+}
+
+.option-box .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.option-box .opt-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.option-box.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+}
+
+/* Pitfalls */
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: rgba(224,148,104,0.06);
+  border-left: 3px solid #e09468;
+  border-radius: 0 8px 8px 0;
+  color: #e2e8f0;
+}
+
+.pitfall-list li strong {
+  color: #e09468;
+}
+
+/* Challenge */
+.challenge-card {
+  border: 1px solid rgba(244,114,182,0.2);
+  background: rgba(244,114,182,0.04);
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+/* Function label badges */
+.fn-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.fn-badge-1 { background: rgba(96,165,250,0.15); color: #60a5fa; }
+.fn-badge-2 { background: rgba(167,139,250,0.15); color: #a78bfa; }
+.fn-badge-3 { background: rgba(244,114,182,0.15); color: #f472b6; }
+.fn-badge-4 { background: rgba(52,211,153,0.15); color: #34d399; }
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { flex-direction: column; }
+  .options-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Izvod kompozitne funkcije</h1>
+  <p class="subtitle">Diferenciranje, trigonometrijski identiteti, pravilo kolicnika i izvod eksponencijalne funkcije</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Data je funkcija:</p>
+    <div class="math-box">
+      \[ f(x) = x - \sin(\pi x) \cdot \cos(\pi x) + \frac{\ln 2x}{x} + e^{\tan(2\pi x)} \]
+    </div>
+    <p>Odrediti vrednost \(f'\!\left(\dfrac{1}{2}\right)\).</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(5 + 3\pi\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(3\pi\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(5\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(e\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Funkcija se sastoji od cetiri sabirka. Svaki cemo diferencirati posebno koristeci odgovarajuca pravila (trigonometrijski identitet, pravilo kolicnika, lancano pravilo), a zatim cemo izracunati vrednost svakog izvoda u tacki \(x = \frac{1}{2}\) i sabrati rezultate.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <details>
+    <summary>Kljucne formule i teoreme</summary>
+    <ul>
+      <li><strong>Trigonometrijski identitet duplog ugla:</strong> \(\sin \alpha \cdot \cos \alpha = \dfrac{1}{2}\sin 2\alpha\)</li>
+      <li><strong>Pravilo kolicnika:</strong> \(\left(\dfrac{u}{v}\right)' = \dfrac{u'v - uv'}{v^2}\)</li>
+      <li><strong>Lancano pravilo:</strong> \(\bigl(e^{g(x)}\bigr)' = e^{g(x)} \cdot g'(x)\)</li>
+      <li><strong>Izvod tangensa:</strong> \((\tan u)' = \dfrac{u'}{\cos^2 u}\)</li>
+      <li><strong>Izvod logaritma:</strong> \((\ln u)' = \dfrac{u'}{u}\)</li>
+      <li><strong>Poznate vrednosti:</strong> \(\cos \pi = -1\), \(\tan \pi = 0\), \(\ln 1 = 0\), \(e^0 = 1\)</li>
+    </ul>
+  </details>
+
+  <!-- Canvas Visualization -->
+  <div class="card canvas-card">
+    <h2>Vizualizacija: Struktura funkcije i doprinos svakog sabirka</h2>
+    <p style="color:#94a3b8; margin-bottom: 14px;">Funkcija je suma cetiri dela. Svaki deo daje svoj doprinos izvodu u tacki \(x = \tfrac{1}{2}\).</p>
+    <canvas id="viz-canvas" width="700" height="480"></canvas>
+    <p class="canvas-hint">Kliknite na dugmad da vidite doprinos svakog sabirka izvodu</p>
+    <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:12px;">
+      <button id="btn-all" class="canvas-btn" style="background:#334155; color:#e2e8f0; border:1px solid #475569; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:0.9rem; transition: all 0.2s;">Pregled</button>
+      <button id="btn-t1" class="canvas-btn" style="background:#334155; color:#e2e8f0; border:1px solid #475569; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:0.9rem; transition: all 0.2s;">Sabirak 1</button>
+      <button id="btn-t2" class="canvas-btn" style="background:#334155; color:#e2e8f0; border:1px solid #475569; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:0.9rem; transition: all 0.2s;">Sabirak 2</button>
+      <button id="btn-t3" class="canvas-btn" style="background:#334155; color:#e2e8f0; border:1px solid #475569; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:0.9rem; transition: all 0.2s;">Sabirak 3</button>
+      <button id="btn-t4" class="canvas-btn" style="background:#334155; color:#e2e8f0; border:1px solid #475569; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:0.9rem; transition: all 0.2s;">Sabirak 4</button>
+      <button id="btn-sum" class="canvas-btn" style="background:#334155; color:#e2e8f0; border:1px solid #475569; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:0.9rem; transition: all 0.2s;">Rezultat</button>
+    </div>
+  </div>
+
+  <!-- Step-by-step solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step" id="step-1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Razlozimo funkciju na cetiri sabirka</h3>
+        <p>Funkcija \(f(x)\) je suma cetiri nezavisna dela, pa mozemo svaki diferencirati posebno:</p>
+        <div class="math-box">
+          \[ f(x) = \underbrace{x}_{g_1(x)} \;\underbrace{-\; \sin(\pi x)\cos(\pi x)}_{g_2(x)} \;+\; \underbrace{\frac{\ln 2x}{x}}_{g_3(x)} \;+\; \underbrace{e^{\tan(2\pi x)}}_{g_4(x)} \]
+        </div>
+        <p>Primenjujemo pravilo: \(f'(x) = g_1'(x) + g_2'(x) + g_3'(x) + g_4'(x)\).</p>
+      </div>
+    </div>
+
+    <div class="step" id="step-2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3><span class="fn-badge fn-badge-1">g1</span> Izvod prvog sabirka: \(g_1(x) = x\)</h3>
+        <p>Ovo je najjednostavniji deo:</p>
+        <div class="math-box">
+          \[ g_1'(x) = 1 \]
+        </div>
+        <p>Prema tome:</p>
+        <div class="math-box">
+          \[ g_1'\!\left(\frac{1}{2}\right) = 1 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3><span class="fn-badge fn-badge-2">g2</span> Pojednostavimo drugi sabirak trigonometrijskim identitetom</h3>
+        <p>Koristimo identitet \(\sin\alpha \cdot \cos\alpha = \frac{1}{2}\sin 2\alpha\) da bismo pojednostavili:</p>
+        <div class="math-box">
+          \[ g_2(x) = -\sin(\pi x)\cos(\pi x) = -\frac{1}{2}\sin(2\pi x) \]
+        </div>
+        <p>Ovo je <span class="highlight">kljucno pojednostavljenje</span> koje nam olaksava diferenciranje.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step-4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3><span class="fn-badge fn-badge-2">g2</span> Diferenciramo drugi sabirak</h3>
+        <p>Primenimo lancano pravilo na \(g_2(x) = -\frac{1}{2}\sin(2\pi x)\):</p>
+        <div class="math-box">
+          \[ g_2'(x) = -\frac{1}{2} \cdot \cos(2\pi x) \cdot 2\pi = -\pi\cos(2\pi x) \]
+        </div>
+        <p>Uvrstimo \(x = \frac{1}{2}\):</p>
+        <div class="math-box">
+          \[ g_2'\!\left(\frac{1}{2}\right) = -\pi\cos\!\left(2\pi \cdot \frac{1}{2}\right) = -\pi\cos(\pi) = -\pi \cdot (-1) = \pi \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(\cos(\pi)\)?</summary>
+      <p>\(\cos(\pi) = \cos(180°) = -1\). Zato je \(-\pi \cdot \cos(\pi) = -\pi \cdot (-1) = \pi\). &check;</p>
+    </details>
+
+    <div class="step" id="step-5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3><span class="fn-badge fn-badge-3">g3</span> Diferenciramo treci sabirak pravilom kolicnika</h3>
+        <p>Za \(g_3(x) = \frac{\ln(2x)}{x}\) primenimo pravilo kolicnika \(\left(\frac{u}{v}\right)' = \frac{u'v - uv'}{v^2}\):</p>
+        <div class="math-box">
+          \[ u = \ln(2x), \quad u' = \frac{1}{2x} \cdot 2 = \frac{1}{x} \]
+        </div>
+        <div class="math-box">
+          \[ v = x, \quad v' = 1 \]
+        </div>
+        <p>Uvrstimo u formulu:</p>
+        <div class="math-box">
+          \[ g_3'(x) = \frac{\dfrac{1}{x} \cdot x - \ln(2x) \cdot 1}{x^2} = \frac{1 - \ln(2x)}{x^2} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3><span class="fn-badge fn-badge-3">g3</span> Izracunamo vrednost u \(x = \frac{1}{2}\)</h3>
+        <p>Uvrstimo \(x = \frac{1}{2}\) u izraz za \(g_3'(x)\):</p>
+        <div class="math-box">
+          \[ g_3'\!\left(\frac{1}{2}\right) = \frac{1 - \ln\!\left(2 \cdot \dfrac{1}{2}\right)}{\left(\dfrac{1}{2}\right)^2} = \frac{1 - \ln(1)}{\dfrac{1}{4}} \]
+        </div>
+        <p>Posto je \(\ln(1) = 0\):</p>
+        <div class="math-box">
+          \[ g_3'\!\left(\frac{1}{2}\right) = \frac{1 - 0}{\dfrac{1}{4}} = 1 \cdot 4 = 4 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(\ln(1)\)?</summary>
+      <p>Logaritam jedinice je uvek nula za bilo koju osnovu: \(\ln(1) = 0\), jer je \(e^0 = 1\). &check;</p>
+    </details>
+
+    <div class="step" id="step-7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3><span class="fn-badge fn-badge-4">g4</span> Diferenciramo cetvrti sabirak lancanim pravilom</h3>
+        <p>Za \(g_4(x) = e^{\tan(2\pi x)}\) primenimo lancano pravilo dvaput:</p>
+        <div class="math-box">
+          \[ g_4'(x) = e^{\tan(2\pi x)} \cdot \bigl(\tan(2\pi x)\bigr)' \]
+        </div>
+        <p>Izvod tangensa, ponovo lancanim pravilom:</p>
+        <div class="math-box">
+          \[ \bigl(\tan(2\pi x)\bigr)' = \frac{1}{\cos^2(2\pi x)} \cdot 2\pi \]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-box">
+          \[ g_4'(x) = e^{\tan(2\pi x)} \cdot \frac{2\pi}{\cos^2(2\pi x)} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-8">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3><span class="fn-badge fn-badge-4">g4</span> Izracunamo vrednost u \(x = \frac{1}{2}\)</h3>
+        <p>Racunamo vrednosti trigonometrijskih funkcija u \(2\pi \cdot \frac{1}{2} = \pi\):</p>
+        <div class="math-box">
+          \[ \tan(\pi) = 0, \qquad \cos(\pi) = -1 \]
+        </div>
+        <p>Uvrstimo:</p>
+        <div class="math-box">
+          \[ g_4'\!\left(\frac{1}{2}\right) = e^{\tan(\pi)} \cdot \frac{2\pi}{\cos^2(\pi)} = e^{0} \cdot \frac{2\pi}{(-1)^2} = 1 \cdot \frac{2\pi}{1} = 2\pi \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Zasto je \(\tan(\pi) = 0\)?</summary>
+      <p>Jer je \(\tan(\pi) = \frac{\sin(\pi)}{\cos(\pi)} = \frac{0}{-1} = 0\). Takodje, \(\cos^2(\pi) = (-1)^2 = 1\), pa imenik nije nula. &check;</p>
+    </details>
+
+    <div class="step" id="step-9">
+      <div class="step-badge">9</div>
+      <div class="step-content">
+        <h3>Saberemo sve doprinose</h3>
+        <p>Konacno, sabiramo izvode sva cetiri sabirka:</p>
+        <div class="math-box">
+          \[ f'\!\left(\frac{1}{2}\right) = g_1'\!\left(\frac{1}{2}\right) + g_2'\!\left(\frac{1}{2}\right) + g_3'\!\left(\frac{1}{2}\right) + g_4'\!\left(\frac{1}{2}\right) \]
+        </div>
+        <div class="math-box">
+          \[ f'\!\left(\frac{1}{2}\right) = 1 + \pi + 4 + 2\pi = 5 + 3\pi \]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2>Kljucni uvid</h2>
+    <p>Tajna ovog zadatka lezi u tome sto se u tacki \(x = \frac{1}{2}\) argument \(2\pi x\) svih trigonometrijskih funkcija svodi na \(\pi\), gde vaze jednostavne vrednosti: \(\cos(\pi) = -1\), \(\tan(\pi) = 0\), \(\ln(1) = 0\). Ova <span class="highlight">specijalna tacka</span> dramaticno pojednostavljuje racun.</p>
+    <div class="math-box" style="text-align:center; font-size:1.2rem; margin-top:16px;">
+      \[ f'\!\left(\frac{1}{2}\right) = \underbrace{1}_{x} + \underbrace{\pi}_{-\sin\cos} + \underbrace{4}_{\ln/x} + \underbrace{2\pi}_{e^{\tan}} = 5 + 3\pi \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konacan odgovor</h2>
+    <div class="answer-big">\(f'\!\left(\dfrac{1}{2}\right) = 5 + 3\pi\)</div>
+
+    <div class="options-row">
+      <div class="option-box">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(0\)</div>
+      </div>
+      <div class="option-box correct">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(5 + 3\pi\)</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(3\pi\)</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(5\)</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(e\)</div>
+      </div>
+    </div>
+
+    <p class="verification"><strong>Verifikacija:</strong> Numericka provera: \(5 + 3\pi \approx 5 + 9{,}4248 \approx 14{,}42\). Mozemo proveriti numerickim diferenciranjem: \(f(0{,}501) - f(0{,}499)\) podeljen sa \(0{,}002\) daje priblizno \(14{,}42\), sto se poklapa. &check;</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <ul class="pitfall-list">
+      <li><strong>Zaboravljen unutrasnji izvod kod lancanog pravila:</strong> Pri diferenciranju \(\sin(\pi x)\) ili \(\tan(2\pi x)\), obavezno pomnozite sa izvodom unutrasnje funkcije (\(\pi\), odnosno \(2\pi\)). Bez toga, gubite faktor \(\pi\) ili \(2\pi\) u rezultatu.</li>
+      <li><strong>Pogresno tumacenje \(\ln 2x\):</strong> Izraz \(\ln 2x\) znaci \(\ln(2x)\), a ne \((\ln 2) \cdot x\). Izvod \(\ln(2x)\) po \(x\) je \(\frac{1}{x}\), ne \(\ln 2\). Ovo je cesta greska koja menja ceo rezultat.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Odredite vrednost \(f''\!\left(\frac{1}{2}\right)\) za istu funkciju \(f(x)\).</p>
+    <details>
+      <summary>Pomoc</summary>
+      <p>Diferencijte svaki od izraza za \(g_1'(x)\), \(g_2'(x)\), \(g_3'(x)\), \(g_4'(x)\) jos jednom. Na primer, \(g_2''(x) = \pi \cdot \sin(2\pi x) \cdot 2\pi = 2\pi^2 \sin(2\pi x)\), pa je \(g_2''(1/2) = 2\pi^2 \sin(\pi) = 0\). Pazljivo izvedite preostale sabirke!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interactivity
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  // Canvas visualization
+  var canvas = document.getElementById('viz-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  var currentView = 'all';
+
+  // Button references
+  var btnAll = document.getElementById('btn-all');
+  var btnT1 = document.getElementById('btn-t1');
+  var btnT2 = document.getElementById('btn-t2');
+  var btnT3 = document.getElementById('btn-t3');
+  var btnT4 = document.getElementById('btn-t4');
+  var btnSum = document.getElementById('btn-sum');
+  var allBtns = [btnAll, btnT1, btnT2, btnT3, btnT4, btnSum];
+  var viewKeys = ['all', 't1', 't2', 't3', 't4', 'sum'];
+
+  function setActiveButton(key) {
+    allBtns.forEach(function(btn, i) {
+      if (viewKeys[i] === key) {
+        btn.style.background = '#60a5fa';
+        btn.style.borderColor = '#60a5fa';
+        btn.style.color = '#0f172a';
+        btn.style.fontWeight = '700';
+      } else {
+        btn.style.background = '#334155';
+        btn.style.borderColor = '#475569';
+        btn.style.color = '#e2e8f0';
+        btn.style.fontWeight = 'normal';
+      }
+    });
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  function drawBox(x, y, w, h, color, alpha, text1, text2) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = 'rgba(30,41,59,0.95)';
+    roundRect(x, y, w, h, 10);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    roundRect(x, y, w, h, 10);
+    ctx.stroke();
+
+    if (text1) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(text1, x + w / 2, y + 20);
+    }
+    if (text2) {
+      ctx.fillStyle = color;
+      ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(text2, x + w / 2, y + h - 14);
+    }
+    ctx.restore();
+  }
+
+  function drawBar(x, y, w, maxW, h, color, alpha, label, valLabel) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // Bar background track
+    ctx.fillStyle = 'rgba(51,65,85,0.4)';
+    roundRect(x, y, maxW, h, 4);
+    ctx.fill();
+
+    // Filled bar
+    if (w > 0) {
+      ctx.fillStyle = color;
+      ctx.globalAlpha = alpha * 0.6;
+      roundRect(x, y, w, h, 4);
+      ctx.fill();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      roundRect(x, y, w, h, 4);
+      ctx.stroke();
+    }
+
+    // Label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(label, x - 12, y + h / 2 + 5);
+
+    // Value label
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(valLabel, x + maxW + 12, y + h / 2 + 5);
+
+    ctx.restore();
+  }
+
+  var colors = {
+    t1: '#60a5fa',
+    t2: '#a78bfa',
+    t3: '#f472b6',
+    t4: '#34d399',
+    sum: '#4ade80'
+  };
+
+  var values = {
+    t1: 1,
+    t2: Math.PI,
+    t3: 4,
+    t4: 2 * Math.PI
+  };
+
+  var total = values.t1 + values.t2 + values.t3 + values.t4;
+  var maxBarW = 340;
+
+  function drawScene(view) {
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    if (view === 'all') {
+      ctx.fillText("Cetiri sabirka funkcije f(x)", W / 2, 30);
+
+      // Draw four boxes for the terms
+      var boxW = 140;
+      var boxH = 55;
+      var startX = 45;
+      var gap = 15;
+      var row1Y = 55;
+
+      drawBox(startX, row1Y, boxW, boxH, colors.t1, 1, 'Sabirak 1', 'x');
+      drawBox(startX + boxW + gap, row1Y, boxW, boxH, colors.t2, 1, 'Sabirak 2', '-sin(\u03C0x)cos(\u03C0x)');
+      drawBox(startX + 2 * (boxW + gap), row1Y, boxW, boxH, colors.t3, 1, 'Sabirak 3', 'ln(2x) / x');
+      drawBox(startX + 3 * (boxW + gap), row1Y, boxW, boxH, colors.t4, 1, 'Sabirak 4', 'e^tan(2\u03C0x)');
+
+      // Arrow down
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(W / 2, row1Y + boxH + 10);
+      ctx.lineTo(W / 2, row1Y + boxH + 35);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Derivatives section
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("Izvodi u x = 1/2:", W / 2, row1Y + boxH + 55);
+
+      // Bar chart
+      var barX = 230;
+      var barY0 = row1Y + boxH + 75;
+      var barH = 26;
+      var barGap = 16;
+      var scale = maxBarW / total;
+
+      drawBar(barX, barY0, values.t1 * scale, maxBarW, barH, colors.t1, 1, "g\u2081'(1/2) = 1", '1');
+      drawBar(barX, barY0 + barH + barGap, values.t2 * scale, maxBarW, barH, colors.t2, 1, "g\u2082'(1/2) = \u03C0", '\u03C0 \u2248 3,14');
+      drawBar(barX, barY0 + 2 * (barH + barGap), values.t3 * scale, maxBarW, barH, colors.t3, 1, "g\u2083'(1/2) = 4", '4');
+      drawBar(barX, barY0 + 3 * (barH + barGap), values.t4 * scale, maxBarW, barH, colors.t4, 1, "g\u2084'(1/2) = 2\u03C0", '2\u03C0 \u2248 6,28');
+
+      // Divider
+      var divY = barY0 + 4 * (barH + barGap) + 5;
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(barX - 120, divY);
+      ctx.lineTo(barX + maxBarW + 80, divY);
+      ctx.stroke();
+
+      // Sum bar
+      drawBar(barX, divY + 15, maxBarW, maxBarW, barH + 4, colors.sum, 1, "f'(1/2) =", '5 + 3\u03C0 \u2248 14,42');
+
+    } else if (view === 't1') {
+      ctx.fillText("Sabirak 1: g\u2081(x) = x", W / 2, 30);
+
+      drawBox(W / 2 - 100, 55, 200, 60, colors.t1, 1, 'Funkcija', 'g\u2081(x) = x');
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Izvod linearne funkcije je konstanta:', W / 2, 150);
+
+      drawBox(W / 2 - 100, 170, 200, 60, colors.t1, 1, 'Izvod', "g\u2081'(x) = 1");
+
+      ctx.fillStyle = colors.t1;
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("g\u2081'(1/2) = 1", W / 2, 290);
+
+      // Draw a simple line graph
+      var ox = 120, oy = 420, gw = 460, gh = 120;
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (var i = 0; i <= 5; i++) {
+        ctx.beginPath();
+        ctx.moveTo(ox, oy - i * gh / 5);
+        ctx.lineTo(ox + gw, oy - i * gh / 5);
+        ctx.stroke();
+      }
+      // Axes
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(ox + gw, oy);
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(ox, oy - gh);
+      ctx.stroke();
+
+      // Line y = x
+      ctx.strokeStyle = colors.t1;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(ox + gw, oy - gh);
+      ctx.stroke();
+
+      // Point at x=0.5
+      var px = ox + gw * 0.5;
+      var py = oy - gh * 0.5;
+      ctx.fillStyle = colors.t1;
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('x = 0,5', px + 10, py - 8);
+      ctx.fillText('Nagib = 1', px + 10, py + 8);
+
+      // Axis labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('0', ox, oy + 15);
+      ctx.fillText('1', ox + gw, oy + 15);
+      ctx.textAlign = 'right';
+      ctx.fillText('1', ox - 8, oy - gh + 4);
+
+    } else if (view === 't2') {
+      ctx.fillText("Sabirak 2: g\u2082(x) = -sin(\u03C0x)\u00B7cos(\u03C0x)", W / 2, 30);
+
+      drawBox(W / 2 - 150, 50, 300, 55, colors.t2, 1, 'Identitet duplog ugla', '-sin(\u03C0x)cos(\u03C0x) = -\u00BD sin(2\u03C0x)');
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("g\u2082'(x) = -\u03C0\u00B7cos(2\u03C0x)", W / 2, 138);
+      ctx.fillText("g\u2082'(1/2) = -\u03C0\u00B7cos(\u03C0) = -\u03C0\u00B7(-1) = \u03C0", W / 2, 162);
+
+      ctx.fillStyle = colors.t2;
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.fillText("g\u2082'(1/2) = \u03C0 \u2248 3,14", W / 2, 200);
+
+      // Draw sin(2pi*x) graph
+      var ox = 80, oy = 350, gw = 540, gh = 80;
+      // Grid
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (var i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(ox, oy + i * gh / 2);
+        ctx.lineTo(ox + gw, oy + i * gh / 2);
+        ctx.stroke();
+      }
+      // Axes
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(ox + gw, oy);
+      ctx.moveTo(ox, oy + gh);
+      ctx.lineTo(ox, oy - gh);
+      ctx.stroke();
+
+      // Plot -0.5*sin(2*pi*x)
+      ctx.strokeStyle = colors.t2;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (var px = 0; px <= gw; px++) {
+        var xVal = px / gw;
+        var yVal = -0.5 * Math.sin(2 * Math.PI * xVal);
+        var cy = oy - yVal * gh;
+        if (px === 0) ctx.moveTo(ox + px, cy);
+        else ctx.lineTo(ox + px, cy);
+      }
+      ctx.stroke();
+
+      // Mark x=0.5
+      var markX = ox + gw * 0.5;
+      var markY = oy;
+      ctx.fillStyle = colors.t2;
+      ctx.beginPath();
+      ctx.arc(markX, markY, 6, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Tangent line at x=0.5: slope = -pi*cos(pi) = pi, in terms of the plot
+      // dy/dx = pi * 0.5 = pi/2 per unit-x, so on canvas: slope = pi/2 * gh/(gw/1)
+      // Actually: g2(x) = -0.5*sin(2*pi*x), g2'(x) = -pi*cos(2*pi*x)
+      // g2'(0.5) = -pi*cos(pi) = pi
+      // Tangent: y - 0 = pi*(x - 0.5)
+      var tangentLen = 0.15;
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      var tx1 = 0.5 - tangentLen;
+      var ty1 = Math.PI * (tx1 - 0.5);
+      var tx2 = 0.5 + tangentLen;
+      var ty2 = Math.PI * (tx2 - 0.5);
+      ctx.moveTo(ox + tx1 * gw, oy - ty1 * gh);
+      ctx.lineTo(ox + tx2 * gw, oy - ty2 * gh);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('x = 0,5', markX + 10, markY - 10);
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText('nagib = \u03C0', markX + 10, markY + 16);
+
+      // Labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('0', ox, oy + 18);
+      ctx.fillText('0,5', ox + gw / 2, oy + 18 + gh);
+      ctx.fillText('1', ox + gw, oy + 18);
+      ctx.fillText('g\u2082(x) = -\u00BD sin(2\u03C0x)', W / 2, oy + gh + 40);
+
+    } else if (view === 't3') {
+      ctx.fillText("Sabirak 3: g\u2083(x) = ln(2x) / x", W / 2, 30);
+
+      drawBox(W / 2 - 140, 50, 280, 55, colors.t3, 1, 'Pravilo kolicnika', "(u/v)' = (u'v - uv') / v\u00B2");
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("u = ln(2x), u' = 1/x", W / 2, 138);
+      ctx.fillText("v = x, v' = 1", W / 2, 160);
+      ctx.fillText("g\u2083'(x) = (1 - ln(2x)) / x\u00B2", W / 2, 190);
+
+      drawBox(W / 2 - 170, 210, 340, 55, colors.t3, 1, 'U x = 1/2: ln(2\u00B71/2) = ln(1) = 0', "g\u2083'(1/2) = (1-0) / (1/4) = 4");
+
+      ctx.fillStyle = colors.t3;
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.fillText("g\u2083'(1/2) = 4", W / 2, 310);
+
+      // Draw ln(2x)/x graph
+      var ox = 80, oy = 400, gw = 540, gh = 70;
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (var i = -2; i <= 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(ox, oy - i * gh / 4);
+        ctx.lineTo(ox + gw, oy - i * gh / 4);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(ox + gw, oy);
+      ctx.moveTo(ox, oy + gh);
+      ctx.lineTo(ox, oy - gh);
+      ctx.stroke();
+
+      // Plot ln(2x)/x for x in [0.05, 2]
+      ctx.strokeStyle = colors.t3;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      var first = true;
+      for (var px = 0; px <= gw; px++) {
+        var xVal = 0.05 + (px / gw) * 1.95;
+        var yVal = Math.log(2 * xVal) / xVal;
+        if (yVal > 5 || yVal < -3) { first = true; continue; }
+        var cy = oy - yVal * (gh / 4);
+        if (first) { ctx.moveTo(ox + px, cy); first = false; }
+        else ctx.lineTo(ox + px, cy);
+      }
+      ctx.stroke();
+
+      // Mark x=0.5
+      var xPlot = (0.5 - 0.05) / 1.95;
+      var yPlot = Math.log(1) / 0.5;
+      var markX = ox + xPlot * gw;
+      var markY = oy - yPlot * (gh / 4);
+      ctx.fillStyle = colors.t3;
+      ctx.beginPath();
+      ctx.arc(markX, markY, 6, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('(0,5 ; 0)', markX + 10, markY - 5);
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText('nagib = 4', markX + 10, markY + 14);
+
+    } else if (view === 't4') {
+      ctx.fillText("Sabirak 4: g\u2084(x) = e^(tan(2\u03C0x))", W / 2, 30);
+
+      drawBox(W / 2 - 150, 50, 300, 55, colors.t4, 1, 'Lancano pravilo (dvostruko)', "g\u2084'(x) = e^(tan(2\u03C0x)) \u00B7 2\u03C0/cos\u00B2(2\u03C0x)");
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('U x = 1/2: argument je 2\u03C0 \u00B7 1/2 = \u03C0', W / 2, 140);
+
+      drawBox(130, 160, 160, 50, '#60a5fa', 1, null, 'tan(\u03C0) = 0');
+      drawBox(310, 160, 160, 50, '#a78bfa', 1, null, 'cos(\u03C0) = -1');
+      drawBox(490, 160, 160, 50, '#f472b6', 1, null, 'e\u2070 = 1');
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("g\u2084'(1/2) = e\u2070 \u00B7 2\u03C0 / (-1)\u00B2 = 1 \u00B7 2\u03C0 / 1 = 2\u03C0", W / 2, 248);
+
+      ctx.fillStyle = colors.t4;
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.fillText("g\u2084'(1/2) = 2\u03C0 \u2248 6,28", W / 2, 290);
+
+      // Small graph of e^(tan(2*pi*x)) near x=0.5
+      var ox = 100, oy = 400, gw = 500, gh = 80;
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (var i = 0; i <= 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(ox, oy - i * gh / 4);
+        ctx.lineTo(ox + gw, oy - i * gh / 4);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy);
+      ctx.lineTo(ox + gw, oy);
+      ctx.moveTo(ox, oy + gh / 2);
+      ctx.lineTo(ox, oy - gh);
+      ctx.stroke();
+
+      // Plot e^(tan(2*pi*x)) for x in [0.3, 0.7], clamped
+      ctx.strokeStyle = colors.t4;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      var firstP = true;
+      for (var px = 0; px <= gw; px++) {
+        var xVal = 0.3 + (px / gw) * 0.4;
+        var tanVal = Math.tan(2 * Math.PI * xVal);
+        if (Math.abs(tanVal) > 4) { firstP = true; continue; }
+        var yVal = Math.exp(tanVal);
+        if (yVal > 8) { firstP = true; continue; }
+        var cy = oy - (yVal - 1) * (gh / 3);
+        if (firstP) { ctx.moveTo(ox + px, cy); firstP = false; }
+        else ctx.lineTo(ox + px, cy);
+      }
+      ctx.stroke();
+
+      // Mark x=0.5
+      var markPx = (0.5 - 0.3) / 0.4;
+      var markX2 = ox + markPx * gw;
+      var markY2 = oy; // e^0 = 1, so y = oy - (1-1)*(gh/3) = oy
+      ctx.fillStyle = colors.t4;
+      ctx.beginPath();
+      ctx.arc(markX2, markY2, 6, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('(0,5 ; 1)', markX2 + 10, markY2 - 5);
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText('nagib = 2\u03C0', markX2 + 10, markY2 + 14);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('g\u2084(x) = e^(tan(2\u03C0x)) blizu x = 0,5', W / 2, oy + 40);
+
+    } else if (view === 'sum') {
+      ctx.fillText("Konacni rezultat", W / 2, 30);
+
+      // Four contribution boxes
+      var boxW = 130;
+      var boxH = 80;
+      var gap = 16;
+      var totalW = 4 * boxW + 3 * gap;
+      var startX = (W - totalW) / 2;
+      var boxY = 55;
+
+      var terms = [
+        { label: "g\u2081'(1/2)", val: '1', color: colors.t1 },
+        { label: "g\u2082'(1/2)", val: '\u03C0', color: colors.t2 },
+        { label: "g\u2083'(1/2)", val: '4', color: colors.t3 },
+        { label: "g\u2084'(1/2)", val: '2\u03C0', color: colors.t4 }
+      ];
+
+      terms.forEach(function(t, i) {
+        var bx = startX + i * (boxW + gap);
+        drawBox(bx, boxY, boxW, boxH, t.color, 1, t.label, t.val);
+
+        // Plus sign between boxes
+        if (i < 3) {
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('+', bx + boxW + gap / 2, boxY + boxH / 2 + 6);
+        }
+      });
+
+      // Arrow down
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(W / 2, boxY + boxH + 15);
+      ctx.lineTo(W / 2, boxY + boxH + 50);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Calculation
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("1 + \u03C0 + 4 + 2\u03C0", W / 2, boxY + boxH + 75);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px Segoe UI, system-ui, sans-serif';
+      ctx.fillText("= (1 + 4) + (\u03C0 + 2\u03C0)", W / 2, boxY + boxH + 105);
+
+      // Big result box
+      var resW = 320;
+      var resH = 70;
+      var resX = W / 2 - resW / 2;
+      var resY = boxY + boxH + 130;
+
+      ctx.shadowColor = colors.sum;
+      ctx.shadowBlur = 25;
+      ctx.fillStyle = 'rgba(30,41,59,0.95)';
+      roundRect(resX, resY, resW, resH, 14);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = colors.sum;
+      ctx.lineWidth = 2.5;
+      roundRect(resX, resY, resW, resH, 14);
+      ctx.stroke();
+
+      ctx.fillStyle = colors.sum;
+      ctx.font = 'bold 28px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("f'(1/2) = 5 + 3\u03C0", W / 2, resY + resH / 2 + 10);
+
+      // Answer label
+      ctx.fillStyle = colors.sum;
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Odgovor: (B)', W / 2, resY + resH + 40);
+
+      // Numerical value
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '15px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('\u2248 14,42', W / 2, resY + resH + 65);
+
+      // Checkmark
+      ctx.fillStyle = colors.sum;
+      ctx.font = 'bold 36px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('\u2713', W / 2, resY + resH + 105);
+    }
+  }
+
+  function render() {
+    drawScene(currentView);
+  }
+
+  allBtns.forEach(function(btn, idx) {
+    btn.addEventListener('click', function() {
+      currentView = viewKeys[idx];
+      setActiveButton(currentView);
+      render();
+    });
+    btn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      currentView = viewKeys[idx];
+      setActiveButton(currentView);
+      render();
+    });
+  });
+
+  setActiveButton('all');
+  render();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Izvod kompozitne funkcije sa trigonometrijskim i eksponencijalnim delovima",
+  "subject": "math",
+  "unit": "calculus",
+  "topic_tags": ["izvod", "lancano pravilo", "pravilo kolicnika", "trigonometrijski identiteti", "eksponencijalna funkcija", "kompozitna funkcija"]
+}
+BRAINSPARK_META-->

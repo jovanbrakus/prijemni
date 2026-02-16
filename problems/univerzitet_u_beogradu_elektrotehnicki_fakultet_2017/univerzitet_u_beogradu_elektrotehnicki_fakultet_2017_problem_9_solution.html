@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kompozicija segmentno definisane funkcije</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Data je funkcija
+f(x) = x^2,          x je paran broj
+f(x) = (1/2)(x-3),   x je neparan broj
+
+Trazimo: f(f(f(17)+1)+1)
+
+Korak 1: Izracunamo f(17).
+17 je neparan broj, pa koristimo drugu granu:
+f(17) = (1/2)(17 - 3) = (1/2)(14) = 7
+
+Korak 2: Izracunamo f(17) + 1 = 7 + 1 = 8.
+Sada racunamo f(8).
+8 je paran broj, pa koristimo prvu granu:
+f(8) = 8^2 = 64
+
+Korak 3: Izracunamo f(8) + 1 = 64 + 1 = 65.
+Sada racunamo f(65).
+65 je neparan broj, pa koristimo drugu granu:
+f(65) = (1/2)(65 - 3) = (1/2)(62) = 31
+
+Dakle: f(f(f(17)+1)+1) = f(f(7+1)+1) = f(f(8)+1) = f(64+1) = f(65) = 31
+
+ODGOVOR: (C) 31
+
+Provera: Svaki medjurezultat je ceo broj, sto je konzistentno sa domenom funkcije (parni/neparni brojevi).
+- f(17) = 7 (neparan -> (1/2)(17-3) = 7, ceo broj, OK)
+- f(8) = 64 (paran -> 8^2 = 64, ceo broj, OK)
+- f(65) = 31 (neparan -> (1/2)(65-3) = 31, ceo broj, OK)
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 28px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+details {
+  margin: 15px 0;
+}
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+}
+details summary:hover {
+  color: #93c5fd;
+}
+details[open] summary {
+  margin-bottom: 12px;
+}
+details ul {
+  list-style: none;
+  padding-left: 0;
+}
+details ul li {
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: rgba(96, 165, 250, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid #60a5fa;
+}
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 4px solid transparent;
+}
+.step-container:hover, .step-container.active {
+  background: rgba(52, 211, 153, 0.05);
+  border-left-color: #34d399;
+}
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.step-content {
+  flex: 1;
+}
+.step-content h3 {
+  margin-bottom: 8px;
+}
+.step-content p {
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+.checkpoint {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 1rem;
+}
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 14px;
+}
+.insight-formula {
+  font-size: 1.3rem;
+  color: #e2e8f0;
+  margin: 12px 0;
+}
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.08));
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.final-answer-box h2 {
+  color: #34d399;
+  margin-bottom: 16px;
+}
+.final-answer-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 12px 0;
+}
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.option-card {
+  background: rgba(30, 41, 59, 0.8);
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 12px 22px;
+  text-align: center;
+  min-width: 80px;
+  transition: all 0.2s;
+}
+.option-card.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
+}
+.option-card .opt-letter {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.option-card.correct .opt-letter {
+  color: #34d399;
+}
+.option-card .opt-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+.verification {
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+.pitfalls {
+  border-left: 4px solid #e09468;
+}
+.pitfalls h2 {
+  color: #e09468;
+}
+.pitfalls ul {
+  list-style: none;
+  padding-left: 0;
+}
+.pitfalls ul li {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: rgba(224, 148, 104, 0.06);
+  border-radius: 8px;
+  color: #cbd5e1;
+}
+.pitfalls ul li::before {
+  content: "\26A0\FE0F ";
+}
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+.challenge-card h2 {
+  color: #f472b6;
+}
+.canvas-card {
+  text-align: center;
+}
+.canvas-card canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+.highlight-green {
+  color: #4ade80;
+  font-weight: 700;
+}
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+.highlight-purple {
+  color: #a78bfa;
+  font-weight: 600;
+}
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { padding: 12px; }
+  .options-row { gap: 8px; }
+  .option-card { padding: 8px 14px; min-width: 60px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Kompozicija segmentno definisane funkcije</h1>
+  <p class="subtitle">Segmentno definisane funkcije, parnost celih brojeva, iterativno izracunavanje</p>
+
+  <!-- ===== PROBLEM STATEMENT ===== -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Data je funkcija:</p>
+    <div class="math-block">
+      \[ f(x) = \begin{cases} x^2, & x \text{ je paran broj} \\ \frac{1}{2}(x-3), & x \text{ je neparan broj} \end{cases} \]
+    </div>
+    <p>Vrednost izraza \( f(f(f(17)+1)+1) \) jednaka je:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( 17 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( 23 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( 31 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( 42 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( 101 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PLAN ===== -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Izraz \( f(f(f(17)+1)+1) \) racunamo iznutra ka spolja, korak po korak. U svakom koraku odredjujemo da li je argument paran ili neparan, pa primenjujemo odgovarajucu granu funkcije.</p>
+  </div>
+
+  <!-- ===== THEORY REFRESHER ===== -->
+  <div class="card">
+    <details>
+      <summary>Kljucne formule i pojmovi</summary>
+      <ul>
+        <li><strong>Segmentno definisana funkcija:</strong> Funkcija koja ima razlicita pravila za razlicite delove domena. Kljucno je pravilno odrediti koji uslov vazi pre primene formule.</li>
+        <li><strong>Parnost celih brojeva:</strong> Paran broj je deljiv sa 2 (ostatak pri deljenju sa 2 je 0). Neparan broj daje ostatak 1 pri deljenju sa 2.</li>
+        <li><strong>Kompozicija funkcija:</strong> Izraz \( f(f(f(17)+1)+1) \) predstavlja trostruku kompoziciju. Racuna se iznutra ka spolja: najprije \( f(17) \), zatim spoljasnji pozivi redom.</li>
+        <li><strong>Pravilo parnosti sabiranja:</strong> Neparan + neparan = paran. Paran + neparan = neparan. Ovo pomaze u brzom odredjivanju koja grana funkcije se koristi.</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- ===== VISUAL AID ===== -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz izracunavanja</h2>
+    <canvas id="mainCanvas" width="800" height="380"></canvas>
+    <p class="drag-hint">Dijagram prikazuje tok izracunavanja kroz tri nivoa kompozicije</p>
+  </div>
+
+  <!-- ===== STEP-BY-STEP SOLUTION ===== -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Odredimo \( f(17) \)</h3>
+        <p>Pocinjemo od najunutrasnjeg poziva. Argument je <span class="highlight-blue">17</span>.</p>
+        <p>Posto je 17 <strong>neparan</strong> broj, koristimo drugu granu funkcije:</p>
+        <div class="math-block">
+          \[ f(17) = \frac{1}{2}(17 - 3) = \frac{1}{2} \cdot 14 = 7 \]
+        </div>
+        <p class="note">Rezultat: \( f(17) = 7 \)</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Izracunamo \( f(17) + 1 \)</h3>
+        <p>Sada dodajemo 1 na rezultat iz prethodnog koraka:</p>
+        <div class="math-block">
+          \[ f(17) + 1 = 7 + 1 = 8 \]
+        </div>
+        <p class="note">Neparan broj 7 plus 1 daje paran broj 8.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koji rezultat daje \( f(8) \)?</summary>
+      <p style="margin-top:10px;">Posto je 8 paran, koristimo prvu granu: \( f(8) = 8^2 = 64 \).</p>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Odredimo \( f(8) \)</h3>
+        <p>Argument je <span class="highlight-blue">8</span>, sto je <strong>paran</strong> broj. Koristimo prvu granu:</p>
+        <div class="math-block">
+          \[ f(8) = 8^2 = 64 \]
+        </div>
+        <p class="note">Rezultat: \( f(f(17)+1) = f(8) = 64 \)</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izracunamo \( f(8) + 1 \)</h3>
+        <p>Dodajemo 1 na rezultat:</p>
+        <div class="math-block">
+          \[ f(8) + 1 = 64 + 1 = 65 \]
+        </div>
+        <p class="note">Paran broj 64 plus 1 daje neparan broj 65.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Da li je 65 paran ili neparan?</summary>
+      <p style="margin-top:10px;">65 je <strong>neparan</strong> broj (65 = 2 &middot; 32 + 1), pa koristimo drugu granu: \( f(65) = \frac{1}{2}(65 - 3) \).</p>
+    </details>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Odredimo \( f(65) \)</h3>
+        <p>Argument je <span class="highlight-blue">65</span>, sto je <strong>neparan</strong> broj. Koristimo drugu granu:</p>
+        <div class="math-block">
+          \[ f(65) = \frac{1}{2}(65 - 3) = \frac{1}{2} \cdot 62 = 31 \]
+        </div>
+        <p class="note">Rezultat: \( f(f(f(17)+1)+1) = f(65) = 31 \)</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko puta smo koristili svaku granu funkcije?</summary>
+      <p style="margin-top:10px;">Granu za neparne brojeve koristili smo <strong>dva puta</strong> (za \( x = 17 \) i \( x = 65 \)), a granu za parne brojeve <strong>jednom</strong> (za \( x = 8 \)).</p>
+    </details>
+  </div>
+
+  <!-- ===== KEY INSIGHT ===== -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>Sabiranjem 1 menjamo parnost broja, sto nas prebacuje na drugu granu funkcije. Zato se grane smenjuju: neparan &rarr; +1 &rarr; paran &rarr; +1 &rarr; neparan.</p>
+    <div class="insight-formula">
+      \[ f(\underbrace{17}_{\text{nep.}}) = 7 \xrightarrow{+1} \underbrace{8}_{\text{par.}} \xrightarrow{f} 64 \xrightarrow{+1} \underbrace{65}_{\text{nep.}} \xrightarrow{f} \boxed{31} \]
+    </div>
+  </div>
+
+  <!-- ===== FINAL ANSWER ===== -->
+  <div class="final-answer-box">
+    <h2>Konacan odgovor</h2>
+    <div class="final-answer-value">\( f(f(f(17)+1)+1) = 31 \)</div>
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-letter">(A)</div>
+        <div class="opt-value">\( 17 \)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-letter">(B)</div>
+        <div class="opt-value">\( 23 \)</div>
+      </div>
+      <div class="option-card correct">
+        <div class="opt-letter">(C)</div>
+        <div class="opt-value">\( 31 \)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-letter">(D)</div>
+        <div class="opt-value">\( 42 \)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-letter">(E)</div>
+        <div class="opt-value">\( 101 \)</div>
+      </div>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Proveravamo da su svi medjurezultati celobrojni: \( f(17) = 7 \) (ceo broj), \( f(8) = 64 \) (ceo broj), \( f(65) = 31 \) (ceo broj). Takodje, 31 se pojavljuje medju ponudjenim odgovorima, sto potvrdjuje ispravnost. Odgovor je <strong>(C) 31</strong>.
+    </div>
+  </div>
+
+  <!-- ===== COMMON PITFALLS ===== -->
+  <div class="card pitfalls">
+    <h2>Ceste greske</h2>
+    <ul>
+      <li><strong>Pogresan redosled izracunavanja:</strong> Izraz \( f(f(f(17)+1)+1) \) se mora racunati iznutra ka spolja. Ukoliko se ne prati pravilan redosled, lako se moze dobiti pogresan argument za naredni poziv.</li>
+      <li><strong>Zaboravljanje sabiranja +1:</strong> Posle svakog unutrasnjeg \( f(\cdot) \) dodaje se 1 pre nego sto se primeni sledeci poziv funkcije. Cesta greska je preskociti to sabiranje i odmah primeniti \( f \) na rezultat.</li>
+    </ul>
+  </div>
+
+  <!-- ===== OPTIONAL CHALLENGE ===== -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Sta bi se desilo ako umesto broja 17 pocnemo sa brojem 5? Koliko iznosi \( f(f(f(5)+1)+1) \)?</p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="margin-top:10px;">Pocnite sa \( f(5) \): posto je 5 neparan, \( f(5) = \frac{1}{2}(5-3) = 1 \). Zatim nastavite dalje, pazeci na parnost svakog medjurezultata nakon sabiranja sa 1.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    // Layout: 3 rows of computation
+    // Row 1: 17 -> f(17) = 7 -> +1 -> 8
+    // Row 2: 8 -> f(8) = 64 -> +1 -> 65
+    // Row 3: 65 -> f(65) = 31
+
+    const rowY = [90, 200, 310];
+    const colX = [80, 240, 420, 600, 720];
+
+    // Helper: draw a rounded rectangle with glow
+    function drawNode(x, y, text, color, glowColor, isResult) {
+      const w = 80;
+      const h = 44;
+      const r = 12;
+
+      // Glow
+      if (glowColor) {
+        ctx.save();
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = glowColor + '22';
+        ctx.beginPath();
+        ctx.roundRect(x - w/2, y - h/2, w, h, r);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Box
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x - w/2, y - h/2, w, h, r);
+      ctx.fill();
+      ctx.stroke();
+
+      // Text
+      ctx.fillStyle = color;
+      ctx.font = isResult ? 'bold 20px Segoe UI, sans-serif' : '18px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+    }
+
+    // Helper: draw arrow
+    function drawArrow(x1, y1, x2, y2, label, color) {
+      const headLen = 10;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const angle = Math.atan2(dy, dx);
+
+      ctx.strokeStyle = color || '#475569';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      // Arrowhead
+      ctx.fillStyle = color || '#475569';
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+      ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+      ctx.closePath();
+      ctx.fill();
+
+      // Label
+      if (label) {
+        const mx = (x1 + x2) / 2;
+        const my = (y1 + y2) / 2 - 14;
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '13px Segoe UI, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, mx, my);
+      }
+    }
+
+    // Helper: draw curved arrow going down
+    function drawCurvedArrow(x1, y1, x2, y2, label, color) {
+      ctx.strokeStyle = color || '#475569';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      const cpx = x1 + 40;
+      const cpy = (y1 + y2) / 2;
+      ctx.quadraticCurveTo(cpx, cpy, x2, y2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Arrowhead
+      const t = 0.95;
+      const prevX = (1-t)*(1-t)*x1 + 2*(1-t)*t*cpx + t*t*x2;
+      const prevY = (1-t)*(1-t)*y1 + 2*(1-t)*t*cpy + t*t*y2;
+      const angle = Math.atan2(y2 - prevY, x2 - prevX);
+      const headLen = 10;
+      ctx.fillStyle = color || '#475569';
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+      ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+      ctx.closePath();
+      ctx.fill();
+
+      if (label) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '12px Segoe UI, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(label, cpx + 8, cpy);
+      }
+    }
+
+    // Row labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Korak 1:', 10, rowY[0] - 35);
+    ctx.fillText('Korak 2:', 10, rowY[1] - 35);
+    ctx.fillText('Korak 3:', 10, rowY[2] - 35);
+
+    // Parity labels
+    function drawParityLabel(x, y, text, color) {
+      ctx.fillStyle = color;
+      ctx.font = '11px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, x, y + 32);
+    }
+
+    // ===== ROW 1 =====
+    drawNode(colX[0], rowY[0], '17', '#60a5fa', '#60a5fa', false);
+    drawParityLabel(colX[0], rowY[0], 'neparan', '#60a5fa');
+
+    drawArrow(colX[0] + 44, rowY[0], colX[1] - 44, rowY[0], 'f(x) = (x-3)/2', '#60a5fa');
+
+    drawNode(colX[1], rowY[0], '7', '#a78bfa', '#a78bfa', false);
+    drawParityLabel(colX[1], rowY[0], 'neparan', '#a78bfa');
+
+    drawArrow(colX[1] + 44, rowY[0], colX[2] - 44, rowY[0], '+ 1', '#f472b6');
+
+    drawNode(colX[2], rowY[0], '8', '#34d399', '#34d399', false);
+    drawParityLabel(colX[2], rowY[0], 'paran', '#34d399');
+
+    // ===== ROW 2 =====
+    // Curved arrow from row 1 col 3 to row 2 col 1
+    drawCurvedArrow(colX[2], rowY[0] + 22, colX[0], rowY[1] - 22, '', '#475569');
+
+    drawNode(colX[0], rowY[1], '8', '#34d399', '#34d399', false);
+    drawParityLabel(colX[0], rowY[1], 'paran', '#34d399');
+
+    drawArrow(colX[0] + 44, rowY[1], colX[1] - 44, rowY[1], 'f(x) = x\u00B2', '#34d399');
+
+    drawNode(colX[1], rowY[1], '64', '#a78bfa', '#a78bfa', false);
+    drawParityLabel(colX[1], rowY[1], 'paran', '#a78bfa');
+
+    drawArrow(colX[1] + 44, rowY[1], colX[2] - 44, rowY[1], '+ 1', '#f472b6');
+
+    drawNode(colX[2], rowY[1], '65', '#60a5fa', '#60a5fa', false);
+    drawParityLabel(colX[2], rowY[1], 'neparan', '#60a5fa');
+
+    // ===== ROW 3 =====
+    drawCurvedArrow(colX[2], rowY[1] + 22, colX[0], rowY[2] - 22, '', '#475569');
+
+    drawNode(colX[0], rowY[2], '65', '#60a5fa', '#60a5fa', false);
+    drawParityLabel(colX[0], rowY[2], 'neparan', '#60a5fa');
+
+    drawArrow(colX[0] + 44, rowY[2], colX[1] - 44, rowY[2], 'f(x) = (x-3)/2', '#60a5fa');
+
+    drawNode(colX[1], rowY[2], '31', '#4ade80', '#4ade80', true);
+
+    // Final answer highlight
+    ctx.save();
+    ctx.shadowColor = '#4ade80';
+    ctx.shadowBlur = 25;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(colX[1] - 48, rowY[2] - 28, 96, 56, 14);
+    ctx.stroke();
+    ctx.restore();
+
+    // Legend
+    const legendY = 35;
+    const legendItems = [
+      { color: '#60a5fa', label: 'Neparan (koristi (x-3)/2)' },
+      { color: '#34d399', label: 'Paran (koristi x\u00B2)' },
+      { color: '#f472b6', label: 'Sabiranje +1' },
+      { color: '#4ade80', label: 'Rezultat' }
+    ];
+    let legendX = 400;
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    legendItems.forEach(function(item) {
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.arc(legendX, legendY, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillText(item.label, legendX + 10, legendY + 4);
+      legendX += ctx.measureText(item.label).width + 30;
+    });
+  }
+
+  draw();
+
+  // Step click interaction
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Kompozicija segmentno definisane funkcije za parne i neparne brojeve",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["segmentno definisane funkcije", "parnost brojeva", "kompozicija funkcija", "iterativno izracunavanje"]
+}
+BRAINSPARK_META-->

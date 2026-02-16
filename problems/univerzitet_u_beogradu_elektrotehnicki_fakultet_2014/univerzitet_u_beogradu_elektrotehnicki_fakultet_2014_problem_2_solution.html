@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uzastopna procentualna smanjenja - Rešenje</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Pojeftinjenje neke robe najpre za 10%, a zatim za 20%, jednako je pojeftinjenju iste robe za koliko procenata?
+
+Poznato:
+- Prvo smanjenje: 10%
+- Drugo smanjenje: 20% (od već smanjene cene)
+
+Korak 1: Neka je početna cena robe P.
+  Nakon smanjenja za 10%, nova cena je:
+  P₁ = P · (1 - 10/100) = P · 0,9
+
+Korak 2: Na tu novu cenu primenjujemo smanjenje od 20%.
+  P₂ = P₁ · (1 - 20/100) = P · 0,9 · 0,8 = P · 0,72
+
+Korak 3: Ukupno smanjenje u odnosu na početnu cenu:
+  Smanjenje = P - P₂ = P - 0,72·P = 0,28·P
+  Procenat smanjenja = 0,28 · 100% = 28%
+
+Korak 4: Provera — zašto nije 30%?
+  30% bi bilo da se procenti prosto sabiraju: 10% + 20% = 30%.
+  Ali to nije tačno jer se drugo smanjenje primenjuje na već smanjenu cenu.
+  Konkretno: 20% od 0,9P = 0,18P (ne 0,20P).
+  Dakle ukupno smanjenje = 0,10P + 0,18P = 0,28P = 28%.
+
+Korak 5: Provera formula:
+  Opšta formula za dva uzastopna smanjenja od a% i b%:
+  Ukupno smanjenje = a + b - (a·b)/100
+  = 10 + 20 - (10·20)/100
+  = 30 - 200/100
+  = 30 - 2
+  = 28%
+
+Provera ponuđenih odgovora:
+  (A) 30% — Pogrešno, to bi bilo prosto sabiranje procenata
+  (B) 25% — Pogrešno
+  (C) 32% — Pogrešno
+  (D) 28% — TAČNO ✓
+  (E) 19% — Pogrešno
+
+Odgovor: (D) 28%
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 28px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #60a5fa;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.given-item {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(96, 165, 250, 0.06);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content h3 {
+  font-size: 1.05rem;
+  color: #60a5fa;
+  margin-bottom: 6px;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  font-size: 0.97rem;
+  margin-bottom: 6px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.88rem;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+details {
+  margin: 15px 0;
+  background: rgba(96, 165, 250, 0.05);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+details ul {
+  list-style: none;
+  padding-left: 8px;
+}
+
+details ul li {
+  padding: 4px 0;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+details ul li::before {
+  content: "\2022";
+  color: #60a5fa;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 14px;
+  padding: 22px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box .formula {
+  font-size: 1.3rem;
+  margin: 12px 0;
+  color: #e2e8f0;
+}
+
+.insight-box .result {
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.answer-box {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.1));
+  border: 2px solid rgba(52, 211, 153, 0.4);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.answer-box .answer-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin-bottom: 10px;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.answer-option-final {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: rgba(30, 41, 59, 0.6);
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.answer-option-final.correct {
+  border-color: #4ade80;
+  background: rgba(52, 211, 153, 0.15);
+  color: #4ade80;
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.2);
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 10px;
+}
+
+.pitfall-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pitfall-icon {
+  color: #e09468;
+  font-size: 1.1rem;
+  min-width: 22px;
+  margin-top: 2px;
+}
+
+.pitfall-text {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.plan-text {
+  color: #cbd5e1;
+  font-size: 0.97rem;
+}
+
+.checkpoint-details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+.checkpoint-details summary {
+  color: #a78bfa;
+}
+
+canvas {
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.82rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px 18px; }
+  .step { flex-direction: column; gap: 8px; }
+  .given-grid { flex-direction: column; }
+  .answer-options-final { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Uzastopna procentualna smanjenja</h1>
+  <p class="subtitle">Procenti, uzastopne promene cene, množenje faktora smanjenja</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title">Tekst zadatka</div>
+    <p>Pojeftinjenje neke robe najpre za <span style="color:#60a5fa;font-weight:700;">10%</span>, a zatim za <span style="color:#a78bfa;font-weight:700;">20%</span>, jednako je pojeftinjenju iste robe za:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(30\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(25\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(32\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(28\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(19\%\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title">Plan rešavanja</div>
+    <p class="plan-text">Postavićemo početnu cenu robe kao \( P \), primenićemo dva uzastopna smanjenja (množenjem faktorima smanjenja), a zatim izračunati koliki je ukupni procenat smanjenja u odnosu na početnu cenu.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i pojmovi</summary>
+      <ul>
+        <li><strong>Smanjenje za \( p\% \):</strong> Nova cena = Stara cena \(\cdot\) \(\displaystyle\left(1 - \frac{p}{100}\right)\)</li>
+        <li><strong>Dva uzastopna smanjenja za \( a\% \) i \( b\% \):</strong> Konačna cena = \( P \cdot \left(1 - \frac{a}{100}\right) \cdot \left(1 - \frac{b}{100}\right) \)</li>
+        <li><strong>Formula za ukupno smanjenje:</strong> Ako se roba smanji za \( a\% \), pa za \( b\% \), ukupno smanjenje iznosi:
+        \[ \text{Ukupno smanjenje} = a + b - \frac{a \cdot b}{100} \; [\%] \]
+        Ovo je manje od prostog zbira \( a + b \) jer se drugo smanjenje primenjuje na <em>već smanjenu</em> cenu.</li>
+        <li><strong>Faktor smanjenja:</strong> Kod smanjenja za \( p\% \) koristimo faktor \(\displaystyle\frac{100 - p}{100}\). Ukupni faktor je proizvod pojedinačnih faktora.</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title">Vizuelni prikaz</div>
+    <canvas id="priceCanvas" width="760" height="340"></canvas>
+    <p class="canvas-hint">Pomerajte klizač ispod da menjate procenat drugog smanjenja</p>
+    <div style="text-align:center; margin-top:14px;">
+      <label for="slider2" style="color:#94a3b8; font-size:0.92rem;">Drugo smanjenje: <span id="sliderLabel" style="color:#a78bfa; font-weight:700;">20%</span></label><br>
+      <input type="range" id="slider2" min="0" max="50" value="20" style="width:80%; max-width:400px; margin-top:6px; accent-color:#a78bfa;">
+    </div>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <div class="card-title">Rešenje korak po korak</div>
+
+    <div class="step" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Označimo početnu cenu</h3>
+        <p>Neka je početna cena robe \( P \). Ova vrednost predstavlja 100% cene pre bilo kakvog smanjenja.</p>
+        <div class="math-block">
+          \[ \text{Početna cena} = P \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Prvo smanjenje: 10%</h3>
+        <p>Cena se prvo smanjuje za 10%. To znači da od početne cene ostaje 90%, tj. množimo sa faktorom \( 0{,}9 \).</p>
+        <div class="math-block">
+          \[ P_1 = P \cdot \left(1 - \frac{10}{100}\right) = P \cdot 0{,}9 \]
+        </div>
+        <p class="note">Izgubili smo 10% od P, tj. \( 0{,}1 \cdot P \). Ostalo je \( 0{,}9 \cdot P \).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint-details">
+      <summary>Proveri sebe: Ako je \( P = 1000 \) din, kolika je cena posle prvog smanjenja?</summary>
+      <p style="color:#4ade80; margin-top:8px;">Odgovor: \( 1000 \cdot 0{,}9 = 900 \) din.</p>
+    </details>
+
+    <div class="step" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Drugo smanjenje: 20%</h3>
+        <p>Na novu cenu \( P_1 \) primenjujemo smanjenje od 20%. Množimo sa faktorom \( 0{,}8 \).</p>
+        <div class="math-block">
+          \[ P_2 = P_1 \cdot \left(1 - \frac{20}{100}\right) = P \cdot 0{,}9 \cdot 0{,}8 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izračunajmo konačnu cenu</h3>
+        <p>Množimo faktore smanjenja:</p>
+        <div class="math-block">
+          \[ P_2 = P \cdot 0{,}9 \cdot 0{,}8 = P \cdot 0{,}72 \]
+        </div>
+        <p>Dakle, konačna cena iznosi 72% od početne.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint-details">
+      <summary>Proveri sebe: Ako je \( P = 1000 \) din, kolika je konačna cena?</summary>
+      <p style="color:#4ade80; margin-top:8px;">Odgovor: \( 1000 \cdot 0{,}72 = 720 \) din. Smanjenje je \( 1000 - 720 = 280 \) din.</p>
+    </details>
+
+    <div class="step" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Odredimo ukupni procenat smanjenja</h3>
+        <p>Ukupno smanjenje cene je razlika između početne i konačne cene:</p>
+        <div class="math-block">
+          \[ \text{Smanjenje} = P - P_2 = P - 0{,}72 \cdot P = 0{,}28 \cdot P \]
+        </div>
+        <p>Izraženo u procentima:</p>
+        <div class="math-block">
+          \[ \text{Procenat smanjenja} = \frac{0{,}28 \cdot P}{P} \cdot 100\% = 28\% \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Alternativni način: formula za uzastopna smanjenja</h3>
+        <p>Možemo koristiti i formulu za ukupno smanjenje od \( a\% \) i \( b\% \):</p>
+        <div class="math-block">
+          \[ \text{Ukupno} = a + b - \frac{a \cdot b}{100} \]
+        </div>
+        <p>Zamenom \( a = 10 \) i \( b = 20 \):</p>
+        <div class="math-block">
+          \[ \text{Ukupno} = 10 + 20 - \frac{10 \cdot 20}{100} = 30 - \frac{200}{100} = 30 - 2 = 28\% \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint-details">
+      <summary>Proveri sebe: Zašto ukupno smanjenje NIJE prosto \( 10\% + 20\% = 30\% \)?</summary>
+      <p style="color:#4ade80; margin-top:8px;">Zato što se drugo smanjenje (20%) ne primenjuje na početnu cenu, već na <em>već smanjenu</em> cenu. 20% od 0,9P je samo 0,18P, a ne 0,20P. Dakle, gubimo 0,10P + 0,18P = 0,28P, što je 28%.</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div style="font-size:1.05rem; color:#94a3b8; margin-bottom:8px;">Ključni uvid</div>
+    <p style="color:#e2e8f0; margin-bottom:12px;">Uzastopna procentualna smanjenja se ne sabiraju, već se <strong>množe odgovarajući faktori</strong>:</p>
+    <div class="formula">
+      \[ 0{,}9 \times 0{,}8 = 0{,}72 \implies \text{smanjenje od } \class{result}{28\%} \]
+    </div>
+    <p style="color:#94a3b8; font-size:0.9rem;">Razlika od prostog sabiranja iznosi \(\displaystyle \frac{a \cdot b}{100} = \frac{10 \cdot 20}{100} = 2\%\).</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="answer-box">
+    <div class="answer-text">Odgovor: (D) 28%</div>
+    <div class="answer-options-final">
+      <div class="answer-option-final">(A) 30%</div>
+      <div class="answer-option-final">(B) 25%</div>
+      <div class="answer-option-final">(C) 32%</div>
+      <div class="answer-option-final correct">(D) 28%</div>
+      <div class="answer-option-final">(E) 19%</div>
+    </div>
+    <p class="verification">Provera: Za cenu od 1000 din, posle smanjenja od 10% dobijamo 900 din, a posle smanjenja od 20% dobijamo 720 din. Ukupno smanjenje: 280 din od 1000 din = 28%. Rezultat je razuman i manji od prostog zbira (30%), što ima smisla.</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title" style="color:#e09468;">Najčešće greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-icon">!</div>
+      <div class="pitfall-text"><strong>Prosto sabiranje procenata:</strong> Mnogi učenici greše tako što sabiraju 10% + 20% = 30%. Ovo ne važi jer se drugo smanjenje primenjuje na već smanjenu cenu, a ne na početnu.</div>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-icon">!</div>
+      <div class="pitfall-text"><strong>Pogrešan redosled:</strong> U ovom zadatku redosled smanjenja ne utiče na rezultat (jer je množenje komutativno: \(0{,}9 \cdot 0{,}8 = 0{,}8 \cdot 0{,}9\)), ali u zadacima sa povećanjem i smanjenjem redosled može biti bitan.</div>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title" style="color:#a78bfa;">Dodatni izazov</div>
+    <p style="color:#cbd5e1; font-size:0.95rem;">Roba je prvo pojeftinila za 10%, pa zatim poskupela za 10%. Da li je krajnja cena jednaka početnoj?</p>
+    <details>
+      <summary>Pokazati nagoveštaj</summary>
+      <p style="color:#94a3b8; margin-top:8px;">Razmislite: \( P \cdot 0{,}9 \cdot 1{,}1 = P \cdot 0{,}99 \). Cena se ne vraća na početnu vrednost! Nedostaje 1% u odnosu na početnu cenu. Ovo je poznata "zamka" sa procentima.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('priceCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('slider2');
+  const sliderLabel = document.getElementById('sliderLabel');
+
+  function draw(secondDiscount) {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, w, h, 12);
+    ctx.fill();
+
+    const firstDiscount = 10;
+    const factor1 = 1 - firstDiscount / 100;
+    const factor2 = 1 - secondDiscount / 100;
+    const finalFactor = factor1 * factor2;
+    const totalDiscount = (1 - finalFactor) * 100;
+
+    // Bar chart settings
+    const barWidth = 120;
+    const barMaxH = 220;
+    const barY = 280;
+    const startX = 100;
+    const gap = 180;
+
+    // Draw bars
+    const bars = [
+      { label: 'Početna cena', value: 1, color: '#60a5fa', x: startX },
+      { label: 'Posle -' + firstDiscount + '%', value: factor1, color: '#a78bfa', x: startX + gap },
+      { label: 'Posle -' + secondDiscount + '%', value: finalFactor, color: '#f472b6', x: startX + 2 * gap },
+    ];
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 10; i++) {
+      const y = barY - (i / 10) * barMaxH;
+      ctx.beginPath();
+      ctx.moveTo(60, y);
+      ctx.lineTo(w - 30, y);
+      ctx.stroke();
+      if (i % 2 === 0) {
+        ctx.fillStyle = '#475569';
+        ctx.font = '12px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText((i * 10) + '%', 54, y + 4);
+      }
+    }
+
+    bars.forEach((bar) => {
+      const barH = bar.value * barMaxH;
+      const x = bar.x;
+      const y = barY - barH;
+
+      // Bar glow
+      const gradient = ctx.createLinearGradient(x, y, x, barY);
+      gradient.addColorStop(0, bar.color);
+      gradient.addColorStop(1, bar.color + '44');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.roundRect(x - barWidth / 2, y, barWidth, barH, [8, 8, 0, 0]);
+      ctx.fill();
+
+      // Bar border
+      ctx.strokeStyle = bar.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x - barWidth / 2, y, barWidth, barH, [8, 8, 0, 0]);
+      ctx.stroke();
+
+      // Value label on bar
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText((bar.value * 100).toFixed(0) + '%', x, y - 12);
+
+      // Label below bar
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(bar.label, x, barY + 20);
+    });
+
+    // Draw discount arrows
+    // Arrow from bar 1 to bar 2
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(startX + barWidth / 2 + 10, barY - barMaxH + 20);
+    ctx.lineTo(startX + gap - barWidth / 2 - 10, barY - factor1 * barMaxH + 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('-' + firstDiscount + '%', startX + gap / 2, barY - barMaxH + 10);
+
+    // Arrow from bar 2 to bar 3
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(startX + gap + barWidth / 2 + 10, barY - factor1 * barMaxH + 20);
+    ctx.lineTo(startX + 2 * gap - barWidth / 2 - 10, barY - finalFactor * barMaxH + 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('-' + secondDiscount + '%', startX + gap + gap / 2, barY - factor1 * barMaxH + 10);
+
+    // Total discount box
+    const boxX = w - 160;
+    const boxY = 20;
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.12)';
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, 140, 56, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ukupno smanjenje', boxX + 70, boxY + 20);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(totalDiscount.toFixed(0) + '%', boxX + 70, boxY + 44);
+  }
+
+  draw(20);
+
+  slider.addEventListener('input', function() {
+    const val = parseInt(this.value);
+    sliderLabel.textContent = val + '%';
+    draw(val);
+  });
+
+  // Step click interactivity
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Uzastopna procentualna smanjenja cene",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["procenti", "uzastopna smanjenja", "množenje faktora", "procentualni račun"]
+}
+BRAINSPARK_META-->

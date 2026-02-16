@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krug kroz tri tačke — presek sa x-osom</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Krug sadrži tri tačke: (0,6), (0,10), (8,0). Naći apscisu druge tačke u kojoj krug seče x-osu.
+
+REŠENJE:
+
+Opšta jednačina kruga: x² + y² + Dx + Ey + F = 0
+
+Zamena tri tačke:
+
+1) (0, 6): 0 + 36 + 0 + 6E + F = 0  =>  6E + F = -36    ... (I)
+2) (0, 10): 0 + 100 + 0 + 10E + F = 0  =>  10E + F = -100  ... (II)
+3) (8, 0): 64 + 0 + 8D + 0 + F = 0  =>  8D + F = -64     ... (III)
+
+Iz (I) i (II):
+(II) - (I): 4E = -64  =>  E = -16
+
+Iz (I): F = -36 - 6·(-16) = -36 + 96 = 60
+
+Iz (III): 8D + 60 = -64  =>  8D = -124  =>  D = -31/2
+
+Jednačina kruga: x² + y² - (31/2)x - 16y + 60 = 0
+
+Presek sa x-osom (y = 0):
+x² - (31/2)x + 60 = 0
+Množenje sa 2: 2x² - 31x + 120 = 0
+
+Kvadratna formula:
+x = (31 ± √(961 - 960)) / 4
+x = (31 ± √1) / 4
+x = (31 ± 1) / 4
+
+x₁ = 32/4 = 8  (poznata tačka)
+x₂ = 30/4 = 7,5
+
+Provera Vjetovim formulama: x₁ · x₂ = 120/2 = 60. Zaista: 8 · 7,5 = 60 ✓
+
+Centar kruga: (-D/2, -E/2) = (31/4, 8) = (7,75; 8)
+Poluprečnik: r² = (31/4)² + 8² - 60 = 961/16 + 64 - 60 = 961/16 + 4 = 1025/16
+r = √(1025/16) = √1025 / 4
+
+Provera: (0-31/4)² + (6-8)² = 961/16 + 4 = 1025/16 ✓
+         (0-31/4)² + (10-8)² = 961/16 + 4 = 1025/16 ✓
+         (8-31/4)² + (0-8)² = (1/4)² + 64 = 1/16 + 64 = 1025/16 ✓
+         (7,5-31/4)² + (0-8)² = (-1/4)² + 64 = 1/16 + 64 = 1025/16 ✓
+
+ODGOVOR: (C) 7,5
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+  transition: border-color 0.2s;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #a78bfa;
+}
+
+.theory-content {
+  padding: 16px 0 0 0;
+  color: #e2e8f0;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+  line-height: 1.8;
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+  margin: 16px 0;
+}
+
+.canvas-wrapper canvas {
+  border-radius: 12px;
+  border: 1px solid #334155;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: border-left 0.2s, background 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  border-left: 3px solid #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.18);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(96,165,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.35);
+  border-radius: 14px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box h2 {
+  color: #34d399;
+  margin-bottom: 16px;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  padding: 12px 22px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #94a3b8;
+  transition: all 0.3s;
+}
+
+.option-card.correct {
+  border-color: #34d399;
+  background: rgba(52,211,153,0.15);
+  color: #4ade80;
+  box-shadow: 0 0 20px rgba(52,211,153,0.2);
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+  text-align: left;
+}
+
+.pitfall {
+  padding: 10px 0;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+}
+
+.pitfall:last-child { border-bottom: none; }
+
+.pitfall-icon {
+  color: #e09468;
+  font-weight: 700;
+}
+
+.challenge-content {
+  padding-top: 12px;
+  color: #e2e8f0;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { flex-direction: column; }
+  .option-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- a. Title & Subtitle -->
+  <h1>Krug kroz tri tačke</h1>
+  <p class="subtitle">Analitička geometrija — jednačina kruga i presek sa koordinatnim osama</p>
+
+  <!-- b. Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Krug sadrži tri tačke čije su koordinate \((0,\, 6)\), \((0,\, 10)\) i \((8,\, 0)\). Apscisa druge tačke u kojoj dati krug seče \(x\)-osu, jednaka je:</p>
+
+    <div class="given-grid" style="margin-bottom: 18px;">
+      <div class="given-item">
+        <div class="label">Tačka 1</div>
+        <div class="value">\((0,\, 6)\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Tačka 2</div>
+        <div class="value">\((0,\, 10)\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Tačka 3</div>
+        <div class="value">\((8,\, 0)\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(7\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(7{,}25\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(7{,}5\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(7{,}75\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(9\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- c. Plan -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p class="plan-text">
+      Postavićemo opštu jednačinu kruga \(x^2 + y^2 + Dx + Ey + F = 0\) i zameniti koordinate tri date tačke
+      da dobijemo sistem od tri jednačine. Nakon nalaženja koeficijenata \(D\), \(E\) i \(F\),
+      postavićemo \(y = 0\) da nađemo presek kruga sa \(x\)-osom.
+    </p>
+  </div>
+
+  <!-- d. Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Opšta jednačina kruga:</strong> \(x^2 + y^2 + Dx + Ey + F = 0\), gde je centar \(\left(-\frac{D}{2},\, -\frac{E}{2}\right)\) i poluprečnik \(r = \sqrt{\frac{D^2}{4} + \frac{E^2}{4} - F}\).</li>
+          <li><strong>Određivanje kruga kroz tri tačke:</strong> Zamenom koordinata svake tačke u opštu jednačinu dobijamo sistem od tri linearne jednačine sa tri nepoznate (\(D\), \(E\), \(F\)).</li>
+          <li><strong>Presek sa \(x\)-osom:</strong> Postavimo \(y = 0\) u jednačinu kruga i rešavamo kvadratnu jednačinu po \(x\).</li>
+          <li><strong>Vjetove formule:</strong> Za kvadratnu jednačinu \(ax^2 + bx + c = 0\) važi: \(x_1 \cdot x_2 = \frac{c}{a}\) i \(x_1 + x_2 = -\frac{b}{a}\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- e. Visual Aid -->
+  <div class="card">
+    <h2>Grafički prikaz</h2>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="700" height="600"></canvas>
+      <p class="drag-hint">Vizuelni prikaz kruga kroz tri date tačke i preseka sa x-osom</p>
+    </div>
+  </div>
+
+  <!-- f. Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Postavljamo opštu jednačinu kruga</h3>
+        <p>Opšta jednačina kruga glasi:</p>
+        <div class="math-block">
+          \[ x^2 + y^2 + Dx + Ey + F = 0 \]
+        </div>
+        <p>Trebamo odrediti koeficijente \(D\), \(E\) i \(F\) tako da sve tri tačke leže na krugu.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Zamenjujemo tačku \((0,\, 6)\)</h3>
+        <div class="math-block">
+          \[ 0^2 + 6^2 + D \cdot 0 + E \cdot 6 + F = 0 \]
+        </div>
+        <div class="math-block">
+          \[ 36 + 6E + F = 0 \]
+        </div>
+        <div class="math-block">
+          \[ 6E + F = -36 \quad \ldots \text{(I)} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Zamenjujemo tačku \((0,\, 10)\)</h3>
+        <div class="math-block">
+          \[ 0^2 + 10^2 + D \cdot 0 + E \cdot 10 + F = 0 \]
+        </div>
+        <div class="math-block">
+          \[ 100 + 10E + F = 0 \]
+        </div>
+        <div class="math-block">
+          \[ 10E + F = -100 \quad \ldots \text{(II)} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Zamenjujemo tačku \((8,\, 0)\)</h3>
+        <div class="math-block">
+          \[ 8^2 + 0^2 + D \cdot 8 + E \cdot 0 + F = 0 \]
+        </div>
+        <div class="math-block">
+          \[ 64 + 8D + F = 0 \]
+        </div>
+        <div class="math-block">
+          \[ 8D + F = -64 \quad \ldots \text{(III)} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Nalazimo \(E\) oduzimanjem jednačina (I) i (II)</h3>
+        <p>Oduzimamo jednačinu (I) od jednačine (II):</p>
+        <div class="math-block">
+          \[ (10E + F) - (6E + F) = -100 - (-36) \]
+        </div>
+        <div class="math-block">
+          \[ 4E = -64 \]
+        </div>
+        <div class="math-block">
+          \[ E = -16 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko iznosi \(F\)?</summary>
+      <div class="challenge-content">
+        <p>Iz jednačine (I): \(6 \cdot (-16) + F = -36\), tj. \(-96 + F = -36\), dakle \(F = 60\).</p>
+      </div>
+    </details>
+
+    <div class="step" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Nalazimo \(F\) iz jednačine (I)</h3>
+        <p>Zamenjujemo \(E = -16\) u jednačinu (I):</p>
+        <div class="math-block">
+          \[ 6 \cdot (-16) + F = -36 \]
+        </div>
+        <div class="math-block">
+          \[ -96 + F = -36 \]
+        </div>
+        <div class="math-block">
+          \[ F = 60 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Nalazimo \(D\) iz jednačine (III)</h3>
+        <p>Zamenjujemo \(F = 60\) u jednačinu (III):</p>
+        <div class="math-block">
+          \[ 8D + 60 = -64 \]
+        </div>
+        <div class="math-block">
+          \[ 8D = -124 \]
+        </div>
+        <div class="math-block">
+          \[ D = -\frac{124}{8} = -\frac{31}{2} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step8">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3>Jednačina kruga</h3>
+        <p>Sada znamo kompletnu jednačinu:</p>
+        <div class="math-block">
+          \[ x^2 + y^2 - \frac{31}{2}\,x - 16y + 60 = 0 \]
+        </div>
+        <p class="note">Centar kruga je \(\left(\frac{31}{4},\, 8\right) = (7{,}75;\; 8)\), a poluprečnik \(r = \frac{\sqrt{1025}}{4}\).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Da li tačka \((0, 10)\) zaista leži na ovom krugu?</summary>
+      <div class="challenge-content">
+        <p>\(0^2 + 10^2 - \frac{31}{2} \cdot 0 - 16 \cdot 10 + 60 = 0 + 100 - 0 - 160 + 60 = 0\) — Tačno!</p>
+      </div>
+    </details>
+
+    <div class="step" id="step9">
+      <div class="step-badge">9</div>
+      <div class="step-content">
+        <h3>Presek sa \(x\)-osom — postavljamo \(y = 0\)</h3>
+        <p>Zamenjujemo \(y = 0\) u jednačinu kruga:</p>
+        <div class="math-block">
+          \[ x^2 + 0 - \frac{31}{2}\,x - 0 + 60 = 0 \]
+        </div>
+        <div class="math-block">
+          \[ x^2 - \frac{31}{2}\,x + 60 = 0 \]
+        </div>
+        <p>Množimo celom jednačinom sa 2 da eliminišemo razlomak:</p>
+        <div class="math-block">
+          \[ 2x^2 - 31x + 120 = 0 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step10">
+      <div class="step-badge">10</div>
+      <div class="step-content">
+        <h3>Rešavamo kvadratnu jednačinu</h3>
+        <p>Primenjujemo kvadratnu formulu:</p>
+        <div class="math-block">
+          \[ x = \frac{31 \pm \sqrt{31^2 - 4 \cdot 2 \cdot 120}}{2 \cdot 2} \]
+        </div>
+        <div class="math-block">
+          \[ x = \frac{31 \pm \sqrt{961 - 960}}{4} \]
+        </div>
+        <div class="math-block">
+          \[ x = \frac{31 \pm \sqrt{1}}{4} = \frac{31 \pm 1}{4} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step11">
+      <div class="step-badge">11</div>
+      <div class="step-content">
+        <h3>Dva rešenja</h3>
+        <div class="math-block">
+          \[ x_1 = \frac{31 + 1}{4} = \frac{32}{4} = 8 \quad \text{(poznata tačka)} \]
+        </div>
+        <div class="math-block">
+          \[ x_2 = \frac{31 - 1}{4} = \frac{30}{4} = 7{,}5 \]
+        </div>
+        <p>Prva tačka preseka je \((8,\, 0)\) — to je tačka koju već znamo. Druga tačka preseka je \((7{,}5;\; 0)\).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Da li \((7{,}5;\; 0)\) zaista leži na krugu?</summary>
+      <div class="challenge-content">
+        <p>\(7{,}5^2 + 0^2 - \frac{31}{2} \cdot 7{,}5 - 16 \cdot 0 + 60 = 56{,}25 - 116{,}25 + 60 = 0\) — Tačno!</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- g. Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p style="margin-top: 12px; color: #e2e8f0;">Diskriminanta je ispala \(\sqrt{1} = 1\), što je izuzetno lepo. To znači da su dva preseka sa \(x\)-osom veoma blizu jedan drugom (8 i 7,5), što se vidi i na crtežu.</p>
+    <div class="math-block" style="display: inline-block; margin-top: 14px; font-size: 1.2rem;">
+      \[ x_2 = \frac{30}{4} = 7{,}5 \]
+    </div>
+  </div>
+
+  <!-- h. Final Answer -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\(x_2 = 7{,}5\)</div>
+
+    <div class="option-row">
+      <div class="option-card">(A) 7</div>
+      <div class="option-card">(B) 7,25</div>
+      <div class="option-card correct">(C) 7,5</div>
+      <div class="option-card">(D) 7,75</div>
+      <div class="option-card">(E) 9</div>
+    </div>
+
+    <div class="verification">
+      <strong>Verifikacija:</strong> Pomoću Vjetovih formula za jednačinu \(2x^2 - 31x + 120 = 0\):
+      proizvod korena je \(x_1 \cdot x_2 = \frac{120}{2} = 60\). Zaista, \(8 \cdot 7{,}5 = 60\). Zbir korena je \(x_1 + x_2 = \frac{31}{2} = 15{,}5\), a \(8 + 7{,}5 = 15{,}5\). Sve se poklapa.
+    </div>
+  </div>
+
+  <!-- i. Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <div class="pitfall">
+      <span class="pitfall-icon">Greška 1:</span> Zaboraviti da pomnožimo jednačinu sa 2 pre primene kvadratne formule, pa raditi sa razlomkom \(\frac{31}{2}\) u koeficijentu — to usložnjava račun i otvara prostor za grešku.
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">Greška 2:</span> Pomešati centar kruga \((7{,}75;\; 8)\) sa traženom tačkom preseka. Centar ima apscisu 7,75 (što je jedna od ponuđenih opcija!), ali to nije tačka na \(x\)-osi.
+    </div>
+  </div>
+
+  <!-- j. Optional Challenge -->
+  <div class="card">
+    <h2>Dodatni izazov</h2>
+    <p>Kolika je površina trougla čija temena su tri date tačke na krugu: \((0,\, 6)\), \((0,\, 10)\) i \((8,\, 0)\)?</p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <div class="challenge-content">
+        <p>Iskoristi formulu za površinu trougla sa temenima u koordinatnom sistemu: \(P = \frac{1}{2} |x_1(y_2 - y_3) + x_2(y_3 - y_1) + x_3(y_1 - y_2)|\). Dve tačke leže na \(y\)-osi, što značajno pojednostavljuje račun.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Diagram
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Circle parameters
+  const cx = 31/4;  // 7.75
+  const cy = 8;
+  const rSq = 1025/16;
+  const r = Math.sqrt(rSq);  // ~8.003
+
+  // Points
+  const points = [
+    { x: 0, y: 6, label: '(0, 6)', color: '#60a5fa' },
+    { x: 0, y: 10, label: '(0, 10)', color: '#60a5fa' },
+    { x: 8, y: 0, label: '(8, 0)', color: '#60a5fa' },
+    { x: 7.5, y: 0, label: '(7,5; 0)', color: '#4ade80' }
+  ];
+
+  // Coordinate transform: math -> canvas
+  // We need to show x from about -2 to 17 and y from about -2 to 18
+  const xMin = -2, xMax = 17;
+  const yMin = -2, yMax = 18;
+  const scaleX = W / (xMax - xMin);
+  const scaleY = H / (yMax - yMin);
+  const scale = Math.min(scaleX, scaleY);
+
+  const offsetX = (W - scale * (xMax - xMin)) / 2;
+  const offsetY = (H - scale * (yMax - yMin)) / 2;
+
+  function toCanvas(x, y) {
+    return {
+      x: offsetX + (x - xMin) * scale,
+      y: H - offsetY - (y - yMin) * scale
+    };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let gx = Math.ceil(xMin); gx <= xMax; gx++) {
+      const p = toCanvas(gx, 0);
+      ctx.beginPath();
+      ctx.moveTo(p.x, 0);
+      ctx.lineTo(p.x, H);
+      ctx.stroke();
+    }
+    for (let gy = Math.ceil(yMin); gy <= yMax; gy++) {
+      const p = toCanvas(0, gy);
+      ctx.beginPath();
+      ctx.moveTo(0, p.y);
+      ctx.lineTo(W, p.y);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    // X-axis
+    const xAxisStart = toCanvas(xMin, 0);
+    const xAxisEnd = toCanvas(xMax, 0);
+    ctx.beginPath();
+    ctx.moveTo(xAxisStart.x, xAxisStart.y);
+    ctx.lineTo(xAxisEnd.x, xAxisEnd.y);
+    ctx.stroke();
+    // Y-axis
+    const yAxisStart = toCanvas(0, yMin);
+    const yAxisEnd = toCanvas(0, yMax);
+    ctx.beginPath();
+    ctx.moveTo(yAxisStart.x, yAxisStart.y);
+    ctx.lineTo(yAxisEnd.x, yAxisEnd.y);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let gx = 0; gx <= 16; gx += 2) {
+      if (gx === 0) continue;
+      const p = toCanvas(gx, 0);
+      ctx.fillText(gx.toString(), p.x, p.y + 18);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = 2; gy <= 16; gy += 2) {
+      const p = toCanvas(0, gy);
+      ctx.fillText(gy.toString(), p.x - 8, p.y + 5);
+    }
+
+    // Axis letters
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const xLabel = toCanvas(xMax - 0.5, 0);
+    ctx.fillText('x', xLabel.x, xLabel.y + 20);
+    const yLabel = toCanvas(0, yMax - 0.5);
+    ctx.textAlign = 'left';
+    ctx.fillText('y', yLabel.x + 10, yLabel.y + 5);
+
+    // Circle
+    const center = toCanvas(cx, cy);
+    const rCanvas = r * scale;
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, rCanvas, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // Circle glow
+    ctx.strokeStyle = 'rgba(167, 139, 250, 0.15)';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, rCanvas, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // Center mark
+    ctx.fillStyle = '#a78bfa';
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, 4, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Dashed line from center to (7.5, 0) - radius
+    const p75 = toCanvas(7.5, 0);
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = 'rgba(167, 139, 250, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(center.x, center.y);
+    ctx.lineTo(p75.x, p75.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Center label
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('C(7,75; 8)', center.x + 8, center.y - 8);
+
+    // Points
+    points.forEach((pt, i) => {
+      const p = toCanvas(pt.x, pt.y);
+
+      // Glow
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 18);
+      grad.addColorStop(0, i === 3 ? 'rgba(74,222,128,0.4)' : 'rgba(96,165,250,0.4)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 18, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Dot
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Border
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = pt.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      if (pt.x === 0) {
+        ctx.textAlign = 'right';
+        ctx.fillText(pt.label, p.x - 12, p.y + 5);
+      } else if (i === 3) {
+        ctx.textAlign = 'center';
+        ctx.fillText(pt.label, p.x, p.y - 14);
+      } else {
+        ctx.textAlign = 'left';
+        ctx.fillText(pt.label, p.x + 12, p.y - 8);
+      }
+    });
+
+    // Highlight the answer point with a special marker
+    const answerPt = toCanvas(7.5, 0);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.arc(answerPt.x, answerPt.y, 14, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  draw();
+
+  // Step click interactivity
+  document.querySelectorAll('.step').forEach(step => {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Krug kroz tri tačke — presek sa x-osom",
+  "subject": "math",
+  "unit": "geometry",
+  "topic_tags": ["analitička geometrija", "jednačina kruga", "krug kroz tri tačke", "presek sa osom", "kvadratna jednačina"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odnos binomnih koeficijenata</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Odnos binomnih koeficijenata uz stepen x^1007 u razvojima binoma (1+x)^2014 i (1+x)^2013.
+
+Korak 1: Binomna teorema.
+  (1+x)^n = sum_{k=0}^{n} C(n,k) * x^k
+
+  Koeficijent uz x^1007 u (1+x)^2014 je C(2014, 1007).
+  Koeficijent uz x^1007 u (1+x)^2013 je C(2013, 1007).
+
+Korak 2: Trazeni odnos:
+  R = C(2014, 1007) / C(2013, 1007)
+
+Korak 3: Racunanje:
+  C(2014, 1007) = 2014! / (1007! * 1007!)
+  C(2013, 1007) = 2013! / (1007! * 1006!)
+
+  R = [2014! / (1007! * 1007!)] / [2013! / (1007! * 1006!)]
+    = [2014! / (1007! * 1007!)] * [1007! * 1006! / 2013!]
+    = [2014! * 1006!] / [1007! * 2013!]
+    = [2014 * 2013! * 1006!] / [1007 * 1006! * 2013!]
+    = 2014 / 1007
+    = 2
+
+Korak 4: Alternativna provera pomocu rekurentne veze:
+  C(n, k) = C(n-1, k-1) + C(n-1, k)  (Paskalov identitet)
+  C(2014, 1007) = C(2013, 1006) + C(2013, 1007)
+
+  R = C(2014, 1007) / C(2013, 1007)
+    = [C(2013, 1006) + C(2013, 1007)] / C(2013, 1007)
+    = 1 + C(2013, 1006) / C(2013, 1007)
+
+  C(2013, 1006) / C(2013, 1007) = [2013! / (1006! * 1007!)] / [2013! / (1007! * 1006!)]
+  = 1
+
+  (jer je C(2013, 1006) = C(2013, 2013-1006) = C(2013, 1007))
+
+  Dakle R = 1 + 1 = 2.
+
+Odgovor: (B) 2
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  overflow-x: auto;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.18);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.given-item:hover {
+  transform: translateY(-2px);
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+}
+
+/* Plan card */
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card h2 {
+  color: #a78bfa;
+}
+
+/* Details/collapsible */
+details {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+details ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+details li {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+details li:last-child {
+  border-bottom: none;
+}
+
+/* Canvas card */
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  width: 100%;
+  max-width: 700px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+/* Steps */
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+/* Checkpoint */
+.checkpoint {
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.18);
+}
+
+.checkpoint summary {
+  color: #34d399;
+}
+
+/* Key insight */
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.25);
+}
+
+.insight-card h2 {
+  color: #a78bfa;
+}
+
+/* Final answer */
+.final-answer {
+  border: 2px solid rgba(74,222,128,0.3);
+  background: linear-gradient(135deg, rgba(74,222,128,0.06), rgba(52,211,153,0.04));
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.answer-big {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.option-box {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  text-align: center;
+  min-width: 90px;
+  transition: transform 0.2s;
+}
+
+.option-box.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  transform: scale(1.05);
+}
+
+.option-box .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.option-box .opt-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.option-box.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+}
+
+/* Pitfalls */
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: rgba(224,148,104,0.06);
+  border-left: 3px solid #e09468;
+  border-radius: 0 8px 8px 0;
+  color: #e2e8f0;
+}
+
+.pitfall-list li strong {
+  color: #e09468;
+}
+
+/* Challenge */
+.challenge-card {
+  border: 1px solid rgba(244,114,182,0.2);
+  background: rgba(244,114,182,0.04);
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { flex-direction: column; }
+  .options-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Odnos binomnih koeficijenata</h1>
+  <p class="subtitle">Binomna teorema i svojstva binomnih koeficijenata</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Odnos binomnih koeficijenata uz stepen \(x^{1007}\), (\(x \in (0, +\infty)\)) u razvojima binoma \((1 + x)^{2014}\) i \((1 + x)^{2013}\) redom, iznosi:</p>
+
+    <div class="given-grid" style="margin-bottom: 18px;">
+      <div class="given-item">
+        <div class="label">Stepen</div>
+        <div class="value">\(x^{1007}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Prvi binom</div>
+        <div class="value">\((1+x)^{2014}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Drugi binom</div>
+        <div class="value">\((1+x)^{2013}\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{1007}{1006}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{3}{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{1}{2014}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{1}{2015}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Koristicemo binomnu teoremu da odredimo koeficijente uz \(x^{1007}\) u oba razvoja, a zatim izracunati njihov odnos. Kljuc je direktna primena formule za binomni koeficijent \(\binom{n}{k}\) i vestina skracivanja faktorijela.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <details>
+    <summary>Kljucne formule i teoreme</summary>
+    <ul>
+      <li><strong>Binomna teorema:</strong> \((1 + x)^n = \displaystyle\sum_{k=0}^{n} \binom{n}{k} x^k\), pa je koeficijent uz \(x^k\) upravo \(\binom{n}{k}\).</li>
+      <li><strong>Binomni koeficijent:</strong> \(\binom{n}{k} = \dfrac{n!}{k!\,(n-k)!}\)</li>
+      <li><strong>Odnos susednih binomnih koeficijenata:</strong> \(\dfrac{\binom{n}{k}}{\binom{n-1}{k}} = \dfrac{n}{n-k}\)</li>
+      <li><strong>Paskalov identitet:</strong> \(\binom{n}{k} = \binom{n-1}{k-1} + \binom{n-1}{k}\)</li>
+      <li><strong>Simetrija:</strong> \(\binom{n}{k} = \binom{n}{n-k}\)</li>
+    </ul>
+  </details>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz: Paskalov trougao i odnos koeficijenata</h2>
+    <p style="color:#94a3b8; margin-bottom: 14px;">Pomerajte klizac da vidite kako se odnos \(\binom{n}{k} / \binom{n-1}{k}\) menja za razlicite vrednosti \(n\) i \(k\)</p>
+    <canvas id="pascal-canvas" width="700" height="500"></canvas>
+    <div style="margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap;">
+      <label for="k-slider" style="color: #94a3b8;">Vrednost \(k\):</label>
+      <input type="range" id="k-slider" min="1" max="20" value="5" style="width: 200px; accent-color: #60a5fa;">
+      <span id="k-display" style="color: #60a5fa; font-weight: 600; min-width: 30px;">5</span>
+    </div>
+    <p class="canvas-hint">Klizac menja vrednost k i prikazuje odnos C(n,k)/C(n-1,k) za n od k+1 do k+20</p>
+  </div>
+
+  <!-- Step-by-step solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step" id="step-1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Odredjivanje koeficijenata pomocu binomne teoreme</h3>
+        <p>Prema binomnoj teoremi, razvoj binoma \((1+x)^n\) glasi:</p>
+        <div class="math-box">
+          \[ (1 + x)^n = \sum_{k=0}^{n} \binom{n}{k} x^k \]
+        </div>
+        <p>Dakle, koeficijent uz \(x^{1007}\) u razvoju \((1+x)^n\) je upravo \(\binom{n}{1007}\).</p>
+      </div>
+    </div>
+
+    <div class="step" id="step-2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Zapisivanje oba koeficijenta</h3>
+        <p>Za prvi binom \((1+x)^{2014}\), koeficijent uz \(x^{1007}\) je:</p>
+        <div class="math-box">
+          \[ \binom{2014}{1007} = \frac{2014!}{1007! \cdot 1007!} \]
+        </div>
+        <p>Za drugi binom \((1+x)^{2013}\), koeficijent uz \(x^{1007}\) je:</p>
+        <div class="math-box">
+          \[ \binom{2013}{1007} = \frac{2013!}{1007! \cdot 1006!} \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Zasto u drugom slucaju imamo 1006! u imeniocu?</summary>
+      <p>Zato sto je \(\binom{2013}{1007} = \frac{2013!}{1007! \cdot (2013-1007)!} = \frac{2013!}{1007! \cdot 1006!}\). Drugi faktor u imeniocu je uvek \((n-k)!\), a ovde je \(n-k = 2013 - 1007 = 1006\).</p>
+    </details>
+
+    <div class="step" id="step-3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Postavljanje odnosa</h3>
+        <p>Trazeni odnos je:</p>
+        <div class="math-box">
+          \[ R = \frac{\binom{2014}{1007}}{\binom{2013}{1007}} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Zamena definicija binomnih koeficijenata</h3>
+        <p>Uvrstavamo definicije:</p>
+        <div class="math-box">
+          \[ R = \frac{\dfrac{2014!}{1007! \cdot 1007!}}{\dfrac{2013!}{1007! \cdot 1006!}} \]
+        </div>
+        <p>Deljenje razlomaka pretvaramo u mnozenje reciprocnom vrednoscu:</p>
+        <div class="math-box">
+          \[ R = \frac{2014!}{1007! \cdot 1007!} \cdot \frac{1007! \cdot 1006!}{2013!} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Skracivanje faktorijela</h3>
+        <p>Skracujemo \(1007!\) iz brojioca i imenioca:</p>
+        <div class="math-box">
+          \[ R = \frac{2014! \cdot 1006!}{1007! \cdot 2013!} \]
+        </div>
+        <p>Sada koristimo cinjenicu da je \(2014! = 2014 \cdot 2013!\) i \(1007! = 1007 \cdot 1006!\):</p>
+        <div class="math-box">
+          \[ R = \frac{2014 \cdot 2013! \cdot 1006!}{1007 \cdot 1006! \cdot 2013!} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Zavrsno skracivanje</h3>
+        <p>Skracujemo \(2013!\) i \(1006!\):</p>
+        <div class="math-box">
+          \[ R = \frac{2014}{1007} \]
+        </div>
+        <p>Racunamo:</p>
+        <div class="math-box">
+          \[ R = \frac{2014}{1007} = \frac{2 \cdot 1007}{1007} = 2 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Kako da brzo proverimo rezultat?</summary>
+      <p>Mozemo koristiti opstu formulu za odnos: \(\dfrac{\binom{n}{k}}{\binom{n-1}{k}} = \dfrac{n}{n-k}\). Za \(n = 2014\) i \(k = 1007\): \(\dfrac{2014}{2014 - 1007} = \dfrac{2014}{1007} = 2\). Potvrdjeno!</p>
+    </details>
+
+    <div class="step" id="step-7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Alternativni pristup: Paskalov identitet</h3>
+        <p>Postoji i elegantan nacin pomocu <span class="highlight">Paskalovog identiteta</span> i <span class="highlight">simetrije binomnih koeficijenata</span>:</p>
+        <div class="math-box">
+          \[ \binom{2014}{1007} = \binom{2013}{1006} + \binom{2013}{1007} \]
+        </div>
+        <p>Posto je \(2013 - 1006 = 1007\), iz simetrije \(\binom{n}{k} = \binom{n}{n-k}\) sledi:</p>
+        <div class="math-box">
+          \[ \binom{2013}{1006} = \binom{2013}{1007} \]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-box">
+          \[ \binom{2014}{1007} = \binom{2013}{1007} + \binom{2013}{1007} = 2 \cdot \binom{2013}{1007} \]
+        </div>
+        <p>Odatle je odnos jednak \(2\).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Zasto je C(2013, 1006) = C(2013, 1007)?</summary>
+      <p>Iz svojstva simetrije: \(\binom{n}{k} = \binom{n}{n-k}\). Posto je \(2013 - 1006 = 1007\), vazi \(\binom{2013}{1006} = \binom{2013}{1007}\). Ovo je kljucan uvid &mdash; oba koeficijenta su jednaka jer su simetricno postavljeni u Paskalovom trouglu (srednji element u redu sa neparnim brojem 2013).</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2>Kljucni uvid</h2>
+    <p>Rezultat \(R = 2\) ima prelepo objasnjenje. Broj \(2013\) je neparan, pa se u Paskalovom trouglu red \(n = 2013\) ima dva jednaka centralna clana: \(\binom{2013}{1006}\) i \(\binom{2013}{1007}\). Kada ih saberemo po Paskalovom pravilu, dobijamo element iz sledeceg reda koji je tacno <span class="highlight">dvostruko veci</span> od svakog od njih:</p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ \frac{\binom{2014}{1007}}{\binom{2013}{1007}} = 2 \]
+    </div>
+    <p>Ovo se desava uvek kada je \(n\) neparno i biramo \(k = \frac{n+1}{2}\) &mdash; trazeni odnos je uvek 2!</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konacan odgovor</h2>
+    <div class="answer-big">\(\dfrac{\dbinom{2014}{1007}}{\dbinom{2013}{1007}} = 2\)</div>
+
+    <div class="options-row">
+      <div class="option-box">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(\dfrac{1007}{1006}\)</div>
+      </div>
+      <div class="option-box correct">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(2\)</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(\dfrac{3}{2}\)</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(\dfrac{1}{2014}\)</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(\dfrac{1}{2015}\)</div>
+      </div>
+    </div>
+
+    <p class="verification"><strong>Verifikacija na malom primeru:</strong> Proverimo za \(n = 5\) i \(k = 3\): \(\binom{5}{3} = 10\), \(\binom{4}{3} = 4\). Opsta formula daje \(\frac{5}{5-3} = \frac{5}{2} = 2{,}5\). Za nas problem \(\frac{2014}{2014-1007} = \frac{2014}{1007} = 2\). Moze se i direktno: \(2014 = 2 \times 1007\), pa je rezultat tacno 2. &check;</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <ul class="pitfall-list">
+      <li><strong>Zamena brojioca i imenioca:</strong> Tekst kaze "u razvojima binoma \((1+x)^{2014}\) i \((1+x)^{2013}\) <em>redom</em>", sto znaci da se prvi binom deli drugim. Da je obrnuto, rezultat bi bio \(\frac{1}{2}\), sto nije medju ponudjenim odgovorima u ovom kontekstu. Pazljivo citajte redosled!</li>
+      <li><strong>Brkanje binomnog koeficijenta i clana razvoja:</strong> Clan uz \(x^{1007}\) u razvoju \((1+x)^{2014}\) je \(\binom{2014}{1007} \cdot x^{1007}\). Zadatak trazi odnos <em>koeficijenata</em>, dakle bez \(x^{1007}\) &mdash; to je upravo \(\binom{2014}{1007}\), ne ceo clan.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Za koje vrednosti \(n\) i \(k\) je odnos \(\dfrac{\binom{n}{k}}{\binom{n-1}{k}}\) ceo broj?</p>
+    <details>
+      <summary>Pomoc</summary>
+      <p>Koristite formulu \(\dfrac{\binom{n}{k}}{\binom{n-1}{k}} = \dfrac{n}{n-k}\). Ovaj odnos je ceo broj tacno onda kada \((n-k) \mid n\), tj. kada \((n-k)\) deli \(n\). Posto je \(n = (n-k) + k\), to je ekvivalentno sa \((n-k) \mid k\). Na primer, za \(n = 2014\) i \(k = 1007\) imamo \(n - k = 1007\), a \(1007 \mid 1007\), pa je odnos zaista ceo broj (= 2).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Pascal triangle ratio visualization
+  const canvas = document.getElementById('pascal-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const slider = document.getElementById('k-slider');
+  const kDisplay = document.getElementById('k-display');
+
+  function draw() {
+    const k = parseInt(slider.value, 10);
+    kDisplay.textContent = k;
+
+    // Clear
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Margins
+    const marginLeft = 80;
+    const marginRight = 40;
+    const marginTop = 50;
+    const marginBottom = 60;
+    const plotW = W - marginLeft - marginRight;
+    const plotH = H - marginTop - marginBottom;
+
+    // Compute data: ratio = n / (n - k) for n from k+1 to k+20
+    const nStart = k + 1;
+    const nEnd = k + 20;
+    const data = [];
+    let maxR = 0;
+    for (let n = nStart; n <= nEnd; n++) {
+      const ratio = n / (n - k);
+      data.push({ n: n, ratio: ratio });
+      if (ratio > maxR) maxR = ratio;
+    }
+
+    // Y axis range: 0 to ceil(maxR) + 0.5
+    const yMax = Math.ceil(maxR) + 0.5;
+    const yMin = 0;
+
+    // Helpers
+    function toX(n) {
+      return marginLeft + ((n - nStart) / (nEnd - nStart)) * plotW;
+    }
+    function toY(r) {
+      return marginTop + plotH - ((r - yMin) / (yMax - yMin)) * plotH;
+    }
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let y = 1; y <= Math.ceil(maxR); y++) {
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, toY(y));
+      ctx.lineTo(W - marginRight, toY(y));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    // X-axis
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, marginTop + plotH);
+    ctx.lineTo(W - marginRight, marginTop + plotH);
+    ctx.stroke();
+    // Y-axis
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, marginTop);
+    ctx.lineTo(marginLeft, marginTop + plotH);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    // X-axis labels
+    for (let i = 0; i < data.length; i += 2) {
+      const d = data[i];
+      ctx.fillText(String(d.n), toX(d.n), marginTop + plotH + 8);
+    }
+    ctx.fillText('n', W - marginRight + 15, marginTop + plotH + 5);
+
+    // Y-axis labels
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let y = 1; y <= Math.ceil(maxR); y++) {
+      ctx.fillText(String(y), marginLeft - 10, toY(y));
+    }
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('Odnos C(n,' + k + ') / C(n-1,' + k + ') = n/(n-' + k + ')', W / 2, marginTop - 10);
+
+    // Draw line
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let i = 0; i < data.length; i++) {
+      const d = data[i];
+      const px = toX(d.n);
+      const py = toY(d.ratio);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Draw points
+    for (let i = 0; i < data.length; i++) {
+      const d = data[i];
+      const px = toX(d.n);
+      const py = toY(d.ratio);
+
+      ctx.fillStyle = '#0c1222';
+      ctx.beginPath();
+      ctx.arc(px, py, 5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = '#60a5fa';
+      ctx.beginPath();
+      ctx.arc(px, py, 4, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    // Highlight the point that corresponds to n=2k (ratio=2, our problem's pattern)
+    const nDouble = 2 * k;
+    if (nDouble >= nStart && nDouble <= nEnd) {
+      const px = toX(nDouble);
+      const py = toY(2);
+
+      // Glow
+      const grad = ctx.createRadialGradient(px, py, 0, px, py, 20);
+      grad.addColorStop(0, 'rgba(74,222,128,0.4)');
+      grad.addColorStop(1, 'rgba(74,222,128,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(px, py, 20, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('n = 2k = ' + nDouble + ' \u2192 odnos = 2', px + 12, py - 4);
+    }
+
+    // Dashed line at ratio = 2
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = 'rgba(74,222,128,0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, toY(2));
+    ctx.lineTo(W - marginRight, toY(2));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label for ratio = 2 line
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('odnos = 2', W - marginRight - 70, toY(2) - 12);
+
+    // Dashed horizontal line at ratio = 1 (asymptote)
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(148,163,184,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, toY(1));
+    ctx.lineTo(W - marginRight, toY(1));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('asimptota: 1', W - marginRight - 70, toY(1) - 10);
+
+    // Info box for our specific problem
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(marginLeft + 10, marginTop + 8, 280, 52, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Nas problem: n=2014, k=1007', marginLeft + 20, marginTop + 16);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('2014 / (2014-1007) = 2014/1007 = 2', marginLeft + 20, marginTop + 36);
+  }
+
+  draw();
+  slider.addEventListener('input', draw);
+
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Odnos binomnih koeficijenata",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["binomna teorema", "binomni koeficijenti", "Paskalov trougao", "faktorijeli", "kombinatorika"]
+}
+BRAINSPARK_META-->

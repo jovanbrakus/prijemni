@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ugao preseka ravni i baze pravilne četvorostrane prizme</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Pravilna četvorostrana prizma presečena je ravni koja sadrži jednu osnovnu ivicu.
+Površina preseka = 2 × površina baze.
+Naći ugao između ravni preseka i baze prizme.
+
+SETUP:
+- Baza: kvadrat ABCD sa stranicom a. Površina baze = a².
+- Visina prizme: h (nepoznata, ali se skraćuje iz računice).
+- Gornja baza: A'B'C'D'.
+- Koordinate: A=(0,0,0), B=(a,0,0), C=(a,a,0), D=(0,a,0).
+  A'=(0,0,h), B'=(a,0,h), C'=(a,a,h), D'=(0,a,h).
+
+CUTTING PLANE:
+- Ravan sadrži ivicu AB (na osi y=0, z=0).
+- Ravan se naginje ka gore pod uglom α u odnosu na bazu.
+- Jednačina ravni: z = y · tan(α).
+
+CASE ANALYSIS:
+Na suprotnoj strani od AB, tj. na y = a, ravan dostiže visinu z = a·tan(α).
+
+Slučaj 1: a·tan(α) ≤ h (ravan seče zadnju bočnu stranu prizme pre nego što stigne do gornje baze)
+- Presek je paralelogram ABEF gde je:
+  E = (a, a, a·tan(α)), F = (0, a, a·tan(α))
+- Vektori: AB = (a,0,0), AF = (0, a, a·tan(α))
+- Površina = |AB × AF| = |(0, -a²·tan(α), a²)| = a² · √(1 + tan²(α)) = a²/cos(α)
+
+Postavljamo jednačinu:
+  a²/cos(α) = 2a²
+  1/cos(α) = 2
+  cos(α) = 1/2
+  α = 60°
+
+Provera uslova: a·tan(60°) = a√3. Treba h ≥ a√3.
+Pošto prizma može imati proizvoljnu visinu (dovoljno visoku), ovo važi.
+
+ANSWER: (D) 60°
+
+VERIFICATION:
+- Ako je α = 60°, cos(60°) = 1/2.
+- Površina preseka = a²/cos(60°) = a²/(1/2) = 2a². ✓
+- To je tačno 2 puta veća od površine baze a². ✓
+
+Zašto je presek paralelogram?
+- AB i EF su paralelni (oba su duž x-ose, na istoj y koordinati ali različitim z).
+  Zapravo: AB ide od (0,0,0) do (a,0,0), a EF ide od (0,a,a·tan α) do (a,a,a·tan α).
+  AB i EF su iste dužine a i paralelni su (oba u pravcu x-ose).
+- AF i BE su paralelni i jednake dužine.
+- Dakle ABEF je paralelogram.
+- AB = a (osnovna ivica), a visina paralelograma (rastojanje od AB do EF) = a/cos(α).
+  Jer AF ima dužinu √(a² + a²·tan²α) = a/cos(α), i AF ⊥ AB,
+  pa je površina = a · (a/cos α) = a²/cos α.
+
+Actually, AF is NOT perpendicular to AB. Let me reconsider.
+AB = (a,0,0), AF = (0, a, a·tan α).
+AB · AF = 0. YES, they ARE perpendicular! So the parallelogram is actually a rectangle.
+Area = |AB| · |AF| = a · a/cos(α) = a²/cos(α). ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.18);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+  transition: border-color 0.2s;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #cbd5e1;
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+canvas {
+  border-radius: 10px;
+  width: 100%;
+  max-width: 650px;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.step-container {
+  margin-bottom: 18px;
+  padding: 18px;
+  padding-left: 24px;
+  background: rgba(30,41,59,0.5);
+  border-left: 3px solid #334155;
+  border-radius: 0 10px 10px 0;
+  cursor: pointer;
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.step-container:hover,
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(30,41,59,0.9);
+}
+
+.step-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+.step-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.step-text {
+  color: #cbd5e1;
+  font-size: 0.97rem;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+
+.insight-box h3 {
+  color: #a78bfa;
+  margin-bottom: 10px;
+}
+
+.final-answer {
+  text-align: center;
+  padding: 30px;
+  border: 2px solid rgba(74,222,128,0.3);
+  background: rgba(74,222,128,0.06);
+}
+
+.final-answer .answer-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer .answer-label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.option-box {
+  padding: 12px 22px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: rgba(30,41,59,0.6);
+  color: #94a3b8;
+  font-size: 1.05rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.option-box.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.12);
+  color: #4ade80;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  padding-left: 16px;
+  position: relative;
+  color: #cbd5e1;
+}
+
+.pitfall-list li::before {
+  content: '\26A0';
+  position: absolute;
+  left: 0;
+}
+
+.challenge-box {
+  border-left: 3px solid #f472b6;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { flex-direction: column; }
+  .options-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Presek ravni i pravilne četvorostrane prizme</h1>
+  <p class="subtitle">Stereometrija, preseci tela ravnima, ugao između ravni</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Zadatak</h2>
+    <p>Pravilna četvorostrana prizma presečena je sa ravni koja sadrži <span class="highlight">osnovnu ivicu</span> prizme. Ako je površina preseka ravni i prizme <span class="highlight">dva puta veća</span> od površine baze, tada je ugao između te ravni i baze prizme jednak:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(15°\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(30°\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(45°\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(60°\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(75°\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Postavićemo koordinatni sistem sa jednim temenom baze u koordinatnom početku. Ravan koja sadrži jednu osnovnu ivicu naginje se pod uglom \(\alpha\) u odnosu na bazu. Odredićemo oblik i površinu preseka u zavisnosti od \(\alpha\), a zatim izjednačiti sa \(2a^2\) (dvostrukom površinom baze).</p>
+  </div>
+
+  <!-- THEORY -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Pravilna četvorostrana prizma:</strong> prava prizma čija je baza kvadrat stranice \(a\). Bočne ivice su normalne na bazu.</li>
+          <li><strong>Ugao između dve ravni (diedarski ugao):</strong> ugao između pravih u kojima se presečna ravan seče sa svakom od dve ravni, gde su te prave normalne na zajedničku ivicu (presečnicu) u istoj tački.</li>
+          <li><strong>Površina paralelograma:</strong> \( S = |\vec{AB} \times \vec{AF}| \), gde su \(\vec{AB}\) i \(\vec{AF}\) vektori dve susedne stranice.</li>
+          <li><strong>Vektorski proizvod:</strong> \(|\vec{u} \times \vec{v}| = |\vec{u}| \cdot |\vec{v}| \cdot \sin\theta\), gde je \(\theta\) ugao između vektora. Ako su vektori normalni (\(\theta = 90°\)), tada je \(|\vec{u} \times \vec{v}| = |\vec{u}| \cdot |\vec{v}|\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- VISUAL AID - 3D PRISM -->
+  <div class="card canvas-card">
+    <h2>3D prikaz prizme i preseka</h2>
+    <p style="color:#94a3b8; margin-bottom:14px;">Prizma sa kvadratnom bazom \(ABCD\), gornjom bazom \(A'B'C'D'\), i ravan preseka \(ABEF\) (ljubičasta).</p>
+    <canvas id="prism3d" width="650" height="550"></canvas>
+    <p class="drag-hint">Prevucite levo/desno da rotirate prikaz</p>
+  </div>
+
+  <!-- STEP-BY-STEP -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" id="step1">
+      <span class="step-badge">Korak 1</span>
+      <div class="step-title">Postavljanje koordinatnog sistema</div>
+      <div class="step-text">
+        <p>Neka je baza prizme kvadrat \(ABCD\) sa stranicom \(a\), a visina prizme \(h\). Postavimo koordinatni sistem:</p>
+        <div class="math-box">
+          \[
+          A = (0,\,0,\,0), \quad B = (a,\,0,\,0), \quad C = (a,\,a,\,0), \quad D = (0,\,a,\,0)
+          \]
+        </div>
+        <p>Gornja baza je na visini \(h\):</p>
+        <div class="math-box">
+          \[
+          A' = (0,\,0,\,h), \quad B' = (a,\,0,\,h), \quad C' = (a,\,a,\,h), \quad D' = (0,\,a,\,h)
+          \]
+        </div>
+        <p>Površina baze je \(S_{\text{baze}} = a^2\).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" id="step2">
+      <span class="step-badge">Korak 2</span>
+      <div class="step-title">Jednačina ravni preseka</div>
+      <div class="step-text">
+        <p>Ravan preseka sadrži ivicu \(AB\), koja leži duž \(x\)-ose (gde je \(y = 0\) i \(z = 0\)). Ravan se naginje ka gore pod uglom \(\alpha\) u odnosu na baznu ravan.</p>
+        <p>Jednačina ravni preseka je:</p>
+        <div class="math-box">
+          \[ z = y \cdot \tan\alpha \]
+        </div>
+        <p>Na rastojanju \(y\) od ivice \(AB\), visina ravni je \(y\tan\alpha\). Na suprotnoj strani baze (gde je \(y = a\)), ravan dostiže visinu \(z = a\tan\alpha\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>🧠 Proveri se: Zašto je jednačina ravni baš \(z = y\tan\alpha\)?</summary>
+      <p style="padding-top:8px; color:#cbd5e1;">
+        Ravan prolazi kroz celu ivicu \(AB\) (gde je \(y = 0\), \(z = 0\)) i naginje se pod uglom \(\alpha\) od bazne ravni. U preseku sa ravni \(x = \text{const}\), ravan pravi pravu liniju koja polazi iz tačke na \(AB\) (gde je \(z=0\)) i raste pod uglom \(\alpha\). Zato je \(z = y\tan\alpha\), nezavisno od \(x\) koordinate.
+      </p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container" id="step3">
+      <span class="step-badge">Korak 3</span>
+      <div class="step-title">Određivanje oblika preseka</div>
+      <div class="step-text">
+        <p>Pretpostavljamo da je prizma dovoljno visoka tako da ravan seče bočnu stranu nasuprot \(AB\) (stranu kroz \(CD\)) pre nego što dostigne gornju bazu. To znači \(a\tan\alpha \leq h\).</p>
+        <p>Ravan \(z = y\tan\alpha\) seče bočnu stranu \(DCC'D'\) (gde je \(y = a\)) u tačkama:</p>
+        <div class="math-box">
+          \[
+          E = (a,\; a,\; a\tan\alpha), \qquad F = (0,\; a,\; a\tan\alpha)
+          \]
+        </div>
+        <p>Dakle, presek ravni i prizme je četvorougao \(ABEF\) — sa temenima:</p>
+        <div class="math-box">
+          \[
+          A = (0,0,0), \quad B = (a,0,0), \quad E = (a,a,a\tan\alpha), \quad F = (0,a,a\tan\alpha)
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" id="step4">
+      <span class="step-badge">Korak 4</span>
+      <div class="step-title">Oblik preseka: pravougaonik!</div>
+      <div class="step-text">
+        <p>Proverimo da li je \(ABEF\) pravougaonik. Formiramo vektore dve susedne stranice:</p>
+        <div class="math-box">
+          \[
+          \vec{AB} = (a,\; 0,\; 0), \qquad \vec{AF} = (0,\; a,\; a\tan\alpha)
+          \]
+        </div>
+        <p>Skalarni proizvod:</p>
+        <div class="math-box">
+          \[
+          \vec{AB} \cdot \vec{AF} = a \cdot 0 + 0 \cdot a + 0 \cdot a\tan\alpha = 0
+          \]
+        </div>
+        <p>Pošto je \(\vec{AB} \cdot \vec{AF} = 0\), stranice \(AB\) i \(AF\) su <span class="highlight">međusobno normalne</span>. Uz činjenicu da su \(AB \parallel EF\) i \(AF \parallel BE\), presek \(ABEF\) je pravougaonik.</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" id="step5">
+      <span class="step-badge">Korak 5</span>
+      <div class="step-title">Računanje površine preseka</div>
+      <div class="step-text">
+        <p>Pošto je \(ABEF\) pravougaonik, njegova površina je proizvod dužina dve susedne stranice:</p>
+        <div class="math-box">
+          \[
+          |AB| = a
+          \]
+        </div>
+        <div class="math-box">
+          \[
+          |AF| = \sqrt{0^2 + a^2 + (a\tan\alpha)^2} = a\sqrt{1 + \tan^2\alpha}
+          \]
+        </div>
+        <p>Primenjujemo poznati trigonometrijski identitet \(1 + \tan^2\alpha = \dfrac{1}{\cos^2\alpha}\):</p>
+        <div class="math-box">
+          \[
+          |AF| = a \cdot \sqrt{\frac{1}{\cos^2\alpha}} = \frac{a}{\cos\alpha}
+          \]
+        </div>
+        <p>Površina preseka je:</p>
+        <div class="math-box">
+          \[
+          S_{\text{preseka}} = |AB| \cdot |AF| = a \cdot \frac{a}{\cos\alpha} = \frac{a^2}{\cos\alpha}
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>🧠 Proveri se: Za \(\alpha = 0°\), kolika bi bila površina preseka?</summary>
+      <p style="padding-top:8px; color:#cbd5e1;">
+        Za \(\alpha = 0°\), ravan preseka se poklapa sa baznom ravni, pa je \(S = \frac{a^2}{\cos 0°} = \frac{a^2}{1} = a^2\), što je tačno površina baze. Logično!
+      </p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container" id="step6">
+      <span class="step-badge">Korak 6</span>
+      <div class="step-title">Postavljanje uslova iz zadatka</div>
+      <div class="step-text">
+        <p>Prema zadatku, površina preseka je dva puta veća od površine baze:</p>
+        <div class="math-box">
+          \[
+          S_{\text{preseka}} = 2 \cdot S_{\text{baze}}
+          \]
+        </div>
+        <div class="math-box">
+          \[
+          \frac{a^2}{\cos\alpha} = 2a^2
+          \]
+        </div>
+        <p>Delimo obe strane sa \(a^2\) (pošto je \(a > 0\)):</p>
+        <div class="math-box">
+          \[
+          \frac{1}{\cos\alpha} = 2 \quad \Longrightarrow \quad \cos\alpha = \frac{1}{2}
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container" id="step7">
+      <span class="step-badge">Korak 7</span>
+      <div class="step-title">Nalaženje ugla</div>
+      <div class="step-text">
+        <p>Jednačina \(\cos\alpha = \dfrac{1}{2}\) ima poznato rešenje:</p>
+        <div class="math-box">
+          \[
+          \alpha = \arccos\frac{1}{2} = 60°
+          \]
+        </div>
+        <p>Ugao između ravni preseka i baze prizme iznosi <span class="highlight">\(60°\)</span>.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>🧠 Proveri se: Da li je uslov \(a\tan 60° \leq h\) moguć?</summary>
+      <p style="padding-top:8px; color:#cbd5e1;">
+        Za \(\alpha = 60°\) imamo \(a\tan 60° = a\sqrt{3}\). Ovo znači da visina prizme mora biti bar \(a\sqrt{3} \approx 1{,}73a\). Pošto zadatak kaže „pravilna četvorostrana prizma" — a to je prava prizma sa kvadratnom bazom (visina nije nužno jednaka stranici baze) — dovoljno je da prizma bude visoka bar \(a\sqrt{3}\), što je potpuno moguće. Rezultat važi jer je ugao \(\alpha\) nezavisan od konkretne visine \(h\) (pod uslovom da je dovoljno velika).
+      </p>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <h3>Ključni uvid</h3>
+    <p>Presek ravni koja sadrži jednu osnovnu ivicu prizme i naginje se pod uglom \(\alpha\) jeste <strong>pravougaonik</strong> čija je jedna stranica osnovna ivica \(a\), a druga stranica je „kosa dijagonala" dužine \(\frac{a}{\cos\alpha}\). Zato je:</p>
+    <div class="math-box" style="text-align:center; font-size:1.15rem;">
+      \[
+      S_{\text{preseka}} = \frac{a^2}{\cos\alpha}
+      \]
+    </div>
+    <p>Ova formula pokazuje da što je ugao veći, to je presek veći — što ima geometrijski smisao jer se ravan „više naginje" i seče veću površinu unutar prizme.</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <p class="answer-label">Ugao između ravni preseka i baze prizme je:</p>
+    <div class="answer-value">(D) 60°</div>
+    <div class="options-row">
+      <div class="option-box">(A) 15°</div>
+      <div class="option-box">(B) 30°</div>
+      <div class="option-box">(C) 45°</div>
+      <div class="option-box correct">(D) 60°</div>
+      <div class="option-box">(E) 75°</div>
+    </div>
+    <p class="verification-note">Provera: \(\cos 60° = \frac{1}{2}\), dakle \(S_{\text{preseka}} = \frac{a^2}{1/2} = 2a^2 = 2 \cdot S_{\text{baze}}\). Uslov iz zadatka je zadovoljen.</p>
+  </div>
+
+  <!-- PITFALLS -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li>Pogrešno pretpostaviti da je presek trougao umesto pravougaonika. Ravan sadrži celu ivicu \(AB\) i seče suprotnu bočnu stranu — presek ima 4 temena, ne 3.</li>
+      <li>Koristiti \(\sin\alpha\) umesto \(\frac{1}{\cos\alpha}\) za odnos površina. Površina preseka je \(a^2 / \cos\alpha\), a ne \(a^2 \cdot \sin\alpha\) — ovo su različiti izrazi (osim za \(\alpha = 90°\), što nema geometrijskog smisla u prizmi).</li>
+    </ul>
+  </div>
+
+  <!-- CHALLENGE -->
+  <div class="card challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Pod kojim uglom treba presecati istu prizmu (ravan opet sadrži jednu osnovnu ivicu) da bi površina preseka bila \(\sqrt{2}\) puta veća od površine baze?</p>
+    <details>
+      <summary>Pomoć</summary>
+      <p style="padding-top:8px; color:#cbd5e1;">
+        Iz formule \(\frac{a^2}{\cos\alpha} = \sqrt{2}\, a^2\), dobijamo \(\cos\alpha = \frac{1}{\sqrt{2}} = \frac{\sqrt{2}}{2}\), što daje \(\alpha = 45°\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // 3D Prism Canvas
+  const canvas = document.getElementById('prism3d');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  let rotY = -0.45;
+  let dragging = false;
+  let lastX = 0;
+
+  // 3D projection: simple oblique / isometric-like
+  const a = 160; // base edge in pixels
+  const h = 280; // prism height in pixels (h > a*sqrt(3) ~ 277 to allow α=60°)
+  const alpha = Math.PI / 3; // 60 degrees
+
+  // 3D vertices of the prism (centered at origin)
+  const halfA = a / 2;
+  function getVertices() {
+    return {
+      A: [-halfA, -halfA, 0],
+      B: [halfA, -halfA, 0],
+      C: [halfA, halfA, 0],
+      D: [-halfA, halfA, 0],
+      Ap: [-halfA, -halfA, h],
+      Bp: [halfA, -halfA, h],
+      Cp: [halfA, halfA, h],
+      Dp: [-halfA, halfA, h],
+      // Cross-section points E and F on the face y = halfA at z = a*tan(alpha)
+      E: [halfA, halfA, a * Math.tan(alpha)],
+      F: [-halfA, halfA, a * Math.tan(alpha)]
+    };
+  }
+
+  // Rotate point around Y axis (vertical in 3D)
+  function rotateY(p, angle) {
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    return [
+      p[0] * c + p[2] * s,
+      p[1],
+      -p[0] * s + p[2] * c
+    ];
+  }
+
+  // Project 3D to 2D with perspective-like foreshortening
+  function project(p) {
+    // Rotate around vertical axis (z in our math = up on screen)
+    const rotated = rotateY(p, rotY);
+    // Swap: x -> screen x, z -> screen up (negate for canvas y), y -> depth
+    const fov = 600;
+    const dist = fov + rotated[1]; // depth
+    const scale = fov / dist;
+    const sx = W / 2 + rotated[0] * scale;
+    const sy = H / 2 + 100 - rotated[2] * scale; // +100 to shift down, z up => -z for canvas
+    return [sx, sy, rotated[1]]; // return depth for sorting
+  }
+
+  function drawLine(p1, p2, color, width, dash) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.setLineDash(dash || []);
+    ctx.beginPath();
+    ctx.moveTo(p1[0], p1[1]);
+    ctx.lineTo(p2[0], p2[1]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawFilledQuad(pts, fillColor) {
+    ctx.fillStyle = fillColor;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) {
+      ctx.lineTo(pts[i][0], pts[i][1]);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawLabel(text, p, color, offsetX, offsetY) {
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, p[0] + (offsetX || 0), p[1] + (offsetY || 0));
+  }
+
+  function drawAngleArc(vertex, p1, p2, radius, color) {
+    // Draw arc from direction vertex->p1 to vertex->p2
+    const a1 = Math.atan2(p1[1] - vertex[1], p1[0] - vertex[0]);
+    const a2 = Math.atan2(p2[1] - vertex[1], p2[0] - vertex[0]);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(vertex[0], vertex[1], radius, a1, a2, a2 < a1);
+    ctx.stroke();
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const v = getVertices();
+    // Project all vertices
+    const pv = {};
+    for (const key in v) {
+      pv[key] = project(v[key]);
+    }
+
+    // Determine which faces are front-facing for depth ordering
+    // We'll draw back edges dashed, front edges solid
+
+    // Base face (always at bottom)
+    drawFilledQuad(
+      [pv.A, pv.B, pv.C, pv.D],
+      'rgba(96, 165, 250, 0.06)'
+    );
+
+    // Cross-section fill (the cut plane ABEF)
+    drawFilledQuad(
+      [pv.A, pv.B, pv.E, pv.F],
+      'rgba(167, 139, 250, 0.18)'
+    );
+
+    // Determine back/front edges based on depth
+    // Simple approach: draw all prism edges, some dashed for hidden
+
+    // Helper: is vertex behind the center roughly?
+    const frontThreshold = 0;
+
+    // Bottom face edges
+    const bottomEdges = [
+      ['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'A']
+    ];
+    bottomEdges.forEach(([from, to]) => {
+      const avgDepth = (pv[from][2] + pv[to][2]) / 2;
+      const isBack = avgDepth > frontThreshold;
+      drawLine(pv[from], pv[to], isBack ? '#3b5a8a' : '#60a5fa', isBack ? 1.2 : 2, isBack ? [5, 5] : []);
+    });
+
+    // Top face edges
+    const topEdges = [
+      ['Ap', 'Bp'], ['Bp', 'Cp'], ['Cp', 'Dp'], ['Dp', 'Ap']
+    ];
+    topEdges.forEach(([from, to]) => {
+      const avgDepth = (pv[from][2] + pv[to][2]) / 2;
+      const isBack = avgDepth > frontThreshold;
+      drawLine(pv[from], pv[to], isBack ? '#3b5a8a' : '#60a5fa', isBack ? 1.2 : 2, isBack ? [5, 5] : []);
+    });
+
+    // Vertical edges
+    const vertEdges = [
+      ['A', 'Ap'], ['B', 'Bp'], ['C', 'Cp'], ['D', 'Dp']
+    ];
+    vertEdges.forEach(([from, to]) => {
+      const avgDepth = (pv[from][2] + pv[to][2]) / 2;
+      const isBack = avgDepth > frontThreshold;
+      drawLine(pv[from], pv[to], isBack ? '#3b5a8a' : '#60a5fa', isBack ? 1.2 : 2, isBack ? [5, 5] : []);
+    });
+
+    // Cross-section edges (purple, prominent)
+    drawLine(pv.A, pv.B, '#a78bfa', 2.5);
+    drawLine(pv.B, pv.E, '#a78bfa', 2.5);
+    drawLine(pv.E, pv.F, '#a78bfa', 2.5);
+    drawLine(pv.F, pv.A, '#a78bfa', 2.5);
+
+    // Height indicator: dashed line from midpoint of EF down to midpoint of CD
+    const midEF = [(pv.E[0] + pv.F[0]) / 2, (pv.E[1] + pv.F[1]) / 2];
+    const midCD = [(pv.C[0] + pv.D[0]) / 2, (pv.C[1] + pv.D[1]) / 2];
+
+    // Draw the angle arc at point A (or D) between base and the cut plane
+    // The angle is between AF direction and AD direction (both in the plane containing A)
+    // AD is along base, AF goes up to F
+    drawAngleArc(pv.A, pv.D, pv.F, 30, '#4ade80');
+    // Label the angle
+    const angleLabelX = pv.A[0] + (pv.D[0] - pv.A[0]) * 0.25 + (pv.F[0] - pv.A[0]) * 0.12;
+    const angleLabelY = pv.A[1] + (pv.D[1] - pv.A[1]) * 0.25 + (pv.F[1] - pv.A[1]) * 0.12;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 15px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u03B1 = 60\u00B0', angleLabelX + 10, angleLabelY - 2);
+
+    // Labels for vertices
+    const labelConfig = {
+      A: [0, 16], B: [0, 16], C: [0, 16], D: [0, 16],
+      Ap: [0, -10], Bp: [0, -10], Cp: [0, -10], Dp: [0, -10],
+      E: [14, -6], F: [-14, -6]
+    };
+
+    const vertexLabels = {
+      A: 'A', B: 'B', C: 'C', D: 'D',
+      Ap: "A'", Bp: "B'", Cp: "C'", Dp: "D'",
+      E: 'E', F: 'F'
+    };
+
+    for (const key in vertexLabels) {
+      const pt = pv[key];
+      const off = labelConfig[key] || [0, 0];
+      const isSection = key === 'E' || key === 'F';
+      const isBase = !key.includes('p') && key !== 'E' && key !== 'F';
+
+      // Dot
+      ctx.beginPath();
+      ctx.arc(pt[0], pt[1], isSection ? 5 : 4, 0, 2 * Math.PI);
+      ctx.fillStyle = isSection ? '#a78bfa' : (isBase ? '#60a5fa' : '#94a3b8');
+      ctx.fill();
+
+      drawLabel(vertexLabels[key], pt, isSection ? '#a78bfa' : (isBase ? '#60a5fa' : '#cbd5e1'), off[0], off[1]);
+    }
+
+    // Side labels
+    // Label "a" on base edge AB
+    const midAB = [(pv.A[0] + pv.B[0]) / 2, (pv.A[1] + pv.B[1]) / 2];
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'italic bold 16px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('a', midAB[0], midAB[1] + 20);
+
+    // Label "a" on base edge AD
+    const midAD = [(pv.A[0] + pv.D[0]) / 2, (pv.A[1] + pv.D[1]) / 2];
+    ctx.fillText('a', midAD[0] - 14, midAD[1] + 6);
+
+    // Label "a/cos α" on side AF of the cross-section
+    const midAF = [(pv.A[0] + pv.F[0]) / 2, (pv.A[1] + pv.F[1]) / 2];
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'italic 13px Segoe UI, sans-serif';
+    ctx.fillText('a/cos\u03B1', midAF[0] - 30, midAF[1]);
+
+    // Legend
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    let lx = 14, ly = 22;
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(lx, ly - 8, 14, 3);
+    ctx.fillText('Ivice prizme', lx + 20, ly);
+    ly += 20;
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillRect(lx, ly - 8, 14, 3);
+    ctx.fillText('Presek ABEF (ravan)', lx + 20, ly);
+    ly += 20;
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(lx, ly - 8, 14, 3);
+    ctx.fillText('Ugao \u03B1 = 60\u00B0', lx + 20, ly);
+  }
+
+  draw();
+
+  // Drag to rotate
+  function getPointerX(e) {
+    if (e.touches && e.touches.length > 0) return e.touches[0].clientX;
+    return e.clientX;
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    dragging = true;
+    lastX = e.clientX;
+  });
+  canvas.addEventListener('touchstart', (e) => {
+    dragging = true;
+    lastX = getPointerX(e);
+  });
+
+  function onMove(e) {
+    if (!dragging) return;
+    const x = getPointerX(e);
+    const dx = x - lastX;
+    rotY += dx * 0.008;
+    lastX = x;
+    draw();
+  }
+
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('touchmove', onMove);
+
+  function onEnd() {
+    dragging = false;
+  }
+
+  canvas.addEventListener('mouseup', onEnd);
+  canvas.addEventListener('mouseleave', onEnd);
+  canvas.addEventListener('touchend', onEnd);
+  canvas.addEventListener('touchcancel', onEnd);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Ugao preseka ravni i baze pravilne četvorostrane prizme",
+  "subject": "math",
+  "unit": "geometry",
+  "topic_tags": ["stereometrija", "pravilna prizma", "presek tela ravni", "diedarski ugao", "površina preseka"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepenovanje imaginarne jedinice i uprošćavanje izraza</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Vrednost izraza ((1 - i^2006)^2007) / ((1 + i^2008)^2009), gde je i^2 = -1.
+
+  Korak 1: Odrediti i^2006
+    Stepeni imaginarne jedinice se ponavljaju sa periodom 4:
+      i^0 = 1, i^1 = i, i^2 = -1, i^3 = -i, i^4 = 1, ...
+    Dakle, i^n zavisi od ostatka pri deljenju n sa 4.
+    2006 = 4 * 501 + 2, dakle 2006 mod 4 = 2
+    => i^2006 = i^2 = -1
+
+  Korak 2: Odrediti i^2008
+    2008 = 4 * 502 + 0, dakle 2008 mod 4 = 0
+    => i^2008 = i^0 = 1
+
+  Korak 3: Zamena u izraz
+    Brojilac: (1 - i^2006)^2007 = (1 - (-1))^2007 = (1 + 1)^2007 = 2^2007
+    Imenilac: (1 + i^2008)^2009 = (1 + 1)^2009 = 2^2009
+
+  Korak 4: Deljenje
+    2^2007 / 2^2009 = 2^(2007 - 2009) = 2^(-2) = 1/4
+
+  Odgovor: (B) 1/4
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.7;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .card-title .icon {
+    font-size: 1.5rem;
+  }
+
+  .problem-statement {
+    border-left: 4px solid #60a5fa;
+    padding-left: 1.2rem;
+    font-size: 1.1rem;
+    line-height: 1.9;
+  }
+
+  .options-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1rem;
+  }
+
+  .option {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    color: #e2e8f0;
+  }
+
+  .option.correct {
+    border-color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    font-weight: 700;
+  }
+
+  .plan-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .plan-list li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+    color: #94a3b8;
+  }
+
+  .plan-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #a78bfa;
+  }
+
+  details {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    margin-bottom: 1.5rem;
+  }
+
+  summary {
+    padding: 1.2rem 1.8rem;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #a78bfa;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  summary::-webkit-details-marker { display: none; }
+
+  summary::before {
+    content: '\25B6';
+    font-size: 0.8rem;
+    transition: transform 0.3s;
+  }
+
+  details[open] summary::before {
+    transform: rotate(90deg);
+  }
+
+  .theory-content {
+    padding: 0 1.8rem 1.5rem;
+  }
+
+  .formula-box {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    margin: 0.8rem 0;
+  }
+
+  .canvas-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+  }
+
+  canvas {
+    border-radius: 12px;
+    max-width: 100%;
+    height: auto;
+    touch-action: none;
+  }
+
+  .step {
+    margin-bottom: 1.5rem;
+    padding-left: 1rem;
+    border-left: 3px solid #334155;
+  }
+
+  .step-header {
+    font-weight: 700;
+    color: #60a5fa;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .math-box {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    margin: 0.8rem 0;
+    overflow-x: auto;
+  }
+
+  .checkpoint {
+    background: rgba(52, 211, 153, 0.08);
+    border: 1px solid #34d399;
+    border-radius: 10px;
+    padding: 0.8rem 1.2rem;
+    margin: 0.8rem 0;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .checkpoint .check-label {
+    color: #34d399;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .checkpoint .check-content {
+    display: none;
+    margin-top: 0.5rem;
+    color: #e2e8f0;
+  }
+
+  .checkpoint.open .check-content {
+    display: block;
+  }
+
+  .insight-box {
+    background: rgba(167, 139, 250, 0.1);
+    border: 1px solid #a78bfa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .insight-box .card-title {
+    color: #a78bfa;
+  }
+
+  .final-answer {
+    background: rgba(74, 222, 128, 0.1);
+    border: 2px solid #4ade80;
+    border-radius: 14px;
+    padding: 1.8rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .final-answer .label {
+    font-size: 1rem;
+    color: #4ade80;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.8rem;
+    font-weight: 700;
+  }
+
+  .final-answer .value {
+    font-size: 1.8rem;
+    color: #4ade80;
+    font-weight: 800;
+  }
+
+  .pitfall-item {
+    background: rgba(244, 114, 182, 0.08);
+    border-left: 3px solid #f472b6;
+    padding: 0.8rem 1.2rem;
+    margin-bottom: 0.8rem;
+    border-radius: 0 8px 8px 0;
+    color: #e2e8f0;
+  }
+
+  .pitfall-item strong {
+    color: #f472b6;
+  }
+
+  .challenge-box {
+    background: rgba(96, 165, 250, 0.08);
+    border: 1px dashed #60a5fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .challenge-box .card-title {
+    color: #60a5fa;
+  }
+
+  .highlight-blue { color: #60a5fa; font-weight: 700; }
+  .highlight-green { color: #4ade80; font-weight: 700; }
+  .highlight-purple { color: #a78bfa; font-weight: 700; }
+  .highlight-pink { color: #f472b6; font-weight: 700; }
+
+  .cycle-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.8rem 0;
+  }
+
+  .cycle-table th, .cycle-table td {
+    border: 1px solid #334155;
+    padding: 0.5rem 1rem;
+    text-align: center;
+    color: #e2e8f0;
+  }
+
+  .cycle-table th {
+    background: #0f172a;
+    color: #60a5fa;
+    font-weight: 700;
+  }
+
+  .cycle-table td {
+    background: rgba(15, 23, 42, 0.5);
+  }
+
+  .cycle-table .highlight-cell {
+    background: rgba(96, 165, 250, 0.15);
+    color: #60a5fa;
+    font-weight: 700;
+  }
+
+  @media (max-width: 700px) {
+    h1 { font-size: 1.6rem; }
+    .card { padding: 1.2rem; }
+    .options-grid { flex-direction: column; }
+    body { padding: 1rem 0.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Stepenovanje imaginarne jedinice i uprošćavanje izraza</h1>
+  <p class="subtitle">Kompleksni brojevi &mdash; ciklični obrazac stepena imaginarne jedinice</p>
+
+  <!-- Postavka zadatka -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128220;</span> Postavka zadatka</div>
+    <div class="problem-statement">
+      Vrednost izraza
+      \[\frac{\left(1 - i^{2006}\right)^{2007}}{\left(1 + i^{2008}\right)^{2009}}, \quad (i^2 = -1)\]
+      iznosi:
+    </div>
+    <div class="options-grid">
+      <div class="option">A) \(\dfrac{i}{2}\)</div>
+      <div class="option correct">B) \(\dfrac{1}{4}\)</div>
+      <div class="option">C) \(4\)</div>
+      <div class="option">D) \(i\)</div>
+      <div class="option">E) \(-i\)</div>
+      <div class="option">N) Ne znam</div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</div>
+    <ul class="plan-list">
+      <li>Prisetiti se cikličnog obrasca stepena imaginarne jedinice: \(i^0 = 1,\; i^1 = i,\; i^2 = -1,\; i^3 = -i,\; i^4 = 1, \ldots\)</li>
+      <li>Naći ostatak pri deljenju eksponenta sa 4 kako bismo odredili \(i^{2006}\) i \(i^{2008}\)</li>
+      <li>Zameniti dobijene vrednosti u izraz i uprošćiti brojilac i imenilac</li>
+      <li>Primeniti pravila za stepenovanje i deljenje stepena sa istom osnovom</li>
+    </ul>
+  </div>
+
+  <!-- Podsetnik iz teorije -->
+  <details>
+    <summary>&#128208; Ključne formule i teoreme</summary>
+    <div class="theory-content">
+      <p><strong>Imaginarna jedinica</strong> \(i\) je definisana kao broj čiji je kvadrat jednak \(-1\):</p>
+      <div class="formula-box">
+        \[i^2 = -1\]
+      </div>
+
+      <p style="margin-top:1rem;"><strong>Ciklični obrazac stepena imaginarne jedinice</strong> &mdash; stepeni broja \(i\) se ponavljaju sa periodom 4:</p>
+      <div class="formula-box">
+        \[i^0 = 1, \quad i^1 = i, \quad i^2 = -1, \quad i^3 = -i\]
+        \[i^4 = 1, \quad i^5 = i, \quad i^6 = -1, \quad i^7 = -i, \quad \ldots\]
+      </div>
+      <p style="margin-top:0.8rem;">Opšte pravilo: za bilo koji prirodan broj \(n\), stepen \(i^n\) zavisi <strong>isključivo od ostatka</strong> pri deljenju \(n\) sa \(4\):</p>
+      <div class="formula-box">
+        \[i^n = i^{(n \bmod 4)}\]
+      </div>
+      <table class="cycle-table" style="margin-top:0.8rem;">
+        <tr>
+          <th>Ostatak \(n \bmod 4\)</th><th>0</th><th>1</th><th>2</th><th>3</th>
+        </tr>
+        <tr>
+          <td>\(i^n\)</td><td>\(1\)</td><td>\(i\)</td><td>\(-1\)</td><td>\(-i\)</td>
+        </tr>
+      </table>
+
+      <p style="margin-top:1.2rem;"><strong>Pravila za stepenovanje:</strong></p>
+      <div class="formula-box">
+        \[\frac{a^m}{a^n} = a^{m-n}, \quad (a \neq 0)\]
+      </div>
+    </div>
+  </details>
+
+  <!-- Vizuelni prikaz -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128200;</span> Vizuelni prikaz &mdash; Ciklus stepena broja \(i\) na kompleksnoj ravni</div>
+    <div class="canvas-wrapper">
+      <canvas id="complexPlane" width="560" height="560" style="touch-action:none;"></canvas>
+    </div>
+    <p style="text-align:center; color:#94a3b8; margin-top:0.5rem; font-size:0.95rem;">
+      Stepeni \(i^0, i^1, i^2, i^3\) se ciklično ponavljaju na jediničnom krugu. Ključne vrednosti: \(i^{2006} = i^2 = -1\) i \(i^{2008} = i^0 = 1\).
+    </p>
+  </div>
+
+  <!-- Rešenje korak po korak -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9998;</span> Rešenje korak po korak</div>
+
+    <div class="step">
+      <div class="step-header">Korak 1: Određujemo \(i^{2006}\)</div>
+      <p>Da bismo izračunali \(i^{2006}\), potrebno je naći ostatak pri deljenju broja \(2006\) sa \(4\):</p>
+      <div class="math-box">
+        \[2006 = 4 \cdot 501 + 2 \quad \Rightarrow \quad 2006 \bmod 4 = 2\]
+      </div>
+      <p>Pošto je ostatak \(2\), važi:</p>
+      <div class="math-box">
+        \[i^{2006} = i^2 = -1\]
+      </div>
+    </div>
+
+    <div class="checkpoint" onclick="this.classList.toggle('open')">
+      <div class="check-label">&#9989; Proveri se &mdash; Da li si tačno odredio ostatak?</div>
+      <div class="check-content">
+        Brza provera: \(4 \cdot 501 = 2004\), a \(2006 - 2004 = 2\). Dakle, ostatak je zaista \(2\), i \(i^{2006} = i^2 = -1\). Sve je u redu!
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">Korak 2: Određujemo \(i^{2008}\)</div>
+      <p>Analogno, delimo \(2008\) sa \(4\):</p>
+      <div class="math-box">
+        \[2008 = 4 \cdot 502 + 0 \quad \Rightarrow \quad 2008 \bmod 4 = 0\]
+      </div>
+      <p>Pošto je ostatak \(0\), važi:</p>
+      <div class="math-box">
+        \[i^{2008} = i^0 = 1\]
+      </div>
+    </div>
+
+    <div class="checkpoint" onclick="this.classList.toggle('open')">
+      <div class="check-label">&#9989; Proveri se &mdash; Alternativna provera za \(i^{2008}\)</div>
+      <div class="check-content">
+        Možemo i ovako razmišljati: \(2008\) je deljivo sa \(4\) (jer je \(2008 / 4 = 502\), ceo broj). Kad god je eksponent deljiv sa \(4\), vrednost je \(i^0 = 1\). Provereno!
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">Korak 3: Zamenjujemo u brojilac</div>
+      <p>Sada zamenjujemo \(i^{2006} = -1\) u brojilac izraza:</p>
+      <div class="math-box">
+        \[\left(1 - i^{2006}\right)^{2007} = \left(1 - (-1)\right)^{2007} = (1 + 1)^{2007} = 2^{2007}\]
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">Korak 4: Zamenjujemo u imenilac</div>
+      <p>Zamenjujemo \(i^{2008} = 1\) u imenilac izraza:</p>
+      <div class="math-box">
+        \[\left(1 + i^{2008}\right)^{2009} = (1 + 1)^{2009} = 2^{2009}\]
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">Korak 5: Delimo stepene sa istom osnovom</div>
+      <p>Sada imamo razlomak sa stepenima dvojke:</p>
+      <div class="math-box">
+        \[\frac{2^{2007}}{2^{2009}} = 2^{2007 - 2009} = 2^{-2} = \frac{1}{2^2} = \frac{1}{4}\]
+      </div>
+    </div>
+
+    <div class="checkpoint" onclick="this.classList.toggle('open')">
+      <div class="check-label">&#9989; Proveri se &mdash; Konačna verifikacija</div>
+      <div class="check-content">
+        Hajde da proverimo kompletno rešenje na malom primeru sa istom strukturom. Ako umesto velikih eksponenata koristimo manje, npr.:
+        <br>
+        \(\dfrac{(1 - i^2)^3}{(1 + i^0)^5} = \dfrac{(1 - (-1))^3}{(1 + 1)^5} = \dfrac{2^3}{2^5} = \dfrac{8}{32} = \dfrac{1}{4}\)
+        <br>
+        Dobijamo isti rezultat \(\frac{1}{4}\), što potvrđuje da je obrazac ispravan &mdash; razlika eksponenata u brojilocu i imeniocu je uvek \(2\), pa je rezultat uvek \(2^{-2} = \frac{1}{4}\).
+      </div>
+    </div>
+  </div>
+
+  <!-- Ključni uvid -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Ključni uvid</div>
+    <p>Ceo ovaj zadatak se svodi na jedno <strong>ključno zapažanje</strong>: stepeni imaginarne jedinice \(i\) se ponavljaju sa periodom \(4\). Zato za bilo koji stepen \(i^n\) ne moramo da stepenujemo \(n\) puta &mdash; dovoljno je naći <span class="highlight-purple">ostatak pri deljenju \(n\) sa \(4\)</span>. Nakon što se ogromni eksponenti (2006 i 2008) svedu na male brojeve (-1 i 1), izraz postaje trivijalno uprošćavanje stepena dvojke. Ovo je klasičan primer kako prepoznavanje periodičnosti drastično uprostava naizgled složen problem.</p>
+  </div>
+
+  <!-- Konačan odgovor -->
+  <div class="final-answer">
+    <div class="label">Konačan odgovor</div>
+    <div class="value">
+      \(\dfrac{\left(1 - i^{2006}\right)^{2007}}{\left(1 + i^{2008}\right)^{2009}} = \dfrac{2^{2007}}{2^{2009}} = \dfrac{1}{4}\)
+    </div>
+    <p style="margin-top:0.8rem; color:#4ade80; font-size:1.1rem; font-weight:600;">Tačan odgovor: B) \(\dfrac{1}{4}\)</p>
+    <div class="options-grid" style="justify-content:center; margin-top:1rem;">
+      <div class="option">A) \(\dfrac{i}{2}\)</div>
+      <div class="option correct">B) \(\dfrac{1}{4}\)</div>
+      <div class="option">C) \(4\)</div>
+      <div class="option">D) \(i\)</div>
+      <div class="option">E) \(-i\)</div>
+    </div>
+  </div>
+
+  <!-- Najčešće greške -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;</span> Najčešće greške</div>
+    <div class="pitfall-item">
+      <strong>Pogrešan ostatak pri deljenju sa 4:</strong> Brzanje može dovesti do greške pri deljenju. Na primer, ako se pogrešno zaključi da je \(2006 \bmod 4 = 0\), dobija se \(i^{2006} = 1\), pa brojilac postaje \(0\) &mdash; što je očigledno pogrešan rezultat (nula nije među ponuđenim odgovorima).
+    </div>
+    <div class="pitfall-item">
+      <strong>Zamena znakova pri oduzimanju:</strong> U brojilocu stoji \(1 - i^{2006}\). Pošto je \(i^{2006} = -1\), imamo \(1 - (-1) = 1 + 1 = 2\). Česta greška je napisati \(1 - 1 = 0\) ako se zaboravi da je \(i^{2006}\) negativno.
+    </div>
+    <div class="pitfall-item">
+      <strong>Mešanje pravila za deljenje stepena:</strong> Kod \(\frac{2^{2007}}{2^{2009}}\) eksponenti se oduzimaju: \(2007 - 2009 = -2\). Greška nastaje ako se oduzme u pogrešnom smeru (\(2009 - 2007 = 2\)), dajući \(2^2 = 4\) umesto \(\frac{1}{4}\). Odgovor \(4\) je upravo ta zamka (ponuđen kao opcija C).
+    </div>
+    <div class="pitfall-item">
+      <strong>Zaboravljanje periodičnosti:</strong> Pokušaj direktnog računanja \(i^{2006}\) stepenima je nemoguć bez prepoznavanja periodičnosti. Uvek koristi \(i^n = i^{(n \bmod 4)}\).
+    </div>
+  </div>
+
+  <!-- Dodatni izazov -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Pokušaj da odrediš vrednost sličnog izraza, ali sa drugačijim eksponentima:</p>
+    <div class="math-box">
+      \[\frac{\left(1 + i^{2023}\right)^{2024}}{\left(1 - i^{2025}\right)^{2026}}\]
+    </div>
+    <p style="margin-top:0.8rem; color:#94a3b8;"><em>Savet: Postupak je isti &mdash; odredi \(2023 \bmod 4\) i \(2025 \bmod 4\), zameni vrednosti i uprosti izraz. Obrati pažnju na znakove!</em></p>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('complexPlane');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const cx = W / 2;
+  const cy = H / 2;
+  const scale = 120;
+
+  function toCanvasX(x) { return cx + x * scale; }
+  function toCanvasY(y) { return cy - y * scale; }
+
+  function draw() {
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+    ctx.lineWidth = 1;
+    for (var i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(i), 0);
+      ctx.lineTo(toCanvasX(i), H);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, toCanvasY(i));
+      ctx.lineTo(W, toCanvasY(i));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, cy);
+    ctx.lineTo(W, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, 0);
+    ctx.lineTo(cx, H);
+    ctx.stroke();
+
+    // Axis tick labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var i = -2; i <= 2; i++) {
+      if (i === 0) continue;
+      ctx.fillText(String(i), toCanvasX(i), cy + 22);
+      ctx.fillText(String(i) + 'i', cx - 22, toCanvasY(i) + 5);
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Re', W - 40, cy - 12);
+    ctx.textAlign = 'center';
+    ctx.fillText('Im', cx + 24, 24);
+
+    // Unit circle
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, scale, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label for unit circle
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.5)';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('|z| = 1', toCanvasX(0.72), toCanvasY(0.72));
+
+    // Draw cycle arrows between the four points
+    var points = [
+      { x: 1, y: 0, label: 'i\u2070 = 1', color: '#4ade80', dx: 15, dy: -12, note: 'i\u00B2\u2070\u2070\u2078' },
+      { x: 0, y: 1, label: 'i\u00B9 = i', color: '#60a5fa', dx: 12, dy: -12, note: '' },
+      { x: -1, y: 0, label: 'i\u00B2 = \u22121', color: '#f472b6', dx: -120, dy: -12, note: 'i\u00B2\u2070\u2070\u2076' },
+      { x: 0, y: -1, label: 'i\u00B3 = \u2212i', color: '#a78bfa', dx: 12, dy: 20, note: '' }
+    ];
+
+    // Draw arrows between consecutive points along the circle
+    ctx.lineWidth = 2;
+    for (var k = 0; k < 4; k++) {
+      var from = points[k];
+      var to = points[(k + 1) % 4];
+      var startAngle = Math.atan2(-from.y, from.x);
+      var endAngle = Math.atan2(-to.y, to.x);
+
+      // We want to draw the arc going counterclockwise in math coordinates
+      // which means clockwise on canvas (since y is flipped)
+      var sA = -startAngle;
+      var eA = -endAngle;
+
+      // Shorten the arcs a bit
+      var offset = 0.15;
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, scale * 0.85, sA + offset, eA - offset, false);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Arrowhead at end
+      var arrowAngle = eA - offset;
+      var arrowX = cx + scale * 0.85 * Math.cos(arrowAngle);
+      var arrowY = cy + scale * 0.85 * Math.sin(arrowAngle);
+      var tangentAngle = arrowAngle + Math.PI / 2;
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.5)';
+      ctx.beginPath();
+      ctx.moveTo(arrowX, arrowY);
+      ctx.lineTo(arrowX - 8 * Math.cos(tangentAngle - 0.4), arrowY - 8 * Math.sin(tangentAngle - 0.4));
+      ctx.lineTo(arrowX - 8 * Math.cos(tangentAngle + 0.4), arrowY - 8 * Math.sin(tangentAngle + 0.4));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Draw the four key points
+    for (var k = 0; k < points.length; k++) {
+      var p = points[k];
+      drawPoint(p.x, p.y, p.color, p.label, p.dx, p.dy);
+
+      // Draw the extra note (for i^2006 and i^2008)
+      if (p.note) {
+        ctx.fillStyle = p.color;
+        ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = p.dx > 0 ? 'left' : 'right';
+        ctx.fillText(p.note, toCanvasX(p.x) + p.dx, toCanvasY(p.y) + (p.dy > 0 ? p.dy + 18 : p.dy - 4));
+      }
+    }
+
+    // Draw origin
+    ctx.fillStyle = '#94a3b8';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('O', cx + 8, cy + 20);
+
+    // Annotation for highlighted values
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+
+    // Highlight for i^2006 = -1
+    ctx.fillStyle = '#f472b6';
+    ctx.textAlign = 'center';
+    ctx.fillText('i\u00B2\u2070\u2070\u2076 = \u22121', toCanvasX(-1), toCanvasY(0) + 48);
+
+    // Highlight for i^2008 = 1
+    ctx.fillStyle = '#4ade80';
+    ctx.textAlign = 'center';
+    ctx.fillText('i\u00B2\u2070\u2070\u2078 = 1', toCanvasX(1), toCanvasY(0) + 48);
+
+    // Title at bottom
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ciklus stepena imaginarne jedinice: i\u2070 \u2192 i\u00B9 \u2192 i\u00B2 \u2192 i\u00B3 \u2192 i\u2070 \u2192 ...', cx, H - 15);
+
+    // Central note about the period
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.6)';
+    ctx.font = 'italic 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Period = 4', cx, cy - 8);
+  }
+
+  function drawPoint(x, y, color, label, dx, dy) {
+    var px = toCanvasX(x);
+    var py = toCanvasY(y);
+
+    // Glow
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(px, py, 10, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // White center
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(px, py, 4, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = color;
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = dx > 0 ? 'left' : 'right';
+    ctx.fillText(label, px + dx, py + dy);
+  }
+
+  draw();
+
+  // Mouse/touch interaction
+  function showTooltip(e) {
+    e.preventDefault();
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    var mx, my;
+    if (e.touches) {
+      mx = (e.touches[0].clientX - rect.left) * scaleX;
+      my = (e.touches[0].clientY - rect.top) * scaleY;
+    } else {
+      mx = (e.clientX - rect.left) * scaleX;
+      my = (e.clientY - rect.top) * scaleY;
+    }
+    var re = (mx - cx) / scale;
+    var im = -(my - cy) / scale;
+
+    draw();
+
+    // Crosshair
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(mx, 0);
+    ctx.lineTo(mx, H);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, my);
+    ctx.lineTo(W, my);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Coordinate label
+    var reStr = re.toFixed(2).replace('.', ',');
+    var imStr = Math.abs(im).toFixed(2).replace('.', ',');
+    var sign = im >= 0 ? ' + ' : ' \u2212 ';
+    var label = reStr + sign + imStr + 'i';
+    var modulus = Math.sqrt(re * re + im * im).toFixed(2).replace('.', ',');
+    var labelFull = label + '   |z| = ' + modulus;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    var tw = ctx.measureText(labelFull).width + 16;
+    var lx = Math.min(mx + 12, W - tw - 5);
+    var ly = Math.max(my - 30, 18);
+    ctx.fillRect(lx, ly - 14, tw, 22);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(lx, ly - 14, tw, 22);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(labelFull, lx + 8, ly + 2);
+  }
+
+  canvas.addEventListener('mousemove', showTooltip);
+  canvas.addEventListener('touchmove', showTooltip, { passive: false });
+  canvas.addEventListener('mouseleave', function() { draw(); });
+  canvas.addEventListener('touchend', function() { draw(); });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje imaginarne jedinice i uprošćavanje izraza",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "imaginarna jedinica", "stepenovanje", "periodičnost", "ciklični obrazac"]
+}
+BRAINSPARK_META-->

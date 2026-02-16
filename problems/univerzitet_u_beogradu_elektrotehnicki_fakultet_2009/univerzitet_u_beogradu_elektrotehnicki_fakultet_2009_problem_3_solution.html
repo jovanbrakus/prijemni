@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presek rešenja dve jednačine — određivanje vrednosti x</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container { max-width: 1200px; margin: 0 auto; }
+h1 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 32px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+}
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #60a5fa;
+}
+.card-title.purple { color: #a78bfa; }
+.card-title.green { color: #4ade80; }
+.card-title.pink { color: #f472b6; }
+
+.problem-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.10), rgba(167,139,250,0.10));
+  border: 1.5px solid #60a5fa;
+  border-radius: 12px;
+  padding: 24px 28px;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan-counter;
+}
+.plan-list li {
+  counter-increment: plan-counter;
+  padding: 8px 0 8px 42px;
+  position: relative;
+}
+.plan-list li::before {
+  content: counter(plan-counter);
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collapsible-toggle {
+  background: rgba(167,139,250,0.12);
+  border: 1px solid #a78bfa44;
+  border-radius: 10px;
+  padding: 14px 20px;
+  width: 100%;
+  text-align: left;
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.collapsible-toggle:hover { background: rgba(167,139,250,0.2); }
+.collapsible-content {
+  display: none;
+  padding: 18px 20px 8px;
+  border-left: 3px solid #a78bfa44;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+.collapsible-content.open { display: block; }
+
+.step {
+  border-left: 3px solid #334155;
+  padding: 16px 0 16px 24px;
+  margin-left: 14px;
+  position: relative;
+}
+.step::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 20px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #60a5fa;
+  border: 2px solid #1e293b;
+}
+.step-num {
+  font-weight: 700;
+  color: #60a5fa;
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.checkpoint-btn {
+  display: inline-block;
+  margin: 14px 0 8px;
+  padding: 9px 20px;
+  background: rgba(167,139,250,0.15);
+  border: 1.5px solid #a78bfa;
+  border-radius: 8px;
+  color: #a78bfa;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s, transform 0.1s;
+}
+.checkpoint-btn:hover { background: rgba(167,139,250,0.28); transform: translateY(-1px); }
+.checkpoint-answer {
+  display: none;
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: rgba(52,211,153,0.08);
+  border-left: 3px solid #34d399;
+  border-radius: 4px;
+  color: #34d399;
+}
+.checkpoint-answer.show { display: block; }
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(74,222,128,0.12), rgba(52,211,153,0.08));
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 24px 28px;
+  text-align: center;
+}
+.final-answer-box .answer-label {
+  font-size: 1rem;
+  color: #94a3b8;
+  margin-bottom: 10px;
+}
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+.option-pill {
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  background: rgba(148,163,184,0.1);
+  border: 1.5px solid #475569;
+  color: #94a3b8;
+}
+.option-pill.correct {
+  background: rgba(74,222,128,0.18);
+  border-color: #4ade80;
+  color: #4ade80;
+  box-shadow: 0 0 18px rgba(74,222,128,0.15);
+  font-size: 1.15rem;
+}
+.verification-note {
+  margin-top: 12px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.10), rgba(167,139,250,0.10));
+  border-left: 4px solid #60a5fa;
+  border-radius: 0 12px 12px 0;
+  padding: 20px 24px;
+}
+
+.pitfall {
+  padding: 10px 0 10px 20px;
+  border-left: 3px solid #f472b6;
+  margin: 10px 0;
+  color: #fca5a5;
+}
+.pitfall strong { color: #f472b6; }
+
+.challenge-box {
+  background: rgba(251,191,36,0.06);
+  border: 1.5px dashed #fbbf24;
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+.challenge-box .card-title { color: #fbbf24; }
+
+.highlight { color: #4ade80; font-weight: 700; }
+.blue { color: #60a5fa; }
+.purple { color: #a78bfa; }
+.muted { color: #94a3b8; }
+
+.set-display {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin: 6px 4px;
+}
+.set-a { background: rgba(96,165,250,0.15); border: 1px solid #60a5fa; color: #60a5fa; }
+.set-b { background: rgba(167,139,250,0.15); border: 1px solid #a78bfa; color: #a78bfa; }
+.set-inter { background: rgba(74,222,128,0.15); border: 1px solid #4ade80; color: #4ade80; }
+
+@media (max-width: 700px) {
+  body { padding: 10px; }
+  .card { padding: 18px 16px; }
+  h1 { font-size: 1.45rem; }
+  .problem-box { padding: 16px 14px; font-size: 1rem; }
+  .options-row { gap: 6px; }
+  .option-pill { padding: 8px 14px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+
+<script type="text/info" id="logic-scratchpad">
+Zadatak:
+  Dati su uslovi:
+    x(2x + 1) = 0
+    (x + 1/2)(2x - 3) = 0
+  Naći x koje zadovoljava OBA uslova istovremeno.
+
+Korak 1: Rešiti prvu jednačinu x(2x + 1) = 0
+  Proizvod je nula ako je bar jedan činilac nula:
+    x = 0  ili  2x + 1 = 0 => x = -1/2
+  Skup rešenja A = {0, -1/2}
+
+Korak 2: Rešiti drugu jednačinu (x + 1/2)(2x - 3) = 0
+  Proizvod je nula ako je bar jedan činilac nula:
+    x + 1/2 = 0 => x = -1/2  ili  2x - 3 = 0 => x = 3/2
+  Skup rešenja B = {-1/2, 3/2}
+
+Korak 3: Presek skupova A ∩ B
+  A ∩ B = {0, -1/2} ∩ {-1/2, 3/2} = {-1/2}
+
+Jedino rešenje: x = -1/2
+
+Odgovor: (B) -1/2
+</script>
+
+<div class="container">
+
+  <h1>Presek rešenja dve jednačine</h1>
+  <p class="subtitle">Određivanje zajedničke vrednosti \(x\) koja zadovoljava oba uslova</p>
+
+  <!-- Problem Statement -->
+  <div class="card">
+    <div class="card-title">Postavka zadatka</div>
+    <div class="problem-box">
+      Ako je \( x(2x + 1) = 0 \) i \( \left(x + \dfrac{1}{2}\right)(2x - 3) = 0 \), tada je \( x \) jednako:<br><br>
+      (A) \(\dfrac{1}{2}\) &nbsp;&nbsp;
+      (B) \(-\dfrac{1}{2}\) &nbsp;&nbsp;
+      (C) \(-3\) &nbsp;&nbsp;
+      (D) \(0\) &nbsp;&nbsp;
+      (E) \(\dfrac{3}{2}\) &nbsp;&nbsp;
+      (N) Ne znam
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title purple">Plan rešavanja</div>
+    <ol class="plan-list">
+      <li>Rešiti prvu jednačinu \( x(2x + 1) = 0 \) — naći skup rešenja \( A \)</li>
+      <li>Rešiti drugu jednačinu \( \left(x + \frac{1}{2}\right)(2x - 3) = 0 \) — naći skup rešenja \( B \)</li>
+      <li>Odrediti presek \( A \cap B \) — zajedničko rešenje koje zadovoljava oba uslova</li>
+    </ol>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <button class="collapsible-toggle" onclick="toggleCollapsible(this)">
+      Podsetnik: Svojstvo nula-proizvoda i presek skupova
+    </button>
+    <div class="collapsible-content">
+      <p><strong>Svojstvo nula-proizvoda:</strong> Ako je \( a \cdot b = 0 \), tada je \( a = 0 \) ili \( b = 0 \) (ili oba).</p>
+      <p style="margin-top:10px;">
+        Ovo svojstvo nam omogućava da svaku jednačinu oblika \(\text{proizvod} = 0\) rastavimo na jednostavnije jednačine.
+      </p>
+      <p style="margin-top:10px;"><strong>Presek skupova:</strong> Skup \( A \cap B \) sadrži samo one elemente koji pripadaju <em>i skupu \(A\) i skupu \(B\)</em> istovremeno.</p>
+      <p style="margin-top:10px;"><strong>Sistem uslova:</strong> Kada zadatak kaže "ako je \(\ldots\) <em>i</em> \(\ldots\)", to znači da oba uslova moraju biti ispunjena istovremeno. Tražimo presek skupova rešenja.</p>
+    </div>
+  </div>
+
+  <!-- Canvas Visual Aid -->
+  <div class="card">
+    <div class="card-title">Vizuelni prikaz — brojna prava i presek skupova</div>
+    <canvas id="diagram" width="760" height="420"></canvas>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <div class="card-title green">Rešenje — korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-num">Korak 1: Rešiti prvu jednačinu</div>
+      <p>Prva jednačina je:</p>
+      \[
+        x(2x + 1) = 0
+      \]
+      <p>
+        Primenjujemo <strong>svojstvo nula-proizvoda</strong>: proizvod dva činioca je nula
+        ako i samo ako je bar jedan od njih jednak nuli.
+      </p>
+      <p style="margin-top:10px;"><span class="blue">Slučaj 1:</span></p>
+      \[
+        x = 0
+      \]
+      <p><span class="blue">Slučaj 2:</span></p>
+      \[
+        2x + 1 = 0 \quad \Rightarrow \quad 2x = -1 \quad \Rightarrow \quad x = -\frac{1}{2}
+      \]
+      <p style="margin-top:10px;">Skup rešenja prve jednačine:</p>
+      <div style="text-align:center; margin: 10px 0;">
+        <span class="set-display set-a">\( A = \left\{ 0,\ -\dfrac{1}{2} \right\} \)</span>
+      </div>
+
+      <button class="checkpoint-btn" onclick="toggleCheckpoint(this)">Proveri se: Zameni \(x = -\frac{1}{2}\) u prvu jednačinu</button>
+      <div class="checkpoint-answer">
+        \[
+          x(2x + 1) = \left(-\frac{1}{2}\right)\left(2 \cdot \left(-\frac{1}{2}\right) + 1\right) = \left(-\frac{1}{2}\right)(-1 + 1) = \left(-\frac{1}{2}\right) \cdot 0 = 0 \quad \checkmark
+        \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-num">Korak 2: Rešiti drugu jednačinu</div>
+      <p>Druga jednačina je:</p>
+      \[
+        \left(x + \frac{1}{2}\right)(2x - 3) = 0
+      \]
+      <p>Ponovo primenjujemo svojstvo nula-proizvoda.</p>
+      <p style="margin-top:10px;"><span class="purple">Slučaj 1:</span></p>
+      \[
+        x + \frac{1}{2} = 0 \quad \Rightarrow \quad x = -\frac{1}{2}
+      \]
+      <p><span class="purple">Slučaj 2:</span></p>
+      \[
+        2x - 3 = 0 \quad \Rightarrow \quad 2x = 3 \quad \Rightarrow \quad x = \frac{3}{2}
+      \]
+      <p style="margin-top:10px;">Skup rešenja druge jednačine:</p>
+      <div style="text-align:center; margin: 10px 0;">
+        <span class="set-display set-b">\( B = \left\{ -\dfrac{1}{2},\ \dfrac{3}{2} \right\} \)</span>
+      </div>
+
+      <button class="checkpoint-btn" onclick="toggleCheckpoint(this)">Proveri se: Zameni \(x = \frac{3}{2}\) u drugu jednačinu</button>
+      <div class="checkpoint-answer">
+        \[
+          \left(\frac{3}{2} + \frac{1}{2}\right)\left(2 \cdot \frac{3}{2} - 3\right) = 2 \cdot (3 - 3) = 2 \cdot 0 = 0 \quad \checkmark
+        \]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-num">Korak 3: Odrediti presek skupova</div>
+      <p>
+        Zadatak traži vrednost \(x\) koja zadovoljava <strong>oba</strong> uslova istovremeno.
+        To znači da tražimo presek skupova rešenja:
+      </p>
+      \[
+        A \cap B = \left\{ 0,\ -\frac{1}{2} \right\} \cap \left\{ -\frac{1}{2},\ \frac{3}{2} \right\}
+      \]
+      <p style="margin-top:10px;">
+        Proveravamo koji elementi se nalaze u oba skupa:
+      </p>
+      <ul style="margin: 10px 0 10px 24px; color: #94a3b8;">
+        <li>\(x = 0\): pripada skupu \(A\), ali <strong>ne pripada</strong> skupu \(B\) — ne zadovoljava drugu jednačinu</li>
+        <li>\(x = -\frac{1}{2}\): pripada skupu \(A\) <strong>i</strong> skupu \(B\) — zadovoljava obe jednačine</li>
+        <li>\(x = \frac{3}{2}\): pripada skupu \(B\), ali <strong>ne pripada</strong> skupu \(A\) — ne zadovoljava prvu jednačinu</li>
+      </ul>
+      <p style="margin-top:10px;">Dakle:</p>
+      \[
+        A \cap B = \left\{ -\frac{1}{2} \right\}
+      \]
+      <div style="text-align:center; margin: 14px 0;">
+        <span class="set-display set-inter">\( x = -\dfrac{1}{2} \)</span>
+      </div>
+
+      <button class="checkpoint-btn" onclick="toggleCheckpoint(this)">Proveri se: Zašto \(x = 0\) nije odgovor?</button>
+      <div class="checkpoint-answer">
+        Zamenimo \(x = 0\) u drugu jednačinu:
+        \[
+          \left(0 + \frac{1}{2}\right)(2 \cdot 0 - 3) = \frac{1}{2} \cdot (-3) = -\frac{3}{2} \neq 0
+        \]
+        Dakle, \(x = 0\) ne zadovoljava drugu jednačinu, pa nije prihvatljivo rešenje.
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card">
+    <div class="card-title blue">Ključni uvid</div>
+    <div class="insight-box">
+      <p>
+        Ključ ovog zadatka je razumevanje reči <strong>"i"</strong> u tekstu.
+        Kada zadatak kaže da važe dva uslova istovremeno, tražimo <em>presek</em> skupova rešenja, a ne njihovu uniju.
+      </p>
+      <p style="margin-top:10px;">
+        Svaka od dve jednačine ima po dva rešenja (ukupno četiri kandidata), ali samo jedno od njih — \(x = -\frac{1}{2}\) — zadovoljava <strong>oba</strong> uslova.
+        Upravo taj zajednički element je traženi odgovor.
+      </p>
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card">
+    <div class="final-answer-box">
+      <div class="answer-label">Konačan odgovor</div>
+      <div class="options-row">
+        <span class="option-pill">(A) \(\frac{1}{2}\)</span>
+        <span class="option-pill correct">(B) \(-\frac{1}{2}\)</span>
+        <span class="option-pill">(C) \(-3\)</span>
+        <span class="option-pill">(D) \(0\)</span>
+        <span class="option-pill">(E) \(\frac{3}{2}\)</span>
+      </div>
+      <div class="verification-note">
+        <strong>Provera:</strong><br>
+        Prva jednačina: \(\left(-\frac{1}{2}\right)\left(2 \cdot \left(-\frac{1}{2}\right) + 1\right) = \left(-\frac{1}{2}\right) \cdot 0 = 0\) &nbsp;\(\checkmark\)<br>
+        Druga jednačina: \(\left(-\frac{1}{2} + \frac{1}{2}\right)\left(2 \cdot \left(-\frac{1}{2}\right) - 3\right) = 0 \cdot (-4) = 0\) &nbsp;\(\checkmark\)
+      </div>
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title pink">Česte greške</div>
+    <div class="pitfall">
+      <strong>Odabir \(x = 0\) (odgovor D):</strong>
+      Vrednost \(x = 0\) jeste rešenje prve jednačine, ali ne i druge.
+      Mnogi učenici zaborave da provere oba uslova i površno odaberu \(x = 0\) jer im se čini kao "najjednostavnije" rešenje.
+    </div>
+    <div class="pitfall">
+      <strong>Odabir \(x = \frac{3}{2}\) (odgovor E):</strong>
+      Slično, \(x = \frac{3}{2}\) zadovoljava drugu jednačinu, ali ne i prvu.
+      Obavezno proverite kandidata u <em>obe</em> jednačine.
+    </div>
+    <div class="pitfall">
+      <strong>Zamena "i" sa "ili":</strong>
+      Reč "i" u matematici znači presek (oba uslova moraju biti ispunjena).
+      Da je u zadatku pisalo "ili", odgovor bi mogao biti bilo koje od četiri rešenja: \(0\), \(-\frac{1}{2}\), ili \(\frac{3}{2}\).
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="challenge-box">
+      <div class="card-title">Dodatni izazov</div>
+      <p>
+        Ako je \( (x^2 - 1)(x + 3) = 0 \) i \( (x - 1)(x^2 - 9) = 0 \), odrediti sve vrednosti \(x\) koje zadovoljavaju oba uslova.
+      </p>
+      <button class="checkpoint-btn" onclick="toggleCheckpoint(this)" style="border-color: #fbbf24; color: #fbbf24; background: rgba(251,191,36,0.1);">Prikaži odgovor</button>
+      <div class="checkpoint-answer" style="border-left-color: #fbbf24; color: #fbbf24; background: rgba(251,191,36,0.06);">
+        Prva jednačina: \(x^2 - 1 = 0 \Rightarrow x = \pm 1\) ili \(x + 3 = 0 \Rightarrow x = -3\).
+        Dakle \(A = \{-3, -1, 1\}\).<br><br>
+        Druga jednačina: \(x - 1 = 0 \Rightarrow x = 1\) ili \(x^2 - 9 = 0 \Rightarrow x = \pm 3\).
+        Dakle \(B = \{-3, 1, 3\}\).<br><br>
+        Presek: \(A \cap B = \{-3, -1, 1\} \cap \{-3, 1, 3\} = \{-3, 1\}\).<br>
+        Rešenja su \(x = -3\) i \(x = 1\).
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  // Collapsible toggle
+  window.toggleCollapsible = function(btn) {
+    var content = btn.nextElementSibling;
+    content.classList.toggle('open');
+    btn.textContent = content.classList.contains('open')
+      ? 'Sakrij podsetnik'
+      : 'Podsetnik: Svojstvo nula-proizvoda i presek skupova';
+  };
+
+  // Checkpoint toggle
+  window.toggleCheckpoint = function(btn) {
+    var answer = btn.nextElementSibling;
+    answer.classList.toggle('show');
+    if (answer.classList.contains('show')) {
+      MathJax.typesetPromise && MathJax.typesetPromise([answer]);
+    }
+  };
+
+  // Canvas diagram
+  function drawDiagram() {
+    var c = document.getElementById('diagram');
+    if (!c) return;
+    var dpr = window.devicePixelRatio || 1;
+    var w = 760, h = 420;
+    c.width = w * dpr;
+    c.height = h * dpr;
+    c.style.width = w + 'px';
+    c.style.height = h + 'px';
+    var ctx = c.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    // --- SECTION 1: Number line with solutions ---
+    ctx.font = 'bold 15px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText('Rešenja na brojnoj pravoj', w / 2, 26);
+
+    var nlY = 70;
+    var nlLeft = 80;
+    var nlRight = w - 80;
+    var nlMid = (nlLeft + nlRight) / 2;
+
+    // Number line
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(nlLeft, nlY);
+    ctx.lineTo(nlRight, nlY);
+    ctx.stroke();
+
+    // Arrow tips
+    ctx.fillStyle = '#475569';
+    ctx.beginPath();
+    ctx.moveTo(nlRight, nlY);
+    ctx.lineTo(nlRight - 10, nlY - 5);
+    ctx.lineTo(nlRight - 10, nlY + 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(nlLeft, nlY);
+    ctx.lineTo(nlLeft + 10, nlY - 5);
+    ctx.lineTo(nlLeft + 10, nlY + 5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Positions: map values to x coordinates
+    // Values: -1/2, 0, 3/2
+    // Range roughly -1 to 2
+    var valToX = function(v) {
+      return nlMid + v * ((nlRight - nlLeft) / 5);
+    };
+
+    // Tick marks and labels for reference
+    var ticks = [-2, -1, 0, 1, 2];
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'center';
+    for (var i = 0; i < ticks.length; i++) {
+      var tx = valToX(ticks[i]);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(tx, nlY - 5);
+      ctx.lineTo(tx, nlY + 5);
+      ctx.stroke();
+      ctx.fillText(ticks[i].toString(), tx, nlY + 20);
+    }
+
+    // Solution points
+    var solutions = [
+      { val: -0.5, label: '-1/2', colorDot: '#60a5fa', colorBg: 'rgba(96,165,250,0.2)', sets: 'A, B', yOff: -30 },
+      { val: 0, label: '0', colorDot: '#60a5fa', colorBg: 'rgba(96,165,250,0.2)', sets: 'samo A', yOff: -30 },
+      { val: 1.5, label: '3/2', colorDot: '#a78bfa', colorBg: 'rgba(167,139,250,0.2)', sets: 'samo B', yOff: -30 }
+    ];
+
+    for (var i = 0; i < solutions.length; i++) {
+      var s = solutions[i];
+      var sx = valToX(s.val);
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(sx, nlY, 14, 0, Math.PI * 2);
+      ctx.fillStyle = s.colorBg;
+      ctx.fill();
+
+      // Dot
+      ctx.beginPath();
+      ctx.arc(sx, nlY, 7, 0, Math.PI * 2);
+      if (s.sets === 'A, B') {
+        ctx.fillStyle = '#4ade80';
+      } else {
+        ctx.fillStyle = s.colorDot;
+      }
+      ctx.fill();
+
+      // Value label
+      ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+      if (s.sets === 'A, B') {
+        ctx.fillStyle = '#4ade80';
+      } else {
+        ctx.fillStyle = s.colorDot;
+      }
+      ctx.textAlign = 'center';
+      ctx.fillText(s.label, sx, nlY + s.yOff);
+
+      // Set label
+      ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('(' + s.sets + ')', sx, nlY + s.yOff + 14);
+    }
+
+    // Highlight the common solution
+    var commonX = valToX(-0.5);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.arc(commonX, nlY, 20, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // --- SECTION 2: Venn diagram ---
+    var vennY = 260;
+    ctx.font = 'bold 15px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText('Venov dijagram — presek skupova rešenja', w / 2, 140);
+
+    var cR = 100;
+    var cx1 = w / 2 - 60;
+    var cx2 = w / 2 + 60;
+
+    // Circle A (blue, transparent)
+    ctx.beginPath();
+    ctx.arc(cx1, vennY, cR, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(96,165,250,0.1)';
+    ctx.fill();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Circle B (purple, transparent)
+    ctx.beginPath();
+    ctx.arc(cx2, vennY, cR, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(167,139,250,0.1)';
+    ctx.fill();
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Highlight intersection area
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx1, vennY, cR, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.arc(cx2, vennY, cR, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(74,222,128,0.18)';
+    ctx.fill();
+    ctx.restore();
+
+    // Labels
+    ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
+
+    // A label
+    ctx.fillStyle = '#60a5fa';
+    ctx.textAlign = 'center';
+    ctx.fillText('A', cx1 - 50, vennY - 80);
+
+    // B label
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('B', cx2 + 50, vennY - 80);
+
+    // Values in A only
+    ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('0', cx1 - 45, vennY + 5);
+
+    // Values in intersection
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('-1/2', (cx1 + cx2) / 2, vennY + 5);
+
+    // Values in B only
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('3/2', cx2 + 45, vennY + 5);
+
+    // Equation labels under circles
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('x(2x+1) = 0', cx1 - 30, vennY + cR + 25);
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('(x+1/2)(2x-3) = 0', cx2 + 40, vennY + cR + 25);
+
+    // Intersection label
+    ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('A \u2229 B = {-1/2}', (cx1 + cx2) / 2, vennY + cR + 25);
+
+    // Result box at bottom
+    var rx = w / 2 - 90, ry = h - 42;
+    roundRect(ctx, rx, ry, 180, 36, 10, 'rgba(74,222,128,0.12)', '#4ade80');
+    ctx.font = 'bold 17px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.textAlign = 'center';
+    ctx.fillText('x = -1/2', rx + 90, ry + 24);
+  }
+
+  function roundRect(ctx, x, y, rw, rh, r, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + rw - r, y);
+    ctx.quadraticCurveTo(x + rw, y, x + rw, y + r);
+    ctx.lineTo(x + rw, y + rh - r);
+    ctx.quadraticCurveTo(x + rw, y + rh, x + rw - r, y + rh);
+    ctx.lineTo(x + r, y + rh);
+    ctx.quadraticCurveTo(x, y + rh, x, y + rh - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); }
+  }
+
+  drawDiagram();
+  window.addEventListener('resize', drawDiagram);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Presek rešenja dve jednačine — određivanje vrednosti x","subject":"math","unit":"algebra","topic_tags":["jednačine","nula-proizvod","presek skupova","kvadratne jednačine","sistem jednačina"]}
+BRAINSPARK_META-->

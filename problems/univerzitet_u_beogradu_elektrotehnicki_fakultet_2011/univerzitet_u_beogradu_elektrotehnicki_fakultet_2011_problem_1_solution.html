@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poređenje stepenih izraza</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Which of the five expressions has a different value from the other four?
+(A) 2^8    (B) 4^4    (C) 8^(8/3)    (D) 16^2    (E) 32^(6/5)
+
+Strategy: Express each as a power of 2.
+
+(A) 2^8 = 256
+(B) 4^4 = (2^2)^4 = 2^(2*4) = 2^8 = 256
+(C) 8^(8/3) = (2^3)^(8/3) = 2^(3 * 8/3) = 2^8 = 256
+(D) 16^2 = (2^4)^2 = 2^(4*2) = 2^8 = 256
+(E) 32^(6/5) = (2^5)^(6/5) = 2^(5 * 6/5) = 2^6 = 64
+
+All except (E) equal 2^8 = 256.
+(E) = 2^6 = 64.
+
+So (E) has a different value from the other four.
+
+Verification: The expected answer from the PDF is (E). Confirmed.
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 120px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #60a5fa;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.plan-card h2 { color: #a78bfa; }
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 14px;
+  background: rgba(96,165,250,0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(96,165,250,0.12);
+  list-style: none;
+  user-select: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B8 ';
+  display: inline;
+}
+
+details[open] summary::before {
+  content: '\25BE ';
+}
+
+details .details-content {
+  padding: 14px 18px;
+  margin-top: 8px;
+  background: rgba(96,165,250,0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(96,165,250,0.08);
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+  cursor: pointer;
+  padding: 8px;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.step-container:hover {
+  background: rgba(96,165,250,0.04);
+  border-left-color: #4ade80;
+}
+
+.step-container.active {
+  background: rgba(52,211,153,0.06);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  min-width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 { color: #a78bfa; }
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.08));
+  border: 2px solid rgba(52,211,153,0.35);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-value {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 18px 0;
+}
+
+.option-chip {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 1.05rem;
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+
+.option-chip.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(52,211,153,0.15);
+}
+
+.pitfall-box {
+  border-left: 4px solid #e09468;
+}
+
+.pitfall-box h2 { color: #e09468; }
+
+.challenge-box {
+  border-left: 4px solid #a78bfa;
+}
+
+.challenge-box h2 { color: #a78bfa; }
+
+.canvas-wrapper {
+  background: #0c1222;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  overflow: hidden;
+  margin: 14px 0;
+}
+
+canvas {
+  width: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.provera-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(52,211,153,0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(52,211,153,0.12);
+}
+
+.formula-list {
+  list-style: none;
+  padding: 0;
+}
+
+.formula-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+}
+
+.formula-list li:last-child { border-bottom: none; }
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 12px 0;
+  padding: 10px 16px;
+  background: rgba(96,165,250,0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(96,165,250,0.12);
+  flex-wrap: wrap;
+}
+
+.slider-container label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.slider-container input[type="range"] {
+  flex: 1;
+  min-width: 120px;
+  accent-color: #60a5fa;
+}
+
+.slider-value {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.05rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .given-grid { flex-direction: column; }
+  .options-grid { flex-direction: column; align-items: center; }
+  .final-answer-box .answer-value { font-size: 1.8rem; }
+  .slider-container { flex-direction: column; align-items: stretch; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Title -->
+  <h1>Poređenje stepenih izraza</h1>
+  <p class="subtitle">Svođenje različitih baza na istu bazu radi poređenja vrednosti stepenih izraza</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Koji od pet datih izraza ima <span class="highlight">različitu vrednost</span> od ostala četiri izraza?</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(2^8\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(4^4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(8^{8/3}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(16^2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(32^{6/5}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Sve baze (2, 4, 8, 16, 32) su stepeni broja 2. Svaki izraz ćemo svesti na oblik \(2^n\) koristeći pravilo za stepen stepena, pa direktno uporediti eksponente.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="details-content">
+        <ul class="formula-list">
+          <li><strong>Stepen stepena:</strong> \(\left(a^m\right)^n = a^{m \cdot n}\) — eksponenti se množe</li>
+          <li><strong>Baze kao stepeni dvojke:</strong> \(4 = 2^2\), \(8 = 2^3\), \(16 = 2^4\), \(32 = 2^5\)</li>
+          <li><strong>Razlomljeni eksponent:</strong> \(a^{p/q} = \sqrt[q]{a^p}\) — razlomak u eksponentu označava kombinaciju korenovanja i stepenovanja</li>
+          <li><strong>Poređenje stepena iste baze:</strong> Ako je \(a > 1\), tada \(a^m = a^n \iff m = n\). Dovoljno je uporediti eksponente.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color: #94a3b8; margin-bottom: 8px;">Svaki izraz je prikazan kao stepen broja 2. Pomerajte klizač da vidite kako se menja eksponent za različite baze.</p>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="900" height="420"></canvas>
+    </div>
+    <div class="slider-container">
+      <label for="exponent-slider">Eksponent osnove 2:</label>
+      <input type="range" id="exponent-slider" min="1" max="10" value="8" step="1">
+      <span class="slider-value" id="slider-display">2^8 = 256</span>
+    </div>
+    <p class="drag-hint">Pomerajte klizač da istražite različite stepene broja 2</p>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapišimo svaku bazu kao stepen broja 2</h3>
+        <p>Svih pet baza su stepeni broja 2. To nam omogućava da sve izraze svedemo na istu bazu:</p>
+        <div class="math-box">
+          \[
+          4 = 2^2, \quad 8 = 2^3, \quad 16 = 2^4, \quad 32 = 2^5
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Primenimo pravilo za stepen stepena na izraz (A)</h3>
+        <p>Izraz (A) je već u obliku stepena dvojke:</p>
+        <div class="math-box">
+          \[
+          (A) \quad 2^8 = \mathbf{2^8}
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Svedimo izraz (B) na stepen dvojke</h3>
+        <p>Zamenjujemo \(4 = 2^2\) i koristimo pravilo \((a^m)^n = a^{mn}\):</p>
+        <div class="math-box">
+          \[
+          (B) \quad 4^4 = \left(2^2\right)^4 = 2^{2 \cdot 4} = \mathbf{2^8}
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Svedimo izraz (C) na stepen dvojke</h3>
+        <p>Zamenjujemo \(8 = 2^3\):</p>
+        <div class="math-box">
+          \[
+          (C) \quad 8^{8/3} = \left(2^3\right)^{8/3} = 2^{3 \cdot \frac{8}{3}} = 2^{\frac{24}{3}} = \mathbf{2^8}
+          \]
+        </div>
+        <p style="color: #94a3b8; font-size: 0.9rem;">Obratite pažnju: trojka u eksponentu baze i trojka u imeniocu razlomka se skrate!</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details>
+      <summary>Proveri se: Koliko je \(3 \cdot \frac{8}{3}\)?</summary>
+      <div class="details-content">
+        <p>Množimo: \(3 \cdot \frac{8}{3} = \frac{3 \cdot 8}{3} = \frac{24}{3} = 8\). Trojke se skrate i ostaje 8.</p>
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Svedimo izraz (D) na stepen dvojke</h3>
+        <p>Zamenjujemo \(16 = 2^4\):</p>
+        <div class="math-box">
+          \[
+          (D) \quad 16^2 = \left(2^4\right)^2 = 2^{4 \cdot 2} = \mathbf{2^8}
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Svedimo izraz (E) na stepen dvojke</h3>
+        <p>Zamenjujemo \(32 = 2^5\):</p>
+        <div class="math-box">
+          \[
+          (E) \quad 32^{6/5} = \left(2^5\right)^{6/5} = 2^{5 \cdot \frac{6}{5}} = 2^{\frac{30}{5}} = \mathbf{2^6}
+          \]
+        </div>
+        <p>Ovde dobijamo <span class="highlight">\(2^6\)</span>, a ne \(2^8\) kao kod ostalih izraza!</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details>
+      <summary>Proveri se: Koliko je \(2^6\) i koliko je \(2^8\)?</summary>
+      <div class="details-content">
+        <p>\(2^6 = 64\) i \(2^8 = 256\). Jasno je da \(64 \neq 256\), pa izraz (E) ima različitu vrednost od ostalih.</p>
+      </div>
+    </details>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Uporedimo sve rezultate</h3>
+        <p>Pregledajmo kompletnu tabelu:</p>
+        <div class="math-box">
+          \[
+          \begin{array}{c|c|c}
+          \textbf{Izraz} & \textbf{Stepen dvojke} & \textbf{Vrednost} \\
+          \hline
+          (A)\; 2^8 & 2^8 & 256 \\
+          (B)\; 4^4 & 2^8 & 256 \\
+          (C)\; 8^{8/3} & 2^8 & 256 \\
+          (D)\; 16^2 & 2^8 & 256 \\
+          (E)\; 32^{6/5} & 2^6 & 64
+          \end{array}
+          \]
+        </div>
+        <p>Četiri izraza imaju vrednost <span class="highlight">256</span>, dok izraz (E) ima vrednost <span class="highlight">64</span>.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details>
+      <summary>Proveri se: Numerička verifikacija izraza (E)</summary>
+      <div class="details-content">
+        <p>Proverimo kalkulatorom: \(32^{6/5} = 32^{1{,}2}\).</p>
+        <div class="math-box">
+          \[
+          32^{1/5} = \sqrt[5]{32} = 2
+          \]
+          \[
+          32^{6/5} = \left(32^{1/5}\right)^6 = 2^6 = 64 \quad \checkmark
+          \]
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Kod izraza (A) do (D), proizvod eksponenta baze i spoljašnjeg eksponenta je uvek <strong>8</strong>:
+    \(1 \cdot 8 = 8\), \(2 \cdot 4 = 8\), \(3 \cdot \frac{8}{3} = 8\), \(4 \cdot 2 = 8\).
+    Međutim, kod izraza (E): \(5 \cdot \frac{6}{5} = 6 \neq 8\).
+    Suština zadatka je upravo u tome da se razlomljeni eksponenti pažljivo izmnože sa eksponentima baza.</p>
+    <div class="math-box" style="text-align: center; font-size: 1.15rem;">
+      \[
+      32^{6/5} = 2^6 = 64 \neq 256 = 2^8
+      \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2 style="color: #34d399; margin-bottom: 10px;">Konačan odgovor</h2>
+    <div class="options-grid">
+      <div class="option-chip">(A) \(2^8 = 256\)</div>
+      <div class="option-chip">(B) \(4^4 = 256\)</div>
+      <div class="option-chip">(C) \(8^{8/3} = 256\)</div>
+      <div class="option-chip">(D) \(16^2 = 256\)</div>
+      <div class="option-chip correct">(E) \(32^{6/5} = 64\)</div>
+    </div>
+    <div class="answer-value">Odgovor je (E)</div>
+    <p style="color: #94a3b8; margin-top: 8px;">Izraz \(32^{6/5} = 64\) ima različitu vrednost od ostala četiri izraza koji svi iznose 256.</p>
+    <div class="provera-note">
+      <strong>Provera:</strong> Svaki izraz smo nezavisno sveli na stepen dvojke. Četiri izraza daju \(2^8 = 256\),
+      dok (E) daje \(2^6 = 64\). Rezultat je smislen jer je \(\frac{6}{5}\) eksponent za bazu 32 nedovoljno
+      velik da dostigne vrednost 256 — bio bi potreban eksponent \(\frac{8}{5}\) umesto \(\frac{6}{5}\).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-box">
+    <h2>Česte greške</h2>
+    <ul style="list-style: disc; padding-left: 20px; color: #e2e8f0;">
+      <li style="margin-bottom: 10px;"><strong>Pogrešno množenje razlomljenih eksponenata:</strong>
+        Pri množenju \(5 \cdot \frac{6}{5}\) student može greškom pomisliti da je rezultat 8
+        (jer su ostali davali 8), umesto da pažljivo izračuna \(\frac{30}{5} = 6\).
+        Uvek izračunajte proizvod, ne pretpostavljajte rezultat!</li>
+      <li><strong>Zamena baze i eksponenta:</strong>
+        Kod izraza \(8^{8/3}\) se lako pobrka šta je baza a šta eksponent, naročito zato
+        što broj 8 učestvuje i kao baza i u brojiocu eksponenta. Ključno je: baza je \(8 = 2^3\),
+        a eksponent je \(\frac{8}{3}\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-box">
+    <h2>Bonus izazov</h2>
+    <p>Koji eksponent bi trebalo staviti umesto \(\frac{6}{5}\) u izrazu \(32^{?}\) da bi i on bio jednak ostalim izrazima?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="details-content">
+        <p>Potrebno je da važi \(32^x = 2^8\), tj. \((2^5)^x = 2^8\), tj. \(5x = 8\).
+           Odatle sledi \(x = \frac{8}{5}\). Dakle, \(32^{8/5} = 256\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('exponent-slider');
+  const sliderDisplay = document.getElementById('slider-display');
+
+  const expressions = [
+    { label: '(A) 2\u2078', base: 2, baseExp: 1, outerExp: 8, baseLabel: '2', outerLabel: '8' },
+    { label: '(B) 4\u2074', base: 4, baseExp: 2, outerExp: 4, baseLabel: '2\u00B2', outerLabel: '4' },
+    { label: '(C) 8^(8/3)', base: 8, baseExp: 3, outerExp: 8/3, baseLabel: '2\u00B3', outerLabel: '8/3' },
+    { label: '(D) 16\u00B2', base: 16, baseExp: 4, outerExp: 2, baseLabel: '2\u2074', outerLabel: '2' },
+    { label: '(E) 32^(6/5)', base: 32, baseExp: 5, outerExp: 6/5, baseLabel: '2\u2075', outerLabel: '6/5' }
+  ];
+
+  let highlightExp = 8;
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 420 * dpr;
+    canvas.style.height = '420px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width;
+    const H = 420;
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const marginL = 40;
+    const marginR = 40;
+    const marginTop = 50;
+    const rowHeight = 65;
+    const barMaxWidth = W - marginL - marginR - 240;
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Svođenje izraza na stepene broja 2', marginL, 28);
+
+    // Reference line for highlighted exponent
+    const refWidth = (highlightExp / 10) * barMaxWidth;
+
+    expressions.forEach((expr, idx) => {
+      const y = marginTop + idx * rowHeight;
+      const resultExp = expr.baseExp * expr.outerExp;
+      const barWidth = (resultExp / 10) * barMaxWidth;
+      const isMatch = Math.abs(resultExp - highlightExp) < 0.001;
+      const isDifferent = idx === 4;
+
+      // Label
+      ctx.fillStyle = isDifferent ? '#f472b6' : '#e2e8f0';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(expr.label, marginL, y + 18);
+
+      // Bar background
+      const barX = marginL + 130;
+      ctx.fillStyle = 'rgba(96,165,250,0.06)';
+      ctx.beginPath();
+      ctx.roundRect(barX, y + 4, barMaxWidth, 28, 6);
+      ctx.fill();
+
+      // Bar fill
+      const barColor = isDifferent ? '#f472b6' : (isMatch ? '#4ade80' : '#60a5fa');
+      const barAlpha = isMatch ? 0.35 : 0.2;
+
+      ctx.fillStyle = isDifferent ? 'rgba(244,114,182,0.3)' : (isMatch ? 'rgba(74,222,128,0.3)' : 'rgba(96,165,250,0.2)');
+      ctx.beginPath();
+      ctx.roundRect(barX, y + 4, Math.max(barWidth, 4), 28, 6);
+      ctx.fill();
+
+      // Bar border
+      ctx.strokeStyle = barColor;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(barX, y + 4, Math.max(barWidth, 4), 28, 6);
+      ctx.stroke();
+
+      // Glow at bar end
+      if (barWidth > 10) {
+        const gradient = ctx.createRadialGradient(barX + barWidth, y + 18, 0, barX + barWidth, y + 18, 20);
+        gradient.addColorStop(0, barColor + '66');
+        gradient.addColorStop(1, barColor + '00');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(barX + barWidth, y + 18, 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Calculation text
+      const calcText = expr.baseExp + ' \u00D7 ' + expr.outerLabel + ' = ' + (Math.round(resultExp * 100) / 100);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(calcText, barX, y + 50);
+
+      // Result value at end of bar
+      const resultVal = Math.pow(2, resultExp);
+      const resultText = '2' + superscript(Math.round(resultExp * 100) / 100) + ' = ' + Math.round(resultVal);
+      ctx.fillStyle = isDifferent ? '#f472b6' : (isMatch ? '#4ade80' : '#e2e8f0');
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(resultText, barX + barMaxWidth + 10, y + 22);
+    });
+
+    // Reference line
+    const refX = marginL + 130 + refWidth;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(refX, marginTop);
+    ctx.lineTo(refX, marginTop + 5 * rowHeight - 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Reference label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2' + superscript(highlightExp) + ' = ' + Math.pow(2, highlightExp), refX, marginTop + 5 * rowHeight - 6);
+
+    // Legend at the bottom
+    const legendY = H - 30;
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.arc(marginL + 10, legendY, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Izrazi jednaki 2' + superscript(highlightExp), marginL + 22, legendY + 4);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.arc(marginL + 200, legendY, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Izraz sa različitom vrednošću', marginL + 212, legendY + 4);
+  }
+
+  function superscript(n) {
+    const superDigits = { '0': '\u2070', '1': '\u00B9', '2': '\u00B2', '3': '\u00B3',
+      '4': '\u2074', '5': '\u2075', '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079',
+      '.': '\u22C5', ',': '\u22C5' };
+    return String(n).split('').map(c => superDigits[c] || c).join('');
+  }
+
+  slider.addEventListener('input', function() {
+    highlightExp = parseInt(this.value);
+    const val = Math.pow(2, highlightExp);
+    sliderDisplay.textContent = '2' + superscript(highlightExp) + ' = ' + val;
+    draw();
+  });
+
+  // Step click highlighting
+  document.querySelectorAll('.step-container').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      step.classList.toggle('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Poređenje stepenih izraza svođenjem na istu bazu",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["stepenovanje", "stepeni broja 2", "razlomljeni eksponenti", "poređenje izraza", "stepen stepena"]
+}
+BRAINSPARK_META-->

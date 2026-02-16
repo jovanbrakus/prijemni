@@ -150,6 +150,11 @@ b. **Problem Statement** (first content section)
        <!-- ... etc for all options -->
      </div>
      \`\`\`
+   - **Ignore "Ne znam" option:** Many Serbian entrance exams include a default answer
+     option "(N) Ne znam" ("I don't know"). This is NOT a real answer option — it is a
+     scoring mechanism. Completely ignore it: do not display it among the answer option
+     cards, do not mention it in the problem statement, and do not reference it anywhere
+     in the solution.
    - **No correct answer indication in the problem statement:** The problem statement card
      must NOT visually mark, highlight, or otherwise reveal which answer option is correct.
      All answer option cards must look identical. If the correct answer is known from the

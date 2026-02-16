@@ -89,9 +89,32 @@ After ALL agents have completed:
    ```
 3. Write the updated array back to `database/problems.json` (keep existing entries, append new ones, maintain sorted order by document then order)
 
-### Step 6: Report results
+### Step 6: Commit results
+
+After updating the database, commit all generated files:
+
+1. Stage the new solution files and the updated database:
+   ```
+   git add {OUTPUT_DIR}/ database/problems.json
+   ```
+2. Create a commit with the message following this pattern:
+   ```
+   Add solutions for {FACULTY_SHORT} {YEAR} entrance exam ({COUNT} problems)
+   ```
+   Where:
+   - `FACULTY_SHORT` is a short human-readable faculty name (e.g. "ETF Belgrade" for `elektrotehnicki_fakultet`)
+   - `YEAR` is the exam year extracted from the filename
+   - `COUNT` is the number of problems solved
+
+   Use a HEREDOC for the commit message and include the co-author trailer:
+   ```
+   Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+   ```
+
+### Step 7: Report results
 
 Tell the user:
 - How many problems were found and solved
 - List any failures
 - The path to the output directory
+- The commit hash

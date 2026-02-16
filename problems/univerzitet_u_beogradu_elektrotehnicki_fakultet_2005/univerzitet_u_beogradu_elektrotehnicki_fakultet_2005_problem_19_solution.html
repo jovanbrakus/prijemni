@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspored nula i jedinica bez susednih jedinica</title>
+<script>MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Count the number of binary strings of length n+k with exactly n zeros and k ones,
+such that no two ones are adjacent, given k <= n+1.
+
+Solution approach:
+1. Place n zeros in a row: 0 0 0 ... 0 (n zeros)
+2. This creates (n+1) gaps where ones can be placed:
+   _  0  _  0  _  0  _  ...  _  0  _
+   There is one gap before each zero and one gap after the last zero.
+   Total gaps = n + 1
+3. We need to choose k of these (n+1) gaps to place exactly one "1" in each.
+   Since each gap gets at most one "1", no two ones can be adjacent.
+4. The number of ways = C(n+1, k)
+
+Verification with small cases:
+- n=2, k=1: zeros = 00, gaps = _0_0_, choose 1 of 3 gaps -> C(3,1) = 3
+  Arrangements: 100, 010, 001 -> 3 ✓
+- n=2, k=2: gaps = _0_0_, choose 2 of 3 -> C(3,2) = 3
+  Arrangements: 1010, 1001, 0101 -> 3 ✓
+- n=3, k=2: gaps = _0_0_0_, choose 2 of 4 -> C(4,2) = 6
+  Arrangements: 10100, 10010, 10001, 01010, 01001, 00101 -> 6 ✓
+
+Answer: (A) C(n+1, k)
+</script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container { max-width: 1200px; margin: 0 auto; }
+h1 {
+  text-align: center;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 32px;
+  padding: 20px 0;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+}
+.card h2 {
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  color: #60a5fa;
+}
+.card h3 {
+  font-size: 1.1rem;
+  margin: 18px 0 10px;
+  color: #a78bfa;
+}
+.muted { color: #94a3b8; }
+.highlight-blue { color: #60a5fa; font-weight: 600; }
+.highlight-green { color: #4ade80; font-weight: 600; }
+.highlight-purple { color: #a78bfa; font-weight: 600; }
+.highlight-pink { color: #f472b6; font-weight: 600; }
+
+/* Problem statement */
+.problem-statement {
+  background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(167,139,250,0.08));
+  border-left: 4px solid #60a5fa;
+  padding: 20px 24px;
+  border-radius: 0 12px 12px 0;
+  margin-bottom: 8px;
+}
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: center;
+  transition: all 0.2s;
+}
+.option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.08);
+}
+
+/* Collapsible theory */
+details {
+  margin: 15px 0;
+}
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  padding: 10px 0;
+  user-select: none;
+  list-style: none;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::before {
+  content: '▶ ';
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 0.8em;
+}
+details[open] summary::before { transform: rotate(90deg); }
+details .detail-content {
+  background: rgba(15,23,42,0.5);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 18px 22px;
+  margin-top: 6px;
+}
+
+/* Steps */
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 20px;
+  margin: 20px 0;
+  position: relative;
+}
+.step::before {
+  content: attr(data-step);
+  position: absolute;
+  left: -16px;
+  top: 0;
+  background: #a78bfa;
+  color: #0f172a;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.step-title {
+  font-weight: 700;
+  color: #a78bfa;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+/* Checkpoint */
+.checkpoint summary {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.06);
+  border: 1px dashed #334155;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+}
+.checkpoint .detail-content {
+  border-color: rgba(52,211,153,0.2);
+}
+
+/* Final answer */
+.final-answer {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.06));
+  border: 2px solid #4ade80;
+  border-radius: 16px;
+  padding: 28px 32px;
+  text-align: center;
+}
+.final-answer .answer-label {
+  font-size: 1rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.final-answer .answer-value {
+  font-size: 1.7rem;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+/* Canvas container */
+.canvas-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+canvas {
+  border: 1px solid #334155;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}
+.controls label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+.controls input[type="range"] {
+  accent-color: #a78bfa;
+  width: 100px;
+}
+.controls span.val {
+  color: #60a5fa;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+}
+.controls button {
+  background: #a78bfa;
+  color: #0f172a;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.controls button:hover { background: #c4b5fd; }
+.controls button.secondary {
+  background: #334155;
+  color: #e2e8f0;
+}
+.controls button.secondary:hover { background: #475569; }
+.result-text {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: center;
+  min-height: 24px;
+}
+
+/* Interactive explorer */
+.explorer-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin: 12px 0;
+}
+.explorer-cell {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.explorer-cell.zero {
+  background: #1e3a5f;
+  border: 2px solid #3b82f6;
+  color: #60a5fa;
+}
+.explorer-cell.gap {
+  background: rgba(167,139,250,0.1);
+  border: 2px dashed #a78bfa;
+  color: #a78bfa;
+  font-size: 0.8rem;
+}
+.explorer-cell.gap.selected {
+  background: rgba(244,114,182,0.2);
+  border-color: #f472b6;
+  color: #f472b6;
+}
+.explorer-cell.gap.filled {
+  background: rgba(74,222,128,0.15);
+  border: 2px solid #4ade80;
+  color: #4ade80;
+}
+.arrangement-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+  justify-content: center;
+}
+.arrangement-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  letter-spacing: 2px;
+}
+
+/* Key insight */
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 12px;
+  padding: 22px 26px;
+}
+
+/* Pitfall */
+.pitfall {
+  background: rgba(239,68,68,0.06);
+  border-left: 3px solid #ef4444;
+  padding: 14px 18px;
+  border-radius: 0 8px 8px 0;
+  margin: 10px 0;
+}
+.pitfall-title { color: #f87171; font-weight: 600; }
+
+/* Verification table */
+.verify-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+.verify-table th, .verify-table td {
+  padding: 10px 14px;
+  border: 1px solid #334155;
+  text-align: center;
+}
+.verify-table th {
+  background: rgba(96,165,250,0.1);
+  color: #60a5fa;
+  font-weight: 600;
+}
+.verify-table td { color: #e2e8f0; }
+
+@media (max-width: 640px) {
+  .card { padding: 18px 16px; }
+  .step { padding-left: 16px; }
+  body { padding: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Raspored nula i jedinica bez susednih jedinica</h1>
+
+<!-- Problem Statement -->
+<div class="card">
+  <h2>Postavka zadatka</h2>
+  <div class="problem-statement">
+    <p>Broj nacina na koji se mogu poredati u niz \( n \) nula i \( k \) jedinica, tako da nikoje dve jedinice nisu susedne, ako je \( k \leq n + 1 \), je:</p>
+    <div class="options-grid">
+      <div class="option correct">(A) \( \binom{n+1}{k} \)</div>
+      <div class="option">(B) \( \binom{n}{k} \)</div>
+      <div class="option">(C) \( \dfrac{n!}{k!} \)</div>
+      <div class="option">(D) \( \dfrac{(n+1)!}{k!} \)</div>
+      <div class="option">(E) \( \binom{n-1}{k} \)</div>
+      <div class="option">(N) Ne znam</div>
+    </div>
+  </div>
+</div>
+
+<!-- Plan -->
+<div class="card">
+  <h2>Plan resavanja</h2>
+  <p>Da bismo prebrojali nizove od \( n \) nula i \( k \) jedinica u kojima nikoje dve jedinice nisu susedne, koristicemo <span class="highlight-purple">tehniku umetanja u praznine (gaps method)</span>:</p>
+  <ol style="margin-top:10px; padding-left:20px; color:#94a3b8;">
+    <li>Postavimo svih \( n \) nula u red &mdash; one stvaraju <span class="highlight-blue">\( n + 1 \) prazninu</span>.</li>
+    <li>Izaberemo \( k \) od tih praznina za jedinice &mdash; to je <span class="highlight-green">\( \binom{n+1}{k} \)</span>.</li>
+    <li>Proverimo na konkretnim primerima.</li>
+  </ol>
+</div>
+
+<!-- Theory Refresher -->
+<div class="card">
+  <h2>Teorijska podloga</h2>
+  <details>
+    <summary>&#128208; Kljucne formule i teoreme</summary>
+    <div class="detail-content">
+      <h3>Binomni koeficijent</h3>
+      <p>Broj nacina da se izabere \( k \) elemenata iz skupa od \( n \) elemenata (bez ponavljanja, redosled nebitan):</p>
+      \[ \binom{n}{k} = \frac{n!}{k!(n-k)!} \]
+
+      <h3>Tehnika umetanja u praznine (Gaps Method)</h3>
+      <p>Kada zelimo da rasporedimo objekte tako da odredeni objekti <em>ne budu susedni</em>, najpre postavimo ostale objekte, a zatim umecemo "zabranjene" objekte u praznine koje su nastale.</p>
+      <p>Ako imamo \( n \) objekata jednog tipa poredanih u red, oni stvaraju tacno <span class="highlight-blue">\( n + 1 \)</span> prazninu:</p>
+      \[ \underset{\text{pre}}{\_} \; O_1 \; \underset{}{\_} \; O_2 \; \underset{}{\_} \; \cdots \; \underset{}{\_} \; O_n \; \underset{\text{posle}}{\_} \]
+
+      <h3>Zasto \( k \leq n + 1 \)?</h3>
+      <p>Posto imamo \( n + 1 \) prazninu, a u svaku mozemo staviti najvise jednu jedinicu (da ne bi bile susedne), moramo imati \( k \leq n + 1 \). U suprotnom, resenje ne postoji.</p>
+    </div>
+  </details>
+</div>
+
+<!-- Visual Aid -->
+<div class="card">
+  <h2>Vizuelni prikaz</h2>
+  <div class="canvas-container">
+    <canvas id="gapsCanvas" width="800" height="320"></canvas>
+    <div class="controls">
+      <label>n (nule): </label>
+      <input type="range" id="sliderN" min="1" max="7" value="3">
+      <span class="val" id="valN">3</span>
+      &nbsp;&nbsp;
+      <label>k (jedinice): </label>
+      <input type="range" id="sliderK" min="0" max="4" value="2">
+      <span class="val" id="valK">2</span>
+      &nbsp;&nbsp;
+      <button id="btnAnimate">Animiraj</button>
+      <button class="secondary" id="btnRandom">Slucajan izbor</button>
+    </div>
+    <div class="result-text" id="resultText"></div>
+  </div>
+</div>
+
+<!-- Interactive Explorer -->
+<div class="card">
+  <h2>Interaktivni istrazivac</h2>
+  <p class="muted" style="margin-bottom:10px;">Klikni na praznine (ljubicaste celije) da postavis jedinice i napravis validan raspored. Nule su plave, praznine su isprekidane.</p>
+  <div class="controls" style="margin-bottom:12px;">
+    <label>n = </label>
+    <input type="range" id="explorerN" min="1" max="6" value="3">
+    <span class="val" id="explorerNVal">3</span>
+    &nbsp;&nbsp;
+    <label>k = </label>
+    <input type="range" id="explorerK" min="1" max="4" value="2">
+    <span class="val" id="explorerKVal">2</span>
+    &nbsp;&nbsp;
+    <button id="btnReset">Resetuj</button>
+    <button class="secondary" id="btnShowAll">Prikazi sve rasporede</button>
+  </div>
+  <div id="explorerGrid" class="explorer-grid"></div>
+  <div class="result-text" id="explorerResult"></div>
+  <div id="allArrangements" style="margin-top:10px;"></div>
+</div>
+
+<!-- Step-by-step Solution -->
+<div class="card">
+  <h2>Resenje korak po korak</h2>
+
+  <div class="step" data-step="1">
+    <div class="step-title">Rasporedimo nule</div>
+    <p>Postavimo svih \( n \) nula u red. Posto su sve nule identicne, postoji samo <strong>jedan</strong> nacin da to uradimo:</p>
+    \[ \underbrace{0 \quad 0 \quad 0 \quad \cdots \quad 0}_{n \text{ nula}} \]
+  </div>
+
+  <div class="step" data-step="2">
+    <div class="step-title">Identificiramo praznine</div>
+    <p>Kada \( n \) nula stoji u redu, one stvaraju <span class="highlight-blue">\( n + 1 \)</span> prazninu &mdash; jednu pre prve nule, jednu izmedju svakog para susednih nula, i jednu posle poslednje nule:</p>
+    \[ \underset{g_0}{\_} \quad 0 \quad \underset{g_1}{\_} \quad 0 \quad \underset{g_2}{\_} \quad \cdots \quad \underset{g_{n-1}}{\_} \quad 0 \quad \underset{g_n}{\_} \]
+    <p>Praznine su oznacene sa \( g_0, g_1, \ldots, g_n \) &mdash; ukupno \( n + 1 \) praznina.</p>
+  </div>
+
+  <details class="checkpoint">
+    <summary>Proveri se: Koliko praznina nastaje ako imamo 4 nule?</summary>
+    <div class="detail-content">
+      <p>Ako \( n = 4 \), onda imamo:</p>
+      \[ \_ \quad 0 \quad \_ \quad 0 \quad \_ \quad 0 \quad \_ \quad 0 \quad \_ \]
+      <p>To je \( n + 1 = 4 + 1 = \) <span class="highlight-green">5 praznina</span>. Tacno!</p>
+    </div>
+  </details>
+
+  <div class="step" data-step="3">
+    <div class="step-title">Umecemo jedinice u praznine</div>
+    <p>Treba da stavimo \( k \) jedinica u ove praznine, ali <strong>najvise jednu jedinicu po praznini</strong>. Zasto? Ako bismo stavili dve jedinice u istu prazninu, one bi bile susedne &mdash; sto je zabranjeno!</p>
+    <p>Dakle, biramo \( k \) od \( n + 1 \) praznina u koje cemo staviti po jednu jedinicu. To je klasican kombinatorni problem izbora:</p>
+    \[ \text{Broj nacina} = \binom{n+1}{k} \]
+  </div>
+
+  <details class="checkpoint">
+    <summary>Proveri se: Za n = 3, k = 2, koliko rasporeda postoji?</summary>
+    <div class="detail-content">
+      <p>\( \binom{n+1}{k} = \binom{4}{2} = \frac{4!}{2! \cdot 2!} = \frac{24}{4} = 6 \)</p>
+      <p>Navedimo ih sve: <code>10100</code>, <code>10010</code>, <code>10001</code>, <code>01010</code>, <code>01001</code>, <code>00101</code></p>
+      <p>Zaista ih ima tacno <span class="highlight-green">6</span>!</p>
+    </div>
+  </details>
+
+  <div class="step" data-step="4">
+    <div class="step-title">Zasto su drugi odgovori pogresni?</div>
+    <p><span class="highlight-pink">(B) \( \binom{n}{k} \)</span> &mdash; Ovo bi bilo tacno samo ako jedinice ne bi mogle da stoje na pocetku ili na kraju niza (tj. samo izmedju nula). Ali one mogu, pa je broj praznina \( n+1 \), ne \( n-1 \).</p>
+    <p><span class="highlight-pink">(C) \( \frac{n!}{k!} \)</span> i <span class="highlight-pink">(D) \( \frac{(n+1)!}{k!} \)</span> &mdash; Ove formule ne odgovaraju nikakvom standardnom kombinatornom izboru za ovaj problem. Za \( n = 3, k = 2 \) daju \( 3 \) i \( 12 \), sto je pogresno.</p>
+    <p><span class="highlight-pink">(E) \( \binom{n-1}{k} \)</span> &mdash; Ovo daje premalo mogucnosti; za \( n = 3, k = 2 \) daje \( \binom{2}{2} = 1 \), sto je pogresno.</p>
+  </div>
+
+  <details class="checkpoint">
+    <summary>Proveri se: Za n = 2, k = 1, proveri sve odgovore</summary>
+    <div class="detail-content">
+      <p>Trazimo nizove od 2 nule i 1 jedinice gde jedinca nije susedna samoj sebi (trivijalno ispunjeno za k=1). Ukupno 3 niza: <code>100</code>, <code>010</code>, <code>001</code>.</p>
+      <table class="verify-table">
+        <tr><th>Odgovor</th><th>Formula</th><th>Vrednost</th><th>Tacno?</th></tr>
+        <tr><td>(A)</td><td>\(\binom{3}{1}\)</td><td>3</td><td style="color:#4ade80;">Da!</td></tr>
+        <tr><td>(B)</td><td>\(\binom{2}{1}\)</td><td>2</td><td style="color:#f87171;">Ne</td></tr>
+        <tr><td>(C)</td><td>\(\frac{2!}{1!}\)</td><td>2</td><td style="color:#f87171;">Ne</td></tr>
+        <tr><td>(D)</td><td>\(\frac{3!}{1!}\)</td><td>6</td><td style="color:#f87171;">Ne</td></tr>
+        <tr><td>(E)</td><td>\(\binom{1}{1}\)</td><td>1</td><td style="color:#f87171;">Ne</td></tr>
+      </table>
+    </div>
+  </details>
+</div>
+
+<!-- Key Insight -->
+<div class="card">
+  <h2>Kljucni uvid</h2>
+  <div class="insight-box">
+    <p style="font-size:1.1rem;"><strong>Tehnika praznina (Gaps Method):</strong> Kada treba rasporediti objekte tako da odredjeni objekti ne budu susedni, prvo postavimo "bezopasne" objekte, a zatim umecemo "problematicne" objekte u praznine.</p>
+    <p style="margin-top:10px;">\( n \) objekata u redu stvara \( n + 1 \) prazninu (ukljucujuci krajeve). Izbor \( k \) praznina od \( n + 1 \) daje \( \binom{n+1}{k} \).</p>
+    <p style="margin-top:10px; color:#94a3b8;">Ova tehnika se koristi u mnogim problemima: raspored ljudi u redu, postavljanje topova na sahovskoj tabli (da se ne napadaju), itd.</p>
+  </div>
+</div>
+
+<!-- Final Answer -->
+<div class="card">
+  <div class="final-answer">
+    <div class="answer-label">Tacan odgovor</div>
+    <div class="answer-value">(A) \( \displaystyle\binom{n+1}{k} \)</div>
+    <div style="margin-top:16px;">
+      <table class="verify-table" style="max-width:500px; margin:12px auto;">
+        <tr><th>\( n \)</th><th>\( k \)</th><th>\( \binom{n+1}{k} \)</th><th>Rucno prebrojano</th></tr>
+        <tr><td>2</td><td>1</td><td>3</td><td>3</td></tr>
+        <tr><td>2</td><td>2</td><td>3</td><td>3</td></tr>
+        <tr><td>3</td><td>2</td><td>6</td><td>6</td></tr>
+        <tr><td>4</td><td>2</td><td>10</td><td>10</td></tr>
+        <tr><td>4</td><td>3</td><td>10</td><td>10</td></tr>
+      </table>
+      <p class="muted" style="margin-top:8px;">Svi rezultati se poklapaju &mdash; formula je verifikovana!</p>
+    </div>
+  </div>
+</div>
+
+<!-- Common Pitfalls -->
+<div class="card">
+  <h2>Ceste greske</h2>
+  <div class="pitfall">
+    <p class="pitfall-title">Zaboravljanje krajnjih praznina</p>
+    <p>Cesta greska je da se broje samo praznine <em>izmedju</em> nula (kojih ima \( n - 1 \)), a zaborave praznine pre prve i posle poslednje nule. Ukupno praznina je \( n + 1 \), ne \( n - 1 \).</p>
+  </div>
+  <div class="pitfall">
+    <p class="pitfall-title">Mesanje sa permutacijama</p>
+    <p>Nule su medjusobno nerazlucive, kao i jedinice. Zato ne koristimo permutacije, vec kombinacije. Nema deljenja sa \( n! \) ili \( k! \) na neuobicajen nacin.</p>
+  </div>
+  <div class="pitfall">
+    <p class="pitfall-title">Direktno prebrojavanje</p>
+    <p>Pokusaj da se direktno nabroje svi nizovi i oduzmu oni sa susednim jedinicama je mnogo komplikovaniji pristup i lako dovodi do greske. Tehnika praznina je elegantnija.</p>
+  </div>
+</div>
+
+<!-- Optional Challenge -->
+<div class="card">
+  <h2>Izazov za razmisljanje</h2>
+  <p>Razmisli o sledecim prosirenjima:</p>
+  <ol style="padding-left:20px; color:#94a3b8; margin-top:10px;">
+    <li style="margin-bottom:8px;">Sta ako nule i jedinice treba da stoje u <em>krugu</em> umesto u redu, a i dalje nikoje dve jedinice ne smeju biti susedne? Koliko rasporeda ima tada?
+      <details class="checkpoint">
+        <summary>Proveri se: Odgovor za kruzni raspored</summary>
+        <div class="detail-content">
+          <p>Za kruzni raspored, \( n \) nula stvara tacno \( n \) praznina (nema "krajeva"). Broj nacina je \( \binom{n}{k} \) za \( k \leq n \), uz uslov \( n \geq 1 \).</p>
+        </div>
+      </details>
+    </li>
+    <li>Sta ako umesto jedinica imamo cifre od 1 do 9 (sve razlicite), pa redosled jedinica postaje bitan?
+      <details class="checkpoint">
+        <summary>Proveri se: Odgovor sa razlicitim elementima</summary>
+        <div class="detail-content">
+          <p>Tada biramo \( k \) praznina od \( n + 1 \), i u njih rasporedimo \( k \) razlicitih elemenata. Broj nacina: \( \binom{n+1}{k} \cdot k! = \frac{(n+1)!}{(n+1-k)!} \).</p>
+        </div>
+      </details>
+    </li>
+  </ol>
+</div>
+
+</div><!-- end container -->
+
+<script>
+(function() {
+  // ---- CANVAS VISUALIZATION ----
+  const canvas = document.getElementById('gapsCanvas');
+  const ctx = canvas.getContext('2d');
+  const sliderN = document.getElementById('sliderN');
+  const sliderK = document.getElementById('sliderK');
+  const valN = document.getElementById('valN');
+  const valK = document.getElementById('valK');
+  const resultText = document.getElementById('resultText');
+  const btnAnimate = document.getElementById('btnAnimate');
+  const btnRandom = document.getElementById('btnRandom');
+
+  let animState = { phase: 0, progress: 0, selectedGaps: [], animating: false };
+
+  function binomial(n, k) {
+    if (k < 0 || k > n) return 0;
+    if (k === 0 || k === n) return 1;
+    let result = 1;
+    for (let i = 0; i < k; i++) {
+      result = result * (n - i) / (i + 1);
+    }
+    return Math.round(result);
+  }
+
+  function getRandomGaps(numGaps, k) {
+    const indices = [];
+    for (let i = 0; i < numGaps; i++) indices.push(i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return indices.slice(0, k).sort((a, b) => a - b);
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const n = parseInt(sliderN.value);
+    const k = parseInt(sliderK.value);
+
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, w, h);
+
+    const totalSlots = 2 * n + 1; // gaps + zeros alternating
+    const slotW = Math.min(60, (w - 60) / totalSlots);
+    const startX = (w - totalSlots * slotW) / 2;
+    const centerY = 100;
+    const radius = slotW * 0.38;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`n = ${n} nula, k = ${k} jedinica    →    ${n + 1} praznina, biramo ${k}`, w / 2, 30);
+
+    // Draw slots
+    for (let i = 0; i < totalSlots; i++) {
+      const cx = startX + i * slotW + slotW / 2;
+      const isGap = i % 2 === 0;
+      const gapIndex = i / 2;
+      const zeroIndex = (i - 1) / 2;
+
+      if (isGap) {
+        const selected = animState.selectedGaps.includes(gapIndex);
+        if (selected && animState.phase >= 2) {
+          // Filled gap with a 1
+          ctx.beginPath();
+          ctx.arc(cx, centerY, radius, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(74,222,128,0.15)';
+          ctx.fill();
+          ctx.strokeStyle = '#4ade80';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = '#4ade80';
+          ctx.font = `bold ${radius * 1.2}px monospace`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('1', cx, centerY);
+        } else {
+          // Empty gap
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.arc(cx, centerY, radius, 0, Math.PI * 2);
+          ctx.strokeStyle = selected ? '#f472b6' : '#a78bfa';
+          ctx.lineWidth = selected ? 2.5 : 1.5;
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = selected ? '#f472b6' : '#a78bfa';
+          ctx.font = `${radius * 0.7}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`g${gapIndex}`, cx, centerY);
+        }
+      } else {
+        // Zero
+        ctx.beginPath();
+        ctx.arc(cx, centerY, radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(59,130,246,0.15)';
+        ctx.fill();
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#60a5fa';
+        ctx.font = `bold ${radius * 1.2}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('0', cx, centerY);
+      }
+    }
+
+    // Draw resulting string
+    if (animState.phase >= 2) {
+      const resultY = centerY + 80;
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Rezultujuci niz:', w / 2, resultY - 15);
+
+      let str = '';
+      for (let i = 0; i < totalSlots; i++) {
+        const isGap = i % 2 === 0;
+        const gapIndex = i / 2;
+        if (isGap) {
+          if (animState.selectedGaps.includes(gapIndex)) str += '1';
+        } else {
+          str += '0';
+        }
+      }
+
+      const charW = Math.min(28, (w - 100) / str.length);
+      const strStartX = (w - str.length * charW) / 2;
+      for (let i = 0; i < str.length; i++) {
+        const cx = strStartX + i * charW + charW / 2;
+        const ch = str[i];
+        if (ch === '1') {
+          ctx.fillStyle = '#4ade80';
+          ctx.font = `bold ${charW * 0.7}px monospace`;
+        } else {
+          ctx.fillStyle = '#60a5fa';
+          ctx.font = `bold ${charW * 0.7}px monospace`;
+        }
+        ctx.textAlign = 'center';
+        ctx.fillText(ch, cx, resultY + 10);
+      }
+    }
+
+    // Formula text
+    const formulaY = animState.phase >= 2 ? centerY + 140 : centerY + 80;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`C(${n + 1}, ${k}) = ${binomial(n + 1, k)} mogucih rasporeda`, w / 2, formulaY);
+
+    // Phase labels
+    const labelY = h - 20;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    if (animState.phase === 0) {
+      ctx.fillText('Klikni "Animiraj" ili "Slucajan izbor" za prikaz', w / 2, labelY);
+    } else if (animState.phase === 1) {
+      ctx.fillText('Izabrane praznine su oznacene rozom bojom...', w / 2, labelY);
+    } else {
+      ctx.fillText('Jedinice su postavljene u izabrane praznine!', w / 2, labelY);
+    }
+  }
+
+  function animate() {
+    if (animState.animating) return;
+    const n = parseInt(sliderN.value);
+    const k = parseInt(sliderK.value);
+    if (k > n + 1) {
+      resultText.textContent = `k = ${k} > n + 1 = ${n + 1}, raspored nije moguc!`;
+      return;
+    }
+    animState.animating = true;
+    animState.phase = 0;
+    animState.selectedGaps = getRandomGaps(n + 1, k);
+    draw();
+
+    setTimeout(() => {
+      animState.phase = 1;
+      draw();
+      setTimeout(() => {
+        animState.phase = 2;
+        draw();
+        animState.animating = false;
+        resultText.textContent = `Izabrane praznine: {${animState.selectedGaps.map(g => 'g' + g).join(', ')}}`;
+      }, 800);
+    }, 500);
+  }
+
+  function randomSelect() {
+    const n = parseInt(sliderN.value);
+    const k = parseInt(sliderK.value);
+    if (k > n + 1) {
+      resultText.textContent = `k = ${k} > n + 1 = ${n + 1}, raspored nije moguc!`;
+      return;
+    }
+    animState.selectedGaps = getRandomGaps(n + 1, k);
+    animState.phase = 2;
+    draw();
+    resultText.textContent = `Izabrane praznine: {${animState.selectedGaps.map(g => 'g' + g).join(', ')}}`;
+  }
+
+  sliderN.addEventListener('input', () => {
+    const n = parseInt(sliderN.value);
+    const k = parseInt(sliderK.value);
+    valN.textContent = n;
+    sliderK.max = n + 1;
+    if (k > n + 1) {
+      sliderK.value = n + 1;
+      valK.textContent = n + 1;
+    }
+    animState.phase = 0;
+    animState.selectedGaps = [];
+    resultText.textContent = '';
+    draw();
+  });
+  sliderK.addEventListener('input', () => {
+    valK.textContent = sliderK.value;
+    animState.phase = 0;
+    animState.selectedGaps = [];
+    resultText.textContent = '';
+    draw();
+  });
+  btnAnimate.addEventListener('click', animate);
+  btnRandom.addEventListener('click', randomSelect);
+
+  // Touch support
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
+
+  draw();
+
+  // ---- INTERACTIVE EXPLORER ----
+  const explorerN = document.getElementById('explorerN');
+  const explorerK = document.getElementById('explorerK');
+  const explorerNVal = document.getElementById('explorerNVal');
+  const explorerKVal = document.getElementById('explorerKVal');
+  const explorerGrid = document.getElementById('explorerGrid');
+  const explorerResult = document.getElementById('explorerResult');
+  const allArrangementsDiv = document.getElementById('allArrangements');
+  const btnReset = document.getElementById('btnReset');
+  const btnShowAll = document.getElementById('btnShowAll');
+
+  let selectedExplorerGaps = new Set();
+
+  function renderExplorer() {
+    const n = parseInt(explorerN.value);
+    const k = parseInt(explorerK.value);
+    explorerGrid.innerHTML = '';
+
+    for (let i = 0; i <= 2 * n; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('explorer-cell');
+      if (i % 2 === 0) {
+        // Gap
+        const gapIdx = i / 2;
+        cell.classList.add('gap');
+        if (selectedExplorerGaps.has(gapIdx)) {
+          cell.classList.add('filled');
+          cell.textContent = '1';
+        } else {
+          cell.textContent = '_';
+        }
+        cell.addEventListener('click', () => {
+          if (selectedExplorerGaps.has(gapIdx)) {
+            selectedExplorerGaps.delete(gapIdx);
+          } else {
+            if (selectedExplorerGaps.size < k) {
+              selectedExplorerGaps.add(gapIdx);
+            }
+          }
+          renderExplorer();
+        });
+      } else {
+        // Zero
+        cell.classList.add('zero');
+        cell.textContent = '0';
+      }
+      explorerGrid.appendChild(cell);
+    }
+
+    if (selectedExplorerGaps.size === k) {
+      let str = '';
+      for (let i = 0; i <= 2 * n; i++) {
+        if (i % 2 === 0) {
+          str += selectedExplorerGaps.has(i / 2) ? '1' : '';
+        } else {
+          str += '0';
+        }
+      }
+      explorerResult.innerHTML = `Tvoj raspored: <strong style="color:#4ade80; letter-spacing:2px;">${str}</strong> &mdash; Validan!`;
+    } else {
+      explorerResult.textContent = `Izabrano ${selectedExplorerGaps.size} od ${k} praznina. Klikni na praznine da postavis jedinice.`;
+    }
+  }
+
+  function generateAllArrangements(n, k) {
+    const results = [];
+    function backtrack(gapIdx, remaining, chosen) {
+      if (remaining === 0) {
+        results.push([...chosen]);
+        return;
+      }
+      if (gapIdx > n) return;
+      if (n + 1 - gapIdx < remaining) return;
+      // Choose this gap
+      chosen.push(gapIdx);
+      backtrack(gapIdx + 1, remaining - 1, chosen);
+      chosen.pop();
+      // Skip this gap
+      backtrack(gapIdx + 1, remaining, chosen);
+    }
+    backtrack(0, k, []);
+    return results;
+  }
+
+  function showAllArrangements() {
+    const n = parseInt(explorerN.value);
+    const k = parseInt(explorerK.value);
+    const combos = generateAllArrangements(n, k);
+
+    let html = `<p class="muted" style="margin-bottom:8px;">Svi validni rasporedi (${combos.length} ukupno = C(${n+1}, ${k})):</p>`;
+    html += '<div class="arrangement-list">';
+    combos.forEach(combo => {
+      let str = '';
+      const gapSet = new Set(combo);
+      for (let i = 0; i <= 2 * n; i++) {
+        if (i % 2 === 0) {
+          str += gapSet.has(i / 2) ? '<span style="color:#4ade80;">1</span>' : '';
+        } else {
+          str += '<span style="color:#60a5fa;">0</span>';
+        }
+      }
+      html += `<div class="arrangement-item">${str}</div>`;
+    });
+    html += '</div>';
+    allArrangementsDiv.innerHTML = html;
+  }
+
+  explorerN.addEventListener('input', () => {
+    const n = parseInt(explorerN.value);
+    explorerNVal.textContent = n;
+    explorerK.max = n + 1;
+    if (parseInt(explorerK.value) > n + 1) {
+      explorerK.value = n + 1;
+      explorerKVal.textContent = n + 1;
+    }
+    selectedExplorerGaps.clear();
+    allArrangementsDiv.innerHTML = '';
+    renderExplorer();
+  });
+  explorerK.addEventListener('input', () => {
+    explorerKVal.textContent = explorerK.value;
+    selectedExplorerGaps.clear();
+    allArrangementsDiv.innerHTML = '';
+    renderExplorer();
+  });
+  btnReset.addEventListener('click', () => {
+    selectedExplorerGaps.clear();
+    allArrangementsDiv.innerHTML = '';
+    renderExplorer();
+  });
+  btnShowAll.addEventListener('click', showAllArrangements);
+
+  renderExplorer();
+
+  // Handle resize
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Raspored nula i jedinica bez susednih jedinica","subject":"math","unit":"combinatorics","topic_tags":["kombinatorika","binomni koeficijent","tehnika praznina","rasporedi","nizovi"]}
+BRAINSPARK_META-->

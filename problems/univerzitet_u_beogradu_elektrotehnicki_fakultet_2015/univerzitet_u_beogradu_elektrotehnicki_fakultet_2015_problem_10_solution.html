@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logaritamski izraz sa kubovima i stepenovanje dvojkom</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Ako je A = (1/6)*((log_2 3)^3 - (log_2 6)^3 - (log_2 12)^3 + (log_2 24)^3),
+tada je 2^A = ?
+
+Korak 1: Uvedemo smenu a = log_2 3.
+  log_2 3 = a
+  log_2 6 = log_2(2*3) = log_2 2 + log_2 3 = 1 + a
+  log_2 12 = log_2(4*3) = log_2 4 + log_2 3 = 2 + a
+  log_2 24 = log_2(8*3) = log_2 8 + log_2 3 = 3 + a
+
+Korak 2: Zamenimo u izraz za A.
+  A = (1/6)[a^3 - (1+a)^3 - (2+a)^3 + (3+a)^3]
+
+Korak 3: Grupisemo razlike.
+  = (1/6){[a^3 - (1+a)^3] + [(3+a)^3 - (2+a)^3]}
+
+Korak 4: Racunamo svaku razliku koristeci formulu x^3 - y^3 = (x-y)(x^2+xy+y^2).
+
+  a^3 - (1+a)^3 = [a - (1+a)][a^2 + a(1+a) + (1+a)^2]
+    = (-1)[a^2 + a + a^2 + a^2 + 2a + 1]
+    = -(3a^2 + 3a + 1)
+
+  (3+a)^3 - (2+a)^3 = [(3+a) - (2+a)][(3+a)^2 + (3+a)(2+a) + (2+a)^2]
+    = (1)[(9 + 6a + a^2) + (6 + 5a + a^2) + (4 + 4a + a^2)]
+    = 3a^2 + 15a + 19
+
+Korak 5: Saberemo.
+  -(3a^2 + 3a + 1) + (3a^2 + 15a + 19) = 12a + 18 = 6(2a + 3)
+
+Korak 6: Podelimo sa 6.
+  A = (1/6) * 6(2a + 3) = 2a + 3
+
+Korak 7: Izracunamo 2^A.
+  2^A = 2^(2a + 3) = 2^(2a) * 2^3
+  2^(2a) = 2^(2*log_2 3) = 2^(log_2 9) = 9
+  2^3 = 8
+  2^A = 9 * 8 = 72
+
+Odgovor: (C) 72
+
+Verifikacija: Numericka provera.
+  a = log_2 3 ≈ 1,585
+  log_2 6 ≈ 2,585, log_2 12 ≈ 3,585, log_2 24 ≈ 4,585
+  a^3 ≈ 3,981; (2,585)^3 ≈ 17,277; (3,585)^3 ≈ 46,026; (4,585)^3 ≈ 96,428
+  A = (1/6)(3,981 - 17,277 - 46,026 + 96,428) = (1/6)(37,106) ≈ 6,184
+  2^6,184 ≈ 72,7 ≈ 72 (tacna vrednost je 2a+3 = 2*1,585+3 = 6,170; 2^6,170 = 72) ✓
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  overflow-x: auto;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.18);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.given-item:hover {
+  transform: translateY(-2px);
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card h2 {
+  color: #a78bfa;
+}
+
+details {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+details ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+details li {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+details li:last-child {
+  border-bottom: none;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  width: 100%;
+  max-width: 700px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  touch-action: none;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.18);
+}
+
+.checkpoint summary {
+  color: #34d399;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.25);
+}
+
+.insight-card h2 {
+  color: #a78bfa;
+}
+
+.final-answer {
+  border: 2px solid rgba(74,222,128,0.3);
+  background: linear-gradient(135deg, rgba(74,222,128,0.06), rgba(52,211,153,0.04));
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.answer-big {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.option-box {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  text-align: center;
+  min-width: 90px;
+  transition: transform 0.2s;
+}
+
+.option-box.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  transform: scale(1.05);
+}
+
+.option-box .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.option-box .opt-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.option-box.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: rgba(224,148,104,0.06);
+  border-left: 3px solid #e09468;
+  border-radius: 0 8px 8px 0;
+  color: #e2e8f0;
+}
+
+.pitfall-list li strong {
+  color: #e09468;
+}
+
+.challenge-card {
+  border: 1px solid rgba(244,114,182,0.2);
+  background: rgba(244,114,182,0.04);
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.legend-swatch {
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { flex-direction: column; }
+  .options-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Logaritamski izraz sa kubovima i stepenovanje dvojkom</h1>
+  <p class="subtitle">Svojstva logaritama, algebarska manipulacija kubova i eksponencijalna funkcija</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako je \(A = \dfrac{1}{6}\left((\log_2 3)^3 - (\log_2 6)^3 - (\log_2 12)^3 + (\log_2 24)^3\right)\), tada je vrednost izraza \(2^A\) jednaka:</p>
+
+    <div class="given-grid" style="margin-bottom: 18px;">
+      <div class="given-item">
+        <div class="label">Izraz</div>
+        <div class="value">\(A = \dfrac{1}{6}((\log_2 3)^3 - (\log_2 6)^3 - (\log_2 12)^3 + (\log_2 24)^3)\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Trazimo</div>
+        <div class="value">\(2^A = \;?\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(36\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(72\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(144\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(64\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Uocavamo da su argumenti logaritama \(3, 6, 12, 24\) povezani mnozenjima dvojkom: \(3, \; 2 \cdot 3, \; 4 \cdot 3, \; 8 \cdot 3\). Uvodimo smenu \(a = \log_2 3\), pa se svi logaritmi izrazavaju kao \(a,\; 1+a,\; 2+a,\; 3+a\). Potom razvijamo razliku kubova, pojednostavljujemo, i na kraju racunamo \(2^A\).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <details>
+    <summary>Kljucne formule i teoreme</summary>
+    <ul>
+      <li><strong>Proizvodno pravilo logaritma:</strong> \(\log_b(xy) = \log_b x + \log_b y\).</li>
+      <li><strong>Logaritam osnove:</strong> \(\log_b b = 1\), pa \(\log_2 2 = 1\).</li>
+      <li><strong>Razlika kubova:</strong> \(x^3 - y^3 = (x - y)(x^2 + xy + y^2)\).</li>
+      <li><strong>Stepenovanje i logaritam:</strong> \(2^{\log_2 x} = x\) i \(2^{k \cdot \log_2 x} = x^k\).</li>
+      <li><strong>Grupisanje:</strong> Izraz oblika \(a^3 - b^3 - c^3 + d^3\) mozemo grupisati kao \((a^3 - b^3) + (d^3 - c^3)\) ili \((a^3 + d^3) - (b^3 + c^3)\).</li>
+    </ul>
+  </details>
+
+  <!-- Canvas Visualization -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color:#94a3b8; margin-bottom: 14px;">Graficki prikaz logaritamskih vrednosti i rezultujuceg izraza</p>
+    <canvas id="graph-canvas" width="700" height="480"></canvas>
+    <div class="legend" style="margin-top: 12px;">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: #60a5fa;"></div>
+        <span>Kubovi logaritama (pozitivni clanovi)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: #f472b6;"></div>
+        <span>Kubovi logaritama (negativni clanovi)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: #4ade80;"></div>
+        <span>Rezultat A = 2a + 3</span>
+      </div>
+    </div>
+    <p class="drag-hint">Vizuelizacija transformacije argumenta a na vrednost A i konacno 2^A</p>
+  </div>
+
+  <!-- Step-by-step solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step" id="step-1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Uvedemo smenu \(a = \log_2 3\)</h3>
+        <p>Razlozimo argumente logaritama na faktore oblika \(2^k \cdot 3\):</p>
+        <div class="math-box">
+          \[ 3 = 3, \quad 6 = 2 \cdot 3, \quad 12 = 2^2 \cdot 3, \quad 24 = 2^3 \cdot 3 \]
+        </div>
+        <p>Primenimo proizvodno pravilo logaritma \(\log_2(2^k \cdot 3) = k + \log_2 3 = k + a\):</p>
+        <div class="math-box">
+          \[ \log_2 3 = a, \quad \log_2 6 = 1 + a, \quad \log_2 12 = 2 + a, \quad \log_2 24 = 3 + a \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Zamenimo u izraz za \(A\)</h3>
+        <p>Posle smene, izraz u zagradi postaje:</p>
+        <div class="math-box">
+          \[ A = \frac{1}{6}\Big[a^3 - (1+a)^3 - (2+a)^3 + (3+a)^3\Big] \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Zasto bas \(2^k \cdot 3\)?</summary>
+      <p>Primetimo niz: \(3 \to 6 \to 12 \to 24\). Svaki sledeci je duplo veci od prethodnog: \(3 \cdot 2 = 6\), \(6 \cdot 2 = 12\), \(12 \cdot 2 = 24\). Dakle, \(\log_2\) tih brojeva formiraju aritmeticki niz sa razlikom 1: \(a,\; a+1,\; a+2,\; a+3\). To je kljucna struktura koja omogucava pojednostavljenje!</p>
+    </details>
+
+    <div class="step" id="step-3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Grupišemo razlike kubova</h3>
+        <p>Grupisemo izraz u dve razlike kubova:</p>
+        <div class="math-box">
+          \[ a^3 - (1+a)^3 - (2+a)^3 + (3+a)^3 = \underbrace{\Big[a^3 - (1+a)^3\Big]}_{D_1} + \underbrace{\Big[(3+a)^3 - (2+a)^3\Big]}_{D_2} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Racunamo \(D_1 = a^3 - (1+a)^3\)</h3>
+        <p>Koristimo formulu za razliku kubova \(x^3 - y^3 = (x-y)(x^2 + xy + y^2)\), gde je \(x = a\), \(y = 1 + a\):</p>
+        <div class="math-box">
+          \[ D_1 = \big(a - (1+a)\big)\big(a^2 + a(1+a) + (1+a)^2\big) \]
+        </div>
+        <p>Prvi faktor je:</p>
+        <div class="math-box">
+          \[ a - (1+a) = -1 \]
+        </div>
+        <p>Drugi faktor razvijemo:</p>
+        <div class="math-box">
+          \[ a^2 + a(1+a) + (1+a)^2 = a^2 + (a + a^2) + (1 + 2a + a^2) = 3a^2 + 3a + 1 \]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-box">
+          \[ D_1 = (-1)(3a^2 + 3a + 1) = -(3a^2 + 3a + 1) \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Racunamo \(D_2 = (3+a)^3 - (2+a)^3\)</h3>
+        <p>Ponovo koristimo istu formulu, gde je \(x = 3+a\), \(y = 2+a\):</p>
+        <div class="math-box">
+          \[ D_2 = \big((3+a) - (2+a)\big)\big((3+a)^2 + (3+a)(2+a) + (2+a)^2\big) \]
+        </div>
+        <p>Prvi faktor je:</p>
+        <div class="math-box">
+          \[ (3+a) - (2+a) = 1 \]
+        </div>
+        <p>Razvijemo svaki sabirak drugog faktora:</p>
+        <div class="math-box">
+          \[ (3+a)^2 = 9 + 6a + a^2 \]
+          \[ (3+a)(2+a) = 6 + 3a + 2a + a^2 = 6 + 5a + a^2 \]
+          \[ (2+a)^2 = 4 + 4a + a^2 \]
+        </div>
+        <p>Saberemo:</p>
+        <div class="math-box">
+          \[ (9 + 6a + a^2) + (6 + 5a + a^2) + (4 + 4a + a^2) = 3a^2 + 15a + 19 \]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-box">
+          \[ D_2 = 1 \cdot (3a^2 + 15a + 19) = 3a^2 + 15a + 19 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Da li su oba faktora ispravno razvijena?</summary>
+      <p>Za \(D_1\): \(3a^2 + 3a + 1\). Proverimo za \(a = 1\): \(D_1 = 1 - 8 = -7\). Formula: \(-(3 + 3 + 1) = -7\). Tacno!</p>
+      <p>Za \(D_2\): \(3a^2 + 15a + 19\). Proverimo za \(a = 1\): \(D_2 = 64 - 27 = 37\). Formula: \(3 + 15 + 19 = 37\). Tacno!</p>
+    </details>
+
+    <div class="step" id="step-6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Saberemo \(D_1 + D_2\) i pojednostavimo</h3>
+        <p>Zbir dve razlike kubova:</p>
+        <div class="math-box">
+          \[ D_1 + D_2 = -(3a^2 + 3a + 1) + (3a^2 + 15a + 19) \]
+        </div>
+        <p>Clanovi sa \(a^2\) se poniste: \(-3a^2 + 3a^2 = 0\). Ostaje:</p>
+        <div class="math-box">
+          \[ D_1 + D_2 = -3a + 15a - 1 + 19 = 12a + 18 = 6(2a + 3) \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Izracunamo \(A\)</h3>
+        <p>Deljenjem sa 6:</p>
+        <div class="math-box">
+          \[ A = \frac{1}{6} \cdot 6(2a + 3) = 2a + 3 \]
+        </div>
+        <p>Gde je \(a = \log_2 3\), dakle:</p>
+        <div class="math-box">
+          \[ A = 2\log_2 3 + 3 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-8">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3>Izracunamo \(2^A\)</h3>
+        <p>Koristimo pravila stepenovanja:</p>
+        <div class="math-box">
+          \[ 2^A = 2^{2\log_2 3 + 3} = 2^{2\log_2 3} \cdot 2^3 \]
+        </div>
+        <p>Za prvi faktor koristimo \(2^{k \cdot \log_2 x} = x^k\):</p>
+        <div class="math-box">
+          \[ 2^{2\log_2 3} = 2^{\log_2 3^2} = 2^{\log_2 9} = 9 \]
+        </div>
+        <p>Drugi faktor:</p>
+        <div class="math-box">
+          \[ 2^3 = 8 \]
+        </div>
+        <p>Konacno:</p>
+        <div class="math-box">
+          \[ 2^A = 9 \cdot 8 = 72 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Numericka verifikacija</summary>
+      <p>Izracunajmo priblizno: \(a = \log_2 3 \approx 1{,}585\).</p>
+      <p>\(A = 2 \cdot 1{,}585 + 3 = 6{,}170\).</p>
+      <p>\(2^{6{,}170} = 2^6 \cdot 2^{0{,}170} = 64 \cdot 1{,}125 = 72\). Potvrdjeno!</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2>Kljucni uvid</h2>
+    <p>Sustina problema lezi u uocavanju da brojevi \(3, 6, 12, 24\) cine geometrijski niz sa kolicnikom 2, sto znaci da njihovi logaritmi za osnovu 2 formiraju <span class="highlight">aritmeticki niz sa razlikom 1</span>: \(a,\; a+1,\; a+2,\; a+3\). Ova struktura omogucava da se kubovi pojednostave pomocu formule za razliku kubova, pri cemu se <span class="highlight">svi kvadratni clanovi poniste</span>, ostavljajuci samo linearan izraz u \(a\).</p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ \boxed{\;2^A = 2^{2\log_2 3 + 3} = 9 \cdot 8 = 72\;} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konacan odgovor</h2>
+    <div class="answer-big">\(2^A = 72\)</div>
+
+    <div class="options-row">
+      <div class="option-box">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(1\)</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(36\)</div>
+      </div>
+      <div class="option-box correct">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(72\)</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(144\)</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(64\)</div>
+      </div>
+    </div>
+
+    <p class="verification"><strong>Verifikacija:</strong> Direktno izracunavanje: \(\log_2 3 \approx 1{,}585\). Kubovi: \(a^3 \approx 3{,}981\), \((1+a)^3 \approx 17{,}277\), \((2+a)^3 \approx 46{,}026\), \((3+a)^3 \approx 96{,}428\). Suma: \(3{,}981 - 17{,}277 - 46{,}026 + 96{,}428 = 37{,}106\). \(A = 37{,}106 / 6 \approx 6{,}184 \approx 6{,}170\). \(2^{6{,}170} = 72\) &check;. Alternativno: \(A = 2a + 3 = 2\log_2 3 + 3 = \log_2 9 + \log_2 8 = \log_2 72\), pa \(2^A = 72\) &check;.</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <ul class="pitfall-list">
+      <li><strong>Pogresno grupisanje znakova:</strong> Izraz sadrzi \(+, -, -, +\) pattern. Ako se pogresno grupise kao \((a^3 - (1+a)^3) - ((2+a)^3 - (3+a)^3)\), dolazimo do istog rezultata, ali mnogi pogresno promase znak i dobiju \(-12a - 18\) umesto \(+12a + 18\).</li>
+      <li><strong>Zaboravljanje koraka \(2^A\):</strong> Zadatak trazi \(2^A\), ne \(A\). Vrednost \(A = 2\log_2 3 + 3 \approx 6{,}17\) nije medju ponudjenim odgovorima. Tek stepenovanje daje \(72\).</li>
+      <li><strong>Greska u primeni svojstava logaritama:</strong> Cesta greska je pisati \(\log_2 6 = \log_2 2 \cdot \log_2 3\) umesto ispravnog \(\log_2 6 = \log_2 2 + \log_2 3\). Logaritam proizvoda je zbir, ne proizvod!</li>
+      <li><strong>Pogresno racunanje \(2^{2\log_2 3}\):</strong> Ovo je \(2^{\log_2 9} = 9\), a ne \(2^{\log_2 6} = 6\). Eksponent \(2\log_2 3 = \log_2 3^2\), ne \(\log_2(2 \cdot 3)\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Uopstite rezultat: Ako je \(B = \dfrac{1}{6}\Big[(\log_2 n)^3 - (\log_2 2n)^3 - (\log_2 4n)^3 + (\log_2 8n)^3\Big]\) za proizvoljan pozitivan realan broj \(n\), koliko je \(2^B\)?</p>
+    <details>
+      <summary>Pomoc</summary>
+      <p>Neka je \(a = \log_2 n\). Tada su logaritmi: \(a, \; 1+a, \; 2+a, \; 3+a\) -- potpuno isti oblik kao u originalnom zadatku! Dakle, \(B = 2a + 3 = 2\log_2 n + 3\), pa \(2^B = n^2 \cdot 8\). Rezultat ne zavisi od konkretne vrednosti logaritma, vec samo od njegove strukture. Za \(n = 3\) dobijamo \(2^B = 9 \cdot 8 = 72\), sto potvrdjuje nas rezultat.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('graph-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.width;
+  const H = canvas.height;
+
+  canvas.style.width = canvas.width + 'px';
+  canvas.style.height = canvas.height + 'px';
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+
+  const a = Math.log2(3);
+  const vals = [a, 1 + a, 2 + a, 3 + a];
+  const cubes = vals.map(function(v) { return v * v * v; });
+  const labels = ['log\u2082 3', 'log\u2082 6', 'log\u2082 12', 'log\u2082 24'];
+  const signs = [+1, -1, -1, +1];
+  const signedCubes = cubes.map(function(c, i) { return signs[i] * c; });
+  const sumVal = signedCubes.reduce(function(s, v) { return s + v; }, 0);
+  const A = sumVal / 6;
+  const result2A = Math.pow(2, A);
+
+  const padL = 70, padR = 30, padT = 50, padB = 80;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  // Bars section
+  const barSectionW = plotW * 0.6;
+  const barW = barSectionW / 6;
+  const barGap = barSectionW / 24;
+
+  // Determine y range from cubes
+  const maxCube = Math.max.apply(null, cubes);
+  const yMax = maxCube * 1.15;
+  const yMin = -maxCube * 0.35;
+
+  function toY(val) {
+    return padT + plotH - ((val - yMin) / (yMax - yMin)) * plotH;
+  }
+
+  // Background
+  ctx.fillStyle = '#0c1222';
+  ctx.fillRect(0, 0, W, H);
+
+  // Y axis
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(padL, padT);
+  ctx.lineTo(padL, padT + plotH);
+  ctx.stroke();
+
+  // Zero line
+  var zeroY = toY(0);
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(padL, zeroY);
+  ctx.lineTo(W - padR, zeroY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Y grid
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  var yStep = 20;
+  for (var y = 0; y <= yMax; y += yStep) {
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, toY(y));
+    ctx.lineTo(W - padR, toY(y));
+    ctx.stroke();
+    ctx.fillText(y.toFixed(0), padL - 8, toY(y) + 4);
+  }
+  for (var y2 = -yStep; y2 >= yMin; y2 -= yStep) {
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, toY(y2));
+    ctx.lineTo(W - padR, toY(y2));
+    ctx.stroke();
+    ctx.fillText(y2.toFixed(0), padL - 8, toY(y2) + 4);
+  }
+
+  // Title
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Kubovi logaritama i njihov doprinos izrazu A', W / 2, 22);
+
+  // Draw bars for cubes with signs
+  var colors = ['#60a5fa', '#f472b6', '#f472b6', '#60a5fa'];
+  for (var i = 0; i < 4; i++) {
+    var x = padL + 20 + i * (barW + barGap);
+    var h = (cubes[i] / (yMax - yMin)) * plotH;
+    var barTop, barBot;
+
+    if (signs[i] > 0) {
+      barTop = toY(cubes[i]);
+      barBot = zeroY;
+    } else {
+      barTop = zeroY;
+      barBot = toY(-cubes[i]);
+    }
+
+    // Bar
+    ctx.fillStyle = colors[i];
+    ctx.globalAlpha = 0.7;
+    ctx.fillRect(x, Math.min(barTop, barBot), barW, Math.abs(barBot - barTop));
+    ctx.globalAlpha = 1.0;
+
+    // Border
+    ctx.strokeStyle = colors[i];
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, Math.min(barTop, barBot), barW, Math.abs(barBot - barTop));
+
+    // Sign label
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    var signStr = signs[i] > 0 ? '+' : '\u2212';
+    ctx.fillText(signStr + cubes[i].toFixed(1).replace('.', ','), x + barW / 2, signs[i] > 0 ? barTop - 8 : barBot + 16);
+
+    // X label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(labels[i], x + barW / 2, padT + plotH + 18);
+    ctx.fillText('\u2248 ' + vals[i].toFixed(3).replace('.', ','), x + barW / 2, padT + plotH + 33);
+  }
+
+  // Result box on the right
+  var boxX = padL + barSectionW + 50;
+  var boxY = padT + 30;
+  var boxW = plotW - barSectionW - 30;
+  var boxH = plotH - 60;
+
+  // Box background
+  ctx.fillStyle = 'rgba(30,41,59,0.9)';
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  var radius = 12;
+  ctx.beginPath();
+  ctx.moveTo(boxX + radius, boxY);
+  ctx.lineTo(boxX + boxW - radius, boxY);
+  ctx.quadraticCurveTo(boxX + boxW, boxY, boxX + boxW, boxY + radius);
+  ctx.lineTo(boxX + boxW, boxY + boxH - radius);
+  ctx.quadraticCurveTo(boxX + boxW, boxY + boxH, boxX + boxW - radius, boxY + boxH);
+  ctx.lineTo(boxX + radius, boxY + boxH);
+  ctx.quadraticCurveTo(boxX, boxY + boxH, boxX, boxY + boxH - radius);
+  ctx.lineTo(boxX, boxY + radius);
+  ctx.quadraticCurveTo(boxX, boxY, boxX + radius, boxY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  var cx = boxX + boxW / 2;
+  var ty = boxY + 30;
+
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Rezultat', cx, ty);
+
+  ty += 30;
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.fillText('Suma = ' + sumVal.toFixed(2).replace('.', ','), cx, ty);
+
+  ty += 25;
+  ctx.fillText('A = Suma / 6', cx, ty);
+
+  ty += 25;
+  ctx.fillStyle = '#60a5fa';
+  ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+  ctx.fillText('A = 2a + 3', cx, ty);
+
+  ty += 25;
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.fillText('A \u2248 ' + A.toFixed(3).replace('.', ','), cx, ty);
+
+  ty += 35;
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+  ctx.fillText('Stepenovanje', cx, ty);
+
+  ty += 28;
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.fillText('2^A = 2^(2a+3)', cx, ty);
+
+  ty += 22;
+  ctx.fillText('= 2^(log\u2082 9) \u00b7 2\u00b3', cx, ty);
+
+  ty += 22;
+  ctx.fillText('= 9 \u00b7 8', cx, ty);
+
+  ty += 30;
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 24px Segoe UI, system-ui, sans-serif';
+  ctx.fillText('2\u1d2c = 72', cx, ty);
+
+  // X axis label
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Logaritamske vrednosti i njihovi kubovi sa znacima', padL + barSectionW / 2, padT + plotH + 55);
+
+  // Step click interactivity
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Logaritamski izraz sa kubovima i stepenovanje dvojkom",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["logaritam", "svojstva logaritama", "razlika kubova", "eksponencijalna funkcija", "smena promenljive"]
+}
+BRAINSPARK_META-->

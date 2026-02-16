@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir parno-indeksiranih clanova aritmeticke progresije</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Data je aritmeticka progresija a1, a2, ... sa razlikom d = 1.
+Zbir prvih 98 clanova je S98 = a1 + a2 + ... + a98 = 137.
+Naci zbir a2 + a4 + a6 + ... + a98.
+
+Korak 1: Nadjimo a1 iz datog zbira.
+  S98 = (98/2)(2*a1 + (98-1)*d) = 49*(2*a1 + 97*1) = 49*(2*a1 + 97) = 137
+  2*a1 + 97 = 137/49
+  2*a1 = 137/49 - 97 = (137 - 4753)/49 = -4616/49
+  a1 = -2308/49
+
+Korak 2: Izracunajmo trazeni zbir.
+  Trazeni zbir: a2 + a4 + a6 + ... + a98
+  To je 49 clanova: a_{2k} za k = 1, 2, ..., 49.
+  a_{2k} = a1 + (2k - 1)*d = a1 + (2k - 1)*1 = a1 + 2k - 1
+
+  Suma = sum_{k=1}^{49} (a1 + 2k - 1)
+       = 49*a1 + 2*sum_{k=1}^{49} k - 49
+       = 49*a1 + 2*(49*50/2) - 49
+       = 49*a1 + 2450 - 49
+       = 49*a1 + 2401
+
+  49*a1 = 49*(-2308/49) = -2308
+  Suma = -2308 + 2401 = 93
+
+Alternativni pristup (elegantniji):
+  S98 = S_neparni + S_parni gde:
+  S_neparni = a1 + a3 + a5 + ... + a97 (49 clanova)
+  S_parni = a2 + a4 + a6 + ... + a98 (49 clanova)
+
+  Svaki parni clan je veci od odgovarajuceg neparnog za d = 1:
+  a_{2k} - a_{2k-1} = d = 1, za svako k = 1, ..., 49
+
+  Dakle S_parni - S_neparni = 49*d = 49*1 = 49
+
+  S_parni + S_neparni = S98 = 137
+  S_parni - S_neparni = 49
+
+  Sabiranjem: 2*S_parni = 186, S_parni = 93.
+
+Odgovor: (B) 93
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  overflow-x: auto;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.18);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.given-item:hover {
+  transform: translateY(-2px);
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+}
+
+/* Plan card */
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card h2 {
+  color: #a78bfa;
+}
+
+/* Details/collapsible */
+details {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+details ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+details li {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+details li:last-child {
+  border-bottom: none;
+}
+
+/* Canvas card */
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  width: 100%;
+  max-width: 700px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  touch-action: none;
+}
+
+/* Steps */
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+/* Checkpoint */
+.checkpoint {
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.18);
+}
+
+.checkpoint summary {
+  color: #34d399;
+}
+
+/* Key insight */
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.25);
+}
+
+.insight-card h2 {
+  color: #a78bfa;
+}
+
+/* Final answer */
+.final-answer {
+  border: 2px solid rgba(74,222,128,0.3);
+  background: linear-gradient(135deg, rgba(74,222,128,0.06), rgba(52,211,153,0.04));
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.answer-big {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.option-box {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  text-align: center;
+  min-width: 90px;
+  transition: transform 0.2s;
+}
+
+.option-box.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  transform: scale(1.05);
+}
+
+.option-box .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.option-box .opt-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.option-box.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+}
+
+/* Pitfalls */
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: rgba(224,148,104,0.06);
+  border-left: 3px solid #e09468;
+  border-radius: 0 8px 8px 0;
+  color: #e2e8f0;
+}
+
+.pitfall-list li strong {
+  color: #e09468;
+}
+
+/* Challenge */
+.challenge-card {
+  border: 1px solid rgba(244,114,182,0.2);
+  background: rgba(244,114,182,0.04);
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { flex-direction: column; }
+  .options-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Zbir parno-indeksiranih clanova aritmeticke progresije</h1>
+  <p class="subtitle">Aritmeticka progresija: zbir, razdvajanje na parne i neparne indekse</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Data je aritmeticka progresija \(a_1, a_2, \ldots\) cija je razlika <span class="highlight">\(d = 1\)</span>, a zbir prvih 98 clanova <span class="highlight">\(a_1 + a_2 + \cdots + a_{98} = 137\)</span>. Tada je zbir \(a_2 + a_4 + a_6 + \cdots + a_{98}\) jednak:</p>
+
+    <div class="given-grid" style="margin-bottom: 18px;">
+      <div class="given-item">
+        <div class="label">Razlika</div>
+        <div class="value">\(d = 1\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Broj clanova</div>
+        <div class="value">\(n = 98\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Zbir \(S_{98}\)</div>
+        <div class="value">\(137\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Trazeni zbir</div>
+        <div class="value">\(a_2 + a_4 + \cdots + a_{98}\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">88</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">93</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">103</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">127</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">141</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Razdvojimo zbir \(S_{98}\) na zbir clanova sa neparnim indeksima (\(a_1 + a_3 + \cdots + a_{97}\)) i zbir clanova sa parnim indeksima (\(a_2 + a_4 + \cdots + a_{98}\)). Koristeci cinjenicu da je svaki parno-indeksirani clan za tacno \(d = 1\) veci od prethodnog neprano-indeksiranog clana, dobijamo sistem od dve jednacine sa dve nepoznate koji se lako resava.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <details>
+    <summary>Kljucne formule i teoreme</summary>
+    <ul>
+      <li><strong>Opsti clan AP:</strong> \(a_n = a_1 + (n-1) \cdot d\)</li>
+      <li><strong>Zbir prvih \(n\) clanova:</strong> \(\displaystyle S_n = \frac{n}{2}\bigl(2a_1 + (n-1)d\bigr) = \frac{n}{2}(a_1 + a_n)\)</li>
+      <li><strong>Razlika susednih clanova:</strong> \(a_{k+1} - a_k = d\) za svako \(k\)</li>
+      <li><strong>Zbir prvih \(m\) prirodnih brojeva:</strong> \(\displaystyle \sum_{k=1}^{m} k = \frac{m(m+1)}{2}\)</li>
+      <li><strong>Zbir prvih \(m\) neparnih brojeva:</strong> \(\displaystyle \sum_{k=1}^{m} (2k-1) = m^2\)</li>
+    </ul>
+  </details>
+
+  <!-- Canvas Visualization -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz progresije</h2>
+    <p style="color:#94a3b8; margin-bottom: 14px;">Pomeranje klizaca menja \(a_1\) i \(d\). Plave tacke su neparni, zelene parni indeksi.</p>
+    <canvas id="ap-canvas" width="700" height="460"></canvas>
+    <p class="drag-hint">Prevucite klizac za \(a_1\) da menjate prvi clan</p>
+  </div>
+
+  <!-- Step-by-step solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step" id="step-1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Razdvojimo \(S_{98}\) na dve grupe</h3>
+        <p>Svih 98 clanova razdelimo na dve grupe po 49 clanova:</p>
+        <div class="math-box">
+          \[ S_{\text{neparni}} = a_1 + a_3 + a_5 + \cdots + a_{97} \quad (49 \text{ clanova}) \]
+          \[ S_{\text{parni}} = a_2 + a_4 + a_6 + \cdots + a_{98} \quad (49 \text{ clanova}) \]
+        </div>
+        <p>Vazi da je:</p>
+        <div class="math-box">
+          \[ S_{\text{neparni}} + S_{\text{parni}} = S_{98} = 137 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Nadimo vezu izmedju dve grupe</h3>
+        <p>Svaki parno-indeksirani clan je za tacno \(d\) veci od prethodnog neparno-indeksiranog clana:</p>
+        <div class="math-box">
+          \[ a_2 - a_1 = d,\quad a_4 - a_3 = d,\quad a_6 - a_5 = d,\quad \ldots,\quad a_{98} - a_{97} = d \]
+        </div>
+        <p>Sabiranjem svih 49 takvih razlika:</p>
+        <div class="math-box">
+          \[ S_{\text{parni}} - S_{\text{neparni}} = 49 \cdot d = 49 \cdot 1 = 49 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Zasto ima tacno 49 parova?</summary>
+      <p>Imamo 98 clanova koje uparujemo: \((a_1, a_2)\), \((a_3, a_4)\), \((a_5, a_6)\), \(\ldots\), \((a_{97}, a_{98})\). To je \(98 / 2 = 49\) parova. U svakom paru, clan sa parnim indeksom je za \(d = 1\) veci od clana sa neparnim indeksom.</p>
+    </details>
+
+    <div class="step" id="step-3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Resimo sistem jednacina</h3>
+        <p>Imamo sistem:</p>
+        <div class="math-box">
+          \[ \begin{cases} S_{\text{parni}} + S_{\text{neparni}} = 137 \\ S_{\text{parni}} - S_{\text{neparni}} = 49 \end{cases} \]
+        </div>
+        <p>Saberemo obe jednacine:</p>
+        <div class="math-box">
+          \[ 2 \cdot S_{\text{parni}} = 137 + 49 = 186 \]
+          \[ S_{\text{parni}} = \frac{186}{2} = 93 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko iznosi \(S_{\text{neparni}}\)?</summary>
+      <p>Iz prve jednacine: \(S_{\text{neparni}} = 137 - 93 = 44\). Provera iz druge jednacine: \(93 - 44 = 49\). Tacno!</p>
+    </details>
+
+    <div class="step" id="step-4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Alternativna provera: direktan racun</h3>
+        <p>Nadimo \(a_1\) iz formule za zbir:</p>
+        <div class="math-box">
+          \[ S_{98} = \frac{98}{2}\bigl(2a_1 + 97 \cdot 1\bigr) = 49(2a_1 + 97) = 137 \]
+          \[ 2a_1 + 97 = \frac{137}{49} \implies 2a_1 = \frac{137 - 4753}{49} = \frac{-4616}{49} \implies a_1 = -\frac{2308}{49} \]
+        </div>
+        <p>Trazeni zbir racunamo direktno:</p>
+        <div class="math-box">
+          \[ S_{\text{parni}} = \sum_{k=1}^{49} a_{2k} = \sum_{k=1}^{49} \bigl(a_1 + (2k-1) \cdot d\bigr) = 49 \cdot a_1 + d \cdot \sum_{k=1}^{49}(2k-1) \]
+        </div>
+        <p>Koristeci \(\displaystyle\sum_{k=1}^{49}(2k-1) = 49^2 = 2401\):</p>
+        <div class="math-box">
+          \[ S_{\text{parni}} = 49 \cdot \left(-\frac{2308}{49}\right) + 1 \cdot 2401 = -2308 + 2401 = 93 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Zasto je zbir prvih 49 neparnih brojeva jednak \(49^2\)?</summary>
+      <p>Poznata formula: zbir prvih \(m\) neparnih prirodnih brojeva je \(m^2\), tj. \(1 + 3 + 5 + \cdots + (2m-1) = m^2\). Za \(m = 49\): \(1 + 3 + 5 + \cdots + 97 = 49^2 = 2401\). Ovo se moze dokazati matematickom indukcijom ili koristeci formulu za zbir aritmetickog niza: \(\frac{49}{2}(1 + 97) = \frac{49 \cdot 98}{2} = 2401\).</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2>Kljucni uvid</h2>
+    <p>Nije potrebno nalaziti \(a_1\) da bismo resili zadatak! Kljucna ideja je da svaki parno-indeksirani clan cini par sa prethodnim neparno-indeksiranim clanom, i u svakom paru razlika je tacno \(d\). Ovo daje elegantnu vezu:</p>
+    <div class="math-box" style="text-align:center; font-size: 1.2rem;">
+      \[ S_{\text{parni}} = \frac{S_{98} + 49d}{2} = \frac{137 + 49}{2} = 93 \]
+    </div>
+    <p>Ovaj pristup radi za bilo koji aritmeticki niz sa parnim brojem clanova: zbir parno-indeksiranih clanova je uvek \(\dfrac{S_n + \frac{n}{2} \cdot d}{2}\).</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konacan odgovor</h2>
+    <div class="answer-big">\(a_2 + a_4 + a_6 + \cdots + a_{98} = 93\)</div>
+
+    <div class="options-row">
+      <div class="option-box">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">88</div>
+      </div>
+      <div class="option-box correct">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">93</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">103</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">127</div>
+      </div>
+      <div class="option-box">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">141</div>
+      </div>
+    </div>
+
+    <p class="verification"><strong>Provera:</strong> \(S_{\text{neparni}} = 137 - 93 = 44\). Razlika: \(S_{\text{parni}} - S_{\text{neparni}} = 93 - 44 = 49 = 49 \cdot d\). Tacno! Takodje, direktan racun sa \(a_1 = -\frac{2308}{49}\) daje: \(49 \cdot a_1 + 2401 = -2308 + 2401 = 93\). Obe metode se slazu.</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <ul class="pitfall-list">
+      <li><strong>Pogresno brojanje clanova:</strong> Niz \(a_2, a_4, \ldots, a_{98}\) ima tacno \(49\) clanova (ne 48 i ne 50). Cesta greska je pogresno prebrojati elemente niza sa korakom 2.</li>
+      <li><strong>Nepotreban racun sa \(a_1\):</strong> Mnogi krenu da nalaze \(a_1\) (koji ispada razlomak!) i onda grese u racunu. Elegantni pristup sa razdvajanjem na parove potpuno zaobilazi \(a_1\).</li>
+      <li><strong>Zamena parnih i neparnih:</strong> Pazite na to koji zbir se trazi -- ovde su to clanovi sa <em>parnim</em> indeksima (\(a_2, a_4, \ldots\)), koji su veci od odgovarajucih neparnih, pa je \(S_{\text{parni}} > S_{\text{neparni}}\).</li>
+      <li><strong>Greska u formuli za zbir AP:</strong> Formula \(S_n = \frac{n}{2}(2a_1 + (n-1)d)\) koristi \(n-1\), ne \(n\). Za \(n = 98\): faktor je \(97d\), ne \(98d\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Neka je aritmeticka progresija sa razlikom \(d\) i zbirom prvih \(2n\) clanova jednakim \(S\). Dokazite opstu formulu:</p>
+    <div class="math-box" style="text-align: center;">
+      \[ a_2 + a_4 + \cdots + a_{2n} = \frac{S + nd}{2} \]
+    </div>
+    <p>Zatim, za isti niz, izrazite zbir \(a_1 + a_4 + a_7 + a_{10} + \cdots\) (svaki treci clan, pocevsi od prvog) preko \(S\) i \(d\).</p>
+    <details>
+      <summary>Pomoc</summary>
+      <p>Za prvi deo: koristite isti pristup kao u resenju -- uparite \((a_1, a_2), (a_3, a_4), \ldots, (a_{2n-1}, a_{2n})\) i iskoristite da je razlika u svakom paru jednaka \(d\). Za drugi deo: razmislite o tri grupe: clanovi sa indeksima \(\equiv 1 \pmod{3}\), \(\equiv 2 \pmod{3}\), i \(\equiv 0 \pmod{3}\). Razlika izmedju susednih grupa je \(d\), a zbir svih tri grupe je \(S\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('ap-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // We'll visualize the arithmetic progression with d=1 and S_98=137
+  // a1 = -2308/49 ≈ -47.1
+  // Show first ~20 terms for clarity, and indicate the pattern
+
+  const a1True = -2308 / 49;
+  const d = 1;
+  const N = 98;
+
+  // Slider for a1
+  let sliderA1 = a1True;
+  let dragging = false;
+
+  // Display range: show terms 1..20 as dots on a number line
+  const showN = 20;
+  const marginL = 80;
+  const marginR = 40;
+  const marginT = 80;
+  const marginB = 120;
+  const plotW = W - marginL - marginR;
+  const plotH = H - marginT - marginB;
+
+  // Slider geometry
+  const sliderY = H - 50;
+  const sliderX0 = marginL;
+  const sliderX1 = W - marginR;
+  const sliderMin = -60;
+  const sliderMax = -30;
+
+  function a1ToSliderX(val) {
+    return sliderX0 + (val - sliderMin) / (sliderMax - sliderMin) * (sliderX1 - sliderX0);
+  }
+
+  function sliderXToA1(x) {
+    return sliderMin + (x - sliderX0) / (sliderX1 - sliderX0) * (sliderMax - sliderMin);
+  }
+
+  function getTerm(a1, k) {
+    return a1 + (k - 1) * d;
+  }
+
+  function getSum98(a1) {
+    return (N / 2) * (2 * a1 + (N - 1) * d);
+  }
+
+  function getSumEven(a1) {
+    // sum of a_{2k} for k=1..49
+    let s = 0;
+    for (let k = 1; k <= 49; k++) {
+      s += a1 + (2 * k - 1) * d;
+    }
+    return s;
+  }
+
+  function getSumOdd(a1) {
+    let s = 0;
+    for (let k = 0; k < 49; k++) {
+      s += a1 + (2 * k) * d;
+    }
+    return s;
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const a1 = sliderA1;
+
+    // Compute values for displayed terms
+    const terms = [];
+    for (let i = 1; i <= showN; i++) {
+      terms.push({ idx: i, val: getTerm(a1, i) });
+    }
+
+    const valMin = terms[0].val - 1;
+    const valMax = terms[terms.length - 1].val + 1;
+
+    function valToX(v) {
+      return marginL + (v - valMin) / (valMax - valMin) * plotW;
+    }
+
+    // Draw number line
+    const lineY = marginT + plotH / 2;
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(marginL, lineY);
+    ctx.lineTo(W - marginR, lineY);
+    ctx.stroke();
+
+    // Tick marks
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const tickStep = Math.ceil((valMax - valMin) / 10);
+    for (let v = Math.ceil(valMin); v <= Math.floor(valMax); v += tickStep) {
+      const tx = valToX(v);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(tx, lineY - 5);
+      ctx.lineTo(tx, lineY + 5);
+      ctx.stroke();
+      ctx.fillText(v.toFixed(1), tx, lineY + 20);
+    }
+
+    // Draw terms as dots
+    terms.forEach((t) => {
+      const x = valToX(t.val);
+      const isEven = t.idx % 2 === 0;
+      const yOff = isEven ? -30 : 30;
+
+      // Connecting line to number line
+      ctx.strokeStyle = isEven ? 'rgba(74,222,128,0.3)' : 'rgba(96,165,250,0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, lineY);
+      ctx.lineTo(x, lineY + yOff);
+      ctx.stroke();
+
+      // Dot
+      ctx.fillStyle = isEven ? '#4ade80' : '#60a5fa';
+      ctx.beginPath();
+      ctx.arc(x, lineY + yOff, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label
+      ctx.fillStyle = isEven ? '#4ade80' : '#60a5fa';
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      const labelOff = isEven ? -16 : 18;
+      ctx.fillText('a' + t.idx, x, lineY + yOff + labelOff);
+    });
+
+    // Draw pairing brackets between consecutive odd-even terms
+    for (let k = 0; k < Math.min(10, showN / 2); k++) {
+      const oddIdx = 2 * k + 1;
+      const evenIdx = 2 * k + 2;
+      if (evenIdx > showN) break;
+      const x1 = valToX(getTerm(a1, oddIdx));
+      const x2 = valToX(getTerm(a1, evenIdx));
+      const bracketY = lineY + 55 + (k % 2) * 18;
+
+      ctx.strokeStyle = 'rgba(167,139,250,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x1, lineY + 36);
+      ctx.lineTo(x1, bracketY);
+      ctx.lineTo(x2, bracketY);
+      ctx.lineTo(x2, lineY - 24);
+      ctx.stroke();
+
+      // d label
+      if (k < 5) {
+        ctx.fillStyle = '#a78bfa';
+        ctx.font = '10px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('d=' + d, (x1 + x2) / 2, bracketY + 12);
+      }
+    }
+
+    // Info panel
+    const s98 = getSum98(a1);
+    const sEven = getSumEven(a1);
+    const sOdd = getSumOdd(a1);
+
+    const isCorrect = Math.abs(s98 - 137) < 0.5;
+
+    // Background box at top
+    ctx.fillStyle = isCorrect ? 'rgba(74,222,128,0.08)' : 'rgba(96,165,250,0.06)';
+    ctx.beginPath();
+    ctx.roundRect(marginL - 10, 8, plotW + 20, 58, 10);
+    ctx.fill();
+    ctx.strokeStyle = isCorrect ? 'rgba(74,222,128,0.2)' : 'rgba(96,165,250,0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = isCorrect ? '#4ade80' : '#94a3b8';
+    ctx.fillText(
+      'a\u2081 = ' + a1.toFixed(2) + '   |   d = ' + d +
+      '   |   S\u2089\u2088 = ' + s98.toFixed(1) +
+      (isCorrect ? ' = 137 \u2714' : ' (treba 137)'),
+      W / 2, 30
+    );
+    ctx.fillText(
+      'S(parni) = ' + sEven.toFixed(1) +
+      '   |   S(neparni) = ' + sOdd.toFixed(1) +
+      '   |   razlika = ' + (sEven - sOdd).toFixed(1),
+      W / 2, 52
+    );
+
+    // Legend
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#60a5fa';
+    ctx.beginPath();
+    ctx.arc(marginL + 5, marginT - 20, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillText(' Neparni (a\u2081, a\u2083, ...)', marginL + 15, marginT - 16);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.arc(marginL + 200, marginT - 20, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillText(' Parni (a\u2082, a\u2084, ...)', marginL + 210, marginT - 16);
+
+    // Slider track
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(sliderX0, sliderY);
+    ctx.lineTo(sliderX1, sliderY);
+    ctx.stroke();
+
+    // Slider filled part
+    const sx = a1ToSliderX(a1);
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(sliderX0, sliderY);
+    ctx.lineTo(sx, sliderY);
+    ctx.stroke();
+
+    // Slider handle
+    ctx.fillStyle = '#60a5fa';
+    ctx.beginPath();
+    ctx.arc(sx, sliderY, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Glow on handle
+    const glow = ctx.createRadialGradient(sx, sliderY, 0, sx, sliderY, 20);
+    glow.addColorStop(0, 'rgba(96,165,250,0.4)');
+    glow.addColorStop(1, 'rgba(96,165,250,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(sx, sliderY, 20, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Slider label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('a\u2081 = ' + a1.toFixed(2), sx, sliderY - 18);
+
+    // Mark the correct position
+    const correctSx = a1ToSliderX(a1True);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(correctSx, sliderY - 14);
+    ctx.lineTo(correctSx, sliderY + 14);
+    ctx.stroke();
+  }
+
+  draw();
+
+  function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function getTouchPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return {
+      x: (e.touches[0].clientX - rect.left) * scaleX,
+      y: (e.touches[0].clientY - rect.top) * scaleY
+    };
+  }
+
+  function isNearSlider(mx, my) {
+    const sx = a1ToSliderX(sliderA1);
+    const dx = mx - sx;
+    const dy = my - sliderY;
+    return dx * dx + dy * dy < 900;
+  }
+
+  function updateSlider(mx) {
+    let val = sliderXToA1(mx);
+    val = Math.max(sliderMin, Math.min(sliderMax, val));
+    sliderA1 = val;
+    draw();
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    const pos = getMousePos(e);
+    if (isNearSlider(pos.x, pos.y)) {
+      dragging = true;
+    }
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const pos = getMousePos(e);
+    updateSlider(pos.x);
+  });
+
+  canvas.addEventListener('mouseup', () => { dragging = false; });
+  canvas.addEventListener('mouseleave', () => { dragging = false; });
+
+  canvas.addEventListener('touchstart', (e) => {
+    const pos = getTouchPos(e);
+    if (isNearSlider(pos.x, pos.y)) {
+      dragging = true;
+      e.preventDefault();
+    }
+  });
+
+  canvas.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    const pos = getTouchPos(e);
+    updateSlider(pos.x);
+    e.preventDefault();
+  });
+
+  canvas.addEventListener('touchend', () => { dragging = false; });
+
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir parno-indeksiranih clanova aritmeticke progresije",
+  "subject": "math",
+  "unit": "sequences_and_series",
+  "topic_tags": ["aritmeticka progresija", "zbir niza", "nizovi", "algebra"]
+}
+BRAINSPARK_META-->

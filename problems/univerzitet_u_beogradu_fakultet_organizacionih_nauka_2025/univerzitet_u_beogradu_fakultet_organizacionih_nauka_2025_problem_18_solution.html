@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binomni razvoj i celobrojnost clanova</title>
+
+  <script type="text/info" id="logic-scratchpad">
+    PROBLEM:
+    Zbir svih binomnih koeficijenata razvoja (1/sqrt(401) + cbrt(802))^n jednak je 8^100.
+    Trazi se broj clanova tog razvoja koji nisu celi brojevi.
+
+    RESENJE:
+
+    Korak 1: Odredimo n.
+    Zbir binomnih koeficijenata razvoja (a + b)^n dobija se za a = b = 1:
+      sum_{k=0}^{n} C(n,k) = 2^n
+    Dato je da je zbir jednak 8^100 = (2^3)^100 = 2^300.
+    Dakle 2^n = 2^300, tj. n = 300.
+
+    Korak 2: Opsti clan razvoja.
+    T_k = C(300, k) * (401^{-1/2})^{300-k} * (802^{1/3})^k,  k = 0, 1, ..., 300
+
+    Korak 3: Transformisemo 802 = 2 * 401.
+    T_k = C(300, k) * 401^{-(300-k)/2} * (2 * 401)^{k/3}
+         = C(300, k) * 401^{-(300-k)/2} * 2^{k/3} * 401^{k/3}
+         = C(300, k) * 2^{k/3} * 401^{-(300-k)/2 + k/3}
+
+    Korak 4: Izracunamo eksponent od 401.
+    -(300-k)/2 + k/3 = (-300 + k)/2 + k/3
+                     = (-900 + 3k + 2k) / 6
+                     = (5k - 900) / 6
+
+    Dakle: T_k = C(300, k) * 2^{k/3} * 401^{(5k-900)/6}
+
+    Korak 5: Uslovi da T_k bude ceo broj.
+    Da bi T_k bio ceo broj, potrebno je:
+    (a) Eksponent od 2 mora biti nenegativan ceo broj: k/3 in Z_>=0
+        => k deljivo sa 3, tj. k = 0, 3, 6, ..., 300
+    (b) Eksponent od 401 mora biti nenegativan ceo broj: (5k-900)/6 in Z_>=0
+        => 5k >= 900, tj. k >= 180
+        => 5k kongruentno 0 (mod 6)
+        Posto NZD(5, 6) = 1, to znaci k kongruentno 0 (mod 6)
+
+    Kombinovano: k deljivo sa 3 (uslov a) I k deljivo sa 6 (uslov b).
+    Posto deljivost sa 6 povlaci deljivost sa 3, ukupan uslov je:
+      k deljivo sa 6  I  k >= 180
+
+    Korak 6: Prebrojimo celobrojne clanove.
+    k in {180, 186, 192, 198, ..., 300}
+    Broj elemenata: (300 - 180) / 6 + 1 = 120/6 + 1 = 20 + 1 = 21
+
+    Korak 7: Prebrojimo necelobrojne clanove.
+    Ukupan broj clanova razvoja: n + 1 = 301
+    Broj clanova koji NISU celi: 301 - 21 = 280
+
+    ODGOVOR: 280
+    Tacan odgovor je (C).
+
+    VERIFIKACIJA:
+    - n = 300: 2^300 = 8^100 ✓
+    - Za k = 180: eksponent od 401 je (5*180 - 900)/6 = 0/6 = 0 ✓ (401^0 = 1)
+      eksponent od 2 je 180/3 = 60 ✓ (2^60)
+    - Za k = 300: eksponent od 401 je (5*300 - 900)/6 = 600/6 = 100 ✓
+      eksponent od 2 je 300/3 = 100 ✓
+    - Za k = 186: eksponent od 401 je (930 - 900)/6 = 30/6 = 5 ✓
+      eksponent od 2 je 186/3 = 62 ✓
+    - Za k = 3 (ne zadovoljava): eksponent od 401 je (15-900)/6 = -885/6 < 0 ✗
+    - Za k = 6 (ne zadovoljava k>=180): eksponent od 401 je (30-900)/6 = -145 < 0 ✗
+    - 301 - 21 = 280 ✓, odgovor (C)
+
+    NAPOMENA: Broj 401 je prost broj, pa se C(300,k) ne moze skratiti sa
+    negativnim stepenom od 401 za k < 180 (401 > 300, pa 401 ne deli C(300,k)).
+    Takodje, za k koji nisu deljivi sa 3, 2^{k/3} je iracionalan.
+    Za k koji nisu deljivi sa 6 ali jesu sa 3, (5k-900)/6 nije ceo broj,
+    pa je 401^{(5k-900)/6} iracionalan. Stoga su uslovi zaista i dovoljni.
+  </script>
+
+  <script>
+  MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]']]
+    },
+    svg: { fontCache: 'global' }
+  };
+  </script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    .card h2 {
+      color: #60a5fa;
+      font-size: 1.4rem;
+      margin-bottom: 16px;
+    }
+
+    .card h3 {
+      color: #e2e8f0;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .given-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .given-item {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px 18px;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .given-item .label {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+
+    .given-item .value {
+      color: #e2e8f0;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .answer-option {
+      cursor: default;
+      transition: border-color 0.2s;
+    }
+
+    .answer-option.correct {
+      border-color: #4ade80;
+      background: rgba(74, 222, 128, 0.1);
+    }
+
+    .step-container {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding: 16px;
+      border-radius: 12px;
+      border-left: 3px solid transparent;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .step-container:hover, .step-container.active {
+      background: rgba(96, 165, 250, 0.05);
+      border-left-color: #4ade80;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #0f172a;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-content h3 {
+      color: #e2e8f0;
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    .step-content p {
+      color: #cbd5e1;
+      margin-bottom: 10px;
+    }
+
+    .math-block {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      overflow-x: auto;
+    }
+
+    .note {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    .insight-box {
+      background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+      border: 1px solid rgba(96,165,250,0.3);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .insight-box h2 {
+      color: #60a5fa;
+      margin-bottom: 12px;
+    }
+
+    .insight-box .formula {
+      font-size: 1.3rem;
+      color: #e2e8f0;
+      margin: 16px 0;
+    }
+
+    .final-answer {
+      background: linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(74, 222, 128, 0.12));
+      border: 2px solid rgba(74, 222, 128, 0.4);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .final-answer h2 {
+      color: #4ade80;
+      margin-bottom: 16px;
+    }
+
+    .final-answer .answer-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #4ade80;
+      margin: 12px 0;
+    }
+
+    .final-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .final-option {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+
+    .final-option.correct {
+      border-color: #4ade80;
+      background: rgba(74, 222, 128, 0.15);
+      color: #4ade80;
+      font-weight: 700;
+    }
+
+    .verification {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin-top: 16px;
+      text-align: left;
+      background: rgba(30, 41, 59, 0.6);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .pitfall-card {
+      border-left: 3px solid #e09468;
+    }
+
+    .pitfall-card h2 {
+      color: #e09468;
+    }
+
+    .pitfall-item {
+      margin-bottom: 10px;
+      padding-left: 16px;
+      position: relative;
+      color: #cbd5e1;
+    }
+
+    .pitfall-item::before {
+      content: '!';
+      position: absolute;
+      left: 0;
+      color: #e09468;
+      font-weight: 700;
+    }
+
+    details {
+      margin: 15px 0;
+      background: rgba(96, 165, 250, 0.06);
+      border: 1px solid rgba(96, 165, 250, 0.15);
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+
+    details summary {
+      cursor: pointer;
+      color: #60a5fa;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    details[open] summary {
+      margin-bottom: 10px;
+    }
+
+    details p, details ul {
+      color: #cbd5e1;
+    }
+
+    details ul {
+      padding-left: 20px;
+    }
+
+    details li {
+      margin-bottom: 8px;
+    }
+
+    .challenge-card {
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      background: rgba(167, 139, 250, 0.06);
+    }
+
+    .challenge-card h2 {
+      color: #a78bfa;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border-radius: 12px;
+      touch-action: none;
+      max-width: 100%;
+    }
+
+    .canvas-hint {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .plan-card {
+      border-left: 3px solid #a78bfa;
+    }
+
+    .plan-card p {
+      color: #cbd5e1;
+    }
+
+    @media (max-width: 700px) {
+      h1 { font-size: 1.6rem; }
+      .card { padding: 16px; }
+      .given-grid { gap: 8px; }
+      .given-item { min-width: 80px; padding: 8px 12px; }
+      .step-container { flex-direction: column; gap: 10px; }
+      .final-answer .answer-value { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Title -->
+    <h1>Binomni razvoj i celobrojnost clanova</h1>
+    <p class="subtitle">Kombinatorika i teorija brojeva -- analiza opsteg clana binomnog razvoja</p>
+
+    <!-- Problem Statement -->
+    <div class="card problem-statement">
+      <h2>Postavka zadatka</h2>
+      <p>
+        Zbir svih binomnih koeficijenata razvoja
+        \[\left(\frac{1}{\sqrt{401}} + \sqrt[3]{802}\right)^n\]
+        jednak je \(8^{100}\). Broj clanova tog razvoja koji nisu celi brojevi jednak je:
+      </p>
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">
+          <div class="label">(A)</div>
+          <div class="value">\(270\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="B">
+          <div class="label">(B)</div>
+          <div class="value">\(250\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="C">
+          <div class="label">(C)</div>
+          <div class="value">\(280\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="D">
+          <div class="label">(D)</div>
+          <div class="value">\(290\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="E">
+          <div class="label">(E)</div>
+          <div class="value">\(260\)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan -->
+    <div class="card plan-card">
+      <h2>Plan resavanja</h2>
+      <p>
+        Prvo cemo iz uslova za zbir binomnih koeficijenata odrediti \(n\). Zatim cemo napisati opsti clan razvoja, analizirati eksponente iracionalnih baza (401 i 2) i odrediti za koje vrednosti \(k\) je clan ceo broj. Na kraju, odbrojacemo necelobrojne clanove.
+      </p>
+    </div>
+
+    <!-- Theory Refresher -->
+    <div class="card">
+      <details>
+        <summary>Kljucne formule i teoreme</summary>
+        <ul>
+          <li><strong>Binomna teorema:</strong> \(\displaystyle (a+b)^n = \sum_{k=0}^{n} \binom{n}{k} a^{n-k} b^k\)</li>
+          <li><strong>Zbir binomnih koeficijenata:</strong> Kada stavimo \(a = b = 1\), dobijamo \(\displaystyle \sum_{k=0}^{n}\binom{n}{k} = 2^n\)</li>
+          <li><strong>Opsti clan binomnog razvoja:</strong> \(T_{k+1} = \binom{n}{k}\, a^{n-k}\, b^k\), za \(k = 0, 1, \dots, n\)</li>
+          <li><strong>Celobrojnost:</strong> Izraz oblika \(m^{p/q}\) je ceo broj samo ako je \(p/q\) nenegativan ceo broj (za prost \(m\) koji ne deli binomni koeficijent).</li>
+        </ul>
+      </details>
+    </div>
+
+    <!-- Visual Aid -->
+    <div class="card">
+      <h2>Vizuelni prikaz</h2>
+      <p style="color: #94a3b8; margin-bottom: 12px;">Grafik prikazuje eksponente od 401 i 2 u zavisnosti od \(k\). Zelena zona oznacava vrednosti \(k\) za koje su oba eksponenta nenegativni celi brojevi -- to su celobrojni clanovi.</p>
+      <canvas id="mainCanvas" width="800" height="420"></canvas>
+      <p class="canvas-hint">Pomeranje misa preko grafika prikazuje detalje za svako k</p>
+    </div>
+
+    <!-- Step-by-Step Solution -->
+    <div class="card">
+      <h2>Resenje korak po korak</h2>
+
+      <!-- Step 1 -->
+      <div class="step-container" id="step1">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Odredjivanje \(n\) iz zbira binomnih koeficijenata</h3>
+          <p>Zbir binomnih koeficijenata razvoja \((a + b)^n\) dobija se kada stavimo \(a = 1\) i \(b = 1\):</p>
+          <div class="math-block">
+            \[\sum_{k=0}^{n} \binom{n}{k} = 2^n\]
+          </div>
+          <p>Po uslovu zadatka, ovaj zbir je jednak \(8^{100}\). Prepisujemo:</p>
+          <div class="math-block">
+            \[2^n = 8^{100} = (2^3)^{100} = 2^{300}\]
+          </div>
+          <p>Izjednacavanjem eksponenata dobijamo:</p>
+          <div class="math-block">
+            \[n = 300\]
+          </div>
+          <p class="note">Razvoj ima ukupno \(n + 1 = 301\) clan.</p>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-container" id="step2">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Zapisivanje opsteg clana razvoja</h3>
+          <p>Primenimo binomnu teoremu na \(\left(\frac{1}{\sqrt{401}} + \sqrt[3]{802}\right)^{300}\):</p>
+          <div class="math-block">
+            \[T_k = \binom{300}{k} \cdot \left(\frac{1}{\sqrt{401}}\right)^{300-k} \cdot \left(\sqrt[3]{802}\right)^k\]
+          </div>
+          <p>Prepisujemo koristeci racionalne eksponente:</p>
+          <div class="math-block">
+            \[T_k = \binom{300}{k} \cdot 401^{-\frac{300-k}{2}} \cdot 802^{\frac{k}{3}}\]
+          </div>
+          <p class="note">Ovde \(k\) ide od \(0\) do \(300\).</p>
+        </div>
+      </div>
+
+      <!-- Checkpoint 1 -->
+      <details>
+        <summary>Proveri sebe: Koliko clanova ima razvoj \((a+b)^{300}\)?</summary>
+        <p>Razvoj ima \(300 + 1 = 301\) clan (od \(T_0\) do \(T_{300}\)).</p>
+      </details>
+
+      <!-- Step 3 -->
+      <div class="step-container" id="step3">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Transformacija: razdvajanje baza</h3>
+          <p>Primetimo da je \(802 = 2 \cdot 401\). Zamenjujemo:</p>
+          <div class="math-block">
+            \[802^{\frac{k}{3}} = (2 \cdot 401)^{\frac{k}{3}} = 2^{\frac{k}{3}} \cdot 401^{\frac{k}{3}}\]
+          </div>
+          <p>Sada opsti clan postaje:</p>
+          <div class="math-block">
+            \[T_k = \binom{300}{k} \cdot 2^{\frac{k}{3}} \cdot 401^{-\frac{300-k}{2} + \frac{k}{3}}\]
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step-container" id="step4">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h3>Izracunavanje eksponenta od 401</h3>
+          <p>Saberimo eksponente od 401:</p>
+          <div class="math-block">
+            \[-\frac{300 - k}{2} + \frac{k}{3} = \frac{-3(300 - k) + 2k}{6} = \frac{-900 + 3k + 2k}{6} = \frac{5k - 900}{6}\]
+          </div>
+          <p>Konacni oblik opsteg clana:</p>
+          <div class="math-block">
+            \[T_k = \binom{300}{k} \cdot 2^{\frac{k}{3}} \cdot 401^{\frac{5k - 900}{6}}\]
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step-container" id="step5">
+        <div class="step-number">5</div>
+        <div class="step-content">
+          <h3>Uslovi za celobrojnost clana</h3>
+          <p>Binomni koeficijent \(\binom{300}{k}\) je uvek ceo broj. Da bi ceo clan \(T_k\) bio ceo broj, potrebno je da su \(2^{k/3}\) i \(401^{(5k-900)/6}\) takodje celi brojevi.</p>
+          <p><strong>Uslov 1:</strong> \(2^{k/3}\) je ceo broj ako i samo ako je \(\frac{k}{3}\) nenegativan ceo broj:</p>
+          <div class="math-block">
+            \[\frac{k}{3} \in \mathbb{Z}_{\geq 0} \quad \Longleftrightarrow \quad 3 \mid k\]
+          </div>
+          <p><strong>Uslov 2:</strong> \(401^{(5k-900)/6}\) je ceo broj ako i samo ako je \(\frac{5k - 900}{6}\) nenegativan ceo broj:</p>
+          <div class="math-block">
+            \[\frac{5k - 900}{6} \in \mathbb{Z}_{\geq 0}\]
+          </div>
+          <p>Ovo zahteva dva poduslova:</p>
+          <div class="math-block">
+            \[5k \geq 900 \quad \Rightarrow \quad k \geq 180\]
+          </div>
+          <div class="math-block">
+            \[5k \equiv 0 \pmod{6} \quad \Rightarrow \quad k \equiv 0 \pmod{6}\]
+          </div>
+          <p class="note">Poslednje sledi iz cinjenice da je \(\text{NZD}(5, 6) = 1\), pa \(6 \mid 5k\) povlaci \(6 \mid k\).</p>
+        </div>
+      </div>
+
+      <!-- Checkpoint 2 -->
+      <details>
+        <summary>Proveri sebe: Zasto deljivost sa 6 automatski zadovoljava deljivost sa 3?</summary>
+        <p>Zato sto je \(6 = 2 \cdot 3\), pa ako je \(k\) deljivo sa 6, onda je automatski deljivo i sa 3. Dakle, uslov 1 (\(3 \mid k\)) je vec sadrzzan u uslovu 2 (\(6 \mid k\)).</p>
+      </details>
+
+      <!-- Step 6 -->
+      <div class="step-container" id="step6">
+        <div class="step-number">6</div>
+        <div class="step-content">
+          <h3>Kombinovanje uslova</h3>
+          <p>Posto \(6 \mid k\) vec povlaci \(3 \mid k\), ukupan uslov za celobrojnost je:</p>
+          <div class="math-block">
+            \[k \equiv 0 \pmod{6} \quad \text{i} \quad k \geq 180\]
+          </div>
+          <p>Vrednosti \(k\) koje zadovoljavaju oba uslova:</p>
+          <div class="math-block">
+            \[k \in \{180,\; 186,\; 192,\; 198,\; \dots,\; 294,\; 300\}\]
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7 -->
+      <div class="step-container" id="step7">
+        <div class="step-number">7</div>
+        <div class="step-content">
+          <h3>Prebrojavanje celobrojnih clanova</h3>
+          <p>Ovo je aritmeticki niz sa prvim clanom \(a_1 = 180\), poslednjim clanom \(a_n = 300\) i razlikom \(d = 6\):</p>
+          <div class="math-block">
+            \[\text{Broj clanova} = \frac{300 - 180}{6} + 1 = \frac{120}{6} + 1 = 20 + 1 = 21\]
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 8 -->
+      <div class="step-container" id="step8">
+        <div class="step-number">8</div>
+        <div class="step-content">
+          <h3>Prebrojavanje necelobrojnih clanova</h3>
+          <p>Ukupan broj clanova razvoja je \(301\). Od toga, \(21\) je celobrojnih. Dakle:</p>
+          <div class="math-block">
+            \[\text{Broj necelobrojnih clanova} = 301 - 21 = 280\]
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkpoint 3 -->
+      <details>
+        <summary>Proveri sebe: Proveri za \(k = 180\) da li je clan zaista ceo broj.</summary>
+        <p>Za \(k = 180\):</p>
+        <p>Eksponent od 2: \(\frac{180}{3} = 60\) -- ceo broj.</p>
+        <p>Eksponent od 401: \(\frac{5 \cdot 180 - 900}{6} = \frac{0}{6} = 0\) -- ceo broj (\(401^0 = 1\)).</p>
+        <p>Dakle \(T_{180} = \binom{300}{180} \cdot 2^{60} \cdot 1\) -- zaista ceo broj.</p>
+      </details>
+    </div>
+
+    <!-- Key Insight -->
+    <div class="insight-box">
+      <h2>Kljucni uvid</h2>
+      <p>Veza \(802 = 2 \cdot 401\) omogucava da se opsti clan zapise pomocu samo dve baze: 2 i 401. Celobrojnost zavisi od toga da li su oba eksponenta nenegativni celi brojevi -- sto se svodi na uslove deljivosti za \(k\).</p>
+      <div class="formula">
+        \[T_k = \binom{300}{k} \cdot 2^{\frac{k}{3}} \cdot 401^{\frac{5k-900}{6}} \quad \Longrightarrow \quad k \equiv 0\ (\text{mod}\ 6),\; k \geq 180\]
+      </div>
+    </div>
+
+    <!-- Final Answer -->
+    <div class="final-answer">
+      <h2>Konacan odgovor</h2>
+      <div class="answer-value">280</div>
+      <p style="color: #94a3b8;">Broj clanova razvoja koji nisu celi brojevi</p>
+      <div class="final-options">
+        <div class="final-option">(A) 270</div>
+        <div class="final-option">(B) 250</div>
+        <div class="final-option correct">(C) 280</div>
+        <div class="final-option">(D) 290</div>
+        <div class="final-option">(E) 260</div>
+      </div>
+      <div class="verification">
+        <strong>Verifikacija:</strong>
+        <ul style="margin-top: 8px; padding-left: 20px;">
+          <li>\(n = 300\): \(2^{300} = 8^{100}\) -- tacno.</li>
+          <li>Ukupno clanova: \(301\).</li>
+          <li>Celobrojni clanovi: \(k \in \{180, 186, \dots, 300\}\), ukupno \(21\) clan.</li>
+          <li>Necelobrojni: \(301 - 21 = 280\).</li>
+          <li>Provera za \(k = 300\): eksponent od 2 je \(100\), eksponent od 401 je \(100\) -- oba celi, clan je ceo broj.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Common Pitfalls -->
+    <div class="card pitfall-card">
+      <h2>Ceste greske</h2>
+      <div class="pitfall-item">
+        Zaboravljanje da eksponent od 401 mora biti <strong>nenegativan</strong> (ne samo ceo). Ako je eksponent negativan, 401 bi bio u imeniocu i clan ne bi bio ceo broj. Zato je uslov \(k \geq 180\) kljucan.
+      </div>
+      <div class="pitfall-item">
+        Pogresno racunanje broja elemenata aritmetickog niza. Formulu \(\frac{a_n - a_1}{d} + 1\) treba primenjivati pazljivo -- ovde je to \(\frac{300 - 180}{6} + 1 = 21\), a ne 20.
+      </div>
+    </div>
+
+    <!-- Optional Challenge -->
+    <div class="card challenge-card">
+      <h2>Dodatni izazov</h2>
+      <p>Koliko clanova razvoja \(\left(\sqrt[4]{3} + \sqrt[6]{5}\right)^{24}\) nisu celi brojevi?</p>
+      <details>
+        <summary>Pogledaj nagovesstaj</summary>
+        <p>Opsti clan je \(\binom{24}{k} \cdot 3^{(24-k)/4} \cdot 5^{k/6}\). Razmisli koji uslovi na \(k\) su potrebni da oba eksponenta budu nenegativni celi brojevi. Ovde su baze 3 i 5 nezavisne (nemaju zajednicki faktor kao 802 i 401), pa su uslovi deljivosti odvojeni: \(4 \mid (24 - k)\) i \(6 \mid k\). Pronadji presek!</p>
+      </details>
+    </div>
+
+  </div>
+
+  <!-- Canvas drawing script -->
+  <script>
+  (() => {
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const marginLeft = 70;
+    const marginRight = 30;
+    const marginTop = 40;
+    const marginBottom = 60;
+
+    const plotW = W - marginLeft - marginRight;
+    const plotH = H - marginTop - marginBottom;
+
+    let mouseK = -1;
+
+    function kToX(k) {
+      return marginLeft + (k / 300) * plotW;
+    }
+
+    function valToY(v, minV, maxV) {
+      return marginTop + plotH - ((v - minV) / (maxV - minV)) * plotH;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#0c1222';
+      ctx.fillRect(0, 0, W, H);
+
+      const minV = -160;
+      const maxV = 110;
+
+      // Grid
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (let v = -150; v <= 100; v += 50) {
+        const y = valToY(v, minV, maxV);
+        ctx.beginPath();
+        ctx.moveTo(marginLeft, y);
+        ctx.lineTo(W - marginRight, y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px Segoe UI, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(v.toString(), marginLeft - 8, y + 4);
+      }
+
+      // k axis labels
+      ctx.textAlign = 'center';
+      for (let k = 0; k <= 300; k += 30) {
+        const x = kToX(k);
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(k.toString(), x, H - marginBottom + 20);
+
+        ctx.strokeStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.moveTo(x, marginTop);
+        ctx.lineTo(x, marginTop + plotH);
+        ctx.stroke();
+      }
+
+      // Zero line
+      const y0 = valToY(0, minV, maxV);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, y0);
+      ctx.lineTo(W - marginRight, y0);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Green zone: k >= 180 and k divisible by 6
+      ctx.fillStyle = 'rgba(74, 222, 128, 0.06)';
+      const x180 = kToX(180);
+      ctx.fillRect(x180, marginTop, W - marginRight - x180, plotH);
+
+      // k=180 vertical line
+      ctx.strokeStyle = 'rgba(74, 222, 128, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x180, marginTop);
+      ctx.lineTo(x180, marginTop + plotH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#4ade80';
+      ctx.font = '11px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('k = 180', x180 + 4, marginTop + 14);
+
+      // Plot exponent of 401: (5k - 900) / 6
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let k = 0; k <= 300; k++) {
+        const v = (5 * k - 900) / 6;
+        const x = kToX(k);
+        const y = valToY(v, minV, maxV);
+        if (k === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Plot exponent of 2: k / 3
+      ctx.strokeStyle = '#f472b6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let k = 0; k <= 300; k++) {
+        const v = k / 3;
+        const x = kToX(k);
+        const y = valToY(v, minV, maxV);
+        if (k === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Mark integer term points (k divisible by 6, k >= 180)
+      for (let k = 180; k <= 300; k += 6) {
+        const exp401 = (5 * k - 900) / 6;
+        const exp2 = k / 3;
+
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.8)';
+        const x1 = kToX(k);
+        const y1 = valToY(exp401, minV, maxV);
+        ctx.beginPath();
+        ctx.arc(x1, y1, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        const y2 = valToY(exp2, minV, maxV);
+        ctx.beginPath();
+        ctx.arc(x1, y2, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Legend
+      const legendX = marginLeft + 10;
+      const legendY = marginTop + 14;
+
+      ctx.fillStyle = '#60a5fa';
+      ctx.fillRect(legendX, legendY - 6, 16, 3);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Eksponent od 401: (5k-900)/6', legendX + 22, legendY);
+
+      ctx.fillStyle = '#f472b6';
+      ctx.fillRect(legendX, legendY + 14, 16, 3);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText('Eksponent od 2: k/3', legendX + 22, legendY + 20);
+
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath();
+      ctx.arc(legendX + 7, legendY + 36, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText('Celobrojni clanovi (21 tacaka)', legendX + 22, legendY + 40);
+
+      // Axis labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('k (indeks clana)', W / 2, H - 8);
+
+      ctx.save();
+      ctx.translate(14, marginTop + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Vrednost eksponenta', 0, 0);
+      ctx.restore();
+
+      // Hover tooltip
+      if (mouseK >= 0 && mouseK <= 300) {
+        const k = mouseK;
+        const exp401 = (5 * k - 900) / 6;
+        const exp2 = k / 3;
+        const isInteger = k % 6 === 0 && k >= 180;
+
+        const tooltipX = Math.min(kToX(k) + 10, W - 210);
+        const tooltipY = Math.max(marginTop + 70, 60);
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(tooltipX, tooltipY, 200, 86, 8);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = 'bold 12px Segoe UI, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('k = ' + k, tooltipX + 10, tooltipY + 18);
+
+        ctx.font = '11px Segoe UI, sans-serif';
+        ctx.fillStyle = '#60a5fa';
+        const e401Str = Number.isInteger(exp401) ? exp401.toString() : exp401.toFixed(2);
+        ctx.fillText('Eksp. od 401: ' + e401Str, tooltipX + 10, tooltipY + 36);
+
+        ctx.fillStyle = '#f472b6';
+        const e2Str = Number.isInteger(exp2) ? exp2.toString() : exp2.toFixed(2);
+        ctx.fillText('Eksp. od 2: ' + e2Str, tooltipX + 10, tooltipY + 52);
+
+        ctx.fillStyle = isInteger ? '#4ade80' : '#ef4444';
+        ctx.font = 'bold 12px Segoe UI, sans-serif';
+        ctx.fillText(isInteger ? 'CEO BROJ' : 'Nije ceo broj', tooltipX + 10, tooltipY + 74);
+
+        // Highlight vertical line
+        ctx.strokeStyle = 'rgba(226, 232, 240, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(kToX(k), marginTop);
+        ctx.lineTo(kToX(k), marginTop + plotH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    function getKFromMouse(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const relX = mx - marginLeft;
+      if (relX < 0 || relX > plotW) return -1;
+      return Math.round((relX / plotW) * 300);
+    }
+
+    canvas.addEventListener('mousemove', function(e) {
+      mouseK = getKFromMouse(e);
+      draw();
+    });
+
+    canvas.addEventListener('mouseleave', function() {
+      mouseK = -1;
+      draw();
+    });
+
+    canvas.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        mouseK = getKFromMouse(touch);
+        draw();
+      }
+    });
+
+    canvas.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        mouseK = getKFromMouse(touch);
+        draw();
+      }
+    });
+
+    canvas.addEventListener('touchend', function() {
+      mouseK = -1;
+      draw();
+    });
+
+    // Step click interaction
+    document.querySelectorAll('.step-container').forEach(function(el) {
+      el.addEventListener('click', function() {
+        document.querySelectorAll('.step-container').forEach(function(s) {
+          s.classList.remove('active');
+        });
+        el.classList.toggle('active');
+      });
+    });
+
+    draw();
+  })();
+  </script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Binomni razvoj i celobrojnost clanova",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["binomna teorema", "binomni koeficijenti", "celobrojnost", "eksponenti", "deljivost"]
+}
+BRAINSPARK_META-->

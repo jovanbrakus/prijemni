@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kombinatorika - formiranje tima sa ograničenjima</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+U bolnici radi 6 lekara opšte prakse (LP), 4 medicinske sestre (MS) i 2 hirurga (H).
+Ukupno: 6 + 4 + 2 = 12 osoba.
+Odabrati šestočlani tim (6 od 12) tako da:
+  - barem 2 lekara opšte prakse (LP >= 2)
+  - barem 1 medicinska sestra (MS >= 1)
+
+APPROACH: Complement counting (inclusion-exclusion).
+Total ways to choose 6 from 12 = C(12,6).
+Then subtract invalid cases:
+  A = cases with fewer than 2 GPs (0 or 1 GP)
+  B = cases with 0 nurses
+
+C(12,6) = 12! / (6! * 6!) = 924
+
+INVALID CASE A: Fewer than 2 GPs
+Non-GPs: 4 MS + 2 H = 6 people.
+- 0 GPs: choose 6 from 6 non-GPs = C(6,6) = 1
+- 1 GP: choose 1 from 6 GPs * choose 5 from 6 non-GPs = C(6,1) * C(6,5) = 6 * 6 = 36
+|A| = 1 + 36 = 37
+
+INVALID CASE B: 0 nurses
+Non-nurses: 6 LP + 2 H = 8 people.
+- 0 nurses: choose 6 from 8 non-nurses = C(8,6) = 28
+|B| = 28
+
+OVERLAP A ∩ B: fewer than 2 GPs AND 0 nurses
+If 0 nurses, we choose from {6 LP, 2 H} = 8 non-nurses.
+  - 0 GPs, 0 nurses: choose 6 from 2 surgeons only = C(2,6) = 0 (impossible, only 2)
+  - 1 GP, 0 nurses: choose 1 GP from 6, then 5 from 2 surgeons = C(6,1)*C(2,5) = 0 (impossible, only 2)
+|A ∩ B| = 0
+
+By inclusion-exclusion:
+|A ∪ B| = |A| + |B| - |A ∩ B| = 37 + 28 - 0 = 65
+
+Valid = Total - Invalid = 924 - 65 = 859
+
+ANSWER: (E) 859
+
+VERIFICATION against provided answer: (E) 859. Matches!
+
+Sanity check: 859/924 ≈ 92.9% of all teams are valid. This makes sense because
+most random 6-person teams from 12 people (with 6 GPs, 4 nurses, 2 surgeons)
+will naturally include at least 2 GPs and at least 1 nurse.
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.subtitle {
+  color: #94a3b8;
+  text-align: center;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.12);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: default;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #a78bfa;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.theory-card ul {
+  list-style: none;
+  padding: 12px 0;
+}
+
+.theory-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+.theory-card li:last-child {
+  border-bottom: none;
+}
+
+/* Step styling */
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+/* Check yourself */
+.checkpoint {
+  margin: 20px 0;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.checkpoint .answer {
+  padding-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+/* Key Insight */
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(96,165,250,0.25);
+  text-align: center;
+  padding: 28px;
+}
+
+.insight-card .big-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+  color: #4ade80;
+}
+
+/* Final Answer */
+.final-answer-card {
+  border: 2px solid #4ade80;
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(74,222,128,0.04));
+  text-align: center;
+  padding: 28px;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+  justify-content: center;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 800;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  color: #4ade80;
+  box-shadow: 0 0 20px rgba(74,222,128,0.15);
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+  text-align: left;
+}
+
+/* Pitfalls */
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #cbd5e1;
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-label {
+  color: #e09468;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+/* Challenge */
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Canvas */
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { padding: 12px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .final-answer-value { font-size: 1.4rem; }
+  .options-row { gap: 8px; }
+  .option-card { padding: 8px 14px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Formiranje tima sa ograničenjima</h1>
+  <p class="subtitle">Kombinatorika &mdash; binomni koeficijenti, princip uključivanja-isključivanja</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      U bolnici radi <span class="highlight-blue">6 lekara opšte prakse</span>,
+      <span class="highlight-pink">4 medicinske sestre</span> i
+      <span class="highlight-green">2 hirurga</span>. Neophodno je odabrati šestočlani tim
+      za izlazak na teren tako da u timu budu <strong>barem dva lekara opšte prakse</strong>
+      i <strong>barem jedna medicinska sestra</strong>. Broj načina na koji je moguće
+      odabrati takav tim jednak je:
+    </p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Lekari opšte prakse</div>
+        <div class="value">6</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Medicinske sestre</div>
+        <div class="value">4</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Hirurzi</div>
+        <div class="value">2</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Veličina tima</div>
+        <div class="value">6</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top: 20px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(849\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(879\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(869\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(5040\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(859\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Koristićemo <span class="highlight-pink">princip uključivanja-isključivanja</span> (komplement metod).
+      Izračunaćemo ukupan broj načina da se odabere tim od 6 osoba iz 12, a zatim oduzeti
+      nevažeće slučajeve &mdash; timove koji krše barem jedan od dva uslova.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <ul>
+        <li>
+          <strong>Binomni koeficijent (kombinacija):</strong>
+          \( \displaystyle \binom{n}{k} = \frac{n!}{k!(n-k)!} \) &mdash; broj načina da se
+          iz \(n\) elemenata odabere \(k\), bez obzira na redosled.
+        </li>
+        <li>
+          <strong>Princip uključivanja-isključivanja:</strong>
+          \( |A \cup B| = |A| + |B| - |A \cap B| \). Omogućava tačno brojanje elemenata
+          koji pripadaju bar jednom od dva skupa.
+        </li>
+        <li>
+          <strong>Komplement metod:</strong>
+          Ako je teško direktno prebrojati povoljne ishode, računamo:
+          \( |\text{povoljni}| = |\text{ukupni}| - |\text{nepovoljni}| \).
+        </li>
+        <li>
+          <strong>Korisne vrednosti:</strong>
+          \( \binom{12}{6} = 924 \), \( \binom{6}{5} = 6 \), \( \binom{6}{6} = 1 \),
+          \( \binom{8}{6} = 28 \).
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizualizacija grupa osoblja</h2>
+    <p style="color:#94a3b8; margin-bottom: 14px;">
+      Koristite dugmad ispod dijagrama da uključite/isključite prikaz nevažećih slučajeva i vidite kako funkcioniše komplement metod.
+    </p>
+    <canvas id="teamCanvas" width="800" height="500"></canvas>
+    <div style="display:flex; gap:12px; justify-content:center; margin-top:14px; flex-wrap:wrap;">
+      <button id="btnAll" style="padding:8px 18px; border-radius:8px; border:1px solid #334155; background:#1e293b; color:#60a5fa; font-weight:600; cursor:pointer; font-size:0.9rem;">Svi timovi (924)</button>
+      <button id="btnInvalid" style="padding:8px 18px; border-radius:8px; border:1px solid #334155; background:#1e293b; color:#e09468; font-weight:600; cursor:pointer; font-size:0.9rem;">Nevažeći timovi (65)</button>
+      <button id="btnValid" style="padding:8px 18px; border-radius:8px; border:1px solid #334155; background:#1e293b; color:#4ade80; font-weight:600; cursor:pointer; font-size:0.9rem;">Važeći timovi (859)</button>
+    </div>
+    <p class="canvas-hint">Kliknite na dugmad da istražite svaku kategoriju</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Ukupan broj osoba</h3>
+        <p>
+          Prebrojimo svo osoblje u bolnici:
+        </p>
+        <div class="math-block">
+          \[ 6 \text{ (lekari)} + 4 \text{ (sestre)} + 2 \text{ (hirurzi)} = 12 \text{ osoba} \]
+        </div>
+        <p>
+          Biramo tim od 6 osoba iz ovih 12.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Ukupan broj timova (bez ograničenja)</h3>
+        <p>
+          Broj načina da se odabere 6 osoba od 12, bez ikakvih ograničenja:
+        </p>
+        <div class="math-block">
+          \[ \binom{12}{6} = \frac{12!}{6! \cdot 6!} \]
+        </div>
+        <p>
+          Računamo korak po korak:
+        </p>
+        <div class="math-block">
+          \[ \binom{12}{6} = \frac{12 \cdot 11 \cdot 10 \cdot 9 \cdot 8 \cdot 7}{6 \cdot 5 \cdot 4 \cdot 3 \cdot 2 \cdot 1} = \frac{665280}{720} = 924 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(\binom{8}{6}\)?</summary>
+      <div class="answer">
+        \(\binom{8}{6} = \binom{8}{2} = \frac{8 \cdot 7}{2 \cdot 1} = 28\). Koristili smo osobinu \(\binom{n}{k} = \binom{n}{n-k}\).
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Definišemo nevažeće slučajeve</h3>
+        <p>
+          Tim je <strong>nevažeći</strong> ako krši barem jedan uslov. Definišemo:
+        </p>
+        <p>
+          <span class="highlight-blue">\(A\)</span> = skup timova sa <strong>manje od 2 lekara opšte prakse</strong> (0 ili 1 lekar)
+        </p>
+        <p>
+          <span class="highlight-pink">\(B\)</span> = skup timova sa <strong>0 medicinskih sestara</strong>
+        </p>
+        <p class="note">
+          Nevažeći timovi = \(A \cup B\). Koristimo princip uključivanja-isključivanja:
+          \(|A \cup B| = |A| + |B| - |A \cap B|\).
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izračunavamo \(|A|\): manje od 2 lekara</h3>
+        <p>
+          Osobe koje <strong>nisu</strong> lekari opšte prakse: 4 sestre + 2 hirurga = <span class="highlight-blue">6 osoba</span>.
+        </p>
+        <p>
+          <strong>Slučaj 1:</strong> Tim sa <span class="highlight-blue">0 lekara</span>. Svih 6 članova biramo iz 6 ne-lekara:
+        </p>
+        <div class="math-block">
+          \[ \binom{6}{6} = 1 \]
+        </div>
+        <p>
+          <strong>Slučaj 2:</strong> Tim sa <span class="highlight-blue">tačno 1 lekarom</span>. Biramo 1 od 6 lekara i 5 od 6 ne-lekara:
+        </p>
+        <div class="math-block">
+          \[ \binom{6}{1} \cdot \binom{6}{5} = 6 \cdot 6 = 36 \]
+        </div>
+        <p>
+          Ukupno:
+        </p>
+        <div class="math-block">
+          \[ |A| = 1 + 36 = 37 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Izračunavamo \(|B|\): 0 medicinskih sestara</h3>
+        <p>
+          Osobe koje <strong>nisu</strong> medicinske sestre: 6 lekara + 2 hirurga = <span class="highlight-pink">8 osoba</span>.
+        </p>
+        <p>
+          Biramo svih 6 članova tima iz ovih 8 osoba:
+        </p>
+        <div class="math-block">
+          \[ |B| = \binom{8}{6} = \binom{8}{2} = \frac{8 \cdot 7}{2} = 28 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Može li tim imati i manje od 2 lekara i 0 sestara istovremeno?</summary>
+      <div class="answer">
+        Ne! Ako nema sestara, preostaju samo lekari (6) i hirurzi (2). Sa 0 lekara,
+        imamo samo 2 hirurga &mdash; ali treba nam 6 osoba (nemoguće). Sa 1 lekarom,
+        imamo 1 lekar + 2 hirurga = 3 &mdash; opet premalo za tim od 6. Dakle, presek je prazan!
+      </div>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Izračunavamo \(|A \cap B|\): presek</h3>
+        <p>
+          Presek znači: <strong>manje od 2 lekara I 0 sestara</strong>. Bez sestara, biramo iz:
+          6 lekara + 2 hirurga = 8 osoba. Ali sa 0 ili 1 lekarom:
+        </p>
+        <p>
+          <strong>0 lekara, 0 sestara:</strong> Biramo 6 od 2 hirurga &mdash; nemoguće jer \(\binom{2}{6} = 0\).
+        </p>
+        <p>
+          <strong>1 lekar, 0 sestara:</strong> Biramo 1 lekara i 5 od 2 hirurga &mdash; nemoguće jer \(\binom{2}{5} = 0\).
+        </p>
+        <div class="math-block">
+          \[ |A \cap B| = 0 + 0 = 0 \]
+        </div>
+        <p class="note">
+          Presek je prazan jer bez sestara nemamo dovoljno ne-lekara da popunimo tim.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Primena principa uključivanja-isključivanja</h3>
+        <p>
+          Sada imamo sve što nam treba. Broj nevažećih timova:
+        </p>
+        <div class="math-block">
+          \[ |A \cup B| = |A| + |B| - |A \cap B| = 37 + 28 - 0 = 65 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3>Konačan račun</h3>
+        <p>
+          Broj važećih timova = ukupno &minus; nevažeći:
+        </p>
+        <div class="math-block">
+          \[ 924 - 65 = 859 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliki je procenat svih timova koji su važeći?</summary>
+      <div class="answer">
+        \(\frac{859}{924} \approx 0{,}9297\), odnosno oko \(93\%\). To ima smisla &mdash; sa 6 lekara
+        i 4 sestre među 12 osoba, većina slučajnih timova prirodno ispunjava oba uslova.
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2 style="justify-content: center;">Ključno zapažanje</h2>
+    <p>
+      Komplement metod dramatično pojednostavljuje računanje. Umesto da razmatramo mnogo
+      slučajeva za različit broj lekara i sestara u timu (direktan pristup), brojimo samo
+      <strong>ono što ne želimo</strong> i oduzmemo od ukupnog broja.
+    </p>
+    <div class="big-formula">
+      \[ 859 = \underbrace{924}_{\text{ukupno}} - \underbrace{37}_{|A|} - \underbrace{28}_{|B|} + \underbrace{0}_{|A \cap B|} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">
+      \( 859 \)
+    </div>
+    <div class="options-row">
+      <div class="option-card">(A) \(849\)</div>
+      <div class="option-card">(B) \(879\)</div>
+      <div class="option-card">(C) \(869\)</div>
+      <div class="option-card">(D) \(5040\)</div>
+      <div class="option-card correct">(E) \(859\)</div>
+    </div>
+    <p class="verification-note">
+      <strong>Verifikacija:</strong> Možemo proveriti i direktnim brojanjem. Broj lekara u timu
+      može biti 2, 3, 4, 5 ili 6, a broj sestara 1, 2, 3 ili 4 (barem 1).
+      Za svaku validnu kombinaciju \((l, s, h)\) gde je \(l + s + h = 6\),
+      \(l \geq 2\), \(s \geq 1\), \(h \leq 2\), sabiramo \(\binom{6}{l}\binom{4}{s}\binom{2}{h}\).
+      Zbir svih tih proizvoda je upravo \(859\), što potvrđuje naš rezultat.
+      Tačan odgovor je <strong>(E)</strong>.
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li>
+        <span class="pitfall-label">Greška 1:</span>
+        Zaboraviti princip uključivanja-isključivanja i jednostavno oduzeti \(|A| + |B|\)
+        bez razmatranja preseka \(|A \cap B|\). U ovom zadatku presek je 0, pa se greška
+        ne ispoljava &mdash; ali u opštem slučaju ovo može dovesti do pogrešnog odgovora.
+      </li>
+      <li>
+        <span class="pitfall-label">Greška 2:</span>
+        Pomešati kombinacije i permutacije. Odgovor \(5040 = 7!\) (opcija D) nagoveštava
+        da je neko računao sa redosledom. Ovde je bitan samo <em>sastav</em> tima, ne i
+        redosled, pa koristimo kombinacije \(\binom{n}{k}\), a ne permutacije.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Iz iste bolnice treba formirati tim od 6 osoba, ali sada sa uslovom da u timu budu
+      <strong>tačno 2 hirurga</strong>, <strong>barem 2 lekara opšte prakse</strong> i
+      <strong>barem 1 medicinska sestra</strong>. Na koliko načina?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="padding-top: 10px; color: #cbd5e1;">
+        Pošto moraju biti tačno 2 hirurga (a postoje tačno 2, dakle \(\binom{2}{2} = 1\)),
+        preostaje da se od preostalih 10 osoba (6 lekara + 4 sestre) odabere 4, uz uslov
+        \(l \geq 2\) i \(s \geq 1\). Ponovo primenite komplement metod na \(\binom{10}{4} = 210\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('teamCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 800 * dpr;
+  canvas.height = 500 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = 800;
+  const H = 500;
+
+  let viewMode = 'all'; // 'all', 'invalid', 'valid'
+
+  // Personnel data
+  const groups = [
+    { name: 'Lekari opšte prakse', count: 6, color: '#60a5fa', abbr: 'LP' },
+    { name: 'Medicinske sestre', count: 4, color: '#f472b6', abbr: 'MS' },
+    { name: 'Hirurzi', count: 2, color: '#4ade80', abbr: 'H' }
+  ];
+
+  function drawPersonIcon(x, y, color, alpha) {
+    ctx.globalAlpha = alpha;
+    // Head
+    ctx.beginPath();
+    ctx.arc(x, y - 12, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+    // Body
+    ctx.beginPath();
+    ctx.moveTo(x, y - 4);
+    ctx.lineTo(x, y + 10);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    // Arms
+    ctx.beginPath();
+    ctx.moveTo(x - 8, y + 2);
+    ctx.lineTo(x + 8, y + 2);
+    ctx.stroke();
+    // Legs
+    ctx.beginPath();
+    ctx.moveTo(x, y + 10);
+    ctx.lineTo(x - 6, y + 22);
+    ctx.moveTo(x, y + 10);
+    ctx.lineTo(x + 6, y + 22);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function draw() {
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    const titleMap = {
+      'all': 'Ukupan broj timova: C(12, 6) = 924',
+      'invalid': 'Nevažeći timovi: |A ∪ B| = 37 + 28 - 0 = 65',
+      'valid': 'Važeći timovi: 924 - 65 = 859'
+    };
+    ctx.fillText(titleMap[viewMode], W / 2, 20);
+
+    // Draw the 12 people in 3 groups
+    const groupStartX = [80, 340, 570];
+    const personSpacing = 40;
+
+    groups.forEach((group, gi) => {
+      const startX = groupStartX[gi];
+      const startY = 100;
+
+      // Group label
+      ctx.fillStyle = group.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      const groupCenterX = startX + (group.count - 1) * personSpacing / 2;
+      ctx.fillText(group.name, groupCenterX, startY - 40);
+      ctx.fillText('(' + group.count + ')', groupCenterX, startY - 22);
+
+      for (let i = 0; i < group.count; i++) {
+        const px = startX + i * personSpacing;
+        drawPersonIcon(px, startY + 18, group.color, 1);
+      }
+    });
+
+    // Draw Venn diagram or bar chart below
+    const diagramY = 220;
+
+    if (viewMode === 'all') {
+      // Show a big rectangle for all 924
+      const rectW = 500;
+      const rectH = 200;
+      const rectX = (W - rectW) / 2;
+
+      ctx.fillStyle = 'rgba(96, 165, 250, 0.08)';
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(rectX, diagramY, rectW, rectH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 48px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('924', W / 2, diagramY + rectH / 2 - 15);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('C(12, 6) = svi mogući šestočlani timovi', W / 2, diagramY + rectH / 2 + 30);
+
+      // Formula
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('12! / (6! · 6!) = 665280 / 720 = 924', W / 2, diagramY + rectH + 30);
+
+    } else if (viewMode === 'invalid') {
+      // Show Venn diagram for A and B (disjoint since overlap = 0)
+      const centerY = diagramY + 110;
+
+      // Set A (manje od 2 lekara)
+      const axCenter = W / 2 - 120;
+      const aRadius = 70;
+
+      ctx.fillStyle = 'rgba(96, 165, 250, 0.12)';
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(axCenter, centerY, aRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('A: < 2 lekara', axCenter, centerY - 25);
+      ctx.font = 'bold 28px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('37', axCenter, centerY + 10);
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('0 LP: 1', axCenter, centerY + 38);
+      ctx.fillText('1 LP: 36', axCenter, centerY + 54);
+
+      // Set B (0 sestara)
+      const bxCenter = W / 2 + 120;
+      const bRadius = 55;
+
+      ctx.fillStyle = 'rgba(244, 114, 182, 0.12)';
+      ctx.strokeStyle = '#f472b6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(bxCenter, centerY, bRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#f472b6';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('B: 0 sestara', bxCenter, centerY - 20);
+      ctx.font = 'bold 28px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('28', bxCenter, centerY + 10);
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('C(8, 6) = 28', bxCenter, centerY + 38);
+
+      // Intersection label
+      ctx.fillStyle = '#e09468';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('A ∩ B = 0', W / 2, centerY + 90);
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('(nemoguće: premalo ne-lekara bez sestara)', W / 2, centerY + 108);
+
+      // Total
+      ctx.fillStyle = '#e09468';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('|A ∪ B| = 37 + 28 - 0 = 65 nevažećih timova', W / 2, diagramY + 240);
+
+    } else { // valid
+      // Bar chart showing 924 - 65 = 859
+      const barY = diagramY + 30;
+      const barH = 45;
+      const totalW = 500;
+      const barX = (W - totalW) / 2;
+
+      // Full bar (924)
+      ctx.fillStyle = 'rgba(96, 165, 250, 0.15)';
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, totalW, barH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Valid portion (859/924 * totalW)
+      const validW = (859 / 924) * totalW;
+      ctx.fillStyle = 'rgba(74, 222, 128, 0.2)';
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, validW, barH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Invalid portion
+      ctx.fillStyle = 'rgba(224, 148, 104, 0.2)';
+      ctx.strokeStyle = '#e09468';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(barX + validW, barY, totalW - validW, barH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Labels on bars
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('859', barX + validW / 2, barY + barH / 2);
+
+      ctx.fillStyle = '#e09468';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('65', barX + validW + (totalW - validW) / 2, barY + barH / 2);
+
+      // Labels below
+      ctx.fillStyle = '#4ade80';
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Važeći (93%)', barX + validW / 2, barY + barH + 22);
+
+      ctx.fillStyle = '#e09468';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Nevažeći', barX + validW + (totalW - validW) / 2, barY + barH + 22);
+
+      // Formula breakdown
+      const formulaY = barY + barH + 70;
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('924  -  65  =  859', W / 2, formulaY);
+
+      // Sub-labels
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#60a5fa';
+      ctx.fillText('C(12,6)', W / 2 - 95, formulaY + 24);
+      ctx.fillStyle = '#e09468';
+      ctx.fillText('|A ∪ B|', W / 2 - 10, formulaY + 24);
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText('odgovor', W / 2 + 78, formulaY + 24);
+
+      // Detailed breakdown
+      const detY = formulaY + 60;
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+
+      ctx.fillText('Nevažeći: 37 (< 2 lekara) + 28 (0 sestara) - 0 (presek) = 65', W / 2, detY);
+    }
+  }
+
+  // Button handlers
+  const btnAll = document.getElementById('btnAll');
+  const btnInvalid = document.getElementById('btnInvalid');
+  const btnValid = document.getElementById('btnValid');
+
+  function updateButtons() {
+    const btns = [btnAll, btnInvalid, btnValid];
+    const modes = ['all', 'invalid', 'valid'];
+    const colors = ['#60a5fa', '#e09468', '#4ade80'];
+    btns.forEach((btn, i) => {
+      if (viewMode === modes[i]) {
+        btn.style.background = colors[i] + '22';
+        btn.style.borderColor = colors[i];
+      } else {
+        btn.style.background = '#1e293b';
+        btn.style.borderColor = '#334155';
+      }
+    });
+  }
+
+  btnAll.addEventListener('click', () => { viewMode = 'all'; updateButtons(); draw(); });
+  btnInvalid.addEventListener('click', () => { viewMode = 'invalid'; updateButtons(); draw(); });
+  btnValid.addEventListener('click', () => { viewMode = 'valid'; updateButtons(); draw(); });
+
+  updateButtons();
+  draw();
+
+  // Step click interactivity
+  document.querySelectorAll('.step').forEach(step => {
+    step.addEventListener('click', () => {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Formiranje tima sa ograničenjima - princip uključivanja-isključivanja",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorike", "binomni koeficijent", "princip uključivanja-isključivanja", "komplement metod", "izbor tima"]
+}
+BRAINSPARK_META-->

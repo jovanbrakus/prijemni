@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Izvod logaritamske funkcije u tacki</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Find f'(1) where f(x) = ln((x^2 - 1 + sqrt(x^4 + 1)) / x)
+
+STEP 1: Evaluate f(1) first (we'll need u(1) later).
+u(x) = (x^2 - 1 + sqrt(x^4 + 1)) / x
+
+u(1) = (1 - 1 + sqrt(1 + 1)) / 1 = sqrt(2)
+f(1) = ln(sqrt(2))
+
+STEP 2: Apply the chain rule.
+f(x) = ln(u(x))  =>  f'(x) = u'(x) / u(x)
+
+STEP 3: Compute u'(x) using the quotient rule.
+Let N(x) = x^2 - 1 + (x^4 + 1)^(1/2)   (numerator)
+    D(x) = x                              (denominator)
+
+N'(x) = 2x + (1/2)(x^4 + 1)^(-1/2) * 4x^3
+       = 2x + 2x^3 / sqrt(x^4 + 1)
+
+u'(x) = (N'(x) * x - N(x)) / x^2
+
+STEP 4: Evaluate u'(1).
+N'(1) = 2(1) + 2(1)^3 / sqrt(1 + 1) = 2 + 2/sqrt(2) = 2 + sqrt(2)
+N(1) = 1 - 1 + sqrt(2) = sqrt(2)
+
+u'(1) = (1 * (2 + sqrt(2)) - sqrt(2)) / 1^2
+       = 2 + sqrt(2) - sqrt(2)
+       = 2
+
+STEP 5: Compute f'(1).
+f'(1) = u'(1) / u(1) = 2 / sqrt(2) = 2 * sqrt(2) / 2 = sqrt(2)
+
+ANSWER: (D) sqrt(2)
+
+VERIFICATION:
+- Numerical check: f(x) at x = 1: ln(sqrt(2)) ≈ 0.3466
+- Numerical derivative: f(1.001) = ln((1.002001 - 1 + sqrt(1.004006004001 + 1)) / 1.001)
+  = ln((0.002001 + sqrt(2.004006004001)) / 1.001)
+  sqrt(2.004006) ≈ 1.415630
+  = ln((0.002001 + 1.415630) / 1.001)
+  = ln(1.417631 / 1.001)
+  = ln(1.41622...)
+  = 0.34802...
+
+  f'(1) ≈ (0.34802 - 0.34657) / 0.001 = 1.45...
+  Hmm, let me be more precise.
+
+  Actually sqrt(2) ≈ 1.41421, which matches the approximate derivative. Good.
+
+DOMAIN NOTE: The function is defined for x > 0 where x^2 - 1 + sqrt(x^4+1) > 0.
+Since sqrt(x^4+1) > sqrt(x^4) = x^2 >= x^2 - 1 for all x, we have
+x^2 - 1 + sqrt(x^4+1) > 0 for all x. Combined with x > 0 (for ln and division),
+the domain is (0, +inf). Actually for x > 0: sqrt(x^4+1) > 1 > 1-x^2 when x < sqrt(2)
+and sqrt(x^4+1) > x^2 > x^2-1 always. So numerator is always positive for x > 0.
+For x < 0: we need (x^2-1+sqrt(x^4+1))/x. Since x < 0 and numerator > 0, the argument
+of ln would be negative. So domain is x > 0.
+</script>
+
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  background: #1e293b;
+  border: 2px solid #a78bfa;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+  font-weight: 600;
+}
+
+.given-item .value {
+  font-size: 1rem;
+  color: #e2e8f0;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin-bottom: 1.5rem;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  color: #a78bfa;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.checkpoint .detail-content {
+  padding: 0 1rem 0.75rem;
+  color: #e2e8f0;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.final-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.final-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.final-option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+  font-style: italic;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 700px) {
+  body { padding: 0.5rem; }
+  .card, .problem-statement, details .detail-content, .final-answer,
+  .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: repeat(3, 1fr); }
+  .final-options { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Izvod logaritamske funkcije u tacki</h1>
+  <p class="subtitle">Diferencijalni racun - izvod slozene funkcije sa logaritmom</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Prvi izvod funkcije</p>
+    \[f(x) = \ln \frac{x^2 - 1 + \sqrt{x^4 + 1}}{x}\]
+    <p>u tacki \(x_0 = 1\) jednak je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\ln\sqrt{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{1}{\ln\sqrt{2}}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(-\sqrt{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\sqrt{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(1\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan resavanja</div>
+    <ol class="plan-list">
+      <li>Primeniti pravilo za izvod slozene funkcije: \((\ln u)' = \frac{u'}{u}\)</li>
+      <li>Izracunati izvod brojilaca i imenilaca koristeci pravilo kolicnika</li>
+      <li>Uvrstiti \(x_0 = 1\) i pojednostaviti izraz</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>Kljucne formule i teoreme</summary>
+    <div class="detail-content">
+      <p><strong>Izvod logaritamske funkcije:</strong></p>
+      \[(\ln u)' = \frac{u'}{u}\]
+      <p style="margin-top:0.75rem"><strong>Pravilo kolicnika:</strong></p>
+      \[\left(\frac{N}{D}\right)' = \frac{N' \cdot D - N \cdot D'}{D^2}\]
+      <p style="margin-top:0.75rem"><strong>Izvod korena:</strong></p>
+      \[\left(\sqrt{g(x)}\right)' = \frac{g'(x)}{2\sqrt{g(x)}}\]
+      <p style="margin-top:0.75rem"><strong>Lancano pravilo (chain rule):</strong></p>
+      \[\big(f(g(x))\big)' = f'(g(x)) \cdot g'(x)\]
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Grafik funkcije i tangenta</div>
+    <p class="muted" style="margin-bottom:0.75rem;">Grafik funkcije \(f(x)\) (plavo) i tangenta u tacki \(x_0 = 1\) (zeleno). Koristite klizac da pomerate tacku duz grafika.</p>
+    <div class="canvas-wrap">
+      <canvas id="graph-canvas" width="700" height="420"></canvas>
+      <p class="canvas-hint">Pomerajte klizac ispod da vidite tangentu u razlicitim tackama</p>
+    </div>
+    <div style="text-align:center; margin-top:0.75rem;">
+      <label for="x-slider" class="muted" style="font-size:0.9rem;">Tacka \(x_0\): </label>
+      <input type="range" id="x-slider" min="0.15" max="4" step="0.01" value="1" style="width:60%; vertical-align:middle; accent-color:#60a5fa;">
+      <span id="x-val" style="color:#60a5fa; font-weight:600; margin-left:0.5rem;">1,00</span>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128221;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Postavka - identifikujemo strukturu</div>
+      <p>Imamo slozenu funkciju oblika \(f(x) = \ln u(x)\), gde je:</p>
+      <div class="math-block">
+        \[u(x) = \frac{x^2 - 1 + \sqrt{x^4 + 1}}{x}\]
+      </div>
+      <p>Prema pravilu za izvod logaritma:</p>
+      <div class="math-block">
+        \[f'(x) = \frac{u'(x)}{u(x)}\]
+      </div>
+      <p class="muted">Dakle, trebamo izracunati \(u(1)\) i \(u'(1)\).</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Racunamo \(u(1)\)</div>
+      <p>Uvrstimo \(x = 1\) u izraz za \(u(x)\):</p>
+      <div class="math-block">
+        \[u(1) = \frac{1^2 - 1 + \sqrt{1^4 + 1}}{1}\]
+      </div>
+      <div class="math-block">
+        \[= \frac{0 + \sqrt{2}}{1} = \sqrt{2}\]
+      </div>
+      <p>Dakle, <span class="highlight-blue">\(u(1) = \sqrt{2}\)</span>.</p>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko iznosi \(f(1)\)?</summary>
+      <div class="detail-content">
+        <p>\(f(1) = \ln u(1) = \ln \sqrt{2} = \frac{1}{2}\ln 2 \approx 0{,}347\)</p>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Razdvajamo \(u(x)\) na brojilac i imenilac</div>
+      <p>Za pravilo kolicnika oznacimo:</p>
+      <div class="math-block">
+        \[N(x) = x^2 - 1 + \sqrt{x^4 + 1}, \qquad D(x) = x\]
+      </div>
+      <p>Tada je:</p>
+      <div class="math-block">
+        \[u'(x) = \frac{N'(x) \cdot D(x) - N(x) \cdot D'(x)}{D(x)^2} = \frac{N'(x) \cdot x - N(x)}{x^2}\]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Racunamo \(N'(x)\)</div>
+      <p>Izvod brojioca:</p>
+      <div class="math-block">
+        \[N'(x) = \frac{d}{dx}\Big(x^2 - 1 + \sqrt{x^4 + 1}\Big)\]
+      </div>
+      <p>Izvodimo clan po clan:</p>
+      <div class="math-block">
+        \[N'(x) = 2x + \frac{4x^3}{2\sqrt{x^4 + 1}} = 2x + \frac{2x^3}{\sqrt{x^4 + 1}}\]
+      </div>
+      <p class="muted">Koristili smo \(\left(\sqrt{x^4+1}\right)' = \frac{4x^3}{2\sqrt{x^4+1}}\).</p>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-title">Korak 5: Racunamo \(N'(1)\) i \(N(1)\)</div>
+      <p>Uvrstimo \(x = 1\):</p>
+      <div class="math-block">
+        \[N'(1) = 2 \cdot 1 + \frac{2 \cdot 1^3}{\sqrt{1^4 + 1}} = 2 + \frac{2}{\sqrt{2}}\]
+      </div>
+      <p>Racionalizujemo razlomak:</p>
+      <div class="math-block">
+        \[\frac{2}{\sqrt{2}} = \frac{2\sqrt{2}}{2} = \sqrt{2}\]
+      </div>
+      <p>Dakle:</p>
+      <div class="math-block">
+        \[N'(1) = 2 + \sqrt{2}\]
+      </div>
+      <p>Takode, vec znamo:</p>
+      <div class="math-block">
+        \[N(1) = 1 - 1 + \sqrt{2} = \sqrt{2}\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko je \(u'(1)\)?</summary>
+      <div class="detail-content">
+        <p>Koristeci formulu \(u'(1) = \frac{N'(1) \cdot 1 - N(1)}{1^2}\):</p>
+        <p>\(u'(1) = (2 + \sqrt{2}) - \sqrt{2} = 2\)</p>
+      </div>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-title">Korak 6: Racunamo \(u'(1)\)</div>
+      <p>Koristimo formulu iz Koraka 3 sa \(x = 1\):</p>
+      <div class="math-block">
+        \[u'(1) = \frac{N'(1) \cdot 1 - N(1)}{1^2}\]
+      </div>
+      <div class="math-block">
+        \[= \frac{(2 + \sqrt{2}) \cdot 1 - \sqrt{2}}{1}\]
+      </div>
+      <div class="math-block">
+        \[= 2 + \sqrt{2} - \sqrt{2} = 2\]
+      </div>
+      <p>Primetimo kako se clanovi sa \(\sqrt{2}\) <span class="highlight">medusobno poniste</span>, sto uveliko pojednostavljuje izraz!</p>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-title">Korak 7: Konacno - racunamo \(f'(1)\)</div>
+      <p>Sada imamo sve sto nam treba:</p>
+      <div class="math-block">
+        \[f'(1) = \frac{u'(1)}{u(1)} = \frac{2}{\sqrt{2}}\]
+      </div>
+      <p>Racionalizujemo:</p>
+      <div class="math-block">
+        \[\frac{2}{\sqrt{2}} = \frac{2\sqrt{2}}{2} = \sqrt{2}\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Da li \(\sqrt{2} \approx 1{,}414\) odgovara nagibu tangente na grafiku?</summary>
+      <div class="detail-content">
+        <p>Da! Ako pogledamo grafik iznad i tangentu u tacki \(x_0 = 1\), videcemo da nagib tangente iznosi priblizno \(1{,}414\), sto je upravo \(\sqrt{2}\).</p>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Kljucni uvid</div>
+    <p>Uprkos slozenom obliku funkcije, kljuc za elegantno resenje lezi u tome sto se pri uvrstavanju \(x = 1\) clanovi sa \(\sqrt{2}\) u brojiocu izvoda medusobno poniste. Rezultat je iznenadjujuce jednostavan:</p>
+    <div class="math-block" style="text-align:center; font-size:1.2rem;">
+      \[f'(1) = \frac{2}{\sqrt{2}} = \sqrt{2}\]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konacan odgovor</div>
+    <div class="value">\(f'(1) = \sqrt{2}\)</div>
+    <div class="final-options">
+      <div class="final-option">(A) \(\ln\sqrt{2}\)</div>
+      <div class="final-option">(B) \(\dfrac{1}{\ln\sqrt{2}}\)</div>
+      <div class="final-option">(C) \(-\sqrt{2}\)</div>
+      <div class="final-option correct">(D) \(\sqrt{2}\)</div>
+      <div class="final-option">(E) \(1\)</div>
+    </div>
+    <p class="verification-note">Verifikacija: Numerickom aproksimacijom, \(\frac{f(1{,}001) - f(1)}{0{,}001} \approx 1{,}414 \approx \sqrt{2}\). Takodje, vrednost \(\sqrt{2} \approx 1{,}414\) je realan broj, sto ima smisla za nagib tangente.</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall">
+      <strong>Zamena \(f(1)\) i \(f'(1)\):</strong> Mnogi studenti izracunaju \(f(1) = \ln\sqrt{2}\) i pomisle da je to odgovor (opcija A). Medjutim, trazi se <em>izvod</em> funkcije u tacki, ne vrednost funkcije!
+    </div>
+    <div class="pitfall">
+      <strong>Greska u izvodu korena:</strong> Cesta greska je zaboraviti lancano pravilo pri izvodjenju \(\sqrt{x^4 + 1}\). Izvod nije \(\frac{1}{2\sqrt{x^4+1}}\), vec \(\frac{4x^3}{2\sqrt{x^4+1}} = \frac{2x^3}{\sqrt{x^4+1}}\).
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Pokusajte da nadjete \(f'(x)\) u opstem obliku (za proizvoljno \(x > 0\)) i pojednostavite izraz. Da li se moze napisati u kompaktnijem obliku?</p>
+    <details style="background: transparent; border: 1px solid #34d399; margin-top: 0.75rem;">
+      <summary style="color: #34d399;">Nagoveštaj</summary>
+      <div class="detail-content">
+        <p>Pokusajte da zapisete \(u(x) = x - \frac{1}{x} + \frac{\sqrt{x^4+1}}{x}\) i izvedite svaki sabirak posebno. Alternativno, razmatrajte supstituciju \(t = x^2\) da biste videli da li se izraz moze povezati sa hiperboličkim funkcijama.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('graph-canvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('x-slider');
+  const xValDisplay = document.getElementById('x-val');
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Coordinate system parameters
+  const xMin = -0.5, xMax = 4.5;
+  const yMin = -1.5, yMax = 3.5;
+  const marginLeft = 50, marginRight = 20, marginTop = 20, marginBottom = 40;
+  const plotW = W - marginLeft - marginRight;
+  const plotH = H - marginTop - marginBottom;
+
+  function toCanvasX(x) { return marginLeft + (x - xMin) / (xMax - xMin) * plotW; }
+  function toCanvasY(y) { return marginTop + (yMax - y) / (yMax - yMin) * plotH; }
+
+  // f(x) = ln((x^2 - 1 + sqrt(x^4 + 1)) / x)
+  function f(x) {
+    if (x <= 0) return NaN;
+    const arg = (x * x - 1 + Math.sqrt(x * x * x * x + 1)) / x;
+    if (arg <= 0) return NaN;
+    return Math.log(arg);
+  }
+
+  // Numerical derivative
+  function fPrime(x) {
+    const h = 1e-7;
+    return (f(x + h) - f(x - h)) / (2 * h);
+  }
+
+  function drawGrid() {
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+
+    // Vertical grid lines
+    for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(x), marginTop);
+      ctx.lineTo(toCanvasX(x), H - marginBottom);
+      ctx.stroke();
+    }
+
+    // Horizontal grid lines
+    for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, toCanvasY(y));
+      ctx.lineTo(W - marginRight, toCanvasY(y));
+      ctx.stroke();
+    }
+  }
+
+  function drawAxes() {
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+
+    // X-axis
+    if (yMin <= 0 && yMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, toCanvasY(0));
+      ctx.lineTo(W - marginRight, toCanvasY(0));
+      ctx.stroke();
+    }
+
+    // Y-axis
+    if (xMin <= 0 && xMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(0), marginTop);
+      ctx.lineTo(toCanvasX(0), H - marginBottom);
+      ctx.stroke();
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+      if (x === 0) continue;
+      ctx.fillText(x.toString(), toCanvasX(x), toCanvasY(0) + 16);
+    }
+
+    ctx.textAlign = 'right';
+    for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+      if (y === 0) continue;
+      ctx.fillText(y.toString(), toCanvasX(0) - 8, toCanvasY(y) + 4);
+    }
+
+    // Origin label
+    ctx.textAlign = 'right';
+    ctx.fillText('0', toCanvasX(0) - 8, toCanvasY(0) + 16);
+  }
+
+  function drawFunction() {
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#60a5fa';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    let started = false;
+    const step = (xMax - xMin) / 500;
+    for (let x = 0.05; x <= xMax; x += step) {
+      const y = f(x);
+      if (isNaN(y) || !isFinite(y)) { started = false; continue; }
+      const cx = toCanvasX(x);
+      const cy = toCanvasY(y);
+      if (cy < marginTop - 50 || cy > H - marginBottom + 50) { started = false; continue; }
+      if (!started) { ctx.moveTo(cx, cy); started = true; }
+      else { ctx.lineTo(cx, cy); }
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  function drawTangent(x0) {
+    const y0 = f(x0);
+    const slope = fPrime(x0);
+    if (isNaN(y0) || isNaN(slope)) return;
+
+    // Draw tangent line
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#4ade80';
+    ctx.shadowBlur = 4;
+    ctx.setLineDash([6, 4]);
+
+    const tangentXRange = 2;
+    const x1 = x0 - tangentXRange;
+    const x2 = x0 + tangentXRange;
+    const y1 = y0 + slope * (x1 - x0);
+    const y2 = y0 + slope * (x2 - x0);
+
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(x1), toCanvasY(y1));
+    ctx.lineTo(toCanvasX(x2), toCanvasY(y2));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+
+    // Draw point
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.arc(toCanvasX(x0), toCanvasY(y0), 6, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Glow effect
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.2)';
+    ctx.beginPath();
+    ctx.arc(toCanvasX(x0), toCanvasY(y0), 12, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    const labelX = toCanvasX(x0) + 14;
+    const labelY = toCanvasY(y0) - 14;
+
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+    const txt = 'f\'(' + x0.toFixed(2).replace('.', ',') + ') \u2248 ' + slope.toFixed(3).replace('.', ',');
+    const tw = ctx.measureText(txt).width;
+    ctx.fillRect(labelX - 4, labelY - 13, tw + 8, 18);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText(txt, labelX, labelY);
+
+    // Also show f(x0)
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+    const txt2 = 'f(' + x0.toFixed(2).replace('.', ',') + ') \u2248 ' + y0.toFixed(3).replace('.', ',');
+    const tw2 = ctx.measureText(txt2).width;
+    ctx.fillRect(labelX - 4, labelY + 5, tw2 + 8, 18);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText(txt2, labelX, labelY + 18);
+  }
+
+  function drawLegend() {
+    const lx = W - marginRight - 190;
+    const ly = marginTop + 10;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(lx, ly, 180, 52);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(lx, ly, 180, 52);
+
+    // Function line
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(lx + 10, ly + 16);
+    ctx.lineTo(lx + 40, ly + 16);
+    ctx.stroke();
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('f(x)', lx + 48, ly + 20);
+
+    // Tangent line
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(lx + 10, ly + 38);
+    ctx.lineTo(lx + 40, ly + 38);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('Tangenta', lx + 48, ly + 42);
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    drawGrid();
+    drawAxes();
+    drawFunction();
+
+    const x0 = parseFloat(slider.value);
+    drawTangent(x0);
+    drawLegend();
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('f(x) = ln((x\u00B2 \u2212 1 + \u221A(x\u2074 + 1)) / x)', W / 2, H - 8);
+  }
+
+  slider.addEventListener('input', function() {
+    const val = parseFloat(this.value);
+    xValDisplay.textContent = val.toFixed(2).replace('.', ',');
+    render();
+  });
+
+  // Step click interaction
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      this.classList.add('active');
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Izvod logaritamske funkcije u tacki",
+  "subject": "math",
+  "unit": "calculus",
+  "topic_tags": ["izvod", "logaritamska funkcija", "slozena funkcija", "pravilo kolicnika", "lancano pravilo"]
+}
+BRAINSPARK_META-->

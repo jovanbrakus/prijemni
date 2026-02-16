@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jednačina sa ugneždenim apsolutnim vrednostima</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: ||1 - |x|| - 1| - 2 = 0
+Find the number of real solutions.
+
+STEP 1: Rewrite the equation.
+||1 - |x|| - 1| = 2
+
+STEP 2: Substitution. Let t = |x|, where t >= 0.
+||1 - t| - 1| = 2
+
+STEP 3: Remove outer absolute value.
+|1 - t| - 1 = 2  OR  |1 - t| - 1 = -2
+
+Case A: |1 - t| - 1 = 2
+  |1 - t| = 3
+  Subcase A1: 1 - t = 3  =>  t = -2  (REJECTED: t >= 0)
+  Subcase A2: 1 - t = -3  =>  t = 4  (VALID: t >= 0)
+
+Case B: |1 - t| - 1 = -2
+  |1 - t| = -1  (IMPOSSIBLE: absolute value >= 0)
+
+So the only value is t = 4, meaning |x| = 4.
+This gives x = 4 or x = -4.
+
+TOTAL: 2 real solutions.
+
+VERIFICATION:
+x = 4: ||1 - |4|| - 1| - 2 = ||1 - 4| - 1| - 2 = |3 - 1| - 2 = 2 - 2 = 0 ✓
+x = -4: ||1 - |-4|| - 1| - 2 = ||1 - 4| - 1| - 2 = |3 - 1| - 2 = 2 - 2 = 0 ✓
+
+Additional verification: check some other candidate values.
+x = 0: ||1 - 0| - 1| - 2 = |1 - 1| - 2 = 0 - 2 = -2 ≠ 0
+x = 2: ||1 - 2| - 1| - 2 = |1 - 1| - 2 = 0 - 2 = -2 ≠ 0
+x = 1: ||1 - 1| - 1| - 2 = |0 - 1| - 2 = 1 - 2 = -1 ≠ 0
+x = 3: ||1 - 3| - 1| - 2 = |2 - 1| - 2 = 1 - 2 = -1 ≠ 0
+
+ANSWER: (C) 2
+
+GRAPH: y = ||1 - |x|| - 1|
+For visualization, we plot f(x) = ||1 - |x|| - 1| and the horizontal line y = 2.
+The function is even (symmetric about y-axis) because it depends on |x|.
+We can trace it using t = |x| >= 0:
+  g(t) = ||1 - t| - 1|
+
+For t in [0, 1]: |1-t| = 1-t, so g(t) = |1-t-1| = |-t| = t
+  => g(t) = t, rising from 0 to 1
+
+For t in [1, 2]: |1-t| = t-1, so g(t) = |t-1-1| = |t-2| = 2-t (since t <= 2)
+  => g(t) = 2-t, falling from 1 to 0
+
+For t >= 2: |1-t| = t-1, so g(t) = |t-1-1| = |t-2| = t-2 (since t >= 2)
+  => g(t) = t-2, rising from 0 onwards
+
+So the function (for x >= 0) forms a tent shape: rises to 1 at x=1, drops to 0 at x=2, then rises without bound.
+By symmetry (|x|), the graph is mirrored for x < 0.
+
+Intersection with y = 2:
+  g(t) = 2 happens only when t - 2 = 2, i.e. t = 4 (in the t >= 2 branch).
+  So x = 4 and x = -4 are the only intersections.
+  The "tent" part (0 <= t <= 2) has max value 1, so y = 2 cannot be reached there.
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h2 .icon {
+  font-size: 1.5rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #60a5fa;
+}
+
+.problem-statement p {
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 12px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.05rem;
+}
+
+.answer-option:hover {
+  border-color: #60a5fa;
+  background: #172033;
+}
+
+.answer-option.selected {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.answer-option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.15);
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.2);
+}
+
+.answer-option.incorrect {
+  border-color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.plan-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.plan-number {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+.collapsible-header {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.collapsible-header .arrow {
+  transition: transform 0.3s ease;
+  font-size: 1.2rem;
+  color: #94a3b8;
+}
+
+.collapsible-header .arrow.open {
+  transform: rotate(180deg);
+}
+
+.collapsible-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.collapsible-content.open {
+  max-height: 2000px;
+}
+
+.collapsible-inner {
+  padding-top: 16px;
+}
+
+.theory-box {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 12px;
+  border-left: 3px solid #a78bfa;
+}
+
+.theory-box h3 {
+  color: #a78bfa;
+  margin-bottom: 8px;
+  font-size: 1.05rem;
+}
+
+.canvas-container {
+  text-align: center;
+  margin: 16px 0;
+}
+
+canvas {
+  border-radius: 12px;
+  max-width: 100%;
+  background: #0c1222;
+  touch-action: none;
+}
+
+.step-card {
+  background: #0f172a;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  border-left: 3px solid #60a5fa;
+  transition: border-left-color 0.3s ease;
+  cursor: pointer;
+}
+
+.step-card:hover {
+  border-left-color: #4ade80;
+}
+
+.step-card h3 {
+  color: #60a5fa;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.step-card.highlight {
+  border-left-color: #a78bfa;
+}
+
+.step-card.highlight h3 {
+  color: #a78bfa;
+}
+
+.step-card.highlight:hover {
+  border-left-color: #4ade80;
+}
+
+.checkpoint {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px dashed #60a5fa;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 15px 0;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.checkpoint strong {
+  color: #60a5fa;
+}
+
+.formula-highlight {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+  text-align: center;
+}
+
+.key-insight {
+  border-left: 4px solid #f472b6;
+  background: rgba(244, 114, 182, 0.06);
+}
+
+.key-insight h2 {
+  color: #f472b6;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  background: rgba(74, 222, 128, 0.07);
+  text-align: center;
+}
+
+.final-answer-card .answer-display {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer-card .answer-label {
+  color: #34d399;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.pitfall {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 10px;
+  border-left: 3px solid #f87171;
+}
+
+.pitfall h4 {
+  color: #f87171;
+  margin-bottom: 6px;
+}
+
+.challenge-box {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 20px;
+  border-left: 3px solid #a78bfa;
+}
+
+.challenge-box h3 {
+  color: #a78bfa;
+  margin-bottom: 8px;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+ul, ol {
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 6px;
+}
+
+a {
+  color: #60a5fa;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 18px 16px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .step-card { padding: 16px 18px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Jednačina sa ugneždenim apsolutnim vrednostima</h1>
+  <p class="subtitle">Algebra &mdash; rešavanje jednačina sa višestrukim apsolutnim vrednostima</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2><span class="icon">📋</span> Tekst zadatka</h2>
+    <p>Broj realnih rešenja jednačine \(\big|\,|1 - |x|| - 1\big| - 2 = 0\) jednak je:</p>
+    <div class="given-grid" id="answer-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(4\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <h2><span class="icon">🗺️</span> Plan rešavanja</h2>
+    <div class="plan-step">
+      <div class="plan-number">1</div>
+      <div>Uvesti smenu \(t = |x|\) da bismo eliminisali unutrašnju apsolutnu vrednost, a zatim „ljuštiti" apsolutne vrednosti jednu po jednu, od spoljašnje ka unutrašnjoj.</div>
+    </div>
+    <div class="plan-step">
+      <div class="plan-number">2</div>
+      <div>Za svaku granu odrediti vrednosti \(t\), odbaciti nedozvoljene (\(t < 0\)), a zatim iz \(|x| = t\) prebrojati realna rešenja.</div>
+    </div>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <div class="collapsible-header" id="theory-toggle">
+      <h2><span class="icon">📐</span> Ključne formule i teoreme</h2>
+      <span class="arrow" id="theory-arrow">▼</span>
+    </div>
+    <div class="collapsible-content" id="theory-content">
+      <div class="collapsible-inner">
+        <div class="theory-box">
+          <h3>Definicija apsolutne vrednosti</h3>
+          <p>Za svako realno \(a\):</p>
+          \[|a| = \begin{cases} a, & a \geq 0 \\ -a, & a < 0 \end{cases}\]
+          <p style="margin-top:8px;">Ključno svojstvo: \(|a| \geq 0\) za svako \(a \in \mathbb{R}\).</p>
+        </div>
+        <div class="theory-box">
+          <h3>Rešavanje jednačine \(|f(x)| = c\)</h3>
+          <p>Jednačina \(|f(x)| = c\) ima:</p>
+          <ul>
+            <li>Dva slučaja: \(f(x) = c\) ili \(f(x) = -c\) &mdash; ako je \(c > 0\)</li>
+            <li>Jedno rešenje: \(f(x) = 0\) &mdash; ako je \(c = 0\)</li>
+            <li>Nema rešenja &mdash; ako je \(c < 0\)</li>
+          </ul>
+        </div>
+        <div class="theory-box">
+          <h3>Svojstvo parnosti</h3>
+          <p>Funkcija \(f(x) = g(|x|)\) je parna, tj. \(f(-x) = f(x)\). Njen grafik je simetričan u odnosu na \(y\)-osu. Ako je \(t_0 > 0\) rešenje po \(t = |x|\), onda daje dva rešenja: \(x = t_0\) i \(x = -t_0\).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISUAL AID / INTERACTIVE DIAGRAM -->
+  <div class="card">
+    <h2><span class="icon">📊</span> Interaktivni grafik</h2>
+    <p style="color:#94a3b8;margin-bottom:12px;">Grafik funkcije \(y = \big|\,|1 - |x|| - 1\big|\) i horizontalna prava \(y = 2\). Presečne tačke su rešenja jednačine.</p>
+    <div class="canvas-container">
+      <canvas id="graph-canvas" width="800" height="500"></canvas>
+    </div>
+    <p class="drag-hint">Prevucite miša levo-desno da istražite vrednosti funkcije. Dodirnite na mobilnom uređaju.</p>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <h2><span class="icon">📝</span> Rešenje korak po korak</h2>
+
+    <div class="step-card">
+      <h3>Korak 1: Prepisivanje jednačine</h3>
+      <p>Polazna jednačina je:</p>
+      \[\big|\,|1 - |x|| - 1\big| - 2 = 0\]
+      <p>Prebacimo \(2\) na desnu stranu:</p>
+      \[\big|\,|1 - |x|| - 1\big| = 2\]
+    </div>
+
+    <div class="step-card">
+      <h3>Korak 2: Smena \(t = |x|\)</h3>
+      <p>Uvedimo smenu \(t = |x|\), gde je \(t \geq 0\). Jednačina postaje:</p>
+      \[\big|\,|1 - t| - 1\big| = 2\]
+      <p style="color:#94a3b8;">Napomena: svako pozitivno \(t\) daje dva rešenja za \(x\) (\(x = t\) i \(x = -t\)), dok \(t = 0\) daje samo jedno (\(x = 0\)).</p>
+    </div>
+
+    <div class="step-card highlight">
+      <h3>Korak 3: Uklanjanje spoljašnje apsolutne vrednosti</h3>
+      <p>Jednačina \(|A| = 2\) važi kada je \(A = 2\) ili \(A = -2\). Ovde je \(A = |1 - t| - 1\), pa:</p>
+      <p><strong>Slučaj A:</strong></p>
+      \[|1 - t| - 1 = 2 \quad \Rightarrow \quad |1 - t| = 3\]
+      <p><strong>Slučaj B:</strong></p>
+      \[|1 - t| - 1 = -2 \quad \Rightarrow \quad |1 - t| = -1\]
+      <p>Slučaj B je <strong>nemoguć</strong>, jer apsolutna vrednost nikada nije negativna (\(|1-t| \geq 0 > -1\)).</p>
+      <details class="checkpoint" style="margin:15px 0;">
+        <summary><strong>Proveri sebe:</strong> Zašto jednačina \(|1 - t| = -1\) nema rešenja?</summary>
+        <p style="margin-top:8px;">Zato što apsolutna vrednost bilo kog realnog broja je uvek nenegativan broj (\(\geq 0\)). Nijedan realan broj ne može imati apsolutnu vrednost jednaku \(-1\).</p>
+      </details>
+    </div>
+
+    <div class="step-card highlight">
+      <h3>Korak 4: Rešavanje slučaja A &mdash; \(|1 - t| = 3\)</h3>
+      <p>Apsolutna vrednost jednaka 3 daje dva podslučaja:</p>
+      <p><strong>Podslučaj A1:</strong> \(1 - t = 3\)</p>
+      \[t = 1 - 3 = -2\]
+      <p>Pošto je \(t = |x| \geq 0\), vrednost \(t = -2\) je <strong>nedozvoljena</strong>. Odbacujemo je.</p>
+      <p style="margin-top:12px;"><strong>Podslučaj A2:</strong> \(1 - t = -3\)</p>
+      \[t = 1 + 3 = 4\]
+      <p>Vrednost \(t = 4 \geq 0\) je <strong>dozvoljena</strong>.</p>
+    </div>
+
+    <div class="step-card">
+      <h3>Korak 5: Vraćanje na promenljivu \(x\)</h3>
+      <p>Jedino rešenje za \(t\) je \(t = 4\), pa:</p>
+      \[|x| = 4\]
+      <p>Odavde dobijamo:</p>
+      \[x = 4 \quad \text{ili} \quad x = -4\]
+      <p>Dakle, jednačina ima tačno <strong>2 realna rešenja</strong>.</p>
+    </div>
+
+    <div class="step-card">
+      <h3>Korak 6: Verifikacija</h3>
+      <p>Proverimo oba rešenja uvrštavanjem u polaznu jednačinu:</p>
+      <p><strong>Za \(x = 4\):</strong></p>
+      \[\big|\,|1 - |4|| - 1\big| - 2 = \big|\,|1-4| - 1\big| - 2 = |3 - 1| - 2 = 2 - 2 = 0 \;\checkmark\]
+      <p><strong>Za \(x = -4\):</strong></p>
+      \[\big|\,|1 - |-4|| - 1\big| - 2 = \big|\,|1-4| - 1\big| - 2 = |3 - 1| - 2 = 2 - 2 = 0 \;\checkmark\]
+      <details class="checkpoint" style="margin:15px 0;">
+        <summary><strong>Proveri sebe:</strong> Da li \(x = 0\) zadovoljava jednačinu?</summary>
+        <p style="margin-top:8px;">Ne. Za \(x = 0\): \(\big|\,|1 - 0| - 1\big| - 2 = |1 - 1| - 2 = 0 - 2 = -2 \neq 0\).</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="card key-insight">
+    <h2><span class="icon">💡</span> Ključni uvid</h2>
+    <p>Ugneždene apsolutne vrednosti se „ljušte" <strong>od spoljašnje ka unutrašnjoj</strong>, kao slojevi luka. Na svakom nivou jednačina \(|A| = c\) daje dva slučaja (ako je \(c > 0\)), ali mnogi od tih slučajeva se eliminišu uslovom \(t \geq 0\) ili nemogućnošću da apsolutna vrednost bude negativna.</p>
+    <p style="margin-top:10px;">U ovom zadatku, od 4 potencijalna podslučaja, samo jedan je preživeo sve uslove &mdash; a simetrija funkcije po \(|x|\) je tu jednu vrednost \(t\) udvostručila u dva rešenja za \(x\).</p>
+    <div class="formula-highlight" style="margin-top:16px;">
+      \[x = -4 \quad \text{i} \quad x = 4\]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="card final-answer-card">
+    <div class="answer-label">Konačan odgovor</div>
+    <div class="answer-display">2 realna rešenja</div>
+    <p style="font-size:1.15rem;color:#34d399;font-weight:600;">Tačan odgovor je (C)</p>
+    <p style="color:#94a3b8;margin-top:8px;font-size:0.95rem;">Verifikacija: Oba rešenja (\(x = 4\) i \(x = -4\)) zadovoljavaju polaznu jednačinu, a grafik potvrđuje da postoje tačno dve presečne tačke sa pravom \(y = 2\).</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <h2><span class="icon">⚠️</span> Najčešće greške</h2>
+    <div class="pitfall">
+      <h4>Greška 1: Zaboraviti uslov \(t \geq 0\)</h4>
+      <p>Pri rešavanju jednačine \(|1-t| = 3\) dobijamo \(t = -2\) i \(t = 4\). Ako se ne odbaci \(t = -2\) (jer je \(t = |x| \geq 0\)), pogrešno se dobija da postoje još dva „fantomska" rešenja \(x = \pm 2\), što bi dalo odgovor (E) 4 umesto tačnog (C) 2.</p>
+    </div>
+    <div class="pitfall">
+      <h4>Greška 2: Pogrešno ljuštenje apsolutnih vrednosti</h4>
+      <p>Rad sa ugneždenim apsolutnim vrednostima zahteva sistematičnost. Česta greška je preskakanje slučajeva ili pogrešno postavljanje jednačina pri uklanjanju apsolutne vrednosti. Uvek krenite od spoljašnje i radite ka unutrašnjoj.</p>
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card">
+    <h2><span class="icon">🏆</span> Dodatni izazov</h2>
+    <div class="challenge-box">
+      <h3>Probaj sam/sama!</h3>
+      <p>Koliko realnih rešenja ima jednačina \(\big|\,|2 - |x|| - 3\big| = 1\)?</p>
+      <details style="margin:15px 0;">
+        <summary style="cursor:pointer;color:#a78bfa;font-weight:600;">Savet</summary>
+        <p style="margin-top:8px;color:#94a3b8;">Primeni istu tehniku: postavi \(t = |x|\), ljušti apsolutne vrednosti, reši po \(t\), odbaci negativne vrednosti, i na kraju za svako pozitivno \(t\) dobijaš dva rešenja za \(x\).</p>
+      </details>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // =============================================
+  // ANSWER OPTION INTERACTIVITY
+  // =============================================
+  const correctOption = 'C';
+  const options = document.querySelectorAll('.answer-option');
+  options.forEach(opt => {
+    opt.addEventListener('click', () => {
+      options.forEach(o => {
+        o.classList.remove('selected', 'correct', 'incorrect');
+      });
+      const chosen = opt.getAttribute('data-option');
+      if (chosen === correctOption) {
+        opt.classList.add('correct');
+      } else {
+        opt.classList.add('incorrect');
+        options.forEach(o => {
+          if (o.getAttribute('data-option') === correctOption) {
+            o.classList.add('correct');
+          }
+        });
+      }
+    });
+  });
+
+  // =============================================
+  // THEORY COLLAPSIBLE
+  // =============================================
+  const theoryToggle = document.getElementById('theory-toggle');
+  const theoryContent = document.getElementById('theory-content');
+  const theoryArrow = document.getElementById('theory-arrow');
+  theoryToggle.addEventListener('click', () => {
+    theoryContent.classList.toggle('open');
+    theoryArrow.classList.toggle('open');
+  });
+
+  // =============================================
+  // STEP CARD CLICK HIGHLIGHT
+  // =============================================
+  const stepCards = document.querySelectorAll('.step-card');
+  stepCards.forEach(card => {
+    card.addEventListener('click', () => {
+      stepCards.forEach(c => c.style.borderLeftColor = '');
+      card.style.borderLeftColor = '#4ade80';
+    });
+  });
+
+  // =============================================
+  // INTERACTIVE GRAPH CANVAS
+  // =============================================
+  const canvas = document.getElementById('graph-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Coordinate system bounds
+  const xMin = -7, xMax = 7;
+  const yMin = -0.8, yMax = 5.5;
+
+  // Transforms (Y-axis pointing UP)
+  const toCanvasX = (x) => (x - xMin) / (xMax - xMin) * W;
+  const toCanvasY = (y) => H - (y - yMin) / (yMax - yMin) * H;
+  const toMathX = (px) => xMin + (px / W) * (xMax - xMin);
+  const toMathY = (py) => yMin + (1 - py / H) * (yMax - yMin);
+
+  // The function f(x) = ||1 - |x|| - 1|
+  function f(x) {
+    return Math.abs(Math.abs(1 - Math.abs(x)) - 1);
+  }
+
+  // Hover tracking
+  let hoverX = null;
+
+  function draw() {
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#1a2438';
+    ctx.lineWidth = 1;
+    for (let gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(gx), 0);
+      ctx.lineTo(toCanvasX(gx), H);
+      ctx.stroke();
+    }
+    for (let gy = Math.ceil(yMin); gy <= Math.floor(yMax); gy++) {
+      ctx.beginPath();
+      ctx.moveTo(0, toCanvasY(gy));
+      ctx.lineTo(W, toCanvasY(gy));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    // x-axis
+    if (yMin <= 0 && yMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(0, toCanvasY(0));
+      ctx.lineTo(W, toCanvasY(0));
+      ctx.stroke();
+    }
+    // y-axis
+    if (xMin <= 0 && xMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(0), 0);
+      ctx.lineTo(toCanvasX(0), H);
+      ctx.stroke();
+    }
+
+    // Axis tick labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      if (gx === 0) continue;
+      ctx.fillText(gx.toString(), toCanvasX(gx), toCanvasY(0) + 16);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = Math.ceil(yMin); gy <= Math.floor(yMax); gy++) {
+      if (gy === 0) continue;
+      ctx.fillText(gy.toString(), toCanvasX(0) - 8, toCanvasY(gy) + 4);
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('x', W - 20, toCanvasY(0) - 10);
+    ctx.fillText('y', toCanvasX(0) + 10, 18);
+
+    // Horizontal line y = 2
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.moveTo(0, toCanvasY(2));
+    ctx.lineTo(W, toCanvasY(2));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label for y = 2
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('y = 2', W - 12, toCanvasY(2) - 8);
+
+    // Draw the function y = ||1 - |x|| - 1|
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    let started = false;
+    for (let px = 0; px <= W; px += 1) {
+      const mx = toMathX(px);
+      const my = f(mx);
+      const cy = toCanvasY(my);
+      if (!started) {
+        ctx.moveTo(px, cy);
+        started = true;
+      } else {
+        ctx.lineTo(px, cy);
+      }
+    }
+    ctx.stroke();
+
+    // Label for the function
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('y = ||1 - |x|| - 1|', toCanvasX(2.5), toCanvasY(f(2.5)) - 14);
+
+    // Intersection points: x = -4 and x = 4
+    const intersections = [-4, 4];
+    intersections.forEach(ix => {
+      const iy = f(ix);
+      const cx = toCanvasX(ix);
+      const cy = toCanvasY(iy);
+
+      // Glow
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18);
+      grad.addColorStop(0, 'rgba(74, 222, 128, 0.4)');
+      grad.addColorStop(1, 'rgba(74, 222, 128, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 18, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = '#0c1222';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('(' + ix + ', ' + iy + ')', cx, cy - 16);
+    });
+
+    // Hover crosshair and value readout
+    if (hoverX !== null) {
+      const mx = toMathX(hoverX);
+      const my = f(mx);
+      const cx = toCanvasX(mx);
+      const cy = toCanvasY(my);
+
+      // Vertical line
+      ctx.strokeStyle = 'rgba(226, 232, 240, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(cx, 0);
+      ctx.lineTo(cx, H);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Dot on curve
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Value readout
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      const xStr = mx.toFixed(2).replace('.', ',');
+      const yStr = my.toFixed(2).replace('.', ',');
+      const labelX = cx + 12;
+      const labelY = cy - 12;
+      ctx.fillText('x = ' + xStr + '  y = ' + yStr, labelX, labelY);
+    }
+  }
+
+  draw();
+
+  // Mouse interaction
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    hoverX = (e.clientX - rect.left) / rect.width * W;
+    draw();
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    hoverX = null;
+    draw();
+  });
+
+  // Touch interaction
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    hoverX = (touch.clientX - rect.left) / rect.width * W;
+    draw();
+  });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    hoverX = (touch.clientX - rect.left) / rect.width * W;
+    draw();
+  });
+
+  canvas.addEventListener('touchend', () => {
+    hoverX = null;
+    draw();
+  });
+
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Jednačina sa ugneždenim apsolutnim vrednostima","subject":"math","unit":"algebra","topic_tags":["apsolutna vrednost","ugneždene apsolutne vrednosti","broj rešenja jednačine","smena promenljive"]}
+BRAINSPARK_META-->

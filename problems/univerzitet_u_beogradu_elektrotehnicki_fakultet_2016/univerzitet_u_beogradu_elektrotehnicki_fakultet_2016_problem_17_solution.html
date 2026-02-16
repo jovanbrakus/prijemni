@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspored knjiga na polici - Kombinatorika</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: There are 5 English books, 7 Spanish books, and 8 French books on a shelf.
+  All books are distinct. In how many ways can we arrange them if all French books
+  must be adjacent (next to each other)?
+
+  Total books: 5 + 7 + 8 = 20
+
+  Key technique: Grouping / Block method in permutations.
+  When a subset of objects must stay together, treat them as a single "super-object" (block).
+
+  Step 1: Treat the 8 French books as a single block.
+    Now we have:
+    - 5 individual English books
+    - 7 individual Spanish books
+    - 1 block of French books
+    Total objects = 5 + 7 + 1 = 13
+
+  Step 2: Arrange these 13 objects.
+    Since all books are distinct (and the English/Spanish books are not constrained),
+    the 13 objects can be arranged in 13! ways.
+
+  Step 3: Arrange the French books within the block.
+    The 8 French books within the block can be arranged among themselves in 8! ways.
+
+  Step 4: Apply the multiplication principle.
+    Total arrangements = 13! * 8!
+
+  Answer: (A) 13! * 8!
+
+  Verification:
+  - Without any constraint, all 20 books can be arranged in 20! ways.
+  - With the constraint, we "lose" the freedom of placing French books in arbitrary
+    positions but gain the block treatment. The block reduces 8 positions to 1,
+    so from 20 objects we go to 13. The internal arrangement of the block gives 8!.
+  - 13! * 8! < 20!, which makes sense since we're restricting arrangements.
+  - Numerically: 13! = 6,227,020,800 and 8! = 40,320
+    so 13! * 8! = 251,065,318,368,000 which is much less than 20! = 2,432,902,008,176,640,000.
+    This confirms the constraint reduces the count significantly.
+
+  Why other answers are wrong:
+  - (B) 13 * 8!: This only counts the position of the block (13 choices) and the
+    internal arrangement (8!), but forgets to arrange the other 12 individual books.
+    Should be 13! not 13.
+  - (C) 13 * C(12,5) + 7! * 8!: This expression doesn't correspond to any valid
+    combinatorial interpretation for this problem.
+  - (D) C(20,7) * C(13,8) * 5!: This seems to try choosing positions for each language
+    group, but it doesn't properly account for the adjacency constraint on French books
+    or the arrangement within groups.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-text {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: #e2e8f0;
+}
+
+.highlight {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.given-item {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 14px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+  transition: border-color 0.2s, background 0.2s;
+  flex: 1;
+  min-width: 140px;
+}
+
+.answer-option:hover {
+  border-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.08);
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card .card-title {
+  color: #a78bfa;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 12px 16px;
+  background: rgba(96, 165, 250, 0.06);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 10px;
+  list-style: none;
+  user-select: none;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: '\25B6';
+  display: inline-block;
+  margin-right: 8px;
+  transition: transform 0.2s;
+  font-size: 0.8rem;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .theory-content {
+  padding: 16px 20px;
+  margin-top: 8px;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 10px;
+  border: 1px solid #334155;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  line-height: 1.8;
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.theory-content li::before {
+  content: '\2022';
+  color: #a78bfa;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+canvas {
+  border-radius: 12px;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.step:hover {
+  background: rgba(96, 165, 250, 0.04);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 10px;
+  line-height: 1.7;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint .checkpoint-content {
+  padding: 14px 18px;
+  margin-top: 6px;
+  background: rgba(52, 211, 153, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  color: #a7f3d0;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border-color: rgba(96, 165, 250, 0.3);
+  text-align: center;
+}
+
+.insight-card .card-title {
+  justify-content: center;
+  color: #a78bfa;
+}
+
+.insight-formula {
+  font-size: 1.5rem;
+  margin: 20px 0;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.final-answer-card {
+  border-color: #4ade80;
+  border-width: 2px;
+  text-align: center;
+}
+
+.final-answer-card .card-title {
+  justify-content: center;
+  color: #4ade80;
+}
+
+.final-answer-value {
+  font-size: 2rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 20px 0;
+}
+
+.options-review {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-review-item {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: rgba(30, 41, 59, 0.6);
+  min-width: 130px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.option-review-item.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.option-review-item.incorrect {
+  border-color: #475569;
+  color: #64748b;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  text-align: left;
+}
+
+.pitfall-card {
+  border-left: 3px solid #e09468;
+}
+
+.pitfall-card .card-title {
+  color: #e09468;
+}
+
+.pitfall-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-card li {
+  padding: 8px 0;
+  color: #cbd5e1;
+  line-height: 1.7;
+}
+
+.pitfall-card li::before {
+  content: '\26A0';
+  margin-right: 10px;
+  color: #e09468;
+}
+
+.challenge-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.challenge-card .card-title {
+  color: #a78bfa;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .given-grid {
+    flex-direction: column;
+  }
+
+  .answer-option {
+    min-width: unset;
+  }
+
+  .step {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .options-review {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .option-review-item {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .final-answer-value {
+    font-size: 1.5rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Raspored knjiga na polici</h1>
+  <p class="subtitle">Kombinatorika -- permutacije sa ogranicenjem susednosti (metod bloka)</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title"><span class="icon">📋</span> Postavka zadatka</h2>
+    <p class="problem-text">
+      Na polici se nalazi <span class="highlight">5 knjiga na engleskom</span>,
+      <span class="highlight-pink">7 na spanskom</span> i
+      <span class="highlight-green">8 na francuskom jeziku</span>.
+      Sve knjige su medusobno razlicite.
+      Na koliko nacina mozemo rasporediti knjige ako sve napisane na francuskom jeziku
+      moraju biti <strong>jedna do druge</strong>?
+    </p>
+
+    <div class="given-grid" style="margin-bottom: 20px;">
+      <div class="given-item">
+        <div class="label">Engleske</div>
+        <div class="value" style="color: #60a5fa;">5</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Spanske</div>
+        <div class="value" style="color: #f472b6;">7</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Francuske</div>
+        <div class="value" style="color: #4ade80;">8</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Ukupno</div>
+        <div class="value">20</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(13! \cdot 8!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(13 \cdot 8!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(13 \cdot \binom{12}{5} + 7! \cdot 8!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\binom{20}{7} \cdot \binom{13}{8} \cdot 5!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">Nijedan od ponudenih</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2 class="card-title"><span class="icon">🧭</span> Plan resavanja</h2>
+    <p>Koristicemo <strong>metod bloka</strong> (grupni metod): posto sve francuske knjige moraju biti jedna do druge, tretiracemo ih kao jedan objekat. Zatim cemo prebrojati rasporede tih objekata i pomnoziti sa brojem unutrasnjih rasporeda francuskog bloka.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>📐 Kljucne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Permutacija bez ponavljanja:</strong> Broj nacina da se rasporedi \(n\) razlicitih objekata u niz je \(n!\) (n faktorijel).</li>
+          <li><strong>Princip mnozenja:</strong> Ako se jedna radnja moze izvrsiti na \(m\) nacina, a druga nezavisno od nje na \(n\) nacina, onda se obe radnje mogu izvrsiti na \(m \cdot n\) nacina.</li>
+          <li><strong>Metod bloka (grupni metod):</strong> Kada grupa objekata mora biti zajedno, tretiramo ih kao jedan "super-objekat". Ukupni broj rasporeda je \(\text{(rasporedi blokova)} \times \text{(rasporedi unutar bloka)}\).</li>
+          <li><strong>Primer:</strong> Ako imamo \(n\) objekata i \(k\) od njih moraju biti zajedno, imamo \((n - k + 1)!\) rasporeda objekata i \(k!\) rasporeda unutar bloka, sto daje \((n - k + 1)! \cdot k!\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Canvas -->
+  <div class="card canvas-card">
+    <h2 class="card-title"><span class="icon">📊</span> Vizuelni prikaz</h2>
+    <canvas id="bookshelfCanvas" width="900" height="420"></canvas>
+    <p class="canvas-hint">Gornji red: 20 pojedinacnih knjiga. Donji red: 13 objekata nakon grupisanja francuskih knjiga u blok.</p>
+    <div style="margin-top: 12px;">
+      <button id="toggleBtn" style="background: linear-gradient(135deg, #60a5fa, #a78bfa); color: #0f172a; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95rem;">Prikazi animaciju</button>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">📝</span> Resenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Odredimo ukupan broj knjiga</h3>
+        <p>Na polici imamo knjige na tri jezika. Prebrojimo ih:</p>
+        <div class="math-block">
+          \[ 5 + 7 + 8 = 20 \text{ knjiga ukupno} \]
+        </div>
+        <p class="step-note">Sve knjige su medusobno razlicite, sto znaci da svaka knjiga ima svoj jedinstven identitet.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Primenimo metod bloka na francuske knjige</h3>
+        <p>Posto svih 8 francuskih knjiga moraju biti jedna do druge, zamislimo da ih "zalepimo" u jednu veliku kutiju -- jedan <strong>blok</strong>.</p>
+        <p>Sada umesto 20 pojedinacnih knjiga, imamo:</p>
+        <div class="math-block">
+          \[ \underbrace{5}_{\text{engleske}} + \underbrace{7}_{\text{spanske}} + \underbrace{1}_{\text{francuski blok}} = 13 \text{ objekata} \]
+        </div>
+        <p class="step-note">Kljucna ideja: 8 knjiga postaje 1 objekat. Time se ukupan broj objekata smanjuje sa 20 na 13.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko objekata rasporedujemo na polici?</summary>
+      <div class="checkpoint-content">
+        <strong>13 objekata</strong> -- 5 engleskih knjiga, 7 spanskih knjiga i 1 francuski blok.
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Rasporedimo 13 objekata na polici</h3>
+        <p>Svih 13 objekata su razliciti (svaka engleska i spanska knjiga je jedinstvena, a francuski blok je poseban objekat). Broj nacina da ih poredamo u niz je:</p>
+        <div class="math-block">
+          \[ 13! \]
+        </div>
+        <p class="step-note">To je permutacija 13 razlicitih objekata.</p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Rasporedimo knjige unutar francuskog bloka</h3>
+        <p>Unutar bloka, 8 francuskih knjiga mogu biti poredjane na razlicite nacine. Posto su sve razlicite, broj rasporeda unutar bloka je:</p>
+        <div class="math-block">
+          \[ 8! \]
+        </div>
+        <p class="step-note">Ovo je nezavisno od rasporeda bloka na polici -- za svaku poziciju bloka, unutrasnji raspored se moze menjati.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zasto mnozimo 13! sa 8!, a ne sabiramo?</summary>
+      <div class="checkpoint-content">
+        Koristimo <strong>princip mnozenja</strong>: za <em>svaki</em> od 13! rasporeda objekata na polici, mozemo <em>nezavisno</em> rasporediti 8 francuskih knjiga unutar bloka na 8! nacina. Posto su ove dve odluke nezavisne, ukupan broj kombinacija je proizvod.
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Primenimo princip mnozenja</h3>
+        <p>Ukupan broj rasporeda je proizvod broja rasporeda objekata na polici i broja rasporeda unutar bloka:</p>
+        <div class="math-block">
+          \[ \text{Ukupno} = 13! \cdot 8! \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Da li je 13! &middot; 8! manje od 20!?</summary>
+      <div class="checkpoint-content">
+        <strong>Da!</strong> Bez ogranicenja, 20 knjiga bi se moglo rasporediti na \(20!\) nacina. Sa ogranicenjem (francuske zajedno), dobijamo manje mogucnosti: \(13! \cdot 8! \approx 2{,}51 \times 10^{14}\), dok je \(20! \approx 2{,}43 \times 10^{18}\). To je oko 10.000 puta manje -- sto ima smisla jer ogranicenje znacajno suzava izbor.
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2 class="card-title"><span class="icon">💡</span> Kljucni uvid</h2>
+    <p style="color: #cbd5e1; margin-bottom: 12px;">Metod bloka pretvara problem sa ogranicenjem u dva jednostavna koraka:</p>
+    <div class="insight-formula">
+      \[ \boxed{13! \cdot 8!} \]
+    </div>
+    <p style="color: #94a3b8; font-size: 0.95rem;">Raspored 13 objekata na polici \(\times\) raspored 8 knjiga unutar bloka</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2 class="card-title"><span class="icon">✅</span> Konacan odgovor</h2>
+    <div class="final-answer-value">(A) \(13! \cdot 8!\)</div>
+
+    <div class="options-review">
+      <div class="option-review-item correct">(A) \(13! \cdot 8!\)</div>
+      <div class="option-review-item incorrect">(B) \(13 \cdot 8!\)</div>
+      <div class="option-review-item incorrect">(C) \(13 \cdot \binom{12}{5} + 7! \cdot 8!\)</div>
+      <div class="option-review-item incorrect">(D) \(\binom{20}{7} \cdot \binom{13}{8} \cdot 5!\)</div>
+      <div class="option-review-item incorrect">(E) Nijedan</div>
+    </div>
+
+    <div class="verification-note">
+      <strong>Provera:</strong> Bez ogranicenja bi bilo \(20!\) rasporeda. Sa ogranicenjem da su francuske knjige zajedno: \(13! \cdot 8!\). Odnos je \(\frac{20!}{13! \cdot 8!} = \binom{20}{8} \cdot \frac{12!}{12!}\)... zapravo, \(\frac{20!}{13! \cdot 8!} = \frac{20!}{13! \cdot 8!}\), sto je veliki broj, potvrdujuci da ogranicenje znacajno smanjuje broj mogucnosti. Rezultat \(13! \cdot 8!\) odgovara opciji (A).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2 class="card-title"><span class="icon">⚠️</span> Ceste greske</h2>
+    <ul>
+      <li><strong>Zaboraviti raspored unutar bloka:</strong> Neki studenti zapamte da treba napraviti blok od francuskih knjiga, ali zaborave da se tih 8 knjiga unutar bloka takodje mogu rasporediti na \(8!\) nacina. Time bi dobili samo \(13!\), sto je pogresno.</li>
+      <li><strong>Koristiti 13 umesto 13!:</strong> Greska u opciji (B) -- broj 13 predstavlja samo koliko pozicija blok moze zauzeti, ali ne uzima u obzir redosled preostalih 12 knjiga. Tih 12 knjiga se rasporeduju na \(12!\) nacina, pa je ukupno \(13 \cdot 12! \cdot 8! = 13! \cdot 8!\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2 class="card-title"><span class="icon">🚀</span> Dodatni izazov</h2>
+    <p style="color: #cbd5e1; margin-bottom: 12px;">Na koliko nacina mozemo rasporediti istih 20 knjiga ako sve engleske knjige moraju biti zajedno <strong>i</strong> sve francuske knjige moraju biti zajedno (ali spanske mogu biti bilo gde)?</p>
+    <details>
+      <summary>Hint</summary>
+      <div class="theory-content">
+        <p>Sada imamo dva bloka: engleski blok i francuski blok. Ukupan broj objekata: \(7 + 1 + 1 = 9\). Rasporedimo ih na \(9!\) nacina, pomnozimo sa \(5!\) (unutrasnji raspored engleskog bloka) i \(8!\) (unutrasnji raspored francuskog bloka). Odgovor: \(9! \cdot 5! \cdot 8!\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('bookshelfCanvas');
+  const ctx = canvas.getContext('2d');
+  const toggleBtn = document.getElementById('toggleBtn');
+
+  let animating = false;
+  let animProgress = 0;
+  let animId = null;
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const colors = {
+    english: '#60a5fa',
+    spanish: '#f472b6',
+    french: '#4ade80',
+    block: '#4ade80',
+    bg: '#0c1222',
+    shelf: '#334155',
+    text: '#e2e8f0',
+    muted: '#64748b',
+    blockBorder: '#22c55e'
+  };
+
+  function drawBook(x, y, w, h, color, label, alpha) {
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+
+    const r = 4;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    ctx.fill();
+
+    ctx.globalAlpha = alpha * 0.3;
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.roundRect(x + 2, y + 2, w - 4, h - 4, r - 1);
+    ctx.fill();
+
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.font = 'bold 10px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x + w / 2, y + h / 2);
+
+    ctx.globalAlpha = 1;
+  }
+
+  function drawBlockBracket(x, y, w, h, alpha) {
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = colors.blockBorder;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([6, 4]);
+    const r = 8;
+    ctx.beginPath();
+    ctx.roundRect(x - 4, y - 4, w + 8, h + 8, r);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = colors.blockBorder;
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BLOK', x + w / 2, y - 14);
+
+    ctx.globalAlpha = 1;
+  }
+
+  function drawShelf(x, y, w) {
+    ctx.fillStyle = colors.shelf;
+    ctx.fillRect(x - 5, y, w + 10, 4);
+
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(x - 5, y, w + 10, 1.5);
+  }
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  }
+
+  function draw(progress) {
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.fillStyle = colors.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const bookW = 36;
+    const bookH = 60;
+    const gap = 4;
+    const totalW1 = 20 * bookW + 19 * gap;
+    const startX1 = (W - totalW1) / 2;
+    const y1 = 50;
+
+    ctx.fillStyle = colors.text;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Pre grupisanja: 20 knjiga', startX1, y1 - 10);
+
+    drawShelf(startX1, y1 + bookH, totalW1);
+
+    const books = [];
+    for (let i = 0; i < 5; i++) {
+      books.push({ color: colors.english, label: 'E' + (i + 1), type: 'eng' });
+    }
+    for (let i = 0; i < 7; i++) {
+      books.push({ color: colors.spanish, label: 'S' + (i + 1), type: 'spa' });
+    }
+    for (let i = 0; i < 8; i++) {
+      books.push({ color: colors.french, label: 'F' + (i + 1), type: 'fra' });
+    }
+
+    for (let i = 0; i < 20; i++) {
+      const bx = startX1 + i * (bookW + gap);
+      drawBook(bx, y1, bookW, bookH, books[i].color, books[i].label, 1);
+    }
+
+    const t = easeInOut(Math.min(progress, 1));
+
+    const y2 = 230;
+    const blockInternalW = 8 * bookW + 7 * gap;
+
+    const totalW2 = 12 * bookW + 11 * gap + gap + bookW + 20;
+    const startX2 = (W - (12 * (bookW + gap) + gap + blockInternalW + 20)) / 2;
+
+    ctx.globalAlpha = t;
+    ctx.fillStyle = colors.text;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Posle grupisanja: 13 objekata (5 engleskih + 7 spanskih + 1 blok)', startX2, y2 - 10);
+    ctx.globalAlpha = 1;
+
+    const shelfW2 = 12 * (bookW + gap) + gap + blockInternalW + 20;
+    if (t > 0) {
+      ctx.globalAlpha = t;
+      drawShelf(startX2, y2 + bookH, shelfW2);
+      ctx.globalAlpha = 1;
+    }
+
+    for (let i = 0; i < 12; i++) {
+      const srcX = startX1 + i * (bookW + gap);
+      const dstX = startX2 + i * (bookW + gap);
+      const bx = lerp(srcX, dstX, t);
+      const by = lerp(y1, y2, t);
+
+      drawBook(bx, by, bookW, bookH, books[i].color, books[i].label, 1);
+    }
+
+    const blockX = startX2 + 12 * (bookW + gap) + gap + 10;
+    for (let i = 0; i < 8; i++) {
+      const srcX = startX1 + (12 + i) * (bookW + gap);
+      const dstX = blockX + i * (bookW + gap);
+      const bx = lerp(srcX, dstX, t);
+      const by = lerp(y1, y2, t);
+
+      drawBook(bx, by, bookW, bookH, colors.french, books[12 + i].label, 1);
+    }
+
+    if (t > 0.3) {
+      const bracketAlpha = Math.min((t - 0.3) / 0.3, 1);
+      drawBlockBracket(blockX, y2, blockInternalW, bookH, bracketAlpha);
+    }
+
+    const y3 = 340;
+    if (t > 0.6) {
+      const formulaAlpha = Math.min((t - 0.6) / 0.4, 1);
+      ctx.globalAlpha = formulaAlpha;
+
+      ctx.fillStyle = '#a78bfa';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Raspored 13 objekata', W / 2 - 150, y3);
+      ctx.fillText('\u00D7', W / 2, y3);
+      ctx.fillText('Raspored 8 knjiga u bloku', W / 2 + 160, y3);
+
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = 'bold 22px Courier New, monospace';
+      ctx.fillText('13!', W / 2 - 150, y3 + 30);
+      ctx.fillText('\u00D7', W / 2, y3 + 30);
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText('8!', W / 2 + 160, y3 + 30);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 20px Courier New, monospace';
+      ctx.fillText('= 13! \u00B7 8!', W / 2, y3 + 65);
+
+      ctx.globalAlpha = 1;
+    }
+
+    // Legend
+    ctx.globalAlpha = 0.9;
+    const legendX = W - 200;
+    const legendY = y1 + bookH + 30;
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = colors.english;
+    ctx.fillRect(legendX, legendY, 14, 14);
+    ctx.fillStyle = colors.text;
+    ctx.fillText('Engleske (5)', legendX + 20, legendY + 11);
+
+    ctx.fillStyle = colors.spanish;
+    ctx.fillRect(legendX, legendY + 22, 14, 14);
+    ctx.fillStyle = colors.text;
+    ctx.fillText('Spanske (7)', legendX + 20, legendY + 33);
+
+    ctx.fillStyle = colors.french;
+    ctx.fillRect(legendX, legendY + 44, 14, 14);
+    ctx.fillStyle = colors.text;
+    ctx.fillText('Francuske (8)', legendX + 20, legendY + 55);
+
+    ctx.globalAlpha = 1;
+  }
+
+  draw(0);
+
+  function animate() {
+    if (!animating) return;
+    animProgress += 0.008;
+    if (animProgress >= 1) {
+      animProgress = 1;
+      animating = false;
+      toggleBtn.textContent = 'Ponovo prikazi';
+    }
+    draw(animProgress);
+    if (animating) {
+      animId = requestAnimationFrame(animate);
+    }
+  }
+
+  toggleBtn.addEventListener('click', function() {
+    if (animating) {
+      animating = false;
+      if (animId) cancelAnimationFrame(animId);
+      toggleBtn.textContent = 'Prikazi animaciju';
+      draw(0);
+      animProgress = 0;
+    } else {
+      animProgress = 0;
+      animating = true;
+      toggleBtn.textContent = 'Zaustavi';
+      animate();
+    }
+  });
+
+  // Step click highlight
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) {
+        s.style.borderLeftColor = 'transparent';
+        s.style.background = 'transparent';
+      });
+      step.style.borderLeftColor = '#4ade80';
+      step.style.background = 'rgba(74, 222, 128, 0.06)';
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Raspored knjiga na polici - metod bloka",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "permutacije", "metod bloka", "princip mnozenja", "faktorijel"]
+}
+BRAINSPARK_META-->

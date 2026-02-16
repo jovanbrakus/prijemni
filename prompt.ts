@@ -122,12 +122,39 @@ a. **Title & Subtitle**
 
 b. **Problem Statement** (first content section)
    - Card with h2 in accent blue: "Problem Statement" (or equivalent in target language)
+   - The problem statement card MUST have the CSS class \`problem-statement\` (in addition
+     to \`card\`) so it can be targeted programmatically, e.g. \`<div class="card problem-statement">\`
    - If the input was a screenshot: describe what was shown THOROUGHLY in text so the
      problem is fully captured without the original image
    - If text was provided: include it clearly, with key values highlighted using colored spans
    - "Given" data displayed in a responsive grid of small cards showing label, value, and unit
    - If any detail is unclear (especially from images), include an "Assumptions" card
      listing assumptions explicitly. Do not invent unreadable text.
+   - **Answer Options (mandatory for multiple-choice problems):** At the end of the problem
+     statement card, display the possible answers as a row of small cards using the
+     \`given-grid\` layout. Each answer option MUST use the CSS class \`answer-option\` (in
+     addition to \`given-item\`) and a \`data-option\` attribute with the option letter, e.g.:
+     \`<div class="given-item answer-option" data-option="A">\`
+     The label inside each option should show only the letter in parentheses — "(A)", "(B)",
+     "(C)", "(D)", "(E)" — NOT "Odgovor A" or similar. Example:
+     \`\`\`html
+     <div class="given-grid">
+       <div class="given-item answer-option" data-option="A">
+         <div class="label">(A)</div>
+         <div class="value">\\(1\\)</div>
+       </div>
+       <div class="given-item answer-option" data-option="B">
+         <div class="label">(B)</div>
+         <div class="value">\\(-1\\)</div>
+       </div>
+       <!-- ... etc for all options -->
+     </div>
+     \`\`\`
+   - **No correct answer indication in the problem statement:** The problem statement card
+     must NOT visually mark, highlight, or otherwise reveal which answer option is correct.
+     All answer option cards must look identical. If the correct answer is known from the
+     source PDF, use it only to verify your solution in the logic scratchpad — never expose
+     it in the problem statement UI.
 
 c. **Plan** (short card)
    - 1-2 sentences: how we'll solve it, what approach we'll take.

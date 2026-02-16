@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir povrsina Sierpinski-trouglova</title>
+
+<script type="text/info" id="logic-scratchpad">
+ZADATAK: Sierpinski-trougao konstrukcija
+=========================================
+
+Polazimo od jednakostranicnog trougla povrsine P.
+
+KONSTRUKCIJA FIGURE F1:
+- Iz jednakostranicnog trougla izbacimo trougao cija su temena sredista stranica.
+- Sredisnji trougao ima stranice jednake polovini stranice polaznog trougla.
+- Povrsina je proporcionalna kvadratu stranice, pa sredisnji trougao ima povrsinu P/4.
+- F1 = polazni trougao - sredisnji trougao = P - P/4 = 3P/4
+- F1 se sastoji od 3 manja trougla, svaki povrsine P/4.
+
+PROVERA: 3 * (P/4) = 3P/4. Slaze se.
+
+KONSTRUKCIJA FIGURE F2:
+- Iz svakog od 3 trougla figure F1 izbacujemo sredisnji trougao (cija su temena sredista stranica tog trougla).
+- Svaki od 3 trouglova F1 ima povrsinu P/4.
+- Iz svakog izbacujemo trougao povrsine (P/4)/4 = P/16.
+- Preostaju 3 manja trougla od svakog, dakle ukupno 3*3 = 9 trouglova.
+- Svaki od 9 trouglova ima povrsinu P/16.
+- F2 = 9 * (P/16) = 9P/16 = (3/4)^2 * P
+
+UOCAVAMO OBRAZAC:
+- F1 = 3 * (P/4) = (3/4)^1 * P
+- F2 = 9 * (P/16) = (3/4)^2 * P
+- F3 = 27 * (P/64) = (3/4)^3 * P
+- Fn = 3^n * (P/4^n) = (3/4)^n * P
+
+ZBIR SVIH FIGURA:
+S = sum_{n=1}^{infinity} F_n
+S = sum_{n=1}^{infinity} (3/4)^n * P
+S = P * sum_{n=1}^{infinity} (3/4)^n
+
+Ovo je geometrijski red sa prvim clanom q = 3/4 i kolicnikom q = 3/4.
+Zbir beskonacnog geometrijskog reda: sum_{n=1}^{inf} q^n = q/(1-q) za |q| < 1.
+
+S = P * (3/4) / (1 - 3/4)
+S = P * (3/4) / (1/4)
+S = P * (3/4) * (4/1)
+S = P * 3
+S = 3P
+
+PROVERA:
+- |q| = 3/4 < 1, dakle red konvergira. Nije +beskonacno.
+- Parcijalni zbirovi: S1 = 3P/4 = 0.75P, S2 = 0.75P + 0.5625P = 1.3125P, ...
+  Raste ka 3P, sto je konacno.
+- Tacan odgovor: (D) 3P
+
+ALTERNATIVNA PROVERA formule za zbir geometrijskog reda:
+sum_{n=1}^{inf} r^n = r/(1-r) za |r| < 1
+r = 3/4: (3/4)/(1/4) = 3
+
+Dakle S = 3P. Odgovor (D).
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-text {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+  padding: 8px;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-note {
+  color: #34d399;
+  font-size: 1.2rem;
+  margin-top: 8px;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.final-option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.verification-note {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgba(52, 211, 153, 0.06);
+  border-left: 3px solid #34d399;
+  border-radius: 0 8px 8px 0;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid {
+    flex-direction: column;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+  .final-options {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Zbir povrsina Sierpinski-trouglova</h1>
+  <p class="subtitle">Nizovi i redovi — geometrijski red, fraktalna konstrukcija, povrsina trougla</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#x1F4CB;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      <p>Figura \( F_1 \) dobijena je tako sto je iz jednakostranicnog trougla cija je povrsina \( P \) izbacen trougao cija su temena <span style="color: #60a5fa; font-weight: 600;">sredista stranica</span> polaznog trougla. Figura \( F_1 \) se sastoji iz 3 trougla.</p>
+      <p style="margin-top: 8px;">Figura \( F_2 \) dobijena je tako sto su iz figure \( F_1 \) izbacena tri trougla cija su temena sredista stranica tri trougla koji cine figuru \( F_1 \). Figura \( F_2 \) se sastoji iz <span style="color: #a78bfa; font-weight: 600;">9 trouglova</span>.</p>
+      <p style="margin-top: 8px;">Figura \( F_{n+1} \) dobijena je tako sto je iz figure \( F_n \) izbaceno \( 3^n \) trouglova cija su temena sredista stranica \( 3^n \) trouglova koji cine figuru \( F_n \).</p>
+      <p style="margin-top: 8px;">Zbir povrsina svih figura \( F_n \), \( n \in \mathbb{N} \), dobijenih na opisani nacin, jednak je:</p>
+
+      <div class="given-grid" style="margin-top: 16px; margin-bottom: 18px;">
+        <div class="given-item">
+          <div class="label">Polazna povrsina</div>
+          <div class="value">\( P \)</div>
+        </div>
+        <div class="given-item">
+          <div class="label">Polazni oblik</div>
+          <div class="value">Jednakostranican trougao</div>
+        </div>
+        <div class="given-item">
+          <div class="label">Trazi se</div>
+          <div class="value">\( \displaystyle\sum_{n=1}^{\infty} F_n \)</div>
+        </div>
+      </div>
+
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">
+          <div class="label">(A)</div>
+          <div class="value">\( \dfrac{3}{4}P \)</div>
+        </div>
+        <div class="given-item answer-option" data-option="B">
+          <div class="label">(B)</div>
+          <div class="value">\( \dfrac{4}{3}P \)</div>
+        </div>
+        <div class="given-item answer-option" data-option="C">
+          <div class="label">(C)</div>
+          <div class="value">\( 4P \)</div>
+        </div>
+        <div class="given-item answer-option" data-option="D">
+          <div class="label">(D)</div>
+          <div class="value">\( 3P \)</div>
+        </div>
+        <div class="given-item answer-option" data-option="E">
+          <div class="label">(E)</div>
+          <div class="value">\( +\infty \)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F3AF;</span> Plan resavanja</div>
+    <p class="plan-text">
+      Najpre cemo analizirati kako se konstruisu figure \( F_1 \), \( F_2 \), \( F_3 \), ... i odrediti povrsinu svake od njih. Potom cemo uociti da povrsine cine geometrijski niz i izracunati zbir beskonacnog geometrijskog reda.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4DA;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <div class="detail-content">
+        <p><strong>Sredisnji trougao:</strong> Trougao cija su temena sredista stranica datog trougla ima povrsinu jednaku <strong>jednoj cetvrtini</strong> povrsine polaznog trougla.</p>
+        <div class="step-math" style="margin: 12px 0;">
+          \[ P_{\text{sredisnji}} = \frac{P_{\text{polaznog}}}{4} \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Geometrijski niz:</strong> Niz oblika \( a, aq, aq^2, \ldots \) gde je \( q \) kolicnik.</p>
+        <div class="step-math" style="margin: 12px 0;">
+          \[ a_n = a_1 \cdot q^{n-1} \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Zbir beskonacnog geometrijskog reda:</strong> Za \( |q| < 1 \), red konvergira:</p>
+        <div class="step-math" style="margin: 12px 0;">
+          \[ \sum_{n=0}^{\infty} a \cdot q^n = \frac{a}{1 - q} \qquad \text{ili} \qquad \sum_{n=1}^{\infty} q^n = \frac{q}{1 - q} \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Sierpinski trougao:</strong> Fraktal koji nastaje ponavljanjem postupka izbacivanja sredisnjeg trougla. Na svakom koraku broj trouglova se utroji, a velicina svakog se cetvorostruko smanji.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid: Sierpinski Triangle Construction -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4D0;</span> Vizuelni prikaz konstrukcije</div>
+    <div class="canvas-wrapper">
+      <canvas id="sierpinski-canvas" width="900" height="620"></canvas>
+    </div>
+    <p class="canvas-caption">Konstrukcija figura F1, F2 i F3 — kliknite na dugmad ispod da promenite prikaz</p>
+    <div style="display: flex; justify-content: center; gap: 12px; margin-top: 14px; flex-wrap: wrap;" id="step-buttons-container">
+      <button id="btn-f0" class="step-btn" data-step="0">Polazni trougao</button>
+      <button id="btn-f1" class="step-btn active" data-step="1">F1 (3 trougla)</button>
+      <button id="btn-f2" class="step-btn" data-step="2">F2 (9 trouglova)</button>
+      <button id="btn-f3" class="step-btn" data-step="3">F3 (27 trouglova)</button>
+      <button id="btn-f4" class="step-btn" data-step="4">F4 (81 trougao)</button>
+      <button id="btn-f5" class="step-btn" data-step="5">F5 (243 trougla)</button>
+    </div>
+    <style>
+      .step-btn {
+        background: rgba(51, 65, 85, 0.6);
+        border: 1px solid #334155;
+        border-radius: 8px;
+        color: #94a3b8;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+      }
+      .step-btn:hover {
+        border-color: #60a5fa;
+        color: #60a5fa;
+      }
+      .step-btn.active {
+        background: rgba(96, 165, 250, 0.15);
+        border-color: #60a5fa;
+        color: #60a5fa;
+        font-weight: 600;
+      }
+    </style>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F522;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Analiziramo figuru \( F_1 \)</div>
+        <p>Polazimo od jednakostranicnog trougla povrsine \( P \). Spajamo sredista njegovih stranica i dobijamo unutrasnji trougao.</p>
+        <p>Ovaj sredisnji trougao deli polazni trougao na <strong>4 jednaka manja trougla</strong>, jer su mu stranice jednake polovini stranica polaznog trougla.</p>
+        <div class="step-math">
+          \[ P_{\text{sredisnji}} = \frac{P}{4} \]
+        </div>
+        <p>Kada izbacimo sredisnji trougao, ostaju 3 trougla. Svaki ima povrsinu \( \dfrac{P}{4} \).</p>
+        <div class="step-math">
+          \[ F_1 = 3 \cdot \frac{P}{4} = \frac{3}{4} P \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Analiziramo figuru \( F_2 \)</div>
+        <p>Iz svakog od 3 trougla figure \( F_1 \) ponovo izbacujemo sredisnji trougao (spajamo sredista stranica svakog od njih).</p>
+        <p>Svaki trougao figure \( F_1 \) ima povrsinu \( \dfrac{P}{4} \). Izbaceni sredisnji trougao ima povrsinu:</p>
+        <div class="step-math">
+          \[ \frac{1}{4} \cdot \frac{P}{4} = \frac{P}{16} \]
+        </div>
+        <p>Od svakog trougla ostaju 3 manja, pa imamo ukupno \( 3 \cdot 3 = 9 \) trouglova, svaki povrsine \( \dfrac{P}{16} \).</p>
+        <div class="step-math">
+          \[ F_2 = 9 \cdot \frac{P}{16} = \frac{9}{16} P = \left(\frac{3}{4}\right)^2 P \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko trouglova ima figura \( F_3 \) i kolika je povrsina svakog od njih?</summary>
+        <div class="detail-content">
+          <p>\( F_3 \) ima \( 3^3 = 27 \) trouglova. Svaki trougao ima povrsinu \( \dfrac{P}{4^3} = \dfrac{P}{64} \).</p>
+          <p>Ukupna povrsina: \( 27 \cdot \dfrac{P}{64} = \dfrac{27}{64} P = \left(\dfrac{3}{4}\right)^3 P \).</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Uocavamo obrazac za \( F_n \)</div>
+        <p>Primetimo pravilnost:</p>
+        <div class="step-math">
+          \[ \begin{align}
+          F_1 &= 3^1 \cdot \frac{P}{4^1} = \left(\frac{3}{4}\right)^1 \cdot P \\[8pt]
+          F_2 &= 3^2 \cdot \frac{P}{4^2} = \left(\frac{3}{4}\right)^2 \cdot P \\[8pt]
+          F_3 &= 3^3 \cdot \frac{P}{4^3} = \left(\frac{3}{4}\right)^3 \cdot P
+          \end{align} \]
+        </div>
+        <p>U svakom koraku, broj trouglova se utroji (mnozimo sa 3), a povrsina svakog se cetvorostruko smanji (delimo sa 4). Dakle:</p>
+        <div class="step-math">
+          \[ F_n = 3^n \cdot \frac{P}{4^n} = \left(\frac{3}{4}\right)^n \cdot P \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Obrazlozimo zasto vazi formula</div>
+        <p>Svaki korak konstrukcije radi sledece sa svakim trouglom figure \( F_n \):</p>
+        <p>1. Trougao se podeli na 4 jednaka dela (spajanje sredista stranica).</p>
+        <p>2. Sredisnji deo se izbaci.</p>
+        <p>3. Ostaju 3 dela — pa se broj trouglova utroji.</p>
+        <p>Dakle, pri prelasku sa \( F_n \) na \( F_{n+1} \):</p>
+        <div class="step-math">
+          \[ \text{Broj trouglova:} \quad 3^n \xrightarrow{\times 3} 3^{n+1} \]
+        </div>
+        <div class="step-math">
+          \[ \text{Povrsina svakog:} \quad \frac{P}{4^n} \xrightarrow{\div 4} \frac{P}{4^{n+1}} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliki je kolicnik geometrijskog niza \( F_1, F_2, F_3, \ldots \)?</summary>
+        <div class="detail-content">
+          <p>Kolicnik je \( q = \dfrac{F_2}{F_1} = \dfrac{(3/4)^2 P}{(3/4)^1 P} = \dfrac{3}{4} \).</p>
+          <p>Posto je \( |q| = \dfrac{3}{4} < 1 \), red konvergira (zbir je konacan).</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Zapisujemo zbir kao geometrijski red</div>
+        <p>Trazeni zbir povrsina svih figura je:</p>
+        <div class="step-math">
+          \[ S = \sum_{n=1}^{\infty} F_n = \sum_{n=1}^{\infty} \left(\frac{3}{4}\right)^n \cdot P = P \cdot \sum_{n=1}^{\infty} \left(\frac{3}{4}\right)^n \]
+        </div>
+        <p>Ovo je beskonacan geometrijski red sa prvim clanom \( a_1 = \dfrac{3}{4} \) i kolicnikom \( q = \dfrac{3}{4} \).</p>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <div class="step-title">Primenimo formulu za zbir beskonacnog geometrijskog reda</div>
+        <p>Za \( |q| < 1 \), vazi:</p>
+        <div class="step-math">
+          \[ \sum_{n=1}^{\infty} q^n = \frac{q}{1 - q} \]
+        </div>
+        <p>Uvrstimo \( q = \dfrac{3}{4} \):</p>
+        <div class="step-math">
+          \[ \sum_{n=1}^{\infty} \left(\frac{3}{4}\right)^n = \frac{\frac{3}{4}}{1 - \frac{3}{4}} = \frac{\frac{3}{4}}{\frac{1}{4}} = \frac{3}{4} \cdot \frac{4}{1} = 3 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <div class="step-title">Izracunamo konacni zbir</div>
+        <p>Vracamo se na izraz za \( S \):</p>
+        <div class="step-math">
+          \[ S = P \cdot \sum_{n=1}^{\infty} \left(\frac{3}{4}\right)^n = P \cdot 3 = 3P \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Da li je razumno da je zbir 3P, a polazna povrsina je samo P?</summary>
+        <div class="detail-content">
+          <p>Da! Ovo deluje kontraintuitivno na prvi pogled, ali se figure \( F_n \) preklapaju sa polaznim trouglom. Svaka figura \( F_n \) je <em>podskup</em> prethodne figure — ne dodajemo novu povrsinu, vec sabiramo povrsine razlicitih figura.</p>
+          <p>Prvih nekoliko parcijalnih zbirova: \( S_1 = 0{,}75P \), \( S_2 \approx 1{,}31P \), \( S_3 \approx 1{,}73P \), ... Zbir polako konvergira ka \( 3P \).</p>
+        </div>
+      </details>
+    </div>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#x1F4A1;</span> Kljucni uvid</div>
+    <p>Kljuc problema je prepoznati da je ovo <strong>Sierpinski-trougao</strong> konstrukcija. U svakom koraku broj trouglova se utroji, a povrsina svakog se cetiri puta smanji. Odnos rasta i smanjenja (3/4 &lt; 1) garantuje da se zbir moze izracunati kao konvergentni geometrijski red.</p>
+    <div class="step-math" style="margin-top: 12px;">
+      \[ \sum_{n=1}^{\infty} \left(\frac{3}{4}\right)^n P = \frac{\frac{3}{4}}{1 - \frac{3}{4}} \cdot P = \boxed{3P} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( S = 3P \)</div>
+    <div class="answer-note">Tacan odgovor je (D) \( 3P \)</div>
+    <div class="final-options">
+      <div class="final-option">(A) \( \frac{3}{4}P \)</div>
+      <div class="final-option">(B) \( \frac{4}{3}P \)</div>
+      <div class="final-option">(C) \( 4P \)</div>
+      <div class="final-option correct">(D) \( 3P \)</div>
+      <div class="final-option">(E) \( +\infty \)</div>
+    </div>
+    <div class="verification-note">
+      <strong>Provera:</strong> Parcijalni zbirovi: \( S_1 = \frac{3}{4}P \), \( S_2 = \frac{3}{4}P + \frac{9}{16}P = \frac{21}{16}P \approx 1{,}31P \), \( S_3 \approx 1{,}73P \), ... Niz raste i konvergira ka \( 3P \), sto je konacna vrednost. Odgovor (E) \( +\infty \) bi vazilo samo ako bi kolicnik bio \( \geq 1 \), ali je \( \frac{3}{4} < 1 \), pa red konvergira.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x26A0;&#xFE0F;</span> Ceste greske</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#x2717;</span>
+      <p><strong>Brkanje \( F_1 \) sa polaznim trouglom:</strong> Figura \( F_1 \) nije polazni trougao! Polazni trougao ima povrsinu \( P \), dok \( F_1 \) ima povrsinu \( \frac{3}{4}P \) jer je sredisnji trougao vec izbacen. Sumiranje od \( n = 0 \) umesto od \( n = 1 \) dalo bi pogresan rezultat \( 4P \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#x2717;</span>
+      <p><strong>Zakljucak da je zbir beskonacan:</strong> Intuitivno se moze uciniti da beskonacno mnogo sabiraka daje beskonacnost, ali posto je kolicnik \( q = \frac{3}{4} < 1 \), geometrijski red konvergira. Kljucno je prepoznati da se radi o konvergentnom redu.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#x1F3C6;</span> Dodatni izazov</div>
+    <p>Umesto trouglova, zamislite istu konstrukciju sa kvadratima: iz kvadrata povrsine \( P \) u svakom koraku izbacujete centralni kvadrat (1/9 povrsine, kao u Sierpinski tepihu). Koliki je zbir povrsina svih figura?</p>
+    <details>
+      <summary>Pogledaj hint</summary>
+      <div class="detail-content">
+        <p>U Sierpinski tepihu, iz svakog kvadrata izbacujete 1/9, pa ostaje 8/9 povrsine. U svakom koraku imate \( 8^n \) kvadrata, svaki povrsine \( \frac{P}{9^n} \). Zbir je \( P \cdot \sum_{n=1}^{\infty} \left(\frac{8}{9}\right)^n = P \cdot \frac{8/9}{1/9} = 8P \).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<!-- Sierpinski Canvas Drawing Script -->
+<script>
+(() => {
+  const canvas = document.getElementById('sierpinski-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  let currentStep = 1;
+
+  // Colors for different depth levels
+  const depthColors = [
+    { fill: 'rgba(96, 165, 250, 0.20)', stroke: '#60a5fa' },
+    { fill: 'rgba(167, 139, 250, 0.18)', stroke: '#a78bfa' },
+    { fill: 'rgba(244, 114, 182, 0.16)', stroke: '#f472b6' },
+    { fill: 'rgba(52, 211, 153, 0.14)', stroke: '#34d399' },
+    { fill: 'rgba(96, 165, 250, 0.12)', stroke: '#60a5fa' },
+    { fill: 'rgba(167, 139, 250, 0.10)', stroke: '#a78bfa' }
+  ];
+
+  // Midpoint helper
+  function mid(p1, p2) {
+    return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+  }
+
+  // Get the remaining triangles after Sierpinski subdivision to depth n
+  // Returns an array of triangles, where each triangle is [p1, p2, p3]
+  function sierpinskiTriangles(vertices, depth) {
+    if (depth === 0) {
+      return [vertices];
+    }
+    var a = vertices[0];
+    var b = vertices[1];
+    var c = vertices[2];
+    var ab = mid(a, b);
+    var bc = mid(b, c);
+    var ca = mid(c, a);
+
+    // Three corner triangles (not the central one)
+    var result = [];
+    var t1 = sierpinskiTriangles([a, ab, ca], depth - 1);
+    var t2 = sierpinskiTriangles([ab, b, bc], depth - 1);
+    var t3 = sierpinskiTriangles([ca, bc, c], depth - 1);
+    for (var i = 0; i < t1.length; i++) result.push(t1[i]);
+    for (var i = 0; i < t2.length; i++) result.push(t2[i]);
+    for (var i = 0; i < t3.length; i++) result.push(t3[i]);
+    return result;
+  }
+
+  // Get the removed (central) triangles at each depth level
+  function removedTriangles(vertices, depth) {
+    if (depth === 0) return [];
+    var a = vertices[0];
+    var b = vertices[1];
+    var c = vertices[2];
+    var ab = mid(a, b);
+    var bc = mid(b, c);
+    var ca = mid(c, a);
+
+    // Central triangle removed at this level
+    var result = [{ tri: [ab, bc, ca], level: depth }];
+
+    // Recurse into the 3 remaining sub-triangles
+    var r1 = removedTriangles([a, ab, ca], depth - 1);
+    var r2 = removedTriangles([ab, b, bc], depth - 1);
+    var r3 = removedTriangles([ca, bc, c], depth - 1);
+    for (var i = 0; i < r1.length; i++) result.push(r1[i]);
+    for (var i = 0; i < r2.length; i++) result.push(r2[i]);
+    for (var i = 0; i < r3.length; i++) result.push(r3[i]);
+    return result;
+  }
+
+  function drawTriangle(tri, fillColor, strokeColor, lineWidth) {
+    ctx.beginPath();
+    ctx.moveTo(tri[0].x, tri[0].y);
+    ctx.lineTo(tri[1].x, tri[1].y);
+    ctx.lineTo(tri[2].x, tri[2].y);
+    ctx.closePath();
+    if (fillColor) {
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    if (strokeColor) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = lineWidth || 1;
+      ctx.stroke();
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Main triangle vertices (equilateral, centered)
+    var triH = H - 100;
+    var triW = triH * 2 / Math.sqrt(3);
+    if (triW > W - 60) {
+      triW = W - 60;
+      triH = triW * Math.sqrt(3) / 2;
+    }
+    var cx = W / 2;
+    var topY = 55;
+    var A = { x: cx, y: topY };
+    var B = { x: cx - triW / 2, y: topY + triH };
+    var C = { x: cx + triW / 2, y: topY + triH };
+
+    var n = currentStep;
+
+    if (n === 0) {
+      // Just the original triangle
+      drawTriangle([A, B, C], 'rgba(96, 165, 250, 0.15)', '#60a5fa', 2);
+
+      // Label
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Polazni trougao', cx, topY + triH + 38);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Povrsina = P', cx, topY + triH / 2 + 10);
+
+    } else {
+      // Draw the Sierpinski figure F_n
+
+      // First, draw the full original triangle as background (removed area)
+      drawTriangle([A, B, C], 'rgba(30, 41, 59, 0.4)', null, 0);
+
+      // Draw the outline of the original triangle
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(A.x, A.y);
+      ctx.lineTo(B.x, B.y);
+      ctx.lineTo(C.x, C.y);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Get the remaining triangles for F_n
+      var remaining = sierpinskiTriangles([A, B, C], n);
+
+      // Get the removed triangles for shading
+      var removed = removedTriangles([A, B, C], n);
+
+      // Draw removed triangles (holes) with subtle fill
+      for (var i = 0; i < removed.length; i++) {
+        var rt = removed[i];
+        drawTriangle(rt.tri, 'rgba(15, 23, 42, 0.9)', null, 0);
+      }
+
+      // Draw remaining triangles with glow
+      var colorIdx = Math.min(n - 1, depthColors.length - 1);
+      var col = depthColors[colorIdx];
+      for (var i = 0; i < remaining.length; i++) {
+        var t = remaining[i];
+        // Glow effect
+        ctx.shadowColor = col.stroke;
+        ctx.shadowBlur = n <= 3 ? 6 : 3;
+        drawTriangle(t, col.fill, col.stroke, n <= 2 ? 1.5 : (n <= 4 ? 0.8 : 0.4));
+        ctx.shadowBlur = 0;
+      }
+
+      // Title and info
+      var numTri = Math.pow(3, n);
+      var areaEach = 'P/' + Math.pow(4, n);
+      var totalArea = '(3/4)';
+
+      ctx.fillStyle = col.stroke;
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Figura F' + n, cx, topY + triH + 32);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '15px Segoe UI, system-ui, sans-serif';
+      var infoText = numTri + ' trouglova, svaki povrsine P/' + Math.pow(4, n);
+      ctx.fillText(infoText, cx, topY + triH + 56);
+
+      // Area formula
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      var fraction = Math.pow(3, n) + '/' + Math.pow(4, n);
+      ctx.fillText('Fn = (' + fraction + ')P = (3/4)^' + n + ' P', cx, topY + triH + 80);
+    }
+
+    // Title at top
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sierpinski trougao — konstrukcija korak po korak', cx, 22);
+  }
+
+  draw();
+
+  // Button interactivity
+  var container = document.getElementById('step-buttons-container');
+  if (container) {
+    container.addEventListener('click', function(e) {
+      var btn = e.target.closest('.step-btn');
+      if (!btn) return;
+      var step = parseInt(btn.getAttribute('data-step'), 10);
+      if (isNaN(step)) return;
+      currentStep = step;
+
+      var allBtns = container.querySelectorAll('.step-btn');
+      for (var i = 0; i < allBtns.length; i++) {
+        allBtns[i].classList.remove('active');
+      }
+      btn.classList.add('active');
+      draw();
+    });
+  }
+})();
+</script>
+
+<!-- Step click highlight -->
+<script>
+(() => {
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir povrsina Sierpinski-trouglova",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["geometrijski red", "Sierpinski trougao", "fraktali", "beskonacan red", "povrsina trougla", "sredisnji trougao"]
+}
+BRAINSPARK_META-->

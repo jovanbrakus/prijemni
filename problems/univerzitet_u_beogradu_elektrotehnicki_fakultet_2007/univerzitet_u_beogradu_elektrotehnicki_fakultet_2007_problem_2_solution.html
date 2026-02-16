@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uprošćavanje ugnježdenog korena</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Ako je x > 0, onda je √(x · √(x · √x)) jednako:
+(A) x√x  (B) x · ⁴√x  (C) ⁸√x  (D) ⁸√(x³)  (E) ⁸√(x⁷)
+
+Working from the inside out:
+
+Layer 1 (innermost): √x = x^(1/2)
+
+Layer 2 (middle): x · √x = x · x^(1/2) = x^(1 + 1/2) = x^(3/2)
+Then: √(x · √x) = (x^(3/2))^(1/2) = x^(3/4)
+
+Layer 3 (outermost): x · √(x · √x) = x · x^(3/4) = x^(1 + 3/4) = x^(7/4)
+Then: √(x · √(x · √x)) = (x^(7/4))^(1/2) = x^(7/8)
+
+Now check the answers:
+(A) x√x = x · x^(1/2) = x^(3/2) ≠ x^(7/8)
+(B) x · ⁴√x = x · x^(1/4) = x^(5/4) ≠ x^(7/8)
+(C) ⁸√x = x^(1/8) ≠ x^(7/8)
+(D) ⁸√(x³) = x^(3/8) ≠ x^(7/8)
+(E) ⁸√(x⁷) = x^(7/8) ✓
+
+Answer: (E) ⁸√(x⁷) = x^(7/8)
+
+Verification: Let x = 256 = 2^8
+x^(7/8) = (2^8)^(7/8) = 2^7 = 128
+
+From inside out:
+√x = √256 = 16
+x · √x = 256 · 16 = 4096
+√(x · √x) = √4096 = 64
+x · √(x · √x) = 256 · 64 = 16384
+√(x · √(x · √x)) = √16384 = 128 ✓
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 120px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.plan-card h2 { color: #a78bfa; }
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 14px;
+  background: rgba(96,165,250,0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(96,165,250,0.12);
+  list-style: none;
+  user-select: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B8 ';
+  display: inline;
+}
+
+details[open] summary::before {
+  content: '\25BE ';
+}
+
+details .details-content {
+  padding: 14px 18px;
+  margin-top: 8px;
+  background: rgba(96,165,250,0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(96,165,250,0.08);
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  min-width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 { color: #a78bfa; }
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.08));
+  border: 2px solid rgba(52,211,153,0.35);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-value {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 18px 0;
+}
+
+.option-chip {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 1.05rem;
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+
+.option-chip.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(52,211,153,0.15);
+}
+
+.pitfall-box {
+  border-left: 4px solid #e09468;
+}
+
+.pitfall-box h2 { color: #e09468; }
+
+.challenge-box {
+  border-left: 4px solid #a78bfa;
+}
+
+.challenge-box h2 { color: #a78bfa; }
+
+.canvas-wrapper {
+  background: #0c1222;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  overflow: hidden;
+  margin: 14px 0;
+}
+
+canvas {
+  width: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.provera-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(52,211,153,0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(52,211,153,0.12);
+}
+
+.formula-list {
+  list-style: none;
+  padding: 0;
+}
+
+.formula-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+}
+
+.formula-list li:last-child { border-bottom: none; }
+
+.layer-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 16px 0;
+}
+
+.layer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.layer-row:hover {
+  transform: translateX(4px);
+}
+
+.layer-label {
+  min-width: 90px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.layer-formula {
+  flex: 1;
+}
+
+.layer-1 { background: rgba(96,165,250,0.1); border-left: 3px solid #60a5fa; }
+.layer-1 .layer-label { color: #60a5fa; }
+.layer-2 { background: rgba(167,139,250,0.1); border-left: 3px solid #a78bfa; }
+.layer-2 .layer-label { color: #a78bfa; }
+.layer-3 { background: rgba(244,114,182,0.1); border-left: 3px solid #f472b6; }
+.layer-3 .layer-label { color: #f472b6; }
+.layer-4 { background: rgba(52,211,153,0.1); border-left: 3px solid #34d399; }
+.layer-4 .layer-label { color: #34d399; }
+
+.exponent-chain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.exp-box {
+  background: rgba(96,165,250,0.1);
+  border: 1px solid rgba(96,165,250,0.2);
+  border-radius: 8px;
+  padding: 8px 14px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.exp-arrow {
+  color: #94a3b8;
+  font-size: 1.3rem;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .given-grid { flex-direction: column; }
+  .options-grid { flex-direction: column; align-items: center; }
+  .final-answer-box .answer-value { font-size: 1.8rem; }
+  .exponent-chain { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Title -->
+  <h1>Ugnježdeni koreni i stepenovanje</h1>
+  <p class="subtitle">Uprošćavanje izraza sa trostruko ugnježdenim kvadratnim korenima pomoću razlomljenih eksponenata</p>
+
+  <!-- Problem Statement -->
+  <div class="card">
+    <h2>Postavka zadatka</h2>
+    <p>Ako je \(x > 0\), onda je</p>
+    <div class="math-box">
+      \[ \sqrt{x \cdot \sqrt{x \cdot \sqrt{x}}} \]
+    </div>
+    <p>jednako:</p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Odgovor (A)</div>
+        <div class="value">\(x\sqrt{x}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Odgovor (B)</div>
+        <div class="value">\(x \cdot \sqrt[4]{x}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Odgovor (C)</div>
+        <div class="value">\(\sqrt[8]{x}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Odgovor (D)</div>
+        <div class="value">\(\sqrt[8]{x^3}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Odgovor (E)</div>
+        <div class="value">\(\sqrt[8]{x^7}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Ključna ideja: korene zapisujemo kao razlomljene stepene, a zatim radimo <strong>od unutra ka spolja</strong>,
+       sloj po sloj. Na svakom nivou koristimo pravila za množenje stepena istih osnova i za stepenovanje stepena.
+       Na kraju proveravamo koji od ponuđenih odgovora odgovara dobijenoj vrednosti eksponenta.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i pravila</summary>
+      <div class="details-content">
+        <ul class="formula-list">
+          <li>Koren kao stepen: \(\sqrt[n]{x^m} = x^{m/n}\), specijalno \(\sqrt{x} = x^{1/2}\)</li>
+          <li>Množenje stepena iste osnove: \(x^a \cdot x^b = x^{a+b}\)</li>
+          <li>Stepenovanje stepena: \(\left(x^a\right)^b = x^{a \cdot b}\)</li>
+          <li>Osmi koren: \(\sqrt[8]{x^k} = x^{k/8}\)</li>
+          <li>Važi za \(x > 0\), pa su sve operacije sa korenima dobro definisane.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color: #94a3b8; margin-bottom: 10px;">Posmatrajmo kako eksponent raste na svakom sloju ugnježdavanja:</p>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="800" height="420"></canvas>
+    </div>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Najdublji sloj: \(\sqrt{x}\)</h3>
+        <p>Krenimo od najdubljeg korena, onoga koji se nalazi u samom centru izraza:</p>
+        <div class="math-box">
+          \[ \sqrt{x} = x^{1/2} \]
+        </div>
+        <p>Ovo je naš polazni rezultat. Eksponent je <span class="highlight">\(\frac{1}{2}\)</span>.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Srednji sloj: \(\sqrt{x \cdot \sqrt{x}}\)</h3>
+        <p>Sada razmatramo izraz pod srednjim korenom. Prvo izračunamo šta je pod korenom:</p>
+        <div class="math-box">
+          \[ x \cdot \sqrt{x} = x^1 \cdot x^{1/2} = x^{1 + 1/2} = x^{3/2} \]
+        </div>
+        <p>Zatim vučemo kvadratni koren od toga:</p>
+        <div class="math-box">
+          \[ \sqrt{x \cdot \sqrt{x}} = \sqrt{x^{3/2}} = \left(x^{3/2}\right)^{1/2} = x^{3/4} \]
+        </div>
+        <p>Eksponent je sada <span class="highlight">\(\frac{3}{4}\)</span>.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details>
+      <summary>Proveri se: Kako množimo stepene iste osnove?</summary>
+      <div class="details-content">
+        <p>Kada množimo \(x^a \cdot x^b\), eksponenti se sabiraju: \(x^{a+b}\). Dakle:</p>
+        <div class="math-box">
+          \[ x^1 \cdot x^{1/2} = x^{1 + 1/2} = x^{3/2} \]
+        </div>
+        <p>A kada korenujemo stepen, eksponenti se množe: \(\left(x^a\right)^{1/2} = x^{a/2}\). Dakle:</p>
+        <div class="math-box">
+          \[ \left(x^{3/2}\right)^{1/2} = x^{(3/2) \cdot (1/2)} = x^{3/4} \]
+        </div>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Spoljašnji sloj: \(\sqrt{x \cdot \sqrt{x \cdot \sqrt{x}}}\)</h3>
+        <p>Sada razmatramo ceo izraz. Pod spoljašnjim korenom imamo:</p>
+        <div class="math-box">
+          \[ x \cdot \sqrt{x \cdot \sqrt{x}} = x^1 \cdot x^{3/4} = x^{1 + 3/4} = x^{7/4} \]
+        </div>
+        <p>Vučemo kvadratni koren:</p>
+        <div class="math-box">
+          \[ \sqrt{x \cdot \sqrt{x \cdot \sqrt{x}}} = \sqrt{x^{7/4}} = \left(x^{7/4}\right)^{1/2} = x^{7/8} \]
+        </div>
+        <p>Konačan eksponent je <span class="highlight">\(\frac{7}{8}\)</span>.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details>
+      <summary>Proveri se: Pregled eksponenata na svakom sloju</summary>
+      <div class="details-content">
+        <div class="layer-diagram">
+          <div class="layer-row layer-1">
+            <span class="layer-label">Sloj 1</span>
+            <span class="layer-formula">\(\sqrt{x} = x^{1/2}\)</span>
+          </div>
+          <div class="layer-row layer-2">
+            <span class="layer-label">Sloj 2</span>
+            <span class="layer-formula">\(x \cdot x^{1/2} = x^{3/2} \;\;\longrightarrow\;\; \sqrt{\cdot} \;\;\longrightarrow\;\; x^{3/4}\)</span>
+          </div>
+          <div class="layer-row layer-3">
+            <span class="layer-label">Sloj 3</span>
+            <span class="layer-formula">\(x \cdot x^{3/4} = x^{7/4} \;\;\longrightarrow\;\; \sqrt{\cdot} \;\;\longrightarrow\;\; x^{7/8}\)</span>
+          </div>
+        </div>
+        <p>Primetimo obrazac u brojiocima: \(1 \to 3 \to 7\), tj. svaki put dupliramo i dodajemo 1!</p>
+      </div>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Identifikujemo tačan odgovor</h3>
+        <p>Dobili smo \(x^{7/8}\). Prevedimo svaki ponuđeni odgovor u oblik \(x^k\):</p>
+        <div class="math-box">
+          \[
+          \begin{aligned}
+          (A)\;\; x\sqrt{x} &= x^{3/2} \\[4pt]
+          (B)\;\; x \cdot \sqrt[4]{x} &= x^{5/4} \\[4pt]
+          (C)\;\; \sqrt[8]{x} &= x^{1/8} \\[4pt]
+          (D)\;\; \sqrt[8]{x^3} &= x^{3/8} \\[4pt]
+          (E)\;\; \sqrt[8]{x^7} &= x^{7/8} \quad \checkmark
+          \end{aligned}
+          \]
+        </div>
+        <p>Jedino odgovor <span class="highlight">(E)</span> daje eksponent \(\frac{7}{8}\), što odgovara našem rezultatu.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details>
+      <summary>Proveri se: Numerička verifikacija sa \(x = 256\)</summary>
+      <div class="details-content">
+        <p>Uzmimo \(x = 256 = 2^8\), pa je \(x^{7/8} = (2^8)^{7/8} = 2^7 = 128\). Proverimo direktnim računom:</p>
+        <div class="math-box">
+          \[
+          \begin{aligned}
+          \sqrt{x} &= \sqrt{256} = 16 \\[4pt]
+          x \cdot \sqrt{x} &= 256 \cdot 16 = 4096 \\[4pt]
+          \sqrt{x \cdot \sqrt{x}} &= \sqrt{4096} = 64 \\[4pt]
+          x \cdot \sqrt{x \cdot \sqrt{x}} &= 256 \cdot 64 = 16384 \\[4pt]
+          \sqrt{x \cdot \sqrt{x \cdot \sqrt{x}}} &= \sqrt{16384} = 128 \quad \checkmark
+          \end{aligned}
+          \]
+        </div>
+        <p>Takođe, \(\sqrt[8]{256^7} = \sqrt[8]{(2^8)^7} = \sqrt[8]{2^{56}} = 2^{56/8} = 2^7 = 128\). Potvrda!</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Kada imamo ugnježdene korene, najelegantniji pristup je da svaki koren zapišemo kao
+       stepenovanje sa eksponentom \(\frac{1}{2}\) i radimo <strong>od unutra ka spolja</strong>.
+       Na svakom sloju koristimo dva pravila: sabiranje eksponenata pri množenju (\(x^a \cdot x^b = x^{a+b}\))
+       i množenje eksponenata pri korenovanju (\((x^a)^{1/2} = x^{a/2}\)).</p>
+    <p style="margin-top: 12px;">Primetimo i lep obrazac: imenilac eksponenta se na svakom sloju duplira
+       (\(2 \to 4 \to 8\)), a brojilac prati niz \(1 \to 3 \to 7\), gde je
+       svaki sledeći jednak \(2 \cdot \text{prethodni} + 1\). Ako bismo dodali
+       još jedan sloj, dobili bismo \(x^{15/16}\).</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2 style="color: #34d399; margin-bottom: 10px;">Konačan odgovor</h2>
+    <div class="options-grid">
+      <div class="option-chip">(A) \(x\sqrt{x}\)</div>
+      <div class="option-chip">(B) \(x\cdot\sqrt[4]{x}\)</div>
+      <div class="option-chip">(C) \(\sqrt[8]{x}\)</div>
+      <div class="option-chip">(D) \(\sqrt[8]{x^3}\)</div>
+      <div class="option-chip correct">(E) \(\sqrt[8]{x^7}\)</div>
+    </div>
+    <div class="answer-value">\(\sqrt{x \cdot \sqrt{x \cdot \sqrt{x}}} = x^{7/8} = \sqrt[8]{x^7}\)</div>
+    <div class="provera-note">
+      <strong>Provera:</strong> Za \(x = 256\), direktan račun daje \(128 = 2^7\), a
+      \(\sqrt[8]{256^7} = 2^7 = 128\). Rezultat se poklapa.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-box">
+    <h2>Česte greške</h2>
+    <ul style="list-style: disc; padding-left: 20px; color: #e2e8f0;">
+      <li style="margin-bottom: 10px;"><strong>Pogrešan redosled razlaganja:</strong> Mnogi studenti pokušavaju
+        da reše izraz od spolja ka unutra, što vodi u konfuziju. Uvek treba krenuti od
+        najdubljeg ugnježdenog korena i postepeno raditi ka spolja.</li>
+      <li><strong>Greška pri sabiranju razlomaka:</strong> Na koraku gde sabiramo \(1 + \frac{3}{4}\),
+        lako je pogrešiti i dobiti \(\frac{4}{4}\) umesto tačnog \(\frac{7}{4}\).
+        Obavezno svedite na zajednički imenilac: \(\frac{4}{4} + \frac{3}{4} = \frac{7}{4}\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-box">
+    <h2>Bonus izazov</h2>
+    <p>Ako dodamo još jedan sloj ugnježdavanja, koliko je:</p>
+    <div class="math-box">
+      \[ \sqrt{x \cdot \sqrt{x \cdot \sqrt{x \cdot \sqrt{x}}}} \; = \; ? \]
+    </div>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="details-content">
+        <p>Nastavi isti obrazac. Dosadašnji niz eksponenata je bio:</p>
+        <div class="exponent-chain">
+          <div class="exp-box">\(\frac{1}{2}\)</div>
+          <span class="exp-arrow">\(\to\)</span>
+          <div class="exp-box">\(\frac{3}{4}\)</div>
+          <span class="exp-arrow">\(\to\)</span>
+          <div class="exp-box">\(\frac{7}{8}\)</div>
+          <span class="exp-arrow">\(\to\)</span>
+          <div class="exp-box">\(\frac{?}{?}\)</div>
+        </div>
+        <p>Na svakom koraku: \(x \cdot x^{7/8} = x^{15/8}\), pa \(\sqrt{x^{15/8}} = x^{15/16}\).
+           Odgovor je \(x^{15/16} = \sqrt[16]{x^{15}}\).</p>
+        <p style="margin-top:8px;">Generalna formula za \(n\) slojeva ugnježdavanja: eksponent je
+           \(\dfrac{2^n - 1}{2^n}\). Za \(n=4\): \(\dfrac{16-1}{16} = \dfrac{15}{16}\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 420 * dpr;
+    canvas.style.height = '420px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width;
+    const H = 420;
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Rast eksponenta kroz slojeve ugnježdavanja', 30, 28);
+
+    // Parameters
+    const centerX = W / 2;
+    const layerData = [
+      { label: 'Sloj 1: \u221Ax', exp: '1/2', numVal: 0.5, color: '#60a5fa' },
+      { label: 'Sloj 2: \u221A(x\u00B7\u221Ax)', exp: '3/4', numVal: 0.75, color: '#a78bfa' },
+      { label: 'Sloj 3: \u221A(x\u00B7\u221A(x\u00B7\u221Ax))', exp: '7/8', numVal: 0.875, color: '#f472b6' }
+    ];
+
+    // --- Section 1: Nested circles diagram ---
+    const circlesCenterX = W * 0.3;
+    const circlesCenterY = 175;
+    const radii = [110, 78, 46];
+    const circleColors = ['#f472b6', '#a78bfa', '#60a5fa'];
+    const circleLabels = ['Spoljni \u221A', 'Srednji \u221A', 'Unutr. \u221Ax'];
+
+    // Draw concentric circles
+    for (let i = 0; i < 3; i++) {
+      ctx.strokeStyle = circleColors[i];
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.arc(circlesCenterX, circlesCenterY, radii[i], 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Glow effect
+      ctx.strokeStyle = circleColors[i] + '33';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(circlesCenterX, circlesCenterY, radii[i], 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Center label
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x', circlesCenterX, circlesCenterY + 5);
+
+    // Circle annotations
+    const annotAngles = [-0.3, 0.5, -1.2];
+    for (let i = 0; i < 3; i++) {
+      const angle = annotAngles[i];
+      const r = radii[i];
+      const ax = circlesCenterX + Math.cos(angle) * (r + 18);
+      const ay = circlesCenterY + Math.sin(angle) * (r + 18);
+      ctx.fillStyle = circleColors[i];
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(circleLabels[i], ax, ay);
+    }
+
+    // "od unutra ka spolja" label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Radimo od unutra ka spolja', circlesCenterX, circlesCenterY + 140);
+
+    // Draw arrow pointing outward
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(circlesCenterX - 40, circlesCenterY + 125);
+    ctx.lineTo(circlesCenterX + 40, circlesCenterY + 125);
+    ctx.stroke();
+    // arrowhead
+    ctx.beginPath();
+    ctx.moveTo(circlesCenterX + 40, circlesCenterY + 125);
+    ctx.lineTo(circlesCenterX + 34, circlesCenterY + 121);
+    ctx.lineTo(circlesCenterX + 34, circlesCenterY + 129);
+    ctx.closePath();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fill();
+
+    // --- Section 2: Exponent progression bar chart ---
+    const barAreaX = W * 0.58;
+    const barAreaW = W * 0.36;
+    const barTop = 60;
+    const barH = 36;
+    const barGap = 22;
+    const maxBarW = barAreaW;
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Eksponent x na svakom sloju:', barAreaX, barTop - 10);
+
+    for (let i = 0; i < layerData.length; i++) {
+      const y = barTop + i * (barH + barGap);
+      const d = layerData[i];
+      const bw = d.numVal * maxBarW;
+
+      // Bar background
+      ctx.fillStyle = 'rgba(255,255,255,0.03)';
+      ctx.beginPath();
+      ctx.roundRect(barAreaX, y, maxBarW, barH, 6);
+      ctx.fill();
+
+      // Filled bar
+      const grad = ctx.createLinearGradient(barAreaX, y, barAreaX + bw, y);
+      grad.addColorStop(0, d.color + 'cc');
+      grad.addColorStop(1, d.color + '66');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(barAreaX, y, bw, barH, 6);
+      ctx.fill();
+
+      // Bar border
+      ctx.strokeStyle = d.color + '88';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(barAreaX, y, bw, barH, 6);
+      ctx.stroke();
+
+      // Label inside bar
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(d.exp, barAreaX + 10, y + barH / 2 + 5);
+
+      // Layer label to the right of bar
+      ctx.fillStyle = d.color;
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      const labelX = barAreaX + bw + 10;
+      if (labelX + 60 < W - 10) {
+        ctx.fillText(d.label, labelX, y + barH / 2 + 4);
+      }
+    }
+
+    // Target line at 1
+    const targetX = barAreaX + maxBarW;
+    ctx.strokeStyle = '#4ade8044';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(targetX, barTop - 5);
+    ctx.lineTo(targetX, barTop + 3 * (barH + barGap) - barGap + 5);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x\u00B9', targetX, barTop - 14);
+
+    // --- Section 3: Formula summary at the bottom ---
+    const formulaY = 310;
+
+    // Arrow flow
+    const steps = [
+      { text: 'x^(1/2)', color: '#60a5fa' },
+      { text: '\u00D7 x, \u221A\u2192 x^(3/4)', color: '#a78bfa' },
+      { text: '\u00D7 x, \u221A\u2192 x^(7/8)', color: '#f472b6' }
+    ];
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Lanac transformacija:', centerX, formulaY);
+
+    const flowY = formulaY + 30;
+    const totalSteps = steps.length;
+    const stepW = Math.min(180, (W - 80) / totalSteps);
+    const startFlowX = centerX - (totalSteps * stepW + (totalSteps - 1) * 20) / 2;
+
+    for (let i = 0; i < totalSteps; i++) {
+      const x = startFlowX + i * (stepW + 20);
+      const s = steps[i];
+
+      // Box
+      ctx.fillStyle = s.color + '18';
+      ctx.strokeStyle = s.color + '55';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x, flowY, stepW, 40, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Text
+      ctx.fillStyle = s.color;
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.text, x + stepW / 2, flowY + 25);
+
+      // Arrow between boxes
+      if (i < totalSteps - 1) {
+        const arrowX1 = x + stepW + 3;
+        const arrowX2 = x + stepW + 17;
+        const arrowY = flowY + 20;
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(arrowX1, arrowY);
+        ctx.lineTo(arrowX2, arrowY);
+        ctx.stroke();
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.moveTo(arrowX2, arrowY);
+        ctx.lineTo(arrowX2 - 5, arrowY - 3);
+        ctx.lineTo(arrowX2 - 5, arrowY + 3);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    // Final result
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Rezultat: x^(7/8) = \u2078\u221A(x\u2077)', centerX, flowY + 75);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Uprošćavanje ugnježdenog korena \u221A(x\u00B7\u221A(x\u00B7\u221Ax))",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["korenovanje", "razlomljeni eksponenti", "stepeni", "uprošćavanje izraza", "ugnježdeni koreni"]
+}
+BRAINSPARK_META-->

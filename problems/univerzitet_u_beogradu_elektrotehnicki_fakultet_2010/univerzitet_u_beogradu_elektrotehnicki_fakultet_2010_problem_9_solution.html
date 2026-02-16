@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje izraza sa korenima</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Ako je a > 0 i x > sqrt(a), tada je izraz
+  sqrt((a + x^2)/x - 2*sqrt(a)) + sqrt((a + x^2)/x + 2*sqrt(a))
+identicki jednak?
+
+Korak 1: Pojednostavimo izraz pod prvim korenom
+  (a + x^2)/x - 2*sqrt(a)
+  = a/x + x - 2*sqrt(a)
+
+Korak 2: Primetimo da je a/x = (sqrt(a/x))^2 i x = (sqrt(x))^2.
+  Takodje, 2*sqrt(a) = 2*sqrt(a/x)*sqrt(x) jer sqrt(a/x)*sqrt(x) = sqrt(a).
+
+Korak 3: Dakle:
+  a/x + x - 2*sqrt(a) = (sqrt(a/x))^2 + (sqrt(x))^2 - 2*sqrt(a/x)*sqrt(x)
+                        = (sqrt(x) - sqrt(a/x))^2
+
+  Posto x > sqrt(a) => x^2 > a => x > a/x => sqrt(x) > sqrt(a/x)
+  Dakle sqrt(x) - sqrt(a/x) > 0.
+  => sqrt(a/x + x - 2*sqrt(a)) = sqrt(x) - sqrt(a/x)
+
+Korak 4: Slicno za drugi koren:
+  a/x + x + 2*sqrt(a) = (sqrt(x) + sqrt(a/x))^2
+  => sqrt(a/x + x + 2*sqrt(a)) = sqrt(x) + sqrt(a/x)
+
+Korak 5: Zbir:
+  (sqrt(x) - sqrt(a/x)) + (sqrt(x) + sqrt(a/x)) = 2*sqrt(x)
+
+Odgovor: (A) 2*sqrt(x)
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 150px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #60a5fa;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+  list-style: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6 ';
+  font-size: 0.8rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  content: '\25BC ';
+}
+
+details .details-content {
+  padding: 12px 16px;
+  background: rgba(167, 139, 250, 0.06);
+  border-left: 3px solid #a78bfa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.canvas-container {
+  text-align: center;
+  margin: 16px 0;
+}
+
+canvas {
+  width: 100%;
+  max-width: 700px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  touch-action: none;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.answer-box {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(74, 222, 128, 0.08));
+  border: 2px solid #34d399;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+}
+
+.answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.answer-box .answer-value {
+  color: #4ade80;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+  min-width: 120px;
+  text-align: center;
+}
+
+.option.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+.insight-box h3 {
+  color: #a78bfa;
+  margin-bottom: 8px;
+}
+
+.pitfall-box {
+  background: rgba(224, 148, 104, 0.06);
+  border-left: 3px solid #e09468;
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  margin: 10px 0;
+}
+
+.pitfall-box .pitfall-title {
+  color: #e09468;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint .details-content {
+  border-left-color: #34d399;
+  background: rgba(52, 211, 153, 0.06);
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.slider-container label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.slider-container input[type="range"] {
+  width: 200px;
+  accent-color: #60a5fa;
+}
+
+.slider-value {
+  color: #60a5fa;
+  font-weight: 600;
+  min-width: 40px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .given-grid { flex-direction: column; }
+  .options-grid { flex-direction: column; align-items: center; }
+  .answer-box .answer-value { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Pojednostavljivanje izraza sa korenima</h1>
+  <p class="subtitle">Algebarski identiteti - prepoznavanje potpunog kvadrata pod korenom</p>
+
+  <!-- Zadatak -->
+  <div class="card">
+    <h2>Zadatak</h2>
+    <p>Ako je \(a > 0\) i \(x > \sqrt{a}\), tada je izraz</p>
+    <div class="math-box">
+      \[\sqrt{\frac{a + x^2}{x} - 2\sqrt{a}} \;+\; \sqrt{\frac{a + x^2}{x} + 2\sqrt{a}}\]
+    </div>
+    <p>identicki jednak:</p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Uslov 1</div>
+        <div class="value">\(a > 0\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Uslov 2</div>
+        <div class="value">\(x > \sqrt{a}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Cilj</div>
+        <div class="value">Pojednostaviti izraz</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2>Plan resavanja</h2>
+    <p class="plan-text">1. Rastavicemo razlomak \(\dfrac{a + x^2}{x}\) na \(\dfrac{a}{x} + x\).</p>
+    <p class="plan-text" style="margin-top: 8px;">2. Primeticemo da se izrazi pod korenima mogu napisati kao potpuni kvadrati oblika \((\sqrt{x} \pm \sqrt{a/x})^2\).</p>
+    <p class="plan-text" style="margin-top: 8px;">3. Iskoristicemo uslove \(a > 0\) i \(x > \sqrt{a}\) da odredimo znak izraza pod korenom.</p>
+    <p class="plan-text" style="margin-top: 8px;">4. Sabiracemo dobijene izraze i pojednostaviti.</p>
+  </div>
+
+  <!-- Teorija -->
+  <div class="card">
+    <details>
+      <summary>Kljucne formule i pojmovi</summary>
+      <div class="details-content">
+        <ul style="list-style: disc; padding-left: 20px; color: #e2e8f0;">
+          <li style="margin-bottom: 8px;">Potpun kvadrat razlike: \((p - q)^2 = p^2 - 2pq + q^2\)</li>
+          <li style="margin-bottom: 8px;">Potpun kvadrat zbira: \((p + q)^2 = p^2 + 2pq + q^2\)</li>
+          <li style="margin-bottom: 8px;">Ako je \(t \geq 0\), tada \(\sqrt{t^2} = |t| = t\)</li>
+          <li style="margin-bottom: 8px;">Rastavljanje razlomka: \(\dfrac{a + x^2}{x} = \dfrac{a}{x} + x\)</li>
+          <li style="margin-bottom: 8px;">Korisna veza: \(\sqrt{\dfrac{a}{x}} \cdot \sqrt{x} = \sqrt{a}\)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Canvas vizualizacija -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color: #94a3b8; margin-bottom: 8px;">Grafik uporeduje levu stranu (originalni izraz) i desnu stranu (\(2\sqrt{x}\)) za razlicite vrednosti \(x\) i \(a\). Poklopljene linije potvrdjuju identitet.</p>
+    <div class="canvas-container">
+      <canvas id="graphCanvas" width="700" height="420"></canvas>
+    </div>
+    <div class="slider-container">
+      <label for="aSlider">Vrednost \(a\):</label>
+      <input type="range" id="aSlider" min="1" max="20" value="4" step="1">
+      <span class="slider-value" id="aValue">4</span>
+    </div>
+  </div>
+
+  <!-- Resavanje korak po korak -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <p>Rastavimo razlomak pod korenima. U oba korena imamo \(\dfrac{a + x^2}{x}\), sto mozemo da rastavimo:</p>
+        <div class="math-box">
+          \[\frac{a + x^2}{x} = \frac{a}{x} + x\]
+        </div>
+        <p>Sada nas izraz postaje:</p>
+        <div class="math-box">
+          \[\sqrt{\frac{a}{x} + x - 2\sqrt{a}} \;+\; \sqrt{\frac{a}{x} + x + 2\sqrt{a}}\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <p>Pokusajmo da <span class="highlight">prepoznamo potpun kvadrat</span> pod prvim korenom. Posmatrajmo izraz \(\dfrac{a}{x} + x - 2\sqrt{a}\).</p>
+        <p>Uvedimo smenu: neka je \(p = \sqrt{x}\) i \(q = \sqrt{\dfrac{a}{x}}\). Tada je:</p>
+        <div class="math-box">
+          \[p^2 = x, \quad q^2 = \frac{a}{x}, \quad 2pq = 2\sqrt{x} \cdot \sqrt{\frac{a}{x}} = 2\sqrt{a}\]
+        </div>
+        <p>Dakle, izraz pod prvim korenom mozemo napisati kao:</p>
+        <div class="math-box">
+          \[\frac{a}{x} + x - 2\sqrt{a} = q^2 + p^2 - 2pq = (p - q)^2 = \left(\sqrt{x} - \sqrt{\frac{a}{x}}\right)^2\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Zasto vazi \(2\sqrt{x} \cdot \sqrt{a/x} = 2\sqrt{a}\)?</summary>
+      <div class="details-content">
+        <p>Koristimo pravilo za mnozenje korenova:</p>
+        <p>\(\sqrt{x} \cdot \sqrt{\dfrac{a}{x}} = \sqrt{x \cdot \dfrac{a}{x}} = \sqrt{a}\)</p>
+        <p>Dakle, \(2\sqrt{x} \cdot \sqrt{\dfrac{a}{x}} = 2\sqrt{a}\). Tacno!</p>
+      </div>
+    </details>
+
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <p>Odredimo <span class="highlight">znak izraza pod korenom</span>. Posto \(x > \sqrt{a}\), sledi:</p>
+        <div class="math-box">
+          \[x > \sqrt{a} \;\Rightarrow\; x^2 > a \;\Rightarrow\; x > \frac{a}{x} \;\Rightarrow\; \sqrt{x} > \sqrt{\frac{a}{x}}\]
+        </div>
+        <p>Dakle, \(\sqrt{x} - \sqrt{\dfrac{a}{x}} > 0\), pa:</p>
+        <div class="math-box">
+          \[\sqrt{\left(\sqrt{x} - \sqrt{\frac{a}{x}}\right)^2} = \left|\sqrt{x} - \sqrt{\frac{a}{x}}\right| = \sqrt{x} - \sqrt{\frac{a}{x}}\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <p>Analogno, za izraz pod <strong>drugim korenom</strong>:</p>
+        <div class="math-box">
+          \[\frac{a}{x} + x + 2\sqrt{a} = q^2 + p^2 + 2pq = (p + q)^2 = \left(\sqrt{x} + \sqrt{\frac{a}{x}}\right)^2\]
+        </div>
+        <p>Posto su oba sabirka pozitivna (\(\sqrt{x} > 0\), \(\sqrt{a/x} > 0\)), imamo:</p>
+        <div class="math-box">
+          \[\sqrt{\left(\sqrt{x} + \sqrt{\frac{a}{x}}\right)^2} = \sqrt{x} + \sqrt{\frac{a}{x}}\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Razvij \((\sqrt{x} + \sqrt{a/x})^2\) rucno</summary>
+      <div class="details-content">
+        <p>\((\sqrt{x} + \sqrt{a/x})^2 = (\sqrt{x})^2 + 2\sqrt{x}\cdot\sqrt{a/x} + (\sqrt{a/x})^2\)</p>
+        <p>\(= x + 2\sqrt{a} + \dfrac{a}{x}\)</p>
+        <p>To je upravo nas izraz \(\dfrac{a}{x} + x + 2\sqrt{a}\). Tacno!</p>
+      </div>
+    </details>
+
+    <div class="step-container">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <p>Konacno, <span class="highlight">sabiramo oba rezultata</span>:</p>
+        <div class="math-box">
+          \[\underbrace{\left(\sqrt{x} - \sqrt{\frac{a}{x}}\right)}_{\text{prvi koren}} + \underbrace{\left(\sqrt{x} + \sqrt{\frac{a}{x}}\right)}_{\text{drugi koren}}\]
+        </div>
+        <p>Clanovi sa \(\sqrt{\dfrac{a}{x}}\) se poniste:</p>
+        <div class="math-box">
+          \[\sqrt{x} \cancel{- \sqrt{\frac{a}{x}}} + \sqrt{x} \cancel{+ \sqrt{\frac{a}{x}}} = 2\sqrt{x}\]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kljucni uvid -->
+  <div class="card">
+    <div class="insight-box">
+      <h3>Kljucni uvid</h3>
+      <p>Trik u ovom zadatku je prepoznavanje da se izrazi \(\dfrac{a}{x} + x \pm 2\sqrt{a}\) mogu napisati kao <strong>potpuni kvadrati</strong> oblika \((\sqrt{x} \pm \sqrt{a/x})^2\). Kljucna veza je da je \(2\sqrt{x} \cdot \sqrt{a/x} = 2\sqrt{a}\), sto nam omogucava da primenimo formule za kvadrat zbira/razlike. Nakon vadjenja korena, suprotni clanovi se poniste i ostaje samo \(2\sqrt{x}\).</p>
+    </div>
+  </div>
+
+  <!-- Konacan odgovor -->
+  <div class="card">
+    <h2>Konacan odgovor</h2>
+    <div class="options-grid">
+      <div class="option correct">(A) \(2\sqrt{x}\)</div>
+      <div class="option">(B) \(2\sqrt{\dfrac{a}{x}}\)</div>
+      <div class="option">(C) \(\dfrac{2a}{\sqrt{x}}\)</div>
+      <div class="option">(D) \(\dfrac{2}{\sqrt{x}}\)</div>
+      <div class="option">(E) \(\sqrt{a} + \sqrt{x}\)</div>
+      <div class="option">(N) Ne znam</div>
+    </div>
+    <div class="answer-box">
+      <div class="answer-label">Tacan odgovor</div>
+      <div class="answer-value">(A) \(2\sqrt{x}\)</div>
+    </div>
+    <p style="margin-top: 16px; color: #94a3b8; text-align: center;">
+      <strong>Verifikacija:</strong> Za \(a = 4\), \(x = 9\):
+      Leva strana = \(\sqrt{\dfrac{85}{9} - 4} + \sqrt{\dfrac{85}{9} + 4} = \sqrt{\dfrac{49}{9}} + \sqrt{\dfrac{121}{9}} = \dfrac{7}{3} + \dfrac{11}{3} = 6 = 2\sqrt{9}\)
+    </p>
+  </div>
+
+  <!-- Ceste greske -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <div class="pitfall-box">
+      <div class="pitfall-title">Pogresno rastavljanje razlomka</div>
+      <p>Greska nastaje ako se \(\dfrac{a + x^2}{x}\) ne rastavi na \(\dfrac{a}{x} + x\), vec se pokusa nesto drugo, na primer \(\dfrac{a}{x^2} + 1\). Kljucno je pravilno podeliti svaki sabirak u brojiocu sa \(x\).</p>
+    </div>
+    <div class="pitfall-box">
+      <div class="pitfall-title">Zaboravljanje na uslov za znak</div>
+      <p>Bez provere uslova \(x > \sqrt{a}\) ne mozemo znati da li je \(\sqrt{x} - \sqrt{a/x}\) pozitivno ili negativno. Pogresan znak bi doveo do drugacijeg rezultata (na primer, \(2\sqrt{a/x}\) umesto \(2\sqrt{x}\)).</p>
+    </div>
+    <div class="pitfall-box">
+      <div class="pitfall-title">Odabir odgovora (E)</div>
+      <p>Izraz \(\sqrt{a} + \sqrt{x}\) moze delovati primamljivo jer sadrzi oba parametra, ali ne odgovara algebarskom pojednostavljivanju. Provera sa konkretnim brojevima brzo otkriva gresku.</p>
+    </div>
+  </div>
+
+  <!-- Dodatni izazov -->
+  <div class="card">
+    <h2>Dodatni izazov</h2>
+    <p>Pojednostavi izraz za \(a > 0\), \(0 < x < \sqrt{a}\):</p>
+    <div class="math-box">
+      \[\sqrt{\frac{a + x^2}{x} - 2\sqrt{a}} \;-\; \sqrt{\frac{a + x^2}{x} + 2\sqrt{a}}\]
+    </div>
+    <details>
+      <summary>Pomoc</summary>
+      <div class="details-content">
+        <p>Sada je \(x < \sqrt{a}\), sto znaci \(\sqrt{a/x} > \sqrt{x}\).</p>
+        <p>Dakle: \(\sqrt{(p-q)^2} = |p - q| = q - p = \sqrt{a/x} - \sqrt{x}\)</p>
+        <p>A drugi koren i dalje daje \(\sqrt{x} + \sqrt{a/x}\).</p>
+        <p>Rezultat: \((\sqrt{a/x} - \sqrt{x}) - (\sqrt{x} + \sqrt{a/x}) = -2\sqrt{x}\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('aSlider');
+  const aValueSpan = document.getElementById('aValue');
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    const a = parseFloat(slider.value);
+    aValueSpan.textContent = a;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Margins
+    const ml = 70, mr = 30, mt = 50, mb = 60;
+    const gw = W - ml - mr;
+    const gh = H - mt - mb;
+
+    // X range: from sqrt(a)+0.1 to sqrt(a) + 10
+    const sqrtA = Math.sqrt(a);
+    const xMin = sqrtA + 0.01;
+    const xMax = sqrtA + 10;
+
+    // Compute Y range
+    const yMinVal = 2 * Math.sqrt(xMin);
+    const yMaxVal = 2 * Math.sqrt(xMax);
+    const yPad = (yMaxVal - yMinVal) * 0.1;
+    const yMin = Math.max(0, yMinVal - yPad);
+    const yMax = yMaxVal + yPad;
+
+    // Helper functions
+    function toCanvasX(xv) { return ml + (xv - xMin) / (xMax - xMin) * gw; }
+    function toCanvasY(yv) { return mt + gh - (yv - yMin) / (yMax - yMin) * gh; }
+
+    // Draw grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+
+    // Vertical grid lines
+    const xStep = Math.ceil((xMax - xMin) / 8);
+    for (let xv = Math.ceil(xMin); xv <= xMax; xv += xStep) {
+      const cx = toCanvasX(xv);
+      ctx.beginPath();
+      ctx.moveTo(cx, mt);
+      ctx.lineTo(cx, mt + gh);
+      ctx.stroke();
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(xv.toFixed(0), cx, mt + gh + 20);
+    }
+
+    // Horizontal grid lines
+    const yStep = Math.max(0.5, Math.ceil((yMax - yMin) / 6 * 2) / 2);
+    for (let yv = Math.ceil(yMin / yStep) * yStep; yv <= yMax; yv += yStep) {
+      const cy = toCanvasY(yv);
+      ctx.beginPath();
+      ctx.moveTo(ml, cy);
+      ctx.lineTo(ml + gw, cy);
+      ctx.stroke();
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(yv.toFixed(1), ml - 8, cy + 4);
+    }
+
+    // Axes
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ml, mt);
+    ctx.lineTo(ml, mt + gh);
+    ctx.lineTo(ml + gw, mt + gh);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x', ml + gw / 2, H - 8);
+
+    ctx.save();
+    ctx.translate(15, mt + gh / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center';
+    ctx.fillText('f(x)', 0, 0);
+    ctx.restore();
+
+    // Compute original expression
+    function originalExpr(xv) {
+      const term = a / xv + xv;
+      const val1 = term - 2 * Math.sqrt(a);
+      const val2 = term + 2 * Math.sqrt(a);
+      if (val1 < 0 || val2 < 0) return null;
+      return Math.sqrt(val1) + Math.sqrt(val2);
+    }
+
+    // Compute 2*sqrt(x)
+    function simplified(xv) {
+      return 2 * Math.sqrt(xv);
+    }
+
+    // Draw 2*sqrt(x) as thick line (draw first so it appears behind)
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    let started = false;
+    const numPts = 300;
+    for (let i = 0; i <= numPts; i++) {
+      const xv = xMin + (xMax - xMin) * i / numPts;
+      const yv = simplified(xv);
+      const cx = toCanvasX(xv);
+      const cy = toCanvasY(yv);
+      if (cy >= mt && cy <= mt + gh) {
+        if (!started) { ctx.moveTo(cx, cy); started = true; }
+        else ctx.lineTo(cx, cy);
+      }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw original expression
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    started = false;
+    for (let i = 0; i <= numPts; i++) {
+      const xv = xMin + (xMax - xMin) * i / numPts;
+      const yv = originalExpr(xv);
+      if (yv === null) continue;
+      const cx = toCanvasX(xv);
+      const cy = toCanvasY(yv);
+      if (cy >= mt && cy <= mt + gh) {
+        if (!started) { ctx.moveTo(cx, cy); started = true; }
+        else ctx.lineTo(cx, cy);
+      }
+    }
+    ctx.stroke();
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Originalni izraz vs. 2\u221Ax  (a = ' + a + ')', W / 2, 25);
+
+    // Legend
+    const legX = ml + 15;
+    const legY = mt + 20;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    roundRect(ctx, legX - 6, legY - 14, 230, 52, 8, true, true);
+
+    // Original expression legend
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(legX, legY);
+    ctx.lineTo(legX + 30, legY);
+    ctx.stroke();
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Originalni izraz', legX + 38, legY + 4);
+
+    // Simplified legend
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.moveTo(legX, legY + 24);
+    ctx.lineTo(legX + 30, legY + 24);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('2\u221Ax', legX + 38, legY + 28);
+
+    // Mark sqrt(a) boundary
+    const sqrtACx = toCanvasX(sqrtA);
+    if (sqrtACx >= ml && sqrtACx <= ml + gw) {
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(sqrtACx, mt);
+      ctx.lineTo(sqrtACx, mt + gh);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('x = \u221Aa = ' + sqrtA.toFixed(2), sqrtACx, mt + gh + 38);
+    }
+  }
+
+  function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+  }
+
+  slider.addEventListener('input', draw);
+
+  // Touch support
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+  canvas.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+
+  draw();
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje izraza sa korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["algebarski identiteti", "potpun kvadrat", "korenovanje", "racionalizacija", "pojednostavljivanje izraza"]
+}
+BRAINSPARK_META-->

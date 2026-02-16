@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistem jednačina – broj rešenja</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  margin-bottom: 32px;
+  font-size: 1.05rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  font-size: 1.1rem;
+  margin: 16px 0 10px;
+  color: #a78bfa;
+}
+
+.problem-box {
+  background: #162032;
+  border-left: 4px solid #60a5fa;
+  padding: 20px;
+  border-radius: 0 12px 12px 0;
+  font-size: 1.1rem;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.option-btn {
+  background: #334155;
+  border: 2px solid #475569;
+  color: #e2e8f0;
+  padding: 8px 22px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.option-btn:hover { border-color: #60a5fa; background: #1e3a5f; }
+.option-btn.correct { border-color: #4ade80; background: #064e3b; color: #4ade80; font-weight: bold; }
+.option-btn.wrong { border-color: #ef4444; background: #450a0a; color: #f87171; }
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 8px 0 8px 40px;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.collapsible-toggle {
+  background: none;
+  border: 1px solid #475569;
+  color: #60a5fa;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: left;
+}
+
+.collapsible-toggle:hover { background: #1e3a5f; }
+
+.collapsible-content {
+  display: none;
+  margin-top: 12px;
+  padding: 16px;
+  background: #162032;
+  border-radius: 10px;
+  line-height: 1.8;
+}
+
+.collapsible-content.open { display: block; }
+
+.step {
+  border-left: 3px solid #334155;
+  padding: 16px 0 16px 20px;
+  margin-left: 14px;
+  position: relative;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 20px;
+  width: 14px;
+  height: 14px;
+  background: #60a5fa;
+  border-radius: 50%;
+  border: 2px solid #1e293b;
+}
+
+.step.step-purple::before { background: #a78bfa; }
+.step.step-green::before { background: #4ade80; }
+.step.step-pink::before { background: #f472b6; }
+
+.step-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+  color: #60a5fa;
+}
+
+.step-purple .step-title { color: #a78bfa; }
+.step-green .step-title { color: #4ade80; }
+.step-pink .step-title { color: #f472b6; }
+
+.checkpoint-card {
+  background: #1a1a40;
+  border: 1px dashed #a78bfa;
+  border-radius: 10px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.checkpoint-card h4 { color: #a78bfa; margin-bottom: 8px; }
+
+.checkpoint-btn {
+  background: #334155;
+  border: 1px solid #a78bfa;
+  color: #e2e8f0;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 4px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.checkpoint-btn:hover { background: #3b3570; }
+.checkpoint-btn.cp-correct { background: #064e3b; border-color: #4ade80; color: #4ade80; }
+.checkpoint-btn.cp-wrong { background: #450a0a; border-color: #ef4444; color: #f87171; }
+
+.verify-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.verify-table th, .verify-table td {
+  border: 1px solid #475569;
+  padding: 10px 14px;
+  text-align: center;
+}
+
+.verify-table th {
+  background: #334155;
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.verify-table td { background: #1e293b; }
+
+.final-answer {
+  background: linear-gradient(135deg, #064e3b, #0d3520);
+  border: 2px solid #4ade80;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin: 24px 0;
+}
+
+.final-answer .answer-label {
+  color: #4ade80;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.final-answer .answer-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, #1e1b4b, #1e293b);
+  border-left: 4px solid #a78bfa;
+  border-radius: 0 12px 12px 0;
+  padding: 20px;
+}
+
+.pitfall-box {
+  background: #2d1520;
+  border-left: 4px solid #f472b6;
+  border-radius: 0 12px 12px 0;
+  padding: 20px;
+}
+
+.pitfall-box ul { margin-left: 20px; margin-top: 8px; }
+.pitfall-box li { margin-bottom: 6px; color: #fecdd3; }
+
+.challenge-box {
+  background: #1a1a40;
+  border: 1px dashed #60a5fa;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+canvas {
+  display: block;
+  margin: 16px auto;
+  border-radius: 12px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-legend {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+@media (max-width: 700px) {
+  body { padding: 12px; }
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .options-row { flex-direction: column; }
+  .option-btn { width: 100%; text-align: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Sistem jednačina – broj rešenja</h1>
+<p class="subtitle">Supstitucija i simetrija u sistemu jednačina</p>
+
+<!-- Zadatak -->
+<div class="card">
+  <h2>📋 Zadatak</h2>
+  <div class="problem-box">
+    <p>Ukupan broj rešenja sistema jednačina:</p>
+    \[
+    \begin{cases}
+    x + xy + y = 11 \\
+    x^2 y + x y^2 = 30
+    \end{cases}
+    \]
+    <p style="margin-top:10px;">je:</p>
+    <div class="options-row" id="answer-options">
+      <button class="option-btn" data-val="A" onclick="checkAnswer(this,'A')">A) 1</button>
+      <button class="option-btn" data-val="B" onclick="checkAnswer(this,'B')">B) 2</button>
+      <button class="option-btn" data-val="C" onclick="checkAnswer(this,'C')">C) 4</button>
+      <button class="option-btn" data-val="D" onclick="checkAnswer(this,'D')">D) 3</button>
+      <button class="option-btn" data-val="E" onclick="checkAnswer(this,'E')">E) 0</button>
+    </div>
+  </div>
+</div>
+
+<!-- Plan rešavanja -->
+<div class="card">
+  <h2>🗺️ Plan rešavanja</h2>
+  <ol class="plan-list">
+    <li>Uočiti simetriju — obe jednačine se mogu izraziti pomoću \(s = x+y\) i \(p = xy\).</li>
+    <li>Transformisati sistem u sistem po \(s\) i \(p\).</li>
+    <li>Rešiti kvadratnu jednačinu po \(s\) (ili \(p\)).</li>
+    <li>Za svaki par \((s, p)\) odrediti \(x\) i \(y\) kao korene kvadratne jednačine.</li>
+    <li>Prebrojati i verifikovati sva rešenja.</li>
+  </ol>
+</div>
+
+<!-- Teorijsko podsetnik -->
+<div class="card">
+  <h2>📖 Teorijsko podsetnik</h2>
+  <button class="collapsible-toggle" onclick="toggleCollapsible(this)">▸ Vijerov teorem i simetrične funkcije (klikni da proširiš)</button>
+  <div class="collapsible-content">
+    <p>Ako su \(x\) i \(y\) koreni kvadratne jednačine \(t^2 - st + p = 0\), tada:</p>
+    \[
+    x + y = s, \quad xy = p
+    \]
+    <p>Ovo je <strong>Vijerov teorem</strong> (Viète). Ključna ideja: svaki simetrični izraz po \(x\) i \(y\) može se napisati preko \(s = x+y\) i \(p = xy\).</p>
+    <h3>Primeri:</h3>
+    <ul style="margin-left:20px; margin-top: 8px;">
+      <li>\(x + xy + y = (x+y) + xy = s + p\)</li>
+      <li>\(x^2y + xy^2 = xy(x+y) = p \cdot s\)</li>
+    </ul>
+    <p style="margin-top: 10px;">Uslov da kvadratna jednačina \(t^2 - st + p = 0\) ima realna rešenja je \(D = s^2 - 4p \geq 0\).</p>
+  </div>
+</div>
+
+<!-- Vizuelizacija -->
+<div class="card">
+  <h2>📊 Grafička vizuelizacija</h2>
+  <p style="color:#94a3b8; margin-bottom:10px;">Preseci krivih \(x + xy + y = 11\) i \(x^2y + xy^2 = 30\) daju rešenja sistema.</p>
+  <canvas id="graphCanvas" width="520" height="520"></canvas>
+  <p class="canvas-legend">Crvena kriva: \(x + xy + y = 11\) · Plava kriva: \(x^2y + xy^2 = 30\) · Zelene tačke: rešenja</p>
+</div>
+
+<!-- Korak po korak rešenje -->
+<div class="card">
+  <h2>✏️ Rešenje korak po korak</h2>
+
+  <div class="step">
+    <div class="step-title">Korak 1: Uvođenje smene</div>
+    <p>Uvedimo oznake za zbir i proizvod:</p>
+    \[ s = x + y, \quad p = xy \]
+    <p>Sada transformišemo obe jednačine sistema.</p>
+  </div>
+
+  <div class="step step-purple">
+    <div class="step-title">Korak 2: Transformacija prve jednačine</div>
+    <p>Prva jednačina: \(x + xy + y = 11\)</p>
+    <p>Prepoznajemo:</p>
+    \[ x + y + xy = s + p = 11 \]
+    <p>Dakle, prva jednačina postaje:</p>
+    \[ \boxed{s + p = 11} \]
+  </div>
+
+  <div class="step">
+    <div class="step-title">Korak 3: Transformacija druge jednačine</div>
+    <p>Druga jednačina: \(x^2y + xy^2 = 30\)</p>
+    <p>Izlučujemo zajednički faktor:</p>
+    \[ x^2y + xy^2 = xy(x + y) = p \cdot s = 30 \]
+    <p>Dakle, druga jednačina postaje:</p>
+    \[ \boxed{p \cdot s = 30} \]
+  </div>
+
+  <!-- Checkpoint 1 -->
+  <div class="checkpoint-card">
+    <h4>🔍 Proveri se!</h4>
+    <p>Posle smene \(s = x+y\), \(p = xy\), sistem postaje \(s + p = 11\) i \(sp = 30\). Čemu je jednako \(p\) izraženo preko \(s\)?</p>
+    <div style="margin-top:8px;">
+      <button class="checkpoint-btn" onclick="checkCP(this, false)"> \(p = 11s\) </button>
+      <button class="checkpoint-btn" onclick="checkCP(this, true)"> \(p = 11 - s\) </button>
+      <button class="checkpoint-btn" onclick="checkCP(this, false)"> \(p = s - 11\) </button>
+    </div>
+  </div>
+
+  <div class="step step-green">
+    <div class="step-title">Korak 4: Rešavanje sistema po s i p</div>
+    <p>Iz prve jednačine: \(p = 11 - s\). Zamenjujemo u drugu:</p>
+    \[ s(11 - s) = 30 \]
+    \[ 11s - s^2 = 30 \]
+    \[ s^2 - 11s + 30 = 0 \]
+    <p>Rešavamo kvadratnu jednačinu:</p>
+    \[ D = 121 - 120 = 1 \]
+    \[ s = \frac{11 \pm 1}{2} \]
+    <p>Dobijamo:</p>
+    \[ s_1 = 6, \quad s_2 = 5 \]
+    <p>Odgovarajuće vrednosti za \(p\):</p>
+    \[ p_1 = 11 - 6 = 5, \quad p_2 = 11 - 5 = 6 \]
+  </div>
+
+  <div class="step step-pink">
+    <div class="step-title">Korak 5: Slučaj 1 — \(s = 6\), \(p = 5\)</div>
+    <p>Brojevi \(x\) i \(y\) su koreni jednačine:</p>
+    \[ t^2 - 6t + 5 = 0 \]
+    \[ (t - 1)(t - 5) = 0 \]
+    <p>Rešenja: \(t = 1\) i \(t = 5\), dakle:</p>
+    \[ (x, y) \in \{(1,\, 5),\; (5,\, 1)\} \]
+    <p>Diskriminanta: \(D = 36 - 20 = 16 > 0\) — dva različita realna korena. ✔</p>
+  </div>
+
+  <div class="step">
+    <div class="step-title">Korak 6: Slučaj 2 — \(s = 5\), \(p = 6\)</div>
+    <p>Brojevi \(x\) i \(y\) su koreni jednačine:</p>
+    \[ t^2 - 5t + 6 = 0 \]
+    \[ (t - 2)(t - 3) = 0 \]
+    <p>Rešenja: \(t = 2\) i \(t = 3\), dakle:</p>
+    \[ (x, y) \in \{(2,\, 3),\; (3,\, 2)\} \]
+    <p>Diskriminanta: \(D = 25 - 24 = 1 > 0\) — dva različita realna korena. ✔</p>
+  </div>
+
+  <!-- Checkpoint 2 -->
+  <div class="checkpoint-card">
+    <h4>🔍 Proveri se!</h4>
+    <p>Koliko ukupno uređenih parova \((x, y)\) čine rešenja sistema?</p>
+    <div style="margin-top:8px;">
+      <button class="checkpoint-btn" onclick="checkCP(this, false)">2</button>
+      <button class="checkpoint-btn" onclick="checkCP(this, false)">3</button>
+      <button class="checkpoint-btn" onclick="checkCP(this, true)">4</button>
+      <button class="checkpoint-btn" onclick="checkCP(this, false)">6</button>
+    </div>
+  </div>
+
+  <div class="step step-green">
+    <div class="step-title">Korak 7: Verifikacija svih rešenja</div>
+    <p>Proveravamo svaki par u polaznom sistemu:</p>
+    <table class="verify-table">
+      <tr>
+        <th>\((x,\, y)\)</th>
+        <th>\(x + xy + y\)</th>
+        <th>\(x^2y + xy^2\)</th>
+        <th>Važi?</th>
+      </tr>
+      <tr>
+        <td>\((1,\, 5)\)</td>
+        <td>\(1 + 5 + 5 = 11\)</td>
+        <td>\(5 + 25 = 30\)</td>
+        <td style="color:#4ade80;">✔</td>
+      </tr>
+      <tr>
+        <td>\((5,\, 1)\)</td>
+        <td>\(5 + 5 + 1 = 11\)</td>
+        <td>\(25 + 5 = 30\)</td>
+        <td style="color:#4ade80;">✔</td>
+      </tr>
+      <tr>
+        <td>\((2,\, 3)\)</td>
+        <td>\(2 + 6 + 3 = 11\)</td>
+        <td>\(12 + 18 = 30\)</td>
+        <td style="color:#4ade80;">✔</td>
+      </tr>
+      <tr>
+        <td>\((3,\, 2)\)</td>
+        <td>\(3 + 6 + 2 = 11\)</td>
+        <td>\(18 + 12 = 30\)</td>
+        <td style="color:#4ade80;">✔</td>
+      </tr>
+    </table>
+    <p style="margin-top:10px;">Sva 4 para zadovoljavaju obe jednačine.</p>
+  </div>
+</div>
+
+<!-- Ključni uvid -->
+<div class="card">
+  <h2>💡 Ključni uvid</h2>
+  <div class="insight-box">
+    <p>Obe jednačine u sistemu su <strong>simetrične funkcije</strong> promenljivih \(x\) i \(y\). To znači da zamenom \(x \leftrightarrow y\) jednačine ostaju iste. Ovo je jak signal da treba uvesti smenu \(s = x+y\) i \(p = xy\), čime se sistem drastično pojednostavljuje.</p>
+    <p style="margin-top:10px;">Uvek kada vidite izraze poput \(x + y\), \(xy\), \(x^2 + y^2\), \(x^2y + xy^2\) — razmislite o Vijerovim smenama!</p>
+  </div>
+</div>
+
+<!-- Konačni odgovor -->
+<div class="final-answer">
+  <div class="answer-label">KONAČAN ODGOVOR</div>
+  <div class="answer-value">
+    (C) 4
+  </div>
+  <p style="margin-top:12px; color:#bbf7d0;">
+    Sistem ima tačno 4 rešenja: \((1, 5)\), \((5, 1)\), \((2, 3)\), \((3, 2)\).
+  </p>
+</div>
+
+<!-- Opcije odgovora sa verifikacijom -->
+<div class="card">
+  <h2>📝 Pregled svih ponuđenih odgovora</h2>
+  <table class="verify-table">
+    <tr>
+      <th>Opcija</th>
+      <th>Vrednost</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td>A</td><td>1</td><td style="color:#f87171;">✗ Netačno</td>
+    </tr>
+    <tr>
+      <td>B</td><td>2</td><td style="color:#f87171;">✗ Netačno</td>
+    </tr>
+    <tr style="background:#064e3b;">
+      <td style="color:#4ade80; font-weight:bold;">C</td>
+      <td style="color:#4ade80; font-weight:bold;">4</td>
+      <td style="color:#4ade80; font-weight:bold;">✔ Tačno</td>
+    </tr>
+    <tr>
+      <td>D</td><td>3</td><td style="color:#f87171;">✗ Netačno</td>
+    </tr>
+    <tr>
+      <td>E</td><td>0</td><td style="color:#f87171;">✗ Netačno</td>
+    </tr>
+  </table>
+</div>
+
+<!-- Česte greške -->
+<div class="card">
+  <h2>⚠️ Česte greške</h2>
+  <div class="pitfall-box">
+    <ul>
+      <li><strong>Zaborav na zamenu \(x \leftrightarrow y\):</strong> Ako tretiramo samo neuređene parove \(\{1,5\}\) i \(\{2,3\}\), dobijamo 2 umesto 4 rešenja. Sistem traži uređene parove \((x,y)\)!</li>
+      <li><strong>Pogrešno faktorizovanje:</strong> Druga jednačina \(x^2y + xy^2\) nije \((xy)^2\), već \(xy(x+y)\). Pažljivo izlučite zajednički faktor.</li>
+      <li><strong>Propust provere diskriminante:</strong> Uvek proverite da li su \(x\) i \(y\) realni, tj. da je \(s^2 - 4p \geq 0\). U ovom zadatku, srećom, oba slučaja daju pozitivnu diskriminantu.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Dodatni izazov -->
+<div class="card">
+  <h2>🚀 Dodatni izazov</h2>
+  <div class="challenge-box">
+    <p>Za koji su zajednički zbir \(x + xy + y\) i proizvod \(x^2y + xy^2\) jednačine \(t^2 - st + p = 0\) ima dvostruki koren (tj. \(x = y\))?</p>
+    <p style="margin-top:8px; color:#94a3b8;"><em>Savet: Postavite uslov \(s^2 - 4p = 0\) uz \(s + p = S\) i \(sp = P\) i istražite odnos \(S\) i \(P\).</em></p>
+  </div>
+</div>
+
+</div>
+
+<script>
+(() => {
+  // Answer option checking
+  window.checkAnswer = function(btn, val) {
+    const buttons = document.querySelectorAll('#answer-options .option-btn');
+    buttons.forEach(b => {
+      b.classList.remove('correct', 'wrong');
+      b.disabled = true;
+    });
+    if (val === 'C') {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      buttons.forEach(b => {
+        if (b.dataset.val === 'C') b.classList.add('correct');
+      });
+    }
+  };
+
+  // Checkpoint checking
+  window.checkCP = function(btn, isCorrect) {
+    const parent = btn.parentElement;
+    const allBtns = parent.querySelectorAll('.checkpoint-btn');
+    allBtns.forEach(b => b.disabled = true);
+    if (isCorrect) {
+      btn.classList.add('cp-correct');
+    } else {
+      btn.classList.add('cp-wrong');
+      allBtns.forEach(b => {
+        if (!b.classList.contains('cp-wrong')) {
+          // find the correct one by trying onclick
+        }
+      });
+    }
+  };
+
+  // Collapsible
+  window.toggleCollapsible = function(btn) {
+    const content = btn.nextElementSibling;
+    content.classList.toggle('open');
+    btn.textContent = content.classList.contains('open')
+      ? '▾ Vijerov teorem i simetrične funkcije (klikni da sakriješ)'
+      : '▸ Vijerov teorem i simetrične funkcije (klikni da proširiš)';
+  };
+
+  // Canvas drawing
+  const canvas = document.getElementById('graphCanvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // Coordinate system setup
+    const xMin = -2, xMax = 8, yMin = -2, yMax = 8;
+
+    function toCanvasX(x) { return (x - xMin) / (xMax - xMin) * W; }
+    function toCanvasY(y) { return H - (y - yMin) / (yMax - yMin) * H; }
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(i), 0);
+      ctx.lineTo(toCanvasX(i), H);
+      ctx.stroke();
+    }
+    for (let j = Math.ceil(yMin); j <= Math.floor(yMax); j++) {
+      ctx.beginPath();
+      ctx.moveTo(0, toCanvasY(j));
+      ctx.lineTo(W, toCanvasY(j));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(xMin), toCanvasY(0));
+    ctx.lineTo(toCanvasX(xMax), toCanvasY(0));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), toCanvasY(yMin));
+    ctx.lineTo(toCanvasX(0), toCanvasY(yMax));
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    for (let i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+      if (i === 0) continue;
+      ctx.fillText(i.toString(), toCanvasX(i) - 4, toCanvasY(0) + 16);
+    }
+    for (let j = Math.ceil(yMin); j <= Math.floor(yMax); j++) {
+      if (j === 0) continue;
+      ctx.fillText(j.toString(), toCanvasX(0) + 6, toCanvasY(j) + 4);
+    }
+
+    // Plot curve 1: x + xy + y = 11 => y(1+x) = 11-x => y = (11-x)/(1+x) for x != -1
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let started = false;
+    for (let px = 0; px < W; px++) {
+      const x = xMin + (px / W) * (xMax - xMin);
+      if (Math.abs(1 + x) < 0.01) { started = false; continue; }
+      const y = (11 - x) / (1 + x);
+      if (y < yMin || y > yMax) { started = false; continue; }
+      const cy = toCanvasY(y);
+      if (!started) { ctx.moveTo(px, cy); started = true; }
+      else ctx.lineTo(px, cy);
+    }
+    ctx.stroke();
+
+    // Plot curve 2: xy(x+y) = 30 => implicit plot
+    // We'll plot x*y*(x+y) = 30 by scanning
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    const step = 0.02;
+    for (let x = xMin; x <= xMax; x += step) {
+      for (let y = yMin; y <= yMax; y += step) {
+        const val = x * y * (x + y);
+        const val2 = (x + step) * y * (x + step + y);
+        const val3 = x * (y + step) * (x + y + step);
+        // Check if 30 is crossed
+        if ((val - 30) * (val2 - 30) < 0 || (val - 30) * (val3 - 30) < 0) {
+          const cx = toCanvasX(x);
+          const cy = toCanvasY(y);
+          ctx.fillStyle = '#60a5fa';
+          ctx.fillRect(cx, cy, 2, 2);
+        }
+      }
+    }
+
+    // Solution points
+    const solutions = [[1, 5], [5, 1], [2, 3], [3, 2]];
+    solutions.forEach(([sx, sy]) => {
+      const cx = toCanvasX(sx);
+      const cy = toCanvasY(sy);
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(74, 222, 128, 0.25)';
+      ctx.fill();
+
+      // Point
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = '#4ade80';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(`(${sx}, ${sy})`, cx + 10, cy - 8);
+    });
+
+    // Legend on canvas
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    // Curve 1
+    ctx.fillStyle = '#f87171';
+    ctx.fillRect(12, 14, 20, 3);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('x + xy + y = 11', 38, 20);
+    // Curve 2
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(12, 32, 20, 3);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('x²y + xy² = 30', 38, 38);
+  }
+})();
+</script>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Find the total number of solutions of the system:
+  x + xy + y = 11
+  x²y + xy² = 30
+
+Step 1: Substitution s = x+y, p = xy
+  Equation 1: x + y + xy = s + p = 11
+  Equation 2: xy(x+y) = ps = 30
+
+Step 2: From equation 1: p = 11 - s
+  Substitute into equation 2: s(11-s) = 30
+  11s - s² = 30
+  s² - 11s + 30 = 0
+  D = 121 - 120 = 1
+  s = (11 ± 1)/2
+  s₁ = 6, s₂ = 5
+
+Step 3: Find p values:
+  p₁ = 11 - 6 = 5
+  p₂ = 11 - 5 = 6
+
+Step 4: Case 1 (s=6, p=5):
+  t² - 6t + 5 = 0 → (t-1)(t-5) = 0
+  x,y ∈ {1, 5}
+  Solutions: (1,5) and (5,1)
+  D = 36 - 20 = 16 > 0 ✓
+
+Step 5: Case 2 (s=5, p=6):
+  t² - 5t + 6 = 0 → (t-2)(t-3) = 0
+  x,y ∈ {2, 3}
+  Solutions: (2,3) and (3,2)
+  D = 25 - 24 = 1 > 0 ✓
+
+Step 6: Verification:
+  (1,5): 1+5+5=11 ✓, 5+25=30 ✓
+  (5,1): 5+5+1=11 ✓, 25+5=30 ✓
+  (2,3): 2+6+3=11 ✓, 12+18=30 ✓
+  (3,2): 3+6+2=11 ✓, 18+12=30 ✓
+
+Total: 4 solutions → Answer: (C) 4
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Broj rešenja sistema jednačina sa simetričnim funkcijama","subject":"math","unit":"systems-of-equations","topic_tags":["sistemi jednačina","simetrične funkcije","Vijerov teorem","supstitucija","kvadratna jednačina"]}
+BRAINSPARK_META-->

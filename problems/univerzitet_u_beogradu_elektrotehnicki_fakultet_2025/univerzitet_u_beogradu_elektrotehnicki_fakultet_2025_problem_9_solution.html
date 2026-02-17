@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nejednačina sa ugnježdenim korenima</title>
+<script>
+MathJax = { tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] }, svg: { fontCache: 'global' } };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Skup svih realnih rešenja nejednačine
+  sqrt(x + 3 - 4*sqrt(x - 1)) + sqrt(x + 3 + 4*sqrt(x - 1)) >= 4
+je oblika (za -inf < a < b < c < inf):
+(A) [a, +inf)
+(B) (-inf, a] union (b, +inf)
+(C) (a, b) union {c}
+(D) (-inf, a] union [b, c]
+(E) [a, b] union [c, +inf)
+
+Domen: x - 1 >= 0 => x >= 1.
+Takodje, izrazi pod spoljasnjim korenima moraju biti >= 0.
+
+Smena: u = sqrt(x - 1), u >= 0, x = u^2 + 1.
+Tada: x + 3 = u^2 + 4.
+
+x + 3 - 4*sqrt(x-1) = u^2 + 4 - 4u = (u - 2)^2
+x + 3 + 4*sqrt(x-1) = u^2 + 4 + 4u = (u + 2)^2
+
+Oba su >= 0 za svako realno u, pa nema dodatnih ogranicenja domena.
+
+Nejednacina postaje:
+sqrt((u-2)^2) + sqrt((u+2)^2) = |u-2| + |u+2| >= 4
+
+Analiza po slucajevima (u >= 0):
+
+Slucaj 1: 0 <= u <= 2
+  |u-2| = 2-u, |u+2| = u+2
+  Zbir = (2-u) + (u+2) = 4.
+  Dakle za 0 <= u <= 2, zbir = 4 >= 4. Tacno (jednakost).
+  Odgovarajuce x: x = u^2 + 1, u in [0, 2] => x in [1, 5].
+
+Slucaj 2: u > 2
+  |u-2| = u-2, |u+2| = u+2
+  Zbir = (u-2) + (u+2) = 2u.
+  Uslov: 2u >= 4, tj. u >= 2. Za u > 2 ovo je ispunjeno.
+  Odgovarajuce x: u > 2 => x = u^2 + 1 > 5, tj. x in (5, +inf).
+
+Kombinovano: x in [1, 5] union (5, +inf) = [1, +inf).
+
+Dakle skup resenja je [1, +inf) = [a, +inf) za a = 1.
+
+Odgovor: (A) [a, +inf)
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: 1.9rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 28px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 22px;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #60a5fa;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: border-color 0.2s;
+}
+
+.answer-option[data-option] {
+  min-width: 70px;
+  text-align: center;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 1.02rem;
+}
+
+details {
+  margin-top: 10px;
+}
+
+summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 6px 0;
+  user-select: none;
+}
+
+summary:hover {
+  color: #93c5fd;
+}
+
+details .detail-content {
+  padding: 12px 0 4px 10px;
+  color: #cbd5e1;
+}
+
+.step {
+  margin-bottom: 18px;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.step-title {
+  font-weight: 700;
+  font-size: 1.08rem;
+  color: #e2e8f0;
+  vertical-align: middle;
+}
+
+.step-body {
+  margin-top: 8px;
+  padding-left: 42px;
+}
+
+.checkpoint summary {
+  color: #f472b6;
+  font-size: 0.95rem;
+}
+
+.key-insight {
+  border: 1px solid #a78bfa;
+  background: rgba(167, 139, 250, 0.08);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 22px;
+}
+
+.key-insight .card-title {
+  color: #a78bfa;
+}
+
+.final-answer {
+  border: 2px solid #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.final-answer .card-title {
+  color: #4ade80;
+  font-size: 1.3rem;
+}
+
+.answer-display {
+  font-size: 1.6rem;
+  text-align: center;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.option-box {
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.05rem;
+  text-align: center;
+  min-width: 80px;
+}
+
+.option-box.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 6px 0 6px 24px;
+  position: relative;
+  color: #fbbf24;
+}
+
+.pitfall-list li::before {
+  content: '\26A0';
+  position: absolute;
+  left: 0;
+}
+
+.canvas-container {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+canvas {
+  border-radius: 10px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.case-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.case-box.case-a {
+  border-left: 3px solid #60a5fa;
+}
+
+.case-box.case-b {
+  border-left: 3px solid #a78bfa;
+}
+
+.case-box.case-c {
+  border-left: 3px solid #34d399;
+}
+
+.case-label {
+  font-weight: 700;
+  font-size: 1.02rem;
+  margin-bottom: 8px;
+}
+
+.case-a .case-label { color: #60a5fa; }
+.case-b .case-label { color: #a78bfa; }
+.case-c .case-label { color: #34d399; }
+
+.result-highlight {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+  border: 1px solid #60a5fa;
+  border-radius: 8px;
+  padding: 4px 14px;
+  font-weight: 700;
+  color: #60a5fa;
+}
+
+.ineq-chain {
+  text-align: center;
+  font-size: 1.1rem;
+  margin: 14px 0;
+  color: #e2e8f0;
+}
+
+.slider-container {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.slider-container input[type="range"] {
+  width: 80%;
+  max-width: 400px;
+  accent-color: #60a5fa;
+  cursor: pointer;
+}
+
+.slider-label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.slider-value {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.substitution-highlight {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 14px;
+  margin: 12px 0;
+  text-align: center;
+}
+
+.verification {
+  background: #0f172a;
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 10px;
+  color: #94a3b8;
+  font-size: 0.97rem;
+}
+
+@media (max-width: 700px) {
+  body { padding: 12px; }
+  h1 { font-size: 1.4rem; }
+  .card { padding: 16px; }
+  .step-body { padding-left: 20px; }
+  .given-grid { gap: 6px; }
+  .given-item { padding: 6px 12px; font-size: 0.92rem; }
+}
+</style>
+</head>
+<body>
+
+<h1>Nejednačina sa ugnježdenim korenima</h1>
+<p class="subtitle">Iracionalne nejednačine — smena i apsolutna vrednost</p>
+
+<!-- Problem Statement -->
+<div class="card problem-statement">
+  <div class="card-title">Tekst zadatka</div>
+  <p>Skup svih realnih rešenja nejednačine</p>
+  \[\sqrt{x + 3 - 4\sqrt{x - 1}} + \sqrt{x + 3 + 4\sqrt{x - 1}} \geq 4\]
+  <p>je oblika (za \(-\infty < a < b < c < \infty\)):</p>
+  <div class="given-grid">
+    <div class="given-item answer-option" data-option="A">(A) \([a,\; +\infty)\)</div>
+    <div class="given-item answer-option" data-option="B">(B) \((-\infty,\; a] \cup (b,\; +\infty)\)</div>
+    <div class="given-item answer-option" data-option="C">(C) \((a,\; b) \cup \{c\}\)</div>
+    <div class="given-item answer-option" data-option="D">(D) \((-\infty,\; a] \cup [b,\; c]\)</div>
+    <div class="given-item answer-option" data-option="E">(E) \([a,\; b] \cup [c,\; +\infty)\)</div>
+  </div>
+</div>
+
+<!-- Plan -->
+<div class="card">
+  <div class="card-title">Plan rešavanja</div>
+  <p class="plan-text">Uvodimo smenu \(u = \sqrt{x - 1}\) da bismo izraze pod korenima sveli na potpune kvadrate. Zatim koristimo osobine apsolutne vrednosti i analiziramo nejednačinu po slučajevima. Na kraju određujemo odgovarajući skup vrednosti za \(x\) i biramo oblik odgovora.</p>
+</div>
+
+<!-- Theory Refresher -->
+<div class="card">
+  <div class="card-title">Teorijska osnova</div>
+  <details>
+    <summary>Potpun kvadrat i apsolutna vrednost</summary>
+    <div class="detail-content">
+      <p>Za svako realno \(t\) važi:</p>
+      \[\sqrt{t^2} = |t|\]
+      <p>Ovo je ključna veza između kvadratnog korena i apsolutne vrednosti. Koristimo je kad prepoznamo potpun kvadrat pod korenom.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Osobine apsolutne vrednosti</summary>
+    <div class="detail-content">
+      <p>Funkcija \(f(u) = |u - a| + |u + a|\) za \(a > 0\) ima sledeće ponašanje:</p>
+      <ul style="margin:8px 0 8px 20px;">
+        <li>Za \(|u| \leq a\): \(f(u) = 2a\) (konstantna vrednost)</li>
+        <li>Za \(|u| > a\): \(f(u) = 2|u|\) (raste)</li>
+      </ul>
+      <p>Drugim rečima, minimum funkcije je \(2a\), dostiže se na celom intervalu \([-a, a]\).</p>
+    </div>
+  </details>
+  <details>
+    <summary>Smena za iracionalne izraze</summary>
+    <div class="detail-content">
+      <p>Kada se u izrazu pojavljuje \(\sqrt{x - 1}\), pogodna smena je \(u = \sqrt{x - 1}\), \(u \geq 0\). Tada je \(x = u^2 + 1\), pa se iracionalni izrazi svode na algebarske.</p>
+    </div>
+  </details>
+</div>
+
+<!-- Visual Aid: Canvas -->
+<div class="card">
+  <div class="card-title">Grafički prikaz funkcije \(g(u) = |u - 2| + |u + 2|\)</div>
+  <p style="color:#94a3b8; margin-bottom:8px;">Pomeri klizač da istražiš vrednosti funkcije. Zeleni deo označava oblast gde je \(g(u) \geq 4\).</p>
+  <div class="canvas-container">
+    <canvas id="mainCanvas" width="700" height="440"></canvas>
+  </div>
+  <div class="slider-container">
+    <div class="slider-label">Vrednost \(u\) (gde je \(u = \sqrt{x-1}\)):</div>
+    <input type="range" id="uSlider" min="0" max="500" value="100">
+    <div><span class="slider-value" id="sliderDisplay">u = 1,00 &rarr; g(u) = 4,00 &rarr; x = 2,00</span></div>
+  </div>
+</div>
+
+<!-- Step-by-step Solution -->
+<div class="card">
+  <div class="card-title">Rešenje korak po korak</div>
+
+  <!-- Step 1 -->
+  <div class="step">
+    <span class="step-badge">1</span>
+    <span class="step-title">Određivanje domena</span>
+    <div class="step-body">
+      <p>Da bi izrazi imali smisla, moramo obezbediti:</p>
+      <ul style="margin:8px 0 8px 20px; color:#cbd5e1;">
+        <li>\(\sqrt{x - 1}\) postoji: \(x - 1 \geq 0\), tj. \(x \geq 1\)</li>
+        <li>\(x + 3 - 4\sqrt{x-1} \geq 0\) (izraz pod prvim spoljašnjim korenom)</li>
+        <li>\(x + 3 + 4\sqrt{x-1} \geq 0\) (izraz pod drugim spoljašnjim korenom)</li>
+      </ul>
+      <p>Uslove pod korenima ćemo proveriti u sledećem koraku nakon smene.</p>
+
+      <details class="checkpoint">
+        <summary>Proveri se: Zašto je osnovni domen \(x \geq 1\)?</summary>
+        <div class="detail-content">
+          <p>Zato što se u oba podizraza javlja \(\sqrt{x - 1}\), a kvadratni koren zahteva nenegativan argument: \(x - 1 \geq 0\).</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step">
+    <span class="step-badge">2</span>
+    <span class="step-title">Smena \(u = \sqrt{x - 1}\)</span>
+    <div class="step-body">
+      <p>Neka je \(u = \sqrt{x - 1}\), gde \(u \geq 0\). Tada:</p>
+      \[x = u^2 + 1, \quad x + 3 = u^2 + 4\]
+      <p>Zamenjujemo u izraze pod korenima:</p>
+
+      <div class="substitution-highlight">
+        \(x + 3 - 4\sqrt{x-1} = u^2 + 4 - 4u = (u - 2)^2\)
+      </div>
+      <div class="substitution-highlight">
+        \(x + 3 + 4\sqrt{x-1} = u^2 + 4 + 4u = (u + 2)^2\)
+      </div>
+
+      <p>Oba izraza su potpuni kvadrati, pa su automatski \(\geq 0\) za svako realno \(u\). Domen ostaje \(x \geq 1\) (tj. \(u \geq 0\)).</p>
+
+      <details class="checkpoint">
+        <summary>Proveri se: Koliko je \((u-2)^2\) za \(u = 3\)?</summary>
+        <div class="detail-content">
+          <p>\((3-2)^2 = 1^2 = 1\). A \(x = 3^2 + 1 = 10\), pa \(x + 3 - 4\sqrt{x-1} = 13 - 4 \cdot 3 = 13 - 12 = 1\). Tačno!</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="step">
+    <span class="step-badge">3</span>
+    <span class="step-title">Svođenje na apsolutne vrednosti</span>
+    <div class="step-body">
+      <p>Koristimo činjenicu da je \(\sqrt{t^2} = |t|\):</p>
+      \[\sqrt{(u-2)^2} + \sqrt{(u+2)^2} = |u - 2| + |u + 2|\]
+      <p>Nejednačina postaje:</p>
+      \[|u - 2| + |u + 2| \geq 4, \quad u \geq 0\]
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="step">
+    <span class="step-badge">4</span>
+    <span class="step-title">Analiza po slučajevima</span>
+    <div class="step-body">
+      <p>Kritične tačke za apsolutne vrednosti su \(u = -2\) i \(u = 2\). Pošto je \(u \geq 0\), razmatramo dva slučaja:</p>
+
+      <div class="case-box case-a">
+        <div class="case-label">Slučaj 1: \(0 \leq u \leq 2\)</div>
+        <p>Ovde je \(u - 2 \leq 0\) i \(u + 2 > 0\), pa:</p>
+        \[|u - 2| + |u + 2| = (2 - u) + (u + 2) = 4\]
+        <p>Zbir je <strong>uvek jednak 4</strong>, bez obzira na konkretnu vrednost \(u\) u ovom intervalu.</p>
+        <p>Uslov \(4 \geq 4\) je <strong>ispunjen</strong> (jednakost).</p>
+      </div>
+
+      <div class="case-box case-b">
+        <div class="case-label">Slučaj 2: \(u > 2\)</div>
+        <p>Ovde je \(u - 2 > 0\) i \(u + 2 > 0\), pa:</p>
+        \[|u - 2| + |u + 2| = (u - 2) + (u + 2) = 2u\]
+        <p>Uslov: \(2u \geq 4\), tj. \(u \geq 2\). Za \(u > 2\) ovo je <strong>ispunjeno</strong> (stroga nejednakost).</p>
+      </div>
+
+      <p style="margin-top:14px;">Kombinujemo: nejednačina važi za <strong>sve \(u \geq 0\)</strong>.</p>
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div class="step">
+    <span class="step-badge">5</span>
+    <span class="step-title">Vraćanje na promenljivu \(x\)</span>
+    <div class="step-body">
+      <p>Pošto je \(u = \sqrt{x - 1} \geq 0\) i nejednačina važi za sve \(u \geq 0\), rešenja su sva \(x\) za koja postoji \(u \geq 0\) takvo da \(x = u^2 + 1\).</p>
+
+      <div class="case-box case-a">
+        <div class="case-label">Slučaj 1: \(0 \leq u \leq 2\)</div>
+        <p>\(x = u^2 + 1\), \(u \in [0, 2]\)</p>
+        <p>Za \(u = 0\): \(x = 1\). Za \(u = 2\): \(x = 5\).</p>
+        <p>Dakle: \(x \in [1,\; 5]\)</p>
+      </div>
+
+      <div class="case-box case-b">
+        <div class="case-label">Slučaj 2: \(u > 2\)</div>
+        <p>\(x = u^2 + 1\), \(u > 2\)</p>
+        <p>Dakle: \(x > 5\), tj. \(x \in (5,\; +\infty)\)</p>
+      </div>
+
+      <p style="margin-top:14px;">Unija oba slučaja:</p>
+      <div class="ineq-chain">\([1,\; 5] \cup (5,\; +\infty) = [1,\; +\infty)\)</div>
+
+      <details class="checkpoint">
+        <summary>Proveri se: Zašto je \([1, 5] \cup (5, +\infty) = [1, +\infty)\)?</summary>
+        <div class="detail-content">
+          <p>Interval \([1, 5]\) sadrži tačku \(5\), a \((5, +\infty)\) počinje odmah posle \(5\). Zajedno pokrivaju sve od \(1\) do \(+\infty\), uključujući \(1\) i \(5\). Dakle unija je \([1, +\infty)\).</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Step 6 -->
+  <div class="step">
+    <span class="step-badge">6</span>
+    <span class="step-title">Identifikacija oblika odgovora</span>
+    <div class="step-body">
+      <p>Skup rešenja je \([1,\; +\infty)\). Ovo odgovara obliku \([a,\; +\infty)\) za \(a = 1\).</p>
+
+      <p style="margin-top:10px;">Proveravamo krajnju tačku:</p>
+      <div class="case-box case-c">
+        <div class="case-label">Provera za \(x = 1\)</div>
+        <p>\(\sqrt{1 + 3 - 4\sqrt{0}} + \sqrt{1 + 3 + 4\sqrt{0}} = \sqrt{4} + \sqrt{4} = 2 + 2 = 4 \geq 4\) -- ispunjeno!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Key Insight -->
+<div class="key-insight">
+  <div class="card-title">Ključni uvid</div>
+  <p>Smena \(u = \sqrt{x-1}\) transformiše složene ugnježdene korene u potpune kvadrate: \((u-2)^2\) i \((u+2)^2\). Nakon toga, nejednačina postaje \(|u-2| + |u+2| \geq 4\).</p>
+  <p style="margin-top:10px;">Funkcija \(|u-2| + |u+2|\) predstavlja <strong>zbir rastojanja</strong> tačke \(u\) od tačaka \(-2\) i \(2\) na brojevnoj pravoj. Za svako \(u \in [-2, 2]\) taj zbir je tačno 4 (rastojanje između \(-2\) i \(2\)), a za \(|u| > 2\) je veći od 4. Dakle, za \(u \geq 0\) nejednačina je <strong>uvek ispunjena</strong>, pa je skup rešenja ceo domen: \(x \geq 1\).</p>
+</div>
+
+<!-- Final Answer -->
+<div class="card final-answer">
+  <div class="card-title">Konačan odgovor</div>
+  <div class="answer-display">\([1,\; +\infty)\) — oblik \([a,\; +\infty)\) za \(a = 1\)</div>
+  <div class="options-final">
+    <div class="option-box correct">(A) \([a,\; +\infty)\)</div>
+    <div class="option-box">(B) \((-\infty,\; a] \cup (b,\; +\infty)\)</div>
+    <div class="option-box">(C) \((a,\; b) \cup \{c\}\)</div>
+    <div class="option-box">(D) \((-\infty,\; a] \cup [b,\; c]\)</div>
+    <div class="option-box">(E) \([a,\; b] \cup [c,\; +\infty)\)</div>
+  </div>
+  <p style="text-align:center; color:#4ade80; font-weight:600;">Tačan odgovor je (A)</p>
+  <div class="verification">
+    <strong>Verifikacija:</strong> Proveravamo nekoliko tačaka.<br>
+    Za \(x = 1\): \(\sqrt{4-0}+\sqrt{4+0} = 2+2 = 4 \geq 4\). Ispunjeno.<br>
+    Za \(x = 2\): \(u = 1\), \(|1-2|+|1+2| = 1+3 = 4 \geq 4\). Ispunjeno.<br>
+    Za \(x = 5\): \(u = 2\), \(|2-2|+|2+2| = 0+4 = 4 \geq 4\). Ispunjeno.<br>
+    Za \(x = 10\): \(u = 3\), \(|3-2|+|3+2| = 1+5 = 6 \geq 4\). Ispunjeno.<br>
+    Za \(x = 0{,}5\): van domena (\(x < 1\)), nejednačina nema smisla.
+  </div>
+</div>
+
+<!-- Common Pitfalls -->
+<div class="card">
+  <div class="card-title">Česte greške</div>
+  <ul class="pitfall-list">
+    <li>Zaboraviti domen \(x \geq 1\) (uslov da \(\sqrt{x-1}\) postoji) i pogrešno razmatrati negativne vrednosti \(x\).</li>
+    <li>Ne prepoznati potpune kvadrate pod korenima — bez smene \(u = \sqrt{x-1}\), izrazi deluju komplikovano i lako se pogriješi u algebri.</li>
+    <li>Pogrešno izračunati \(\sqrt{t^2} = t\) umesto \(\sqrt{t^2} = |t|\) — apsolutna vrednost je ključna!</li>
+    <li>Misliti da nejednačina nema rešenja za sve \(x \geq 1\) — zapravo, za \(0 \leq u \leq 2\) uvek važi jednakost \(|u-2|+|u+2| = 4\), pa je uslov ispunjen na celom domenu.</li>
+    <li>Pogriješiti pri spajanju intervala: \([1, 5] \cup (5, +\infty) = [1, +\infty)\), a ne \([1, 5) \cup (5, +\infty)\).</li>
+  </ul>
+</div>
+
+<!-- Optional Challenge -->
+<div class="card">
+  <div class="card-title">Dodatni izazov</div>
+  <details>
+    <summary>Za koja \(x\) važi \(\sqrt{x + 8 - 6\sqrt{x-1}} + \sqrt{x + 8 + 6\sqrt{x-1}} < 10\)?</summary>
+    <div class="detail-content">
+      <p><strong>Savet:</strong> Isti pristup. Neka \(u = \sqrt{x-1}\). Tada:</p>
+      <p>\(x + 8 - 6\sqrt{x-1} = u^2 + 9 - 6u = (u-3)^2\)</p>
+      <p>\(x + 8 + 6\sqrt{x-1} = u^2 + 9 + 6u = (u+3)^2\)</p>
+      <p>Nejednačina: \(|u-3| + |u+3| < 10\).</p>
+      <p>Za \(0 \leq u \leq 3\): zbir = 6. Važi \(6 < 10\).</p>
+      <p>Za \(u > 3\): zbir = \(2u\). Uslov \(2u < 10\), tj. \(u < 5\), pa \(u \in (3, 5)\).</p>
+      <p>Ukupno: \(u \in [0, 5)\), tj. \(x \in [1, 26)\).</p>
+      <p><strong>Odgovor:</strong> \(x \in [1,\; 26)\).</p>
+    </div>
+  </details>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('uSlider');
+  const display = document.getElementById('sliderDisplay');
+
+  let currentU = 1.0;
+
+  if (!ctx.roundRect) {
+    ctx.roundRect = function(x, y, w, h, r) {
+      if (typeof r === 'number') r = [r, r, r, r];
+      ctx.beginPath();
+      ctx.moveTo(x + r[0], y);
+      ctx.lineTo(x + w - r[1], y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r[1]);
+      ctx.lineTo(x + w, y + h - r[2]);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r[2], y + h);
+      ctx.lineTo(x + r[3], y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r[3]);
+      ctx.lineTo(x, y + r[0]);
+      ctx.quadraticCurveTo(x, y, x + r[0], y);
+      ctx.closePath();
+    };
+  }
+
+  function g(u) {
+    return Math.abs(u - 2) + Math.abs(u + 2);
+  }
+
+  const margin = { left: 70, right: 40, top: 40, bottom: 55 };
+  const plotW = canvas.width - margin.left - margin.right;
+  const plotH = canvas.height - margin.top - margin.bottom;
+
+  const uMin = -0.5, uMax = 5.5;
+  const yMin = -0.5, yMax = 12;
+
+  function toCanvasX(u) { return margin.left + (u - uMin) / (uMax - uMin) * plotW; }
+  function toCanvasY(y) { return margin.top + (1 - (y - yMin) / (yMax - yMin)) * plotH; }
+  function fromCanvasX(cx) { return uMin + (cx - margin.left) / plotW * (uMax - uMin); }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (var gu = 0; gu <= 5; gu += 1) {
+      var cx = toCanvasX(gu);
+      ctx.beginPath(); ctx.moveTo(cx, margin.top); ctx.lineTo(cx, canvas.height - margin.bottom); ctx.stroke();
+    }
+    for (var gy = 0; gy <= 11; gy += 2) {
+      var cy = toCanvasY(gy);
+      ctx.beginPath(); ctx.moveTo(margin.left, cy); ctx.lineTo(canvas.width - margin.right, cy); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    var yAxisPos = toCanvasY(0);
+    ctx.beginPath(); ctx.moveTo(margin.left, yAxisPos); ctx.lineTo(canvas.width - margin.right, yAxisPos); ctx.stroke();
+    var xAxisPos = toCanvasX(0);
+    ctx.beginPath(); ctx.moveTo(xAxisPos, margin.top); ctx.lineTo(xAxisPos, canvas.height - margin.bottom); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var gu2 = 0; gu2 <= 5; gu2 += 1) {
+      ctx.fillText(gu2.toString(), toCanvasX(gu2), yAxisPos + 18);
+    }
+    ctx.textAlign = 'right';
+    for (var gy2 = 2; gy2 <= 10; gy2 += 2) {
+      ctx.fillText(gy2.toString(), xAxisPos - 8, toCanvasY(gy2) + 4);
+    }
+
+    // Axis names
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('u', canvas.width - margin.right + 20, yAxisPos + 5);
+    ctx.fillText('g(u)', xAxisPos, margin.top - 12);
+
+    // Shade region where g(u) >= 4 and u >= 0 (the whole u >= 0 region)
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.08)';
+    var solLeft = toCanvasX(0);
+    var solRight = toCanvasX(uMax);
+    ctx.fillRect(solLeft, margin.top, solRight - solLeft, canvas.height - margin.top - margin.bottom);
+
+    // Horizontal dashed line y = 4
+    ctx.setLineDash([6, 4]);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.moveTo(margin.left, toCanvasY(4));
+    ctx.lineTo(canvas.width - margin.right, toCanvasY(4));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label for y = 4
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('y = 4', canvas.width - margin.right - 50, toCanvasY(4) - 8);
+
+    // Draw g(u) = |u-2| + |u+2| for u >= 0
+    // For 0 <= u <= 2: g = 4 (horizontal line)
+    // For u > 2: g = 2u (linear, slope 2)
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    // Draw the full function from a bit before 0
+    var started = false;
+    for (var px = margin.left; px <= canvas.width - margin.right; px += 1) {
+      var uVal = fromCanvasX(px);
+      if (uVal < -0.3) continue;
+      var gVal = g(uVal);
+      if (gVal > yMax + 1) continue;
+      var cyVal = toCanvasY(gVal);
+      if (!started) { ctx.moveTo(px, cyVal); started = true; }
+      else { ctx.lineTo(px, cyVal); }
+    }
+    ctx.stroke();
+
+    // Highlight the constant segment [0, 2] at y=4
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), toCanvasY(4));
+    ctx.lineTo(toCanvasX(2), toCanvasY(4));
+    ctx.stroke();
+
+    // Labels on the curve
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('g(u) = |u-2| + |u+2|', toCanvasX(2.5), toCanvasY(8.5));
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('= 4 (konst.)', toCanvasX(1), toCanvasY(4) - 14);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('= 2u', toCanvasX(3.8), toCanvasY(7.2));
+
+    // Vertical dashed line at u = 2
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(2), margin.top);
+    ctx.lineTo(toCanvasX(2), canvas.height - margin.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('u = 2', toCanvasX(2), canvas.height - margin.bottom + 16);
+    ctx.fillText('(x = 5)', toCanvasX(2), canvas.height - margin.bottom + 30);
+
+    // Filled circle at u=0 (domain start)
+    ctx.beginPath();
+    ctx.arc(toCanvasX(0), toCanvasY(4), 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#4ade80';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Label u=0, x=1
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('u=0', toCanvasX(0), canvas.height - margin.bottom + 16);
+    ctx.fillText('(x=1)', toCanvasX(0), canvas.height - margin.bottom + 30);
+
+    // Current u marker from slider
+    if (currentU >= 0 && currentU <= 5.2) {
+      var cxM = toCanvasX(currentU);
+      var gVal = g(currentU);
+      var cyM = toCanvasY(gVal);
+
+      // Vertical line
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = '#a78bfa';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cxM, yAxisPos);
+      ctx.lineTo(cxM, cyM);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Horizontal line to y-axis
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = '#a78bfa';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cxM, cyM);
+      ctx.lineTo(xAxisPos, cyM);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Point on curve
+      var ptColor = gVal >= 4 ? '#4ade80' : '#ef4444';
+      ctx.beginPath();
+      ctx.arc(cxM, cyM, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = ptColor;
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Value label
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      var labelX = cxM + 10;
+      var labelY = cyM - 12;
+      if (labelX > canvas.width - 140) labelX = cxM - 130;
+      if (labelY < margin.top + 15) labelY = cyM + 20;
+      var xVal = currentU * currentU + 1;
+      ctx.fillText('g(' + currentU.toFixed(1).replace('.', ',') + ') = ' + gVal.toFixed(1).replace('.', ',') + '   [x = ' + xVal.toFixed(1).replace('.', ',') + ']', labelX, labelY);
+
+      ctx.fillStyle = ptColor;
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(gVal >= 4 ? 'Ispunjeno (>= 4)' : 'Nije ispunjeno (< 4)', labelX, labelY + 16);
+    }
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('g(u) = |u - 2| + |u + 2| za u >= 0', canvas.width / 2, 22);
+  }
+
+  slider.addEventListener('input', function() {
+    currentU = parseInt(slider.value) / 100;
+    var gVal = g(currentU);
+    var xVal = currentU * currentU + 1;
+    display.textContent = 'u = ' + currentU.toFixed(2).replace('.', ',') +
+      ' \u2192 g(u) = ' + gVal.toFixed(2).replace('.', ',') +
+      ' \u2192 x = ' + xVal.toFixed(2).replace('.', ',');
+    draw();
+  });
+
+  canvas.addEventListener('click', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+    var uVal = fromCanvasX(mx);
+    if (uVal >= 0 && uVal <= 5) {
+      currentU = uVal;
+      slider.value = Math.round(currentU * 100);
+      var gVal = g(currentU);
+      var xVal = currentU * currentU + 1;
+      display.textContent = 'u = ' + currentU.toFixed(2).replace('.', ',') +
+        ' \u2192 g(u) = ' + gVal.toFixed(2).replace('.', ',') +
+        ' \u2192 x = ' + xVal.toFixed(2).replace('.', ',');
+      draw();
+    }
+  });
+
+  draw();
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Nejednačina sa ugnježdenim korenima","subject":"math","unit":"algebra","topic_tags":["iracionalne nejednačine","apsolutna vrednost","smena promenljive","potpun kvadrat","domen funkcije"]}
+BRAINSPARK_META-->

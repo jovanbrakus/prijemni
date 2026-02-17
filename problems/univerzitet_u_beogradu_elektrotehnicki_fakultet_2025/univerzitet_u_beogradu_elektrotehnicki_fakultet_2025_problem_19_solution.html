@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minimalna zapremina kupe opisane oko valjka</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Oko pravog valjka poluprecnika osnove r i visine 3r opisana je prava kupa
+tako da se centri donjih osnova poklapaju, a gornja osnova valjka dodiruje omotac kupe.
+Minimalna zapremina takve kupe iznosi:
+(A) 64*pi*r^3/9   (B) 32*pi*r^3/3   (C) 27*pi*r^3/4   (D) 27*pi*r^3/8   (E) 9*pi*r^3/4
+
+Setup:
+  - Cylinder: radius r, height 3r
+  - Cone: base radius R, height H, base center coincides with cylinder bottom center
+  - Top circle of cylinder (at height 3r) touches the lateral surface of the cone
+  - Constraints: R > r, H > 3r
+
+Step 1: Express R in terms of H
+  At height h from the base, the cone's cross-section has radius R(1 - h/H) = R(H-h)/H.
+  At h = 3r, this radius must equal r (cylinder top circle touches cone surface):
+    R(H - 3r)/H = r
+    R = rH/(H - 3r)
+
+Step 2: Express volume of cone
+  V = (1/3)*pi*R^2*H = (1/3)*pi * r^2*H^2/(H-3r)^2 * H
+    = pi*r^2*H^3 / [3*(H-3r)^2]
+
+Step 3: Substitute t = H - 3r (t > 0), so H = t + 3r
+  V(t) = pi*r^2*(t + 3r)^3 / (3*t^2)
+
+Step 4: Minimize V(t) by taking dV/dt = 0
+  Let f(t) = (t + 3r)^3 / t^2
+  ln f = 3*ln(t + 3r) - 2*ln(t)
+  f'/f = 3/(t + 3r) - 2/t = 0
+  3t = 2(t + 3r)
+  3t = 2t + 6r
+  t = 6r
+
+Step 5: Find optimal dimensions
+  t = 6r  =>  H = 6r + 3r = 9r
+  R = r*9r/(9r - 3r) = 9r^2/(6r) = 3r/2
+
+Step 6: Compute minimum volume
+  V_min = (1/3)*pi*(3r/2)^2*9r
+        = (1/3)*pi*(9r^2/4)*9r
+        = (1/3)*pi*81r^3/4
+        = 81*pi*r^3/12
+        = 27*pi*r^3/4
+
+Step 7: Verify with second derivative test
+  f'(t) = f(t)*[3/(t+3r) - 2/t]
+  At t = 6r: f(t) > 0, and checking sign changes:
+    For t < 6r (say t=3r): 3/(6r) - 2/(3r) = 1/(2r) - 2/(3r) = (3-4)/(6r) < 0 => f' < 0
+    For t > 6r (say t=12r): 3/(15r) - 2/(12r) = 1/(5r) - 1/(6r) = 1/(30r) > 0 => f' > 0
+  So t = 6r is indeed a minimum.
+
+Answer: (C) 27*pi*r^3/4
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.factor-color {
+  color: #60a5fa;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Minimalna zapremina kupe opisane oko valjka</h1>
+  <p class="subtitle">Optimizacija zapremine &mdash; izvod, kriticna tacka, geometrijski uslov</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Postavka zadatka</div>
+    <div class="problem-text">
+      Oko pravog valjka ciji je poluprecnik osnove jednak \(r\), a visina jednaka \(3r\), opisana je prava kupa tako da se centri donjih osnova valjka i kupe poklapaju, a gornja osnova valjka dodiruje omotac kupe. Minimalna zapremina takve kupe iznosi:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">(A) \(\dfrac{64\pi r^3}{9}\)</div>
+      <div class="given-item answer-option" data-option="B">(B) \(\dfrac{32\pi r^3}{3}\)</div>
+      <div class="given-item answer-option" data-option="C">(C) \(\dfrac{27\pi r^3}{4}\)</div>
+      <div class="given-item answer-option" data-option="D">(D) \(\dfrac{27\pi r^3}{8}\)</div>
+      <div class="given-item answer-option" data-option="E">(E) \(\dfrac{9\pi r^3}{4}\)</div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      1. Postavicemo geometrijski uslov: gornja osnova valjka dodiruje omotac kupe.<br>
+      2. Iz tog uslova izrazicemo poluprecnik osnove kupe \(R\) preko visine kupe \(H\).<br>
+      3. Zapisacemo zapreminu kupe kao funkciju jedne promenljive.<br>
+      4. Nadjemo izvod, izjednacimo sa nulom i odredimo kriticnu tacku.<br>
+      5. Izracunamo minimalnu zapreminu.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Kljucne formule i teoreme</summary>
+      <ul style="margin-top: 12px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;"><strong>Zapremina kupe:</strong>
+          <div class="math-box">\[ V = \frac{1}{3}\pi R^2 H \]</div>
+          gde je \(R\) poluprecnik osnove, a \(H\) visina kupe.
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Linearnost omotaca kupe:</strong>
+          <div class="math-box">\[ \text{Na visini } h \text{ od osnove, poluprecnik preseka je: } R\left(1 - \frac{h}{H}\right) = \frac{R(H - h)}{H} \]</div>
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Odredjivanje ekstremuma:</strong>
+          <div class="math-box">\[ f'(x) = 0 \quad \text{i} \quad f''(x) > 0 \;\Rightarrow\; \text{minimum} \]</div>
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Logaritamsko diferenciranje:</strong>
+          <div class="math-box">\[ \frac{d}{dx}\ln f(x) = \frac{f'(x)}{f(x)} \]</div>
+          Korisno za funkcije oblika \(\frac{u^a}{v^b}\).
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz &mdash; presek valjka i kupe</div>
+    <canvas id="solutionCanvas" width="900" height="580"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-title"><span class="step-badge">1</span> Postavimo koordinatni sistem i uvedemo oznake</div>
+      <p class="step-explanation">
+        Neka je centar donje osnove i valjka i kupe u koordinatnom pocetku. Osa simetrije je vertikalna. Oznacimo:
+      </p>
+      <ul style="padding-left: 20px; color: #cbd5e1; margin-bottom: 12px;">
+        <li>\(R\) &mdash; poluprecnik osnove kupe</li>
+        <li>\(H\) &mdash; visina kupe</li>
+        <li>\(r\) &mdash; poluprecnik osnove valjka (dato)</li>
+        <li>\(3r\) &mdash; visina valjka (dato)</li>
+      </ul>
+      <p class="step-explanation">
+        Posto je valjak <span class="highlight">upisan u kupu</span>, vazi \(R > r\) i \(H > 3r\).
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-title"><span class="step-badge">2</span> Geometrijski uslov: gornja osnova valjka dodiruje omotac</div>
+      <p class="step-explanation">
+        Kupa je prav konus. Na visini \(h\) od osnove, poluprecnik poprecnog preseka kupe je:
+      </p>
+      <div class="math-box">
+        \[ \rho(h) = R \cdot \frac{H - h}{H} \]
+      </div>
+      <p class="step-explanation">
+        Gornja osnova valjka je na visini \(h = 3r\) i ima poluprecnik \(r\). Uslov da krug dodiruje omotac kupe glasi:
+      </p>
+      <div class="math-box">
+        \[ R \cdot \frac{H - 3r}{H} = r \]
+      </div>
+      <p class="step-explanation">
+        Iz ovoga izrazavamo \(R\):
+      </p>
+      <div class="math-box">
+        \[ R = \frac{rH}{H - 3r} \]
+      </div>
+      <details>
+        <summary>Proveri se: Zasto je ovo uslov dodira?</summary>
+        <p>Omotac kupe u aksijalnom preseku je prava linija od tacke \((R, 0)\) do vrha \((0, H)\). Na visini \(3r\) ta prava ima horizontalno rastojanje od ose jednako \(R(H-3r)/H\). Da bi gornja osnova valjka (poluprecnika \(r\)) <em>tacno</em> dodirivala omotac, taj poluprecnik mora biti jednak \(r\).</p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-title"><span class="step-badge">3</span> Zapremina kupe kao funkcija jedne promenljive</div>
+      <p class="step-explanation">
+        Zamenimo \(R = \dfrac{rH}{H - 3r}\) u formulu za zapreminu kupe:
+      </p>
+      <div class="math-box">
+        \[ V = \frac{1}{3}\pi R^2 H = \frac{1}{3}\pi \cdot \frac{r^2 H^2}{(H - 3r)^2} \cdot H = \frac{\pi r^2 H^3}{3(H - 3r)^2} \]
+      </div>
+      <p class="step-explanation">
+        Uvedimo smenu \(t = H - 3r\), gde je \(t > 0\), pa je \(H = t + 3r\):
+      </p>
+      <div class="math-box">
+        \[ V(t) = \frac{\pi r^2 (t + 3r)^3}{3t^2} \]
+      </div>
+      <p class="step-explanation">
+        Sada trazimo minimum ove funkcije za \(t > 0\).
+      </p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-title"><span class="step-badge">4</span> Nalazenje kriticne tacke logaritamskim diferenciranjem</div>
+      <p class="step-explanation">
+        Neka je \(f(t) = \dfrac{(t + 3r)^3}{t^2}\). Logaritmujemo:
+      </p>
+      <div class="math-box">
+        \[ \ln f(t) = 3\ln(t + 3r) - 2\ln t \]
+      </div>
+      <p class="step-explanation">
+        Diferenciramo po \(t\):
+      </p>
+      <div class="math-box">
+        \[ \frac{f'(t)}{f(t)} = \frac{3}{t + 3r} - \frac{2}{t} \]
+      </div>
+      <p class="step-explanation">
+        Izjednacimo sa nulom (posto je \(f(t) > 0\)):
+      </p>
+      <div class="math-box">
+        \[ \frac{3}{t + 3r} = \frac{2}{t} \]
+      </div>
+      <p class="step-explanation">
+        Krstastim mnozenjem:
+      </p>
+      <div class="math-box">
+        \[ 3t = 2(t + 3r) \;\;\Longrightarrow\;\; 3t = 2t + 6r \;\;\Longrightarrow\;\; \boxed{t = 6r} \]
+      </div>
+      <details>
+        <summary>Proveri se: Da li je to zaista minimum?</summary>
+        <p>Ispitajmo znak izvoda oko \(t = 6r\):<br>
+        Za \(t = 3r\): \(\dfrac{3}{6r} - \dfrac{2}{3r} = \dfrac{1}{2r} - \dfrac{2}{3r} = \dfrac{3 - 4}{6r} = -\dfrac{1}{6r} < 0\) &mdash; funkcija opada.<br>
+        Za \(t = 12r\): \(\dfrac{3}{15r} - \dfrac{2}{12r} = \dfrac{1}{5r} - \dfrac{1}{6r} = \dfrac{1}{30r} > 0\) &mdash; funkcija raste.<br>
+        Dakle, u \(t = 6r\) funkcija prelazi iz opadanja u rast &mdash; to je <strong>minimum</strong>.</p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" data-step="5">
+      <div class="step-title"><span class="step-badge">5</span> Odredjivanje optimalnih dimenzija kupe</div>
+      <p class="step-explanation">
+        Za \(t = 6r\):
+      </p>
+      <div class="math-box">
+        \[ H = t + 3r = 6r + 3r = 9r \]
+      </div>
+      <div class="math-box">
+        \[ R = \frac{rH}{H - 3r} = \frac{r \cdot 9r}{9r - 3r} = \frac{9r^2}{6r} = \frac{3r}{2} \]
+      </div>
+      <p class="step-explanation">
+        Optimalna kupa ima visinu \(H = 9r\) i poluprecnik osnove \(R = \dfrac{3r}{2}\).
+      </p>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container" data-step="6">
+      <div class="step-title"><span class="step-badge">6</span> Racunamo minimalnu zapreminu</div>
+      <p class="step-explanation">
+        Uvrstavamo \(R = \dfrac{3r}{2}\) i \(H = 9r\) u formulu za zapreminu kupe:
+      </p>
+      <div class="math-box">
+        \[ V_{\min} = \frac{1}{3}\pi R^2 H = \frac{1}{3}\pi \left(\frac{3r}{2}\right)^2 \cdot 9r \]
+      </div>
+      <div class="math-box">
+        \[ = \frac{1}{3}\pi \cdot \frac{9r^2}{4} \cdot 9r = \frac{1}{3} \cdot \frac{81\pi r^3}{4} = \frac{81\pi r^3}{12} = \boxed{\frac{27\pi r^3}{4}} \]
+      </div>
+      <details>
+        <summary>Proveri se: Verifikacija alternativnim putem</summary>
+        <p>Koristimo formulu sa smenom:<br>
+        \(V(t) = \dfrac{\pi r^2 (t+3r)^3}{3t^2}\) za \(t = 6r\):<br>
+        \(V(6r) = \dfrac{\pi r^2 \cdot (6r+3r)^3}{3 \cdot (6r)^2} = \dfrac{\pi r^2 \cdot (9r)^3}{3 \cdot 36r^2} = \dfrac{\pi r^2 \cdot 729r^3}{108r^2} = \dfrac{729\pi r^3}{108} = \dfrac{27\pi r^3}{4}\).<br>
+        Rezultat se poklapa!</p>
+      </details>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container" data-step="7">
+      <div class="step-title"><span class="step-badge">7</span> Numericka verifikacija</div>
+      <p class="step-explanation">
+        Za \(r = 1\), trazimo minimum zapremine kupe opisane oko valjka sa \(r = 1\) i visinom \(3\).
+      </p>
+      <p class="step-explanation">
+        Optimalna kupa: \(R = 1{,}5\), \(H = 9\).
+      </p>
+      <div class="math-box">
+        \[ V = \frac{1}{3}\pi \cdot 1{,}5^2 \cdot 9 = \frac{1}{3}\pi \cdot 2{,}25 \cdot 9 = \frac{20{,}25\pi}{3} = 6{,}75\pi \]
+      </div>
+      <p class="step-explanation">
+        Proverimo: \(\dfrac{27\pi}{4} = 6{,}75\pi\). Tacno!
+      </p>
+      <p class="step-explanation">
+        Proverimo da je za druge vrednosti \(H\) zapremina veca. Na primer, za \(H = 12\) (tj. \(t = 9\)):
+      </p>
+      <div class="math-box">
+        \[ R = \frac{12}{12 - 3} = \frac{12}{9} = \frac{4}{3}, \quad V = \frac{1}{3}\pi \cdot \frac{16}{9} \cdot 12 = \frac{64\pi}{9} \approx 7{,}11\pi > 6{,}75\pi \;\; \checkmark \]
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Kljucni uvid</div>
+    <p>
+      Sustina zadatka je u vestom prevodjenju geometrijskog uslova (dodira valjka i kupe) u algebarski izraz, a zatim u optimizaciji funkcije jedne promenljive. Smena \(t = H - 3r\) znacajno pojednostavljuje racun. Logaritamsko diferenciranje odnosa stepena daje elegantan put do kriticne tacke bez potrebe za komplikovanim pravilom kolicnika.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konacan odgovor</div>
+    <div class="answer">\(\dfrac{27\pi r^3}{4}\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(\dfrac{64\pi r^3}{9}\)</div>
+      <div class="final-option" data-option="B">(B) \(\dfrac{32\pi r^3}{3}\)</div>
+      <div class="final-option correct" data-option="C">(C) \(\dfrac{27\pi r^3}{4}\)</div>
+      <div class="final-option" data-option="D">(D) \(\dfrac{27\pi r^3}{8}\)</div>
+      <div class="final-option" data-option="E">(E) \(\dfrac{9\pi r^3}{4}\)</div>
+    </div>
+    <p class="verification-note">
+      Optimalna kupa: \(H = 9r\), \(R = \frac{3}{2}r\). Verifikovano numerickom proverom za \(r = 1\): \(V = 6{,}75\pi = \frac{27\pi}{4}\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogresno postavljanje geometrijskog uslova</div>
+      <p>Cesta greska je zamena uloga: umesto da se gornja osnova valjka dodiruje <em>omotac</em> kupe, neki studenti postave uslov da se donja osnova valjka poklapa sa donjom osnovom kupe po velicini (tj. \(R = r\)), sto nije tacno jer je \(R > r\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboravljanje ogranicenja \(H > 3r\)</div>
+      <p>Visina kupe mora biti veca od visine valjka (\(H > 3r\)), inace valjak ne moze biti upisan. Ako se ovo previdi, moze se dobiti ekstremum izvan dopustivog domena.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Greska u smeru linearnosti omotaca</div>
+      <p>Na visini \(h\) od osnove, poluprecnik preseka kupe je \(R(H-h)/H\), a ne \(Rh/H\). Ovaj drugi izraz bi bio poluprecnik preseka mereno od vrha. Zamena dovodi do potpuno pogresnog rezultata.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Neproveren rezultat &mdash; da li je minimum ili maksimum?</div>
+      <p>Kriticki je ispitati znak izvoda oko kriticne tacke (ili izracunati drugi izvod) da bi se potvrdilo da je u pitanju minimum, a ne maksimum ili prevoj.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Kako bi se promenio rezultat da umesto kupe imamo opisani <strong>cilindar</strong> minimalne zapremine koji sadrzi isti valjak (poluprecnika \(r\) i visine \(3r\))?
+    </p>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p>Kod cilindra nema optimizacije &mdash; najmanji cilindar koji sadrzi valjak ima iste dimenzije: \(R = r\), \(H = 3r\), pa je \(V = 3\pi r^3\). Ali ako se postavi uslov da je opisani cilindar <em>veci</em> (npr. sa drugacijom ogranicenjem na oblik), problem postaje netrivijalan. Razmislite sta se desava ako valjak moze da rotira unutar cilindra!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('solutionCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 580 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 580;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Aksijalni presek: valjak upisan u kupu', W / 2, 28);
+
+    // Drawing parameters
+    var cx = W * 0.35;
+    var baseY = H - 80;
+    var topY = 60;
+    var totalH = baseY - topY;
+
+    // Cone dimensions (scaled): H_cone = 9r, R_cone = 1.5r
+    // Cylinder: h_cyl = 3r, r_cyl = r
+    // Scale: let r_unit = totalH / 9 (so cone height = totalH)
+    var rUnit = totalH / 9;
+    var coneR = 1.5 * rUnit;
+    var coneH = 9 * rUnit;
+    var cylR = 1 * rUnit;
+    var cylH = 3 * rUnit;
+
+    var coneApex = { x: cx, y: topY };
+    var coneBaseL = { x: cx - coneR, y: baseY };
+    var coneBaseR = { x: cx + coneR, y: baseY };
+    var cylTopY = baseY - cylH;
+
+    // Draw cone (triangle) - filled with subtle gradient
+    var grad = ctx.createLinearGradient(cx, topY, cx, baseY);
+    grad.addColorStop(0, 'rgba(167, 139, 250, 0.08)');
+    grad.addColorStop(1, 'rgba(167, 139, 250, 0.03)');
+    ctx.beginPath();
+    ctx.moveTo(coneApex.x, coneApex.y);
+    ctx.lineTo(coneBaseL.x, coneBaseL.y);
+    ctx.lineTo(coneBaseR.x, coneBaseR.y);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw cone base line
+    ctx.beginPath();
+    ctx.moveTo(coneBaseL.x, coneBaseL.y);
+    ctx.lineTo(coneBaseR.x, coneBaseR.y);
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw cylinder (rectangle) - filled
+    var cylGrad = ctx.createLinearGradient(cx, cylTopY, cx, baseY);
+    cylGrad.addColorStop(0, 'rgba(96, 165, 250, 0.15)');
+    cylGrad.addColorStop(1, 'rgba(96, 165, 250, 0.05)');
+    ctx.fillStyle = cylGrad;
+    ctx.fillRect(cx - cylR, cylTopY, 2 * cylR, cylH);
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cx - cylR, cylTopY, 2 * cylR, cylH);
+
+    // Draw the touch points (where cylinder top meets cone surface)
+    // Left touch point
+    ctx.beginPath();
+    ctx.arc(cx - cylR, cylTopY, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#f472b6';
+    ctx.fill();
+    // Right touch point
+    ctx.beginPath();
+    ctx.arc(cx + cylR, cylTopY, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#f472b6';
+    ctx.fill();
+
+    // Label touch point
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('tacka dodira', cx + cylR + 10, cylTopY - 5);
+
+    // Dimension lines
+    // Cone height H = 9r (right side)
+    var dimX = cx + coneR + 35;
+    drawDimLine(dimX, topY, dimX, baseY, 'H = 9r', '#a78bfa');
+
+    // Cylinder height 3r (far right)
+    var dimX2 = cx + coneR + 80;
+    drawDimLine(dimX2, cylTopY, dimX2, baseY, '3r', '#60a5fa');
+
+    // Cone radius R = 3r/2 (bottom)
+    var dimY = baseY + 30;
+    drawHorizDimLine(cx, dimY, cx + coneR, dimY, 'R = 3r/2', '#a78bfa');
+
+    // Cylinder radius r (bottom, offset)
+    var dimY2 = baseY + 55;
+    drawHorizDimLine(cx, dimY2, cx + cylR, dimY2, 'r', '#60a5fa');
+
+    // Axis of symmetry (dashed)
+    ctx.beginPath();
+    ctx.setLineDash([6, 4]);
+    ctx.moveTo(cx, topY - 15);
+    ctx.lineTo(cx, baseY + 10);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label vertex
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('vrh kupe', cx, topY - 20);
+
+    // Right side panel: formula and optimization
+    var panelX = W * 0.68;
+    var panelY = 70;
+    var panelW = W * 0.30;
+
+    // Panel background
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    ctx.beginPath();
+    ctx.roundRect(panelX - 10, panelY - 10, panelW + 20, 440, 12);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Geometrijski uslov:', panelX, panelY + 12);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('R(H \u2212 3r)/H = r', panelX, panelY + 35);
+    ctx.fillText('\u21D2  R = rH/(H \u2212 3r)', panelX, panelY + 55);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Zapremina:', panelX, panelY + 88);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('V = \u03C0r\u00B2H\u00B3 / [3(H\u22123r)\u00B2]', panelX, panelY + 111);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Smena t = H \u2212 3r:', panelX, panelY + 144);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('V(t) = \u03C0r\u00B2(t+3r)\u00B3/(3t\u00B2)', panelX, panelY + 167);
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Optimizacija:', panelX, panelY + 200);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('dV/dt = 0:', panelX, panelY + 223);
+    ctx.fillText('3/(t+3r) = 2/t', panelX, panelY + 243);
+    ctx.fillText('3t = 2t + 6r', panelX, panelY + 263);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('t = 6r', panelX + 10, panelY + 290);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('H = t + 3r = 9r', panelX, panelY + 318);
+    ctx.fillText('R = rH/(H\u22123r) = 3r/2', panelX, panelY + 338);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('V\u2098\u1D62\u2099 = 27\u03C0r\u00B3/4', panelX, panelY + 375);
+
+    // Draw green highlight box around final result
+    ctx.beginPath();
+    ctx.roundRect(panelX - 6, panelY + 357, panelW + 12, 30, 8);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Legend
+    var legY = panelY + 405;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillRect(panelX, legY, 14, 14);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Kupa', panelX + 20, legY + 12);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(panelX + 80, legY, 14, 14);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Valjak', panelX + 100, legY + 12);
+
+    ctx.beginPath();
+    ctx.arc(panelX + 173, legY + 7, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#f472b6';
+    ctx.fill();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Dodir', panelX + 183, legY + 12);
+  }
+
+  function drawDimLine(x1, y1, x2, y2, label, color) {
+    var tickLen = 6;
+    ctx.beginPath();
+    ctx.moveTo(x1 - tickLen, y1);
+    ctx.lineTo(x1 + tickLen, y1);
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.moveTo(x2 - tickLen, y2);
+    ctx.lineTo(x2 + tickLen, y2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Arrowheads
+    drawSmallArrow(x1, y1, x2, y2, color);
+    drawSmallArrow(x2, y2, x1, y1, color);
+
+    ctx.fillStyle = color;
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(label, x1 + 8, (y1 + y2) / 2 + 5);
+  }
+
+  function drawHorizDimLine(x1, y, x2, y2, label, color) {
+    var tickLen = 5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y - tickLen);
+    ctx.lineTo(x1, y + tickLen);
+    ctx.moveTo(x1, y);
+    ctx.lineTo(x2, y);
+    ctx.moveTo(x2, y - tickLen);
+    ctx.lineTo(x2, y + tickLen);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, (x1 + x2) / 2, y + 18);
+  }
+
+  function drawSmallArrow(fromX, fromY, toX, toY, color) {
+    var angle = Math.atan2(toY - fromY, toX - fromX);
+    var size = 6;
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(fromX + size * Math.cos(angle - 0.45), fromY + size * Math.sin(angle - 0.45));
+    ctx.lineTo(fromX + size * Math.cos(angle + 0.45), fromY + size * Math.sin(angle + 0.45));
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  // Step click interaction
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(container) {
+    container.addEventListener('click', function() {
+      stepContainers.forEach(function(c) { c.classList.remove('active'); });
+      container.classList.add('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Minimalna zapremina kupe opisane oko valjka",
+  "subject": "math",
+  "unit": "geometry",
+  "topic_tags": ["zapremina kupe", "optimizacija", "izvod funkcije", "valjak upisan u kupu", "logaritamsko diferenciranje", "kriticna tacka"]
+}
+BRAINSPARK_META-->

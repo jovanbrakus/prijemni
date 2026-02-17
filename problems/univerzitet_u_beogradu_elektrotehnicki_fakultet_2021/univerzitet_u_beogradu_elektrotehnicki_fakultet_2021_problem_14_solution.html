@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Podela knjiga - kombinatorika</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Na koliko načina dve osobe, A i B, mogu da podele 8 različitih knjiga, ukoliko ne moraju
+sve knjige biti podeljene, osoba A mora da dobije bar jednu knjigu, dok osoba B ne mora
+da dobije nijednu knjigu?
+
+APPROACH: Princip komplementarnog prebrojavanja (ukupno minus zabranjena stanja)
+
+STEP 1: Modelovanje izbora
+Svaka od 8 različitih knjiga ima tačno 3 mogućnosti:
+  (1) Ide osobi A
+  (2) Ide osobi B
+  (3) Ostaje neraspoređena (niko je ne dobija)
+
+STEP 2: Ukupan broj raspodela bez ograničenja
+Svaka knjiga bira nezavisno jedno od 3 stanja.
+Ukupno raspodela = 3^8 = 6561
+
+STEP 3: Oduzimanje zabranjenih raspodela
+Uslov: osoba A mora da dobije BAR JEDNU knjigu.
+Zabranjeno: A ne dobija nijednu knjigu.
+Ako A ne dobija ništa, svaka knjiga ima samo 2 mogućnosti: ide B-u ili ostaje neraspoređena.
+Zabranjenih raspodela = 2^8 = 256
+
+STEP 4: Konačan rezultat
+Broj dozvoljenih raspodela = 3^8 - 2^8 = 6561 - 256 = 6305
+
+ANSWER: 6305, što odgovara opciji (A).
+
+VERIFICATION:
+- 3^8 = 6561 ✓ (3, 9, 27, 81, 243, 729, 2187, 6561)
+- 2^8 = 256 ✓
+- 6561 - 256 = 6305 ✓
+- Logička provera: odgovor je manji od 3^8 = 6561 (jer smo izbacili neke) ✓
+- Odgovor je veći od 3^8 - 3^8/3 (A dobija ≈ 2/3 vremena bar nešto) ✓
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.subtitle {
+  color: #94a3b8;
+  text-align: center;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.12);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: default;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #a78bfa;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.theory-card ul {
+  list-style: none;
+  padding: 12px 0;
+}
+
+.theory-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+.theory-card li:last-child {
+  border-bottom: none;
+}
+
+/* Step styling */
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+/* Check yourself */
+.checkpoint {
+  margin: 20px 0;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.checkpoint .answer {
+  padding-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+/* Key Insight */
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(96,165,250,0.25);
+  text-align: center;
+  padding: 28px;
+}
+
+.insight-card .big-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+  color: #4ade80;
+}
+
+/* Final Answer */
+.final-answer-card {
+  border: 2px solid #4ade80;
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(74,222,128,0.04));
+  text-align: center;
+  padding: 28px;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+  justify-content: center;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 800;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  color: #4ade80;
+  box-shadow: 0 0 20px rgba(74,222,128,0.15);
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+  text-align: left;
+}
+
+/* Pitfalls */
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #cbd5e1;
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-label {
+  color: #e09468;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+/* Challenge */
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Canvas */
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-purple {
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { padding: 12px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .final-answer-value { font-size: 1.4rem; }
+  .options-row { gap: 8px; }
+  .option-card { padding: 8px 14px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Podela knjiga dvema osobama</h1>
+  <p class="subtitle">Kombinatorika &mdash; princip množenja, komplementarno prebrojavanje</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Na koliko načina dve osobe, <span class="highlight-blue">A</span> i <span class="highlight-pink">B</span>,
+      mogu da podele <span class="highlight-purple">8 različitih knjiga</span>, ukoliko ne moraju sve knjige
+      biti podeljene, osoba A mora da dobije <span class="highlight-green">bar jednu knjigu</span>,
+      dok osoba B ne mora da dobije nijednu knjigu?
+    </p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Broj knjiga</div>
+        <div class="value">8</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Broj osoba</div>
+        <div class="value">2 (A i B)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Uslov za A</div>
+        <div class="value">&ge; 1 knjiga</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Uslov za B</div>
+        <div class="value">&ge; 0 knjiga</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Nepodelj. knjige</div>
+        <div class="value">dozvoljeno</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 20px;">Ponuđeni odgovori:</h3>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">6305</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">6561</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">6732</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">6552</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">6256</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Koristićemo <span class="highlight-green">princip komplementarnog prebrojavanja</span>. Prvo ćemo prebrojati
+      <span class="highlight-blue">sve moguće raspodele</span> 8 knjiga (svaka knjiga može ići osobi A, osobi B,
+      ili ostati neraspoređena). Zatim ćemo oduzeti <span class="highlight-pink">zabranjene raspodele</span>
+      &mdash; one u kojima osoba A ne dobija nijednu knjigu.
+    </p>
+    <p style="margin-top: 10px;">
+      Formula: \(\text{Dozvoljene raspodele} = \text{Ukupne raspodele} - \text{Raspodele gde A nema ništa}\)
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Teorijska podloga &mdash; princip množenja i komplementarno prebrojavanje</summary>
+      <ul>
+        <li>
+          <strong>Princip množenja:</strong>
+          Ako se prvi izbor može napraviti na \(n_1\) načina, drugi na \(n_2\) načina, ..., \(k\)-ti na \(n_k\) načina,
+          tada se svi izbori zajedno mogu napraviti na \(n_1 \cdot n_2 \cdot \ldots \cdot n_k\) načina.
+        </li>
+        <li>
+          <strong>Komplementarno prebrojavanje:</strong>
+          Umesto da direktno brojimo raspodele koje zadovoljavaju uslov, lakše je izračunati
+          \(|S| = |U| - |\overline{S}|\), gde je \(U\) univerzalni skup svih raspodela, a \(\overline{S}\) skup
+          raspodela koje <em>ne</em> zadovoljavaju uslov.
+        </li>
+        <li>
+          <strong>Raspodela objekata u kutije:</strong>
+          Kada \(n\) različitih objekata raspoređujemo u \(k\) kategorija (bez ograničenja), ukupan broj načina
+          je \(k^n\), jer svaki objekat nezavisno bira jednu od \(k\) kategorija.
+        </li>
+        <li>
+          <strong>Primena na ovaj zadatak:</strong>
+          Imamo 8 različitih knjiga i 3 kategorije (A, B, neraspoređena). Svaka knjiga nezavisno bira jednu od 3
+          kategorije, pa je ukupno raspodela \(3^8\). Uslov je da A dobije bar jednu knjigu.
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color:#94a3b8; margin-bottom: 14px;">
+      Dijagram prikazuje kako svaka od 8 knjiga nezavisno bira jednu od tri „kutije": osobi A (plavo),
+      osobi B (pink) ili ostaje neraspoređena (sivo). Ukupno je to \(3^8\) kombinacija,
+      od kojih odbijamo one gde je A-kutija prazna.
+    </p>
+    <canvas id="bookCanvas" width="800" height="520"></canvas>
+    <p class="canvas-hint">Svaka knjiga nezavisno bira jednu od 3 mogućnosti &mdash; princip množenja</p>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Modelovanje problema</h3>
+        <p>
+          Svaka od <span class="highlight-purple">8 različitih knjiga</span> može da završi na jednom od tri mesta:
+        </p>
+        <ul style="list-style: none; padding: 8px 0;">
+          <li style="padding: 4px 0;"><span class="highlight-blue">Opcija 1:</span> Knjiga ide osobi A</li>
+          <li style="padding: 4px 0;"><span class="highlight-pink">Opcija 2:</span> Knjiga ide osobi B</li>
+          <li style="padding: 4px 0;"><span style="color: #94a3b8; font-weight: 600;">Opcija 3:</span> Knjiga ostaje neraspoređena</li>
+        </ul>
+        <p>
+          Pošto knjige ne moraju sve biti podeljene, „ostaje neraspoređena" je legitimna opcija.
+          Svaka knjiga donosi odluku nezavisno od ostalih.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Ukupan broj raspodela (bez ograničenja)</h3>
+        <p>
+          Primenom <span class="highlight-green">principa množenja</span>, svaka od 8 knjiga ima 3 nezavisna izbora:
+        </p>
+        <div class="math-block">
+          \[ \text{Ukupno} = \underbrace{3 \times 3 \times 3 \times 3 \times 3 \times 3 \times 3 \times 3}_{8 \text{ knjiga}} = 3^8 \]
+        </div>
+        <p>Izračunajmo \(3^8\) korak po korak:</p>
+        <div class="math-block">
+          \[ 3^1 = 3 \quad 3^2 = 9 \quad 3^3 = 27 \quad 3^4 = 81 \]
+          \[ 3^5 = 243 \quad 3^6 = 729 \quad 3^7 = 2187 \quad 3^8 = 6561 \]
+        </div>
+        <p>
+          Dakle, <span class="highlight-blue">ukupno ima 6561 raspodelu</span> (uključujući i one gde A ne dobija ništa).
+        </p>
+        <p class="note">
+          Primetimo da je 6561 upravo ponuđeni odgovor (B) &mdash; ali to je odgovor BEZ uslova da A dobije bar jednu knjigu.
+        </p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Zašto je 3^8 a ne, recimo, C(8,k) ili permutacije?</summary>
+      <div class="answer">
+        Zato što svaka knjiga nezavisno bira jedno od 3 mesta. Nisu u pitanju kombinacije (biramo <em>koliko</em>
+        knjiga ide kome) niti permutacije (ne raspoređujemo knjige u niz). Svaka knjiga ima tačno 3 opcije,
+        i sve odluke su nezavisne &mdash; klasičan princip množenja.
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Prebrojavanje zabranjenih raspodela</h3>
+        <p>
+          Uslov kaže: <span class="highlight-green">osoba A mora da dobije bar jednu knjigu</span>.
+          Zabranjene su raspodele u kojima A <em>ne dobija nijednu</em> knjigu.
+        </p>
+        <p>
+          Ako A ne dobija ništa, svaka knjiga ima samo <span class="highlight-pink">2 opcije</span>:
+          ide osobi B ili ostaje neraspoređena.
+        </p>
+        <div class="math-block">
+          \[ \text{Zabranjeno} = \underbrace{2 \times 2 \times 2 \times 2 \times 2 \times 2 \times 2 \times 2}_{8 \text{ knjiga}} = 2^8 = 256 \]
+        </div>
+        <p class="note">
+          Ovih 256 raspodela uključuju i slučaj da sve knjige ostanu neraspoređene (niko ne dobija ništa),
+          i slučajeve gde samo B dobija neke knjige. U svim njima je A prazan.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Primena komplementarnog prebrojavanja</h3>
+        <p>
+          Broj dozvoljenih raspodela (A dobija bar jednu knjigu) jednak je:
+        </p>
+        <div class="math-block">
+          \[ \text{Dozvoljeno} = \text{Ukupno} - \text{Zabranjeno} = 3^8 - 2^8 \]
+        </div>
+        <div class="math-block">
+          \[ = 6561 - 256 = \boxed{6305} \]
+        </div>
+        <p>
+          Dakle, postoji <span class="highlight-green">6305 načina</span> da se 8 knjiga podele uz date uslove.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 5 (Verification) -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Verifikacija rezultata</h3>
+        <p>Proverimo logičnost rezultata na više načina:</p>
+        <ul style="list-style: none; padding: 8px 0;">
+          <li style="padding: 4px 0;">
+            <strong>Provera 1:</strong> \(6305 < 6561 = 3^8\) &mdash; rezultat je manji od ukupnog broja, što je očekivano jer smo izbacili neke raspodele.
+          </li>
+          <li style="padding: 4px 0;">
+            <strong>Provera 2:</strong> \(6305 > 0\) &mdash; ima dozvoljenih raspodela (naravno, jer A može uzeti bilo koju knjigu).
+          </li>
+          <li style="padding: 4px 0;">
+            <strong>Provera 3:</strong> Udeo zabranjenih: \(\frac{256}{6561} \approx 3{,}9\%\), što je razumno &mdash; mali procenat raspodela nema ništa za A.
+          </li>
+          <li style="padding: 4px 0;">
+            <strong>Provera 4:</strong> Odgovor \(6305\) se poklapa sa opcijom (A).
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Šta ako bi i B morao da dobije bar jednu knjigu?</summary>
+      <div class="answer">
+        Tada bismo koristili princip uključenja-isključenja (inkluzija-ekskluzija):
+        <br>
+        Neka su zabranjene: \(|A = \emptyset|\) = raspodele gde A nema ništa, \(|B = \emptyset|\) = raspodele gde B nema ništa.
+        <br>
+        \(|A = \emptyset| = 2^8 = 256\), \(|B = \emptyset| = 2^8 = 256\), \(|A = \emptyset \cap B = \emptyset| = 1^8 = 1\) (sve ostaje neraspoređeno).
+        <br>
+        Dozvoljeno = \(3^8 - 2 \cdot 2^8 + 1^8 = 6561 - 512 + 1 = 6050\).
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2 style="justify-content: center;">Ključno zapažanje</h2>
+    <p>
+      Problem se svodi na <span class="highlight-pink">raspodelu razlučivih objekata u kategorije</span>.
+      Svaka knjiga nezavisno bira jednu od 3 „kutija" (A, B, neraspoređena), dajući \(3^8\) ukupnih mogućnosti.
+      Komplementarnim prebrojavanjem eliminišemo slučajeve gde A ostaje prazan:
+    </p>
+    <div class="big-formula">
+      \[ 3^8 - 2^8 = 6561 - 256 = 6305 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">
+      6305 načina
+    </div>
+    <div class="options-row">
+      <div class="option-card correct">(A) 6305</div>
+      <div class="option-card">(B) 6561</div>
+      <div class="option-card">(C) 6732</div>
+      <div class="option-card">(D) 6552</div>
+      <div class="option-card">(E) 6256</div>
+    </div>
+    <p class="verification-note">
+      <strong>Verifikacija:</strong> Ukupan broj raspodela 8 knjiga u 3 kategorije je \(3^8 = 6561\).
+      Od toga oduzimamo \(2^8 = 256\) raspodela u kojima osoba A ne dobija nijednu knjigu (svaka knjiga ide B-u ili ostaje neraspoređena).
+      Konačno: \(6561 - 256 = 6305\). Tačan odgovor je <strong>(A) 6305</strong>.
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li>
+        <span class="pitfall-label">Greška 1:</span>
+        Zaboraviti opciju „neraspoređena". Neki učenici misle da svaka knjiga mora ići nekome, pa računaju
+        \(2^8 = 256\) ukupnih raspodela. Međutim, zadatak eksplicitno kaže „ne moraju sve knjige biti podeljene",
+        pa svaka knjiga ima 3 opcije, ne 2.
+      </li>
+      <li>
+        <span class="pitfall-label">Greška 2:</span>
+        Odgovoriti \(3^8 = 6561\), zaboravljajući uslov da A mora da dobije bar jednu knjigu.
+        Broj 6561 je ponuđen kao opcija (B) &mdash; zamka za nepažljive.
+      </li>
+      <li>
+        <span class="pitfall-label">Greška 3:</span>
+        Pokušati da se problem reši preko kombinacija &mdash; nabrajanjem koliko knjiga ide kome.
+        To je komplikovanije: trebalo bi sumirati \(\sum_{a=1}^{8}\sum_{b=0}^{8-a}\binom{8}{a}\binom{8-a}{b}\).
+        Ovo daje isti rezultat, ali je daleko teže za računanje na ispitu.
+      </li>
+      <li>
+        <span class="pitfall-label">Greška 4:</span>
+        Mešanje „bar jednu" sa „tačno jednu". „Bar jednu" znači \(\ge 1\), što uključuje 1, 2, ..., 8 knjiga za A.
+        „Tačno jednu" bi bila samo \(\binom{8}{1} \cdot 2^7 = 1024\).
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Na koliko načina tri osobe (A, B i C) mogu da podele 8 različitih knjiga, ukoliko ne moraju sve knjige
+      biti podeljene, ali svaka osoba mora da dobije bar jednu knjigu?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="padding-top: 10px; color: #cbd5e1;">
+        Sada svaka knjiga ima 4 opcije (A, B, C, neraspoređena), pa je ukupno \(4^8 = 65536\).
+        Koristimo princip uključenja-isključenja sa 3 uslova. Neka \(A_i\) = skup raspodela gde osoba \(i\) nema ništa.
+        <br><br>
+        \(|A_1| = |A_2| = |A_3| = 3^8 = 6561\) (preostale 3 opcije za svaku knjigu)
+        <br>
+        \(|A_1 \cap A_2| = |A_1 \cap A_3| = |A_2 \cap A_3| = 2^8 = 256\)
+        <br>
+        \(|A_1 \cap A_2 \cap A_3| = 1^8 = 1\)
+        <br><br>
+        Po principu uključenja-isključenja:
+        <br>
+        \(|A_1 \cup A_2 \cup A_3| = 3 \cdot 6561 - 3 \cdot 256 + 1 = 19683 - 768 + 1 = 18916\)
+        <br><br>
+        Dozvoljene raspodele: \(65536 - 18916 = 46620\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('bookCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 800 * dpr;
+  canvas.height = 520 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = 800;
+  const H = 520;
+
+  function draw() {
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Svaka knjiga bira jednu od 3 kutije', W / 2, 28);
+
+    // Draw 8 books at the top
+    const bookColors = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#34d399', '#22d3ee', '#818cf8', '#e879f9'];
+    const bookLabels = ['K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7', 'K8'];
+    const bookStartX = 100;
+    const bookSpacing = 80;
+    const bookY = 55;
+    const bookW = 48;
+    const bookH = 62;
+
+    // Draw books
+    for (let i = 0; i < 8; i++) {
+      const bx = bookStartX + i * bookSpacing;
+      const by = bookY;
+
+      // Book shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath();
+      ctx.roundRect(bx + 3, by + 3, bookW, bookH, 6);
+      ctx.fill();
+
+      // Book body
+      ctx.fillStyle = bookColors[i];
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, bookW, bookH, 6);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Book spine line
+      ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(bx + 10, by);
+      ctx.lineTo(bx + 10, by + bookH);
+      ctx.stroke();
+
+      // Book label
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(bookLabels[i], bx + bookW / 2 + 3, by + bookH / 2 + 5);
+    }
+
+    // Arrows from books downward
+    const arrowStartY = bookY + bookH + 12;
+    const arrowEndY = 185;
+
+    for (let i = 0; i < 8; i++) {
+      const bx = bookStartX + i * bookSpacing + bookW / 2;
+
+      // Three small arrows branching out
+      const angles = [-0.3, 0, 0.3];
+      const arrowColors = ['#60a5fa', '#f472b6', '#64748b'];
+
+      for (let j = 0; j < 3; j++) {
+        const endX = bx + Math.sin(angles[j]) * 35;
+        const endY = arrowEndY - 10;
+
+        ctx.strokeStyle = arrowColors[j];
+        ctx.globalAlpha = 0.4;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(bx, arrowStartY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // "3 opcije" label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u00D7 3 opcije svaka', W / 2, arrowEndY - 5);
+
+    // Three destination boxes
+    const boxY = arrowEndY + 10;
+    const boxH = 100;
+    const boxW = 200;
+    const totalBoxW = 3 * boxW + 2 * 30;
+    const boxStartX = (W - totalBoxW) / 2;
+
+    // Box A (blue)
+    const boxAX = boxStartX;
+    ctx.fillStyle = 'rgba(96,165,250,0.12)';
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(boxAX, boxY, boxW, boxH, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Osoba A', boxAX + boxW / 2, boxY + 35);
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('mora \u2265 1 knjiga', boxAX + boxW / 2, boxY + 58);
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Opcija 1', boxAX + boxW / 2, boxY + 82);
+
+    // Box B (pink)
+    const boxBX = boxStartX + boxW + 30;
+    ctx.fillStyle = 'rgba(244,114,182,0.12)';
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(boxBX, boxY, boxW, boxH, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Osoba B', boxBX + boxW / 2, boxY + 35);
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('mo\u017ee \u2265 0 knjiga', boxBX + boxW / 2, boxY + 58);
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Opcija 2', boxBX + boxW / 2, boxY + 82);
+
+    // Box "Unassigned" (gray)
+    const boxUX = boxStartX + 2 * (boxW + 30);
+    ctx.fillStyle = 'rgba(100,116,139,0.12)';
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(boxUX, boxY, boxW, boxH, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Neraspodelj.', boxUX + boxW / 2, boxY + 35);
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('knjiga ostaje', boxUX + boxW / 2, boxY + 58);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Opcija 3', boxUX + boxW / 2, boxY + 82);
+
+    // Computation section
+    const compY = boxY + boxH + 35;
+
+    // Big equation: Total
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ukupno raspodela:', W / 2, compY);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('3\u2078 = 6561', W / 2, compY + 30);
+
+    // Minus
+    const subY = compY + 60;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Zabranjeno (A nema ni\u0161ta):', W / 2, subY);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('2\u2078 = 256', W / 2, subY + 30);
+
+    // Divider line
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - 160, subY + 50);
+    ctx.lineTo(W / 2 + 160, subY + 50);
+    ctx.stroke();
+
+    // Minus sign
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 28px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('\u2212', W / 2 - 170, subY + 25);
+
+    // Result
+    const resY = subY + 70;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Dozvoljeno:', W / 2, resY);
+
+    // Green result with glow
+    ctx.shadowColor = 'rgba(74,222,128,0.4)';
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 28px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('6561 \u2212 256 = 6305', W / 2, resY + 35);
+    ctx.shadowBlur = 0;
+  }
+
+  draw();
+
+  // Step click interactivity
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Podela knjiga dvema osobama - kombinatorika",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "princip množenja", "komplementarno prebrojavanje", "raspodela objekata", "stepenovanje"]
+}
+BRAINSPARK_META-->

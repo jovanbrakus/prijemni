@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trigonometrijska jednacina na segmentu</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Broj realnih i razlicitih resenja jednacine
+  cos7x - sin5x = sqrt(3)(cos5x - sin7x)
+na segmentu [0, pi/2].
+
+Step 1: Rearrange
+  cos7x - sin5x = sqrt(3)*cos5x - sqrt(3)*sin7x
+  cos7x + sqrt(3)*sin7x = sqrt(3)*cos5x + sin5x
+
+Step 2: Express as single sinusoid
+  Left: cos7x + sqrt(3)*sin7x = 2*(1/2*cos7x + sqrt(3)/2*sin7x) = 2*sin(7x + pi/6)
+    Verify: 2*sin(7x + pi/6) = 2*(sin7x*cos(pi/6) + cos7x*sin(pi/6))
+          = 2*(sqrt(3)/2*sin7x + 1/2*cos7x) = sqrt(3)*sin7x + cos7x ✓
+
+  Right: sqrt(3)*cos5x + sin5x = 2*(sqrt(3)/2*cos5x + 1/2*sin5x) = 2*sin(5x + pi/3)
+    Verify: 2*sin(5x + pi/3) = 2*(sin5x*cos(pi/3) + cos5x*sin(pi/3))
+          = 2*(1/2*sin5x + sqrt(3)/2*cos5x) = sin5x + sqrt(3)*cos5x ✓
+
+Step 3: Solve sin(7x + pi/6) = sin(5x + pi/3)
+
+Case 1: 7x + pi/6 = 5x + pi/3 + 2k*pi
+  2x = pi/6 + 2k*pi
+  x = pi/12 + k*pi
+  In [0, pi/2]: k=0 gives x = pi/12 ≈ 0.2618 ✓
+                k=1 gives x = pi/12 + pi > pi/2 ✗
+
+Case 2: 7x + pi/6 = pi - (5x + pi/3) + 2k*pi
+  7x + pi/6 = pi - 5x - pi/3 + 2k*pi
+  12x = pi - pi/3 - pi/6 + 2k*pi
+  12x = (6pi - 2pi - pi)/6 + 2k*pi
+  12x = 3pi/6 + 2k*pi = pi/2 + 2k*pi
+  x = pi/24 + k*pi/6
+
+  In [0, pi/2]:
+    k=0: x = pi/24 ≈ 0.1309 ✓
+    k=1: x = pi/24 + pi/6 = pi/24 + 4pi/24 = 5pi/24 ≈ 0.6545 ✓
+    k=2: x = pi/24 + 2pi/6 = pi/24 + 8pi/24 = 9pi/24 = 3pi/8 ≈ 1.1781 ✓
+    k=3: x = pi/24 + 3pi/6 = pi/24 + 12pi/24 = 13pi/24 ≈ 1.7017
+          pi/2 = 12pi/24, so 13pi/24 > pi/2 ✗
+
+Total solutions: pi/24, pi/12, 5pi/24, 3pi/8 = 4 distinct solutions
+
+Check pi/12 = 2pi/24, which is different from pi/24, 5pi/24, 9pi/24.
+All four are distinct: pi/24, 2pi/24, 5pi/24, 9pi/24.
+
+Answer: (C) 4
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.arrow {
+  color: #60a5fa;
+  margin: 0 4px;
+}
+
+.checkpoint {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 12px 0;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.solution-list {
+  list-style: none;
+  padding: 0;
+}
+
+.solution-list li {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.solution-list li .sol-num {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  font-weight: 700;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Trigonometrijska jednacina na segmentu</h1>
+  <p class="subtitle">Odredjivanje broja resenja jednacine sa sinusima i kosinusima na datom intervalu</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Broj realnih i razlicitih resenja jednacine
+      <div class="math-box">
+        \[ \cos 7x - \sin 5x = \sqrt{3}\,(\cos 5x - \sin 7x) \]
+      </div>
+      na segmentu \(\left[0,\;\dfrac{\pi}{2}\right]\) je:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">(A) veci od 4</div>
+      <div class="given-item answer-option" data-option="B">(B) 2</div>
+      <div class="given-item answer-option" data-option="C">(C) 4</div>
+      <div class="given-item answer-option" data-option="D">(D) 1</div>
+      <div class="given-item answer-option" data-option="E">(E) 3</div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      Pregrupisemo jednacinu tako da na jednoj strani budu clanovi sa \(7x\), a na drugoj sa \(5x\).
+      <span class="arrow">&#8594;</span> Svaku stranu zapisemo kao jedinstven sinusni izraz oblika \(R\sin(\alpha + \varphi)\).
+      <span class="arrow">&#8594;</span> Resavamo jednacinu \(\sin A = \sin B\) koristeci dva slucaja.
+      <span class="arrow">&#8594;</span> Izdvajamo resenja koja pripadaju segmentu \(\left[0, \frac{\pi}{2}\right]\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsecanje na teoriju</div>
+    <details>
+      <summary>Linearna kombinacija sinusa i kosinusa</summary>
+      <div class="math-box">
+        \[ a\cos\theta + b\sin\theta = R\sin(\theta + \varphi) \]
+        \[ \text{gde je } R = \sqrt{a^2 + b^2},\quad \tan\varphi = \frac{a}{b} \]
+      </div>
+      <p>Na primer: \(\cos\theta + \sqrt{3}\sin\theta = 2\sin\!\left(\theta + \frac{\pi}{6}\right)\), jer \(R = \sqrt{1+3}=2\) i \(\varphi = \frac{\pi}{6}\).</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Jednacina \(\sin A = \sin B\)</summary>
+      <div class="math-box">
+        \[ \sin A = \sin B \;\Longleftrightarrow\; A = B + 2k\pi \quad\text{ili}\quad A = \pi - B + 2k\pi, \quad k \in \mathbb{Z} \]
+      </div>
+      <p>Ovo su dva osnovna slucaja za resavanje jednacina sa sinusima.</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Adicionu formulu za sinus</summary>
+      <div class="math-box">
+        \[ \sin(\alpha + \beta) = \sin\alpha\cos\beta + \cos\alpha\sin\beta \]
+      </div>
+      <p>Koristi se za razvoj izraza oblika \(\sin(7x + \frac{\pi}{6})\).</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Graficki prikaz resenja</div>
+    <canvas id="solutionCanvas" width="900" height="500"></canvas>
+    <p style="color:#94a3b8; font-size:0.9rem; text-align:center; margin-top:10px;">
+      Plave tacke oznacavaju resenja jednacine na segmentu \([0, \pi/2]\). Crvena kriva: \(\sin(7x+\pi/6)\), zelena kriva: \(\sin(5x+\pi/3)\).
+    </p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Pregrupisanje jednacine</div>
+      <p class="step-explanation">
+        Polazimo od date jednacine i prebacujemo clanove tako da na jednoj strani budu izrazi sa \(7x\), a na drugoj sa \(5x\):
+      </p>
+      <div class="math-box">
+        \[ \cos 7x - \sin 5x = \sqrt{3}\cos 5x - \sqrt{3}\sin 7x \]
+      </div>
+      <p class="step-explanation">
+        Prebacimo \(-\sqrt{3}\sin 7x\) na levu i \(-\sin 5x\) na desnu stranu:
+      </p>
+      <div class="math-box">
+        \[ \cos 7x + \sqrt{3}\sin 7x = \sqrt{3}\cos 5x + \sin 5x \]
+      </div>
+      <div class="checkpoint">Kontrolna tacka: Jednacina je sada uredjena po argumentima \(7x\) i \(5x\).</div>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Leva strana &mdash; zapis kao jedinstven sinusni izraz</div>
+      <p class="step-explanation">
+        Izraz \(\cos 7x + \sqrt{3}\sin 7x\) zapisujemo u obliku \(R\sin(7x + \varphi)\):
+      </p>
+      <div class="math-box">
+        \[ \cos 7x + \sqrt{3}\sin 7x = 2\!\left(\frac{1}{2}\cos 7x + \frac{\sqrt{3}}{2}\sin 7x\right) \]
+      </div>
+      <p class="step-explanation">
+        Prepoznajemo adicione vrednosti: \(\sin\frac{\pi}{6} = \frac{1}{2}\) i \(\cos\frac{\pi}{6} = \frac{\sqrt{3}}{2}\), pa:
+      </p>
+      <div class="math-box">
+        \[ = 2\!\left(\sin 7x \cdot \cos\frac{\pi}{6} + \cos 7x \cdot \sin\frac{\pi}{6}\right) = 2\sin\!\left(7x + \frac{\pi}{6}\right) \]
+      </div>
+      <details>
+        <summary>Verifikacija: Razvijmo \(2\sin(7x + \pi/6)\)</summary>
+        <p>
+          \(2\sin(7x + \frac{\pi}{6}) = 2\left(\sin 7x \cdot \frac{\sqrt{3}}{2} + \cos 7x \cdot \frac{1}{2}\right) = \sqrt{3}\sin 7x + \cos 7x\). Tacno!
+        </p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Desna strana &mdash; zapis kao jedinstven sinusni izraz</div>
+      <p class="step-explanation">
+        Slicno, izraz \(\sqrt{3}\cos 5x + \sin 5x\) zapisujemo u obliku \(R\sin(5x + \varphi)\):
+      </p>
+      <div class="math-box">
+        \[ \sqrt{3}\cos 5x + \sin 5x = 2\!\left(\frac{\sqrt{3}}{2}\cos 5x + \frac{1}{2}\sin 5x\right) \]
+      </div>
+      <p class="step-explanation">
+        Prepoznajemo: \(\sin\frac{\pi}{3} = \frac{\sqrt{3}}{2}\) i \(\cos\frac{\pi}{3} = \frac{1}{2}\), pa:
+      </p>
+      <div class="math-box">
+        \[ = 2\!\left(\sin 5x \cdot \cos\frac{\pi}{3} + \cos 5x \cdot \sin\frac{\pi}{3}\right) = 2\sin\!\left(5x + \frac{\pi}{3}\right) \]
+      </div>
+      <details>
+        <summary>Verifikacija: Razvijmo \(2\sin(5x + \pi/3)\)</summary>
+        <p>
+          \(2\sin(5x + \frac{\pi}{3}) = 2\left(\sin 5x \cdot \frac{1}{2} + \cos 5x \cdot \frac{\sqrt{3}}{2}\right) = \sin 5x + \sqrt{3}\cos 5x\). Tacno!
+        </p>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Formiranje sinusne jednacine</div>
+      <p class="step-explanation">
+        Jednacina sada glasi:
+      </p>
+      <div class="math-box">
+        \[ 2\sin\!\left(7x + \frac{\pi}{6}\right) = 2\sin\!\left(5x + \frac{\pi}{3}\right) \]
+      </div>
+      <p class="step-explanation">
+        Delimo obe strane sa 2:
+      </p>
+      <div class="math-box">
+        \[ \sin\!\left(7x + \frac{\pi}{6}\right) = \sin\!\left(5x + \frac{\pi}{3}\right) \]
+      </div>
+      <div class="checkpoint">Kontrolna tacka: Sveli smo problem na standardnu jednacinu \(\sin A = \sin B\).</div>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Slucaj 1: \(A = B + 2k\pi\)</div>
+      <p class="step-explanation">
+        Izjednacavamo argumente direktno:
+      </p>
+      <div class="math-box">
+        \[ 7x + \frac{\pi}{6} = 5x + \frac{\pi}{3} + 2k\pi \]
+      </div>
+      <p class="step-explanation">
+        Resavamo po \(x\):
+      </p>
+      <div class="math-box">
+        \[ 2x = \frac{\pi}{3} - \frac{\pi}{6} + 2k\pi = \frac{\pi}{6} + 2k\pi \]
+        \[ x = \frac{\pi}{12} + k\pi, \quad k \in \mathbb{Z} \]
+      </div>
+      <p class="step-explanation">
+        Na segmentu \(\left[0, \frac{\pi}{2}\right]\):
+      </p>
+      <div class="math-box">
+        \[ k = 0:\quad x = \frac{\pi}{12} \approx 0{,}2618 \;\in\; \left[0, \frac{\pi}{2}\right] \;\checkmark \]
+        \[ k = 1:\quad x = \frac{\pi}{12} + \pi > \frac{\pi}{2} \;\times \]
+      </div>
+      <p class="step-explanation" style="color: #4ade80; font-weight: 600;">
+        Iz prvog slucaja: \(x_1 = \dfrac{\pi}{12}\)
+      </p>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">6</span> Slucaj 2: \(A = \pi - B + 2k\pi\)</div>
+      <p class="step-explanation">
+        Koriscenjem drugog uslova:
+      </p>
+      <div class="math-box">
+        \[ 7x + \frac{\pi}{6} = \pi - \left(5x + \frac{\pi}{3}\right) + 2k\pi \]
+      </div>
+      <p class="step-explanation">
+        Pojednostavimo desnu stranu:
+      </p>
+      <div class="math-box">
+        \[ 7x + \frac{\pi}{6} = \pi - 5x - \frac{\pi}{3} + 2k\pi \]
+        \[ 7x + 5x = \pi - \frac{\pi}{3} - \frac{\pi}{6} + 2k\pi \]
+        \[ 12x = \frac{6\pi - 2\pi - \pi}{6} + 2k\pi = \frac{3\pi}{6} + 2k\pi = \frac{\pi}{2} + 2k\pi \]
+      </div>
+      <p class="step-explanation">
+        Dakle:
+      </p>
+      <div class="math-box">
+        \[ x = \frac{\pi}{24} + \frac{k\pi}{6}, \quad k \in \mathbb{Z} \]
+      </div>
+      <p class="step-explanation">
+        Na segmentu \(\left[0, \frac{\pi}{2}\right]\) proveravamo redom:
+      </p>
+      <div class="math-box">
+        \[ k = 0:\quad x = \frac{\pi}{24} \approx 0{,}1309 \;\checkmark \]
+        \[ k = 1:\quad x = \frac{\pi}{24} + \frac{\pi}{6} = \frac{\pi}{24} + \frac{4\pi}{24} = \frac{5\pi}{24} \approx 0{,}6545 \;\checkmark \]
+        \[ k = 2:\quad x = \frac{\pi}{24} + \frac{2\pi}{6} = \frac{\pi}{24} + \frac{8\pi}{24} = \frac{9\pi}{24} = \frac{3\pi}{8} \approx 1{,}1781 \;\checkmark \]
+        \[ k = 3:\quad x = \frac{\pi}{24} + \frac{3\pi}{6} = \frac{13\pi}{24} \approx 1{,}7017 > \frac{\pi}{2} = \frac{12\pi}{24} \;\times \]
+      </div>
+      <p class="step-explanation" style="color: #4ade80; font-weight: 600;">
+        Iz drugog slucaja: \(x_2 = \dfrac{\pi}{24},\quad x_3 = \dfrac{5\pi}{24},\quad x_4 = \dfrac{3\pi}{8}\)
+      </p>
+    </div>
+
+    <!-- Step 7 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">7</span> Provera da su sva resenja razlicita</div>
+      <p class="step-explanation">
+        Zapisimo sva resenja sa zajednickim imeniocem 24:
+      </p>
+      <ul class="solution-list">
+        <li><span class="sol-num">1</span> \(x_1 = \dfrac{\pi}{24}\)</li>
+        <li><span class="sol-num">2</span> \(x_2 = \dfrac{\pi}{12} = \dfrac{2\pi}{24}\)</li>
+        <li><span class="sol-num">3</span> \(x_3 = \dfrac{5\pi}{24}\)</li>
+        <li><span class="sol-num">4</span> \(x_4 = \dfrac{3\pi}{8} = \dfrac{9\pi}{24}\)</li>
+      </ul>
+      <p class="step-explanation" style="margin-top: 12px;">
+        Uredjeno: \(\dfrac{\pi}{24} < \dfrac{2\pi}{24} < \dfrac{5\pi}{24} < \dfrac{9\pi}{24} < \dfrac{12\pi}{24} = \dfrac{\pi}{2}\). Sva cetiri broja su razlicita i pripadaju segmentu \(\left[0, \frac{\pi}{2}\right]\).
+      </p>
+      <div class="checkpoint">Kontrolna tacka: Imamo tacno 4 razlicita resenja.</div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Kljucni uvid</div>
+    <p>
+      Pregrupisavanje jednacine po argumentima (\(7x\) i \(5x\)) je kljucan korak. Umesto da razvijamo trigonometrijske funkcije visestrukih uglova, kljuc je prepoznati linearnu kombinaciju \(a\cos\theta + b\sin\theta\) i zapisati je kao jedinstven sinusni izraz \(R\sin(\theta + \varphi)\). To odmah svodi problem na elementarnu jednacinu \(\sin A = \sin B\), koja se resi pomocu dva standardna slucaja.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konacni odgovor</div>
+    <div class="answer">\(4\) resenja</div>
+    <p style="color:#94a3b8; margin-bottom: 12px;">
+      \(x \in \left\{\dfrac{\pi}{24},\;\dfrac{\pi}{12},\;\dfrac{5\pi}{24},\;\dfrac{3\pi}{8}\right\}\)
+    </p>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) veci od 4</div>
+      <div class="final-option" data-option="B">(B) 2</div>
+      <div class="final-option correct" data-option="C">(C) 4</div>
+      <div class="final-option" data-option="D">(D) 1</div>
+      <div class="final-option" data-option="E">(E) 3</div>
+    </div>
+    <p class="verification-note">Verifikacija: Sva cetiri resenja pripadaju segmentu \([0, \pi/2]\) i medjusobno su razlicita.</p>
+  </div>
+
+  <!-- Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboravljen drugi slucaj</div>
+      Jednacina \(\sin A = \sin B\) ima DVA slucaja: \(A = B + 2k\pi\) i \(A = \pi - B + 2k\pi\). Ako zaboravite drugi slucaj, dobicete samo jedno resenje umesto cetiri.
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogresan znak pri pregrupisavanju</div>
+      Pri prebacivanju clanova sa jedne strane na drugu, lako je pogresiti znak. Obratite paznju da \(-\sqrt{3}\sin 7x\) prelazi na levu stranu kao \(+\sqrt{3}\sin 7x\).
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Granica segmenta</div>
+      Resenje \(x = \frac{13\pi}{24}\) je blizu \(\frac{\pi}{2} = \frac{12\pi}{24}\), ali ipak izlazi iz segmenta. Uvek proverite numericku vrednost granicnih slucajeva.
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogresan koeficijent \(\varphi\)</div>
+      Pazljivo odredite ugao \(\varphi\) u izrazu \(R\sin(\theta + \varphi)\). Zamena \(\sin\) i \(\cos\) koeficijenata vodi do pogresnog faznog ugla.
+    </div>
+  </div>
+
+  <!-- Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Izazov za razmisljanje</div>
+    <p class="step-explanation">
+      Koliko resenja ima ista jednacina \(\cos 7x - \sin 5x = \sqrt{3}(\cos 5x - \sin 7x)\) na segmentu \([0, \pi]\)?
+    </p>
+    <details>
+      <summary>Pogledaj odgovor</summary>
+      <p>
+        Koristimo iste formule: iz prvog slucaja \(x = \frac{\pi}{12} + k\pi\), pa za \(k=0\): \(x=\frac{\pi}{12}\).
+        Iz drugog slucaja \(x = \frac{\pi}{24} + \frac{k\pi}{6}\), pa za \(k = 0, 1, 2, 3, 4, 5\):
+        \(x = \frac{\pi}{24}, \frac{5\pi}{24}, \frac{3\pi}{8}, \frac{13\pi}{24}, \frac{17\pi}{24}, \frac{7\pi}{8}\).
+        Za \(k=6\): \(x = \frac{25\pi}{24} > \pi\). Ukupno: <strong>7 resenja</strong> na \([0, \pi]\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var canvas = document.getElementById('solutionCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+
+  function resize() {
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var w = Math.min(rect.width - 48, 900);
+    var h = Math.round(w * 0.55);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw(w, h);
+  }
+
+  function draw(W, H) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    var pad = { left: 70, right: 30, top: 40, bottom: 55 };
+    var gw = W - pad.left - pad.right;
+    var gh = H - pad.top - pad.bottom;
+
+    var xMin = 0;
+    var xMax = Math.PI / 2;
+    var yMin = -1.3;
+    var yMax = 1.3;
+
+    function toX(v) { return pad.left + (v - xMin) / (xMax - xMin) * gw; }
+    function toY(v) { return pad.top + (1 - (v - yMin) / (yMax - yMin)) * gh; }
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    var yTicks = [-1, -0.5, 0, 0.5, 1];
+    for (var i = 0; i < yTicks.length; i++) {
+      ctx.beginPath();
+      ctx.moveTo(pad.left, toY(yTicks[i]));
+      ctx.lineTo(W - pad.right, toY(yTicks[i]));
+      ctx.stroke();
+    }
+
+    var xTicks = [
+      { val: 0, label: '0' },
+      { val: Math.PI / 12, label: '\u03C0/12' },
+      { val: Math.PI / 6, label: '\u03C0/6' },
+      { val: Math.PI / 4, label: '\u03C0/4' },
+      { val: Math.PI / 3, label: '\u03C0/3' },
+      { val: 5 * Math.PI / 12, label: '5\u03C0/12' },
+      { val: Math.PI / 2, label: '\u03C0/2' }
+    ];
+
+    for (var i = 0; i < xTicks.length; i++) {
+      ctx.beginPath();
+      ctx.moveTo(toX(xTicks[i].val), pad.top);
+      ctx.lineTo(toX(xTicks[i].val), H - pad.bottom);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, toY(0));
+    ctx.lineTo(W - pad.right, toY(0));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(pad.left, pad.top);
+    ctx.lineTo(pad.left, H - pad.bottom);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var i = 0; i < xTicks.length; i++) {
+      ctx.fillText(xTicks[i].label, toX(xTicks[i].val), H - pad.bottom + 18);
+    }
+    ctx.textAlign = 'right';
+    for (var i = 0; i < yTicks.length; i++) {
+      ctx.fillText(yTicks[i].toFixed(1), pad.left - 10, toY(yTicks[i]) + 4);
+    }
+
+    // Function f(x) = sin(7x + pi/6)
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    var steps = 500;
+    for (var i = 0; i <= steps; i++) {
+      var x = xMin + (xMax - xMin) * i / steps;
+      var y = Math.sin(7 * x + Math.PI / 6);
+      if (i === 0) ctx.moveTo(toX(x), toY(y));
+      else ctx.lineTo(toX(x), toY(y));
+    }
+    ctx.stroke();
+
+    // Function g(x) = sin(5x + pi/3)
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (var i = 0; i <= steps; i++) {
+      var x = xMin + (xMax - xMin) * i / steps;
+      var y = Math.sin(5 * x + Math.PI / 3);
+      if (i === 0) ctx.moveTo(toX(x), toY(y));
+      else ctx.lineTo(toX(x), toY(y));
+    }
+    ctx.stroke();
+
+    // Solutions
+    var solutions = [
+      { x: Math.PI / 24, label: '\u03C0/24' },
+      { x: Math.PI / 12, label: '\u03C0/12' },
+      { x: 5 * Math.PI / 24, label: '5\u03C0/24' },
+      { x: 3 * Math.PI / 8, label: '3\u03C0/8' }
+    ];
+
+    for (var i = 0; i < solutions.length; i++) {
+      var sx = solutions[i].x;
+      var sy = Math.sin(7 * sx + Math.PI / 6);
+      var px = toX(sx);
+      var py = toY(sy);
+
+      // Vertical dashed line
+      ctx.strokeStyle = 'rgba(96,165,250,0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(px, toY(0));
+      ctx.lineTo(px, py);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Dot
+      ctx.beginPath();
+      ctx.arc(px, py, 7, 0, 2 * Math.PI);
+      ctx.fillStyle = '#60a5fa';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = 'bold 12px "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      var labelOffset = (i % 2 === 0) ? -18 : 20;
+      ctx.fillText(solutions[i].label, px, py + labelOffset);
+    }
+
+    // Legend
+    var lx = W - pad.right - 190;
+    var ly = pad.top + 10;
+    ctx.fillStyle = 'rgba(15,23,42,0.85)';
+    ctx.fillRect(lx, ly, 180, 80);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(lx, ly, 180, 80);
+
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(lx + 10, ly + 22);
+    ctx.lineTo(lx + 40, ly + 22);
+    ctx.stroke();
+    ctx.fillStyle = '#f87171';
+    ctx.fillText('sin(7x + \u03C0/6)', lx + 48, ly + 26);
+
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(lx + 10, ly + 46);
+    ctx.lineTo(lx + 40, ly + 46);
+    ctx.stroke();
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('sin(5x + \u03C0/3)', lx + 48, ly + 50);
+
+    ctx.beginPath();
+    ctx.arc(lx + 25, ly + 68, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fill();
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Resenja (preseci)', lx + 48, ly + 72);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Trigonometrijska jednacina na segmentu","subject":"math","unit":"trigonometry","topic_tags":["trigonometrijske jednacine","linearna kombinacija sinusa i kosinusa","sinusna jednacina","segment","visestruki uglovi"]}
+BRAINSPARK_META-->

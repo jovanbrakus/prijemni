@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir povrsina kocki upisanih u lopte</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: U kocku K1 ivice 1 cm upisana je lopta L1, zatim je u loptu L1 upisana kocka K2,
+zatim u nju lopta L2 i tako dalje. Naci zbir povrsina svih kocki Kn, n in N.
+
+Korak 1: Ivica kocke K1
+  a1 = 1 cm
+
+Korak 2: Lopta L1 upisana u kocku K1
+  Precnik lopte L1 = ivica kocke = 1, pa poluprecnik r1 = 1/2.
+
+Korak 3: Kocka K2 upisana u loptu L1
+  Prostorna dijagonala kocke K2 = precnik lopte L1 = 1
+  Prostorna dijagonala kocke ivice a je a*sqrt(3).
+  Dakle: a2 * sqrt(3) = 1, odakle a2 = 1/sqrt(3).
+
+Korak 4: Odnos uzastopnih ivica
+  Svaka sledeca kocka je upisana u loptu koja je upisana u prethodnu kocku.
+  Lopta upisana u kocku ivice a ima precnik a.
+  Kocka upisana u tu loptu ima prostornu dijagonalu jednaku precniku = a.
+  Nova ivica = a / sqrt(3).
+  Dakle: q = a_{n+1}/a_n = 1/sqrt(3) za svako n.
+
+Korak 5: Opsta ivica
+  a_n = 1 * (1/sqrt(3))^{n-1} = (1/sqrt(3))^{n-1} = 3^{-(n-1)/2}
+
+Korak 6: Povrsina jedne kocke
+  P_n = 6 * a_n^2 = 6 * (1/sqrt(3))^{2(n-1)} = 6 * (1/3)^{n-1}
+
+Korak 7: Zbir svih povrsina
+  S = sum_{n=1}^{infty} P_n = sum_{n=1}^{infty} 6 * (1/3)^{n-1}
+  Ovo je geometrijski red sa prvim clanom b1 = 6 i kolicnikom q = 1/3.
+  S = b1 / (1 - q) = 6 / (1 - 1/3) = 6 / (2/3) = 6 * 3/2 = 9
+
+Odgovor: (E) 9
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #a78bfa;
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+  margin-top: 8px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 12px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 100px;
+  flex: 1;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.given-item .unit {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: border-color 0.2s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step {
+  position: relative;
+  padding-left: 40px;
+  margin-bottom: 24px;
+}
+
+.step-number {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.step p {
+  margin-bottom: 8px;
+}
+
+.checkpoint {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 10px 0;
+  font-size: 0.95rem;
+  color: #34d399;
+}
+
+.badge {
+  display: inline-block;
+  background: rgba(167, 139, 250, 0.15);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 6px;
+  padding: 2px 10px;
+  font-size: 0.8rem;
+  color: #a78bfa;
+  margin-bottom: 6px;
+}
+
+.insight-box {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer {
+  background: rgba(52, 211, 153, 0.1);
+  border: 2px solid rgba(52, 211, 153, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer h2 {
+  color: #34d399;
+  justify-content: center;
+}
+
+.final-answer .answer-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 12px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.option-card {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 90px;
+}
+
+.option-card.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+}
+
+.option-card .opt-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.option-card .opt-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #e2e8f0;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.pitfall-box {
+  background: rgba(224, 148, 104, 0.08);
+  border: 1px solid rgba(224, 148, 104, 0.25);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.pitfall-box h2 {
+  color: #e09468;
+}
+
+.pitfall-box ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.pitfall-box li {
+  padding: 6px 0 6px 24px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfall-box li::before {
+  content: '\26A0';
+  position: absolute;
+  left: 0;
+}
+
+.challenge-box {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.challenge-box h2 {
+  color: #60a5fa;
+}
+
+details {
+  margin-bottom: 24px;
+}
+
+details summary {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  color: #e2e8f0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details[open] summary {
+  border-radius: 12px 12px 0 0;
+  margin-bottom: 0;
+}
+
+details .details-content {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+details .details-content ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+details .details-content li {
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 80px; padding: 10px 12px; }
+  .step { padding-left: 34px; }
+  .final-answer .answer-value { font-size: 1.5rem; }
+  .options-row { gap: 6px; }
+  .option-card { min-width: 70px; padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Zbir povrsina kocki upisanih u lopte</h1>
+  <p class="subtitle">Geometrijski nizovi, upisane kocke i lopte, beskonacni zbir</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      U kocku \( K_1 \) ivice \( 1\,\text{cm} \) upisana je lopta \( L_1 \), zatim je u loptu \( L_1 \) upisana kocka \( K_2 \), zatim u nju lopta \( L_2 \) i zatim se postupak nastavlja na isti nacin. Zbir povrsina (u \(\text{cm}^2\)) svih kocki \( K_n \), \( n \in \mathbb{N} \), iznosi:
+    </p>
+    <h3>Ponudjeni odgovori</h3>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(8\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(18\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(9\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>
+      Potrebno je da nadjemo vezu izmedju ivica uzastopnih kocki. Svaka kocka \( K_n \) sadrzi upisanu loptu \( L_n \), a u tu loptu se upisuje sledeca kocka \( K_{n+1} \). Kljucni geometrijski odnosi su:
+    </p>
+    <p>
+      1. Lopta upisana u kocku ima <span class="highlight-blue">precnik jednak ivici kocke</span>.<br>
+      2. Kocka upisana u loptu ima <span class="highlight-blue">prostornu dijagonalu jednaku precniku lopte</span>.
+    </p>
+    <p>
+      Iz ovih odnosa nadjemo kolicnik geometrijskog niza ivica, zatim formirajmo geometrijski red za zbir povrsina.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <details>
+    <summary>Kljucne formule i teoreme</summary>
+    <div class="details-content">
+      <ul>
+        <li>
+          <strong>Prostorna dijagonala kocke:</strong> Za kocku ivice \( a \), prostorna dijagonala je \( d = a\sqrt{3} \).
+        </li>
+        <li>
+          <strong>Lopta upisana u kocku:</strong> Precnik upisane lopte jednak je ivici kocke: \( D = a \).
+        </li>
+        <li>
+          <strong>Kocka upisana u loptu:</strong> Prostorna dijagonala kocke jednaka je precniku lopte. Ako je precnik \( D \), ivica kocke je \( a = \dfrac{D}{\sqrt{3}} \).
+        </li>
+        <li>
+          <strong>Povrsina kocke:</strong> \( P = 6a^2 \) (sest jednakih kvadratnih strana).
+        </li>
+        <li>
+          <strong>Zbir beskonacnog geometrijskog reda:</strong> Ako je \( |q| < 1 \), tada \( \displaystyle \sum_{n=0}^{\infty} b_1 \cdot q^n = \frac{b_1}{1 - q} \).
+        </li>
+      </ul>
+    </div>
+  </details>
+
+  <!-- Visual Canvas -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="cubeCanvas" height="520"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step">
+      <div class="step-number">1</div>
+      <span class="badge">Geometrija</span>
+      <p><strong>Odredjujemo ivicu kocke \( K_1 \)</strong></p>
+      <p>Dato je da je ivica kocke \( K_1 \) jednaka \( a_1 = 1\,\text{cm} \).</p>
+    </div>
+
+    <div class="step">
+      <div class="step-number">2</div>
+      <span class="badge">Geometrija</span>
+      <p><strong>Lopta \( L_1 \) upisana u kocku \( K_1 \)</strong></p>
+      <p>
+        Lopta upisana u kocku dodiruje sve sest strana kocke. Njen precnik je jednak ivici kocke:
+      </p>
+      <div class="math-box">
+        \[ D_1 = a_1 = 1\,\text{cm}, \quad r_1 = \frac{1}{2}\,\text{cm} \]
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">3</div>
+      <span class="badge">Geometrija</span>
+      <p><strong>Kocka \( K_2 \) upisana u loptu \( L_1 \)</strong></p>
+      <p>
+        Kocka upisana u loptu ima svih 8 temena na povrsini lopte. To znaci da je <span class="highlight">prostorna dijagonala kocke jednaka precniku lopte</span>:
+      </p>
+      <div class="math-box">
+        \[ a_2 \sqrt{3} = D_1 = 1 \quad \Longrightarrow \quad a_2 = \frac{1}{\sqrt{3}} \]
+      </div>
+      <div class="checkpoint">Proverimo: \( a_2 = \frac{1}{\sqrt{3}} \approx 0{,}577\,\text{cm} \) &mdash; manje od \( a_1 = 1 \), sto ima smisla.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">4</div>
+      <span class="badge">Niz</span>
+      <p><strong>Odnos uzastopnih ivica &mdash; kolicnik niza</strong></p>
+      <p>
+        Postupak se ponavlja: lopta \( L_n \) upisana u kocku \( K_n \) ima precnik \( D_n = a_n \), a kocka \( K_{n+1} \) upisana u tu loptu ima ivicu:
+      </p>
+      <div class="math-box">
+        \[ a_{n+1} = \frac{D_n}{\sqrt{3}} = \frac{a_n}{\sqrt{3}} \]
+      </div>
+      <p>Dakle, ivice kocki cine <span class="highlight-blue">geometrijski niz</span> sa kolicnikom:</p>
+      <div class="math-box">
+        \[ q = \frac{a_{n+1}}{a_n} = \frac{1}{\sqrt{3}} \]
+      </div>
+      <p>Opsti clan niza ivica je:</p>
+      <div class="math-box">
+        \[ a_n = \left(\frac{1}{\sqrt{3}}\right)^{n-1} = 3^{-(n-1)/2} \]
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">5</div>
+      <span class="badge">Povrsina</span>
+      <p><strong>Povrsina jedne kocke \( K_n \)</strong></p>
+      <p>Povrsina kocke sa ivicom \( a_n \) je:</p>
+      <div class="math-box">
+        \[ P_n = 6 \cdot a_n^2 = 6 \cdot \left(\frac{1}{\sqrt{3}}\right)^{2(n-1)} = 6 \cdot \left(\frac{1}{3}\right)^{n-1} \]
+      </div>
+      <div class="checkpoint">Proverimo za \( n = 1 \): \( P_1 = 6 \cdot 1 = 6\,\text{cm}^2 \) &mdash; tacno, povrsina jedinicne kocke.</div>
+      <div class="checkpoint">Proverimo za \( n = 2 \): \( P_2 = 6 \cdot \frac{1}{3} = 2\,\text{cm}^2 \).</div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">6</div>
+      <span class="badge">Beskonacni red</span>
+      <p><strong>Zbir povrsina svih kocki</strong></p>
+      <p>Trazimo:</p>
+      <div class="math-box">
+        \[ S = \sum_{n=1}^{\infty} P_n = \sum_{n=1}^{\infty} 6 \cdot \left(\frac{1}{3}\right)^{n-1} \]
+      </div>
+      <p>
+        Ovo je <span class="highlight-blue">beskonacni geometrijski red</span> sa prvim clanom \( b_1 = 6 \) i kolicnikom \( q = \dfrac{1}{3} \). Posto je \( |q| = \dfrac{1}{3} < 1 \), red konvergira:
+      </p>
+      <div class="math-box">
+        \[ S = \frac{b_1}{1 - q} = \frac{6}{1 - \dfrac{1}{3}} = \frac{6}{\dfrac{2}{3}} = 6 \cdot \frac{3}{2} = \boxed{9} \]
+      </div>
+      <div class="checkpoint">Parcijalna provera: \( P_1 + P_2 + P_3 = 6 + 2 + \frac{2}{3} = 8{,}667 \approx 9 \) &mdash; brzo konvergira ka 9.</div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>
+      Kljucna ideja je da se kvadriranjem kolicnika ivica (\( q = 1/\sqrt{3} \)) dobija kolicnik povrsina (\( q^2 = 1/3 \)).
+      Zato, iako ivice opadaju kao \( 1/\sqrt{3} \) puta, <strong>povrsine opadaju tacno 3 puta</strong> sa svakom
+      sledecom kockom. To dovodi do elegantnog geometrijskog reda sa kolicnikom \( \frac{1}{3} \), ciji zbir
+      daje ceo broj &mdash; 9.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konacan odgovor</h2>
+    <div class="answer-value">\(9\,\text{cm}^2\)</div>
+    <p style="color: #94a3b8; margin-bottom: 12px;">Tacan odgovor je <strong style="color:#4ade80;">(E)</strong></p>
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(2\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(8\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(18\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(4\)</div>
+      </div>
+      <div class="option-card correct">
+        <div class="opt-label">(E) &#10003;</div>
+        <div class="opt-value">\(9\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="pitfall-box">
+    <h2>Ceste greske</h2>
+    <ul>
+      <li>
+        <strong>Mesanje precnika i poluprecnika:</strong> Lopta upisana u kocku ivice \( a \) ima precnik \( D = a \), a ne poluprecnik \( r = a \). Ako se koristi poluprecnik umesto precnika za narednu kocku, dobija se pogresan kolicnik niza.
+      </li>
+      <li>
+        <strong>Koriscenje dijagonale strane umesto prostorne dijagonale:</strong> Kocka upisana u loptu ima prostornu dijagonalu \( a\sqrt{3} \), a ne dijagonalu strane \( a\sqrt{2} \). Koriscenjem pogresne dijagonale dobio bi se kolicnik \( 1/\sqrt{2} \) i pogresan zbir \( S = 12 \).
+      </li>
+      <li>
+        <strong>Zaboravljanje kvadriranja pri prelasku na povrsine:</strong> Kolicnik ivica je \( 1/\sqrt{3} \), ali kolicnik povrsina je \( (1/\sqrt{3})^2 = 1/3 \). Ukoliko se ne kvadrira, dobija se pogresan kolicnik geometrijskog reda.
+      </li>
+      <li>
+        <strong>Pogresna formula za zbir reda:</strong> Formula je \( S = \frac{b_1}{1-q} \), a ne \( S = \frac{b_1}{1+q} \) ili \( S = \frac{b_1 \cdot q}{1-q} \). Takodje, \( b_1 = 6 \) (prva povrsina), ne \( b_1 = 1 \).
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Koristeci isti postupak (kocka &rarr; lopta &rarr; kocka &rarr; ...), izracunaj <strong>zbir zapremina</strong> svih kocki \( K_n \), \( n \in \mathbb{N} \).
+    </p>
+    <p>
+      <em>(Savet: Zapremina kocke ivice \( a \) je \( V = a^3 \). Kolicnik zapremina je \( q^3 = (1/\sqrt{3})^3 = 1/(3\sqrt{3}) \). Primeni formulu za zbir beskonacnog geometrijskog reda.)</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('cubeCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 520;
+
+    ctx.clearRect(0, 0, W, H);
+
+    /* --- Draw nested cubes and spheres diagram --- */
+
+    const cx = W * 0.32;
+    const cy = H * 0.42;
+
+    /* Isometric projection helpers */
+    function isoX(x, y, z, s) { return cx + (x - y) * s * 0.866; }
+    function isoY(x, y, z, s) { return cy - z * s + (x + y) * s * 0.5; }
+
+    function drawCube(s, color, lineW) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineW;
+
+      var verts = [
+        [0,0,0],[1,0,0],[1,1,0],[0,1,0],
+        [0,0,1],[1,0,1],[1,1,1],[0,1,1]
+      ];
+
+      var edges = [
+        [0,1],[1,2],[2,3],[3,0],
+        [4,5],[5,6],[6,7],[7,4],
+        [0,4],[1,5],[2,6],[3,7]
+      ];
+
+      var px = verts.map(function(v) {
+        return [isoX(v[0]-0.5, v[1]-0.5, v[2]-0.5, s), isoY(v[0]-0.5, v[1]-0.5, v[2]-0.5, s)];
+      });
+
+      edges.forEach(function(e) {
+        ctx.beginPath();
+        ctx.moveTo(px[e[0]][0], px[e[0]][1]);
+        ctx.lineTo(px[e[1]][0], px[e[1]][1]);
+        ctx.stroke();
+      });
+    }
+
+    function drawSphere(r, color, lineW) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineW;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      /* Equator ellipse for 3D feel */
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, r, r * 0.35, 0, 0, Math.PI * 2);
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    /* Title */
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Upisivanje kocki i lopti: K\u2081 \u2283 L\u2081 \u2283 K\u2082 \u2283 L\u2082 \u2283 ...', W * 0.32, 24);
+
+    /* Scale for K1: edge = 1 -> 140px */
+    var baseScale = Math.min(140, W * 0.18);
+
+    /* K1 (edge = 1) */
+    drawCube(baseScale, '#60a5fa', 2.5);
+
+    /* L1 (radius = 0.5, so diameter = 1 = edge of K1) */
+    var r1 = baseScale * 0.5;
+    drawSphere(r1, 'rgba(244, 114, 182, 0.6)', 2);
+
+    /* K2 (edge = 1/sqrt(3)) */
+    var s2 = baseScale / Math.sqrt(3);
+    drawCube(s2, '#a78bfa', 2);
+
+    /* L2 (radius = a2/2 = 1/(2*sqrt(3))) */
+    var r2 = s2 * 0.5;
+    drawSphere(r2, 'rgba(244, 114, 182, 0.4)', 1.5);
+
+    /* K3 (edge = 1/3) */
+    var s3 = baseScale / 3;
+    drawCube(s3, '#34d399', 1.5);
+
+    /* L3 */
+    var r3 = s3 * 0.5;
+    drawSphere(r3, 'rgba(244, 114, 182, 0.3)', 1);
+
+    /* Labels for cubes */
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('K\u2081: a\u2081 = 1', cx + baseScale * 0.9, cy - baseScale * 0.7);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('K\u2082: a\u2082 = 1/\u221A3', cx + s2 * 0.9 + 5, cy - s2 * 0.55);
+
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('K\u2083: a\u2083 = 1/3', cx + s3 * 0.9 + 5, cy - s3 * 0.3);
+
+    /* --- Right side: Surface area geometric series bar chart --- */
+
+    var chartX = W * 0.62;
+    var chartY = 60;
+    var chartW = W * 0.34;
+    var chartH = H - 140;
+    var barCount = 6;
+    var maxP = 6;
+    var barGap = 12;
+    var barW = (chartW - barGap * (barCount + 1)) / barCount;
+
+    /* Chart title */
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Povrsine kocki P\u2099 = 6 \u00B7 (1/3)^(n-1)', chartX + chartW / 2, chartY - 10);
+
+    /* Y-axis */
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(chartX, chartY);
+    ctx.lineTo(chartX, chartY + chartH);
+    ctx.stroke();
+
+    /* X-axis */
+    ctx.beginPath();
+    ctx.moveTo(chartX, chartY + chartH);
+    ctx.lineTo(chartX + chartW, chartY + chartH);
+    ctx.stroke();
+
+    /* Y-axis labels */
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    for (var yi = 0; yi <= 6; yi += 1) {
+      var yy = chartY + chartH - (yi / maxP) * chartH;
+      ctx.fillText(yi.toString(), chartX - 6, yy + 4);
+      if (yi > 0) {
+        ctx.strokeStyle = 'rgba(226, 232, 240, 0.06)';
+        ctx.beginPath();
+        ctx.moveTo(chartX, yy);
+        ctx.lineTo(chartX + chartW, yy);
+        ctx.stroke();
+      }
+    }
+
+    /* Cumulative sum line */
+    var cumSum = 0;
+    var cumPoints = [];
+
+    /* Bars */
+    var colors = ['#60a5fa', '#a78bfa', '#34d399', '#f472b6', '#fbbf24', '#94a3b8'];
+    for (var i = 0; i < barCount; i++) {
+      var pn = 6 * Math.pow(1/3, i);
+      cumSum += pn;
+      var bx = chartX + barGap + i * (barW + barGap);
+      var bh = (pn / maxP) * chartH;
+      var by = chartY + chartH - bh;
+
+      /* Bar */
+      ctx.fillStyle = colors[i];
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, barW, bh, [4, 4, 0, 0]);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      /* Bar value */
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      var valText = i === 0 ? '6' : i === 1 ? '2' : (6 * Math.pow(1/3, i)).toFixed(i > 2 ? 2 : 1).replace('.', ',');
+      ctx.fillText(valText, bx + barW / 2, by - 6);
+
+      /* Bar label */
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('K' + String.fromCharCode(8321 + i), bx + barW / 2, chartY + chartH + 18);
+
+      /* Cumulative point */
+      cumPoints.push([bx + barW / 2, chartY + chartH - (cumSum / (maxP * 1.6)) * chartH]);
+    }
+
+    /* Draw cumulative sum line */
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath();
+    for (var j = 0; j < cumPoints.length; j++) {
+      if (j === 0) ctx.moveTo(cumPoints[j][0], cumPoints[j][1]);
+      else ctx.lineTo(cumPoints[j][0], cumPoints[j][1]);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Cumulative sum dots */
+    for (var k = 0; k < cumPoints.length; k++) {
+      ctx.beginPath();
+      ctx.arc(cumPoints[k][0], cumPoints[k][1], 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#4ade80';
+      ctx.fill();
+    }
+
+    /* Dashed horizontal line at S = 9 */
+    var s9y = chartY + chartH - (9 / (maxP * 1.6)) * chartH;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    ctx.moveTo(chartX, s9y);
+    ctx.lineTo(chartX + chartW, s9y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('S = 9 (granica)', chartX + chartW, s9y - 8);
+
+    /* Bottom summary */
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Kolicnik povrsina: q = 1/3 \u2014 Zbir: S = 6/(1 - 1/3) = 9', W / 2, H - 15);
+
+    /* Legend for cumulative line */
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(chartX + 10, chartY + chartH + 32, 16, 3);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Kumulativni zbir \u2192 9', chartX + 32, chartY + chartH + 37);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir povrsina kocki upisanih u lopte",
+  "subject": "math",
+  "unit": "geometry",
+  "topic_tags": ["geometrijski_red", "kocka", "lopta", "upisane_figure", "prostorna_dijagonala", "beskonacni_zbir", "stereometrija"]
+}
+BRAINSPARK_META-->

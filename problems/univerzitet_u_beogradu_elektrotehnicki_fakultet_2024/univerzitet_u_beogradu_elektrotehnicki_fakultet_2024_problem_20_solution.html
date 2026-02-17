@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kombinatorika: izbor cetiri broja sa uslovima deljivosti i velicine</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem 20: Broj nacina na koji se mogu izabrati cetiri razlicita broja iz skupa {1,2,...,9}
+tako da je bar jedan od njih deljiv sa 4 i bar jedan od njih strogo veci od 5.
+
+Identifikacija skupova:
+  - Skup svih elemenata: S = {1, 2, 3, 4, 5, 6, 7, 8, 9}
+  - Deljivih sa 4: D = {4, 8}
+  - Strogo vecih od 5: V = {6, 7, 8, 9}
+
+Ukupan broj 4-elementnih podskupova od S:
+  C(9,4) = 126
+
+Koristimo inkluziju-ekskluziju:
+  Neka je A = "bar jedan element deljiv sa 4"
+  Neka je B = "bar jedan element strogo veci od 5"
+  Trazimo |A ∩ B|
+
+  A' = komplement od A = "nijedan element nije deljiv sa 4"
+     => biramo 4 iz S \ D = {1,2,3,5,6,7,9} (7 elemenata)
+     => |A'| = C(7,4) = 35
+
+  B' = komplement od B = "nijedan element nije strogo veci od 5"
+     => biramo 4 iz {1,2,3,4,5} (5 elemenata)
+     => |B'| = C(5,4) = 5
+
+  A' ∩ B' = "nijedan deljiv sa 4 I nijedan strogo veci od 5"
+     => biramo 4 iz S \ D ∩ {1,2,3,4,5} = {1,2,3,5} (4 elementa)
+     => |A' ∩ B'| = C(4,4) = 1
+
+  Po principu inkluzije-ekskluzije:
+  |A' ∪ B'| = |A'| + |B'| - |A' ∩ B'| = 35 + 5 - 1 = 39
+
+  |A ∩ B| = |S| - |A' ∪ B'| = 126 - 39 = 87
+
+Verifikacija: Mozemo i direktno:
+  Podskupovi koji sadrze bar jedan iz {4,8} i bar jedan iz {6,7,8,9}
+  = 126 - (podskupovi bez ijednog iz {4,8}) - (podskupovi bez ijednog > 5) + (podskupovi bez oba)
+  = 126 - 35 - 5 + 1 = 87
+
+Odgovor: (B) 87
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.set-color {
+  color: #60a5fa;
+}
+
+.complement-color {
+  color: #a78bfa;
+}
+
+.result-color {
+  color: #34d399;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  margin: 14px 0;
+}
+
+.combo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.combo-table th, .combo-table td {
+  padding: 10px 14px;
+  border: 1px solid #334155;
+  text-align: center;
+}
+
+.combo-table th {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.combo-table td {
+  background: rgba(30, 41, 59, 0.6);
+  color: #cbd5e1;
+}
+
+.combo-table .highlight-row td {
+  background: rgba(244, 114, 182, 0.1);
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.combo-table .result-row td {
+  background: rgba(52, 211, 153, 0.1);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Izbor cetiri broja sa uslovima deljivosti i velicine</h1>
+  <p class="subtitle">Kombinatorika &mdash; inkluzija-ekskluzija na podskupovima</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Postavka zadatka</div>
+    <div class="problem-text">
+      Broj nacina na koji se mogu izabrati cetiri razlicita broja iz skupa \(\{1, 2, \ldots, 9\}\) tako da je bar jedan od njih deljiv sa cetiri i bar jedan od njih strogo veci od pet iznosi:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">(A) \(202\)</div>
+      <div class="given-item answer-option" data-option="B">(B) \(87\)</div>
+      <div class="given-item answer-option" data-option="C">(C) \(367\)</div>
+      <div class="given-item answer-option" data-option="D">(D) \(91\)</div>
+      <div class="given-item answer-option" data-option="E">(E) \(108\)</div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      Imamo dva uslova koji moraju istovremeno biti ispunjeni: <span class="highlight">bar jedan broj deljiv sa 4</span> i <span class="highlight">bar jedan broj strogo veci od 5</span>. Umesto da direktno brojimo podskupove koji zadovoljavaju oba uslova (sto je komplikovano), koristicemo <strong>princip inkluzije-ekskluzije</strong> da od ukupnog broja podskupova oduzmemo one koji krsci barem jedan od uslova.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Kljucne formule i teoreme</summary>
+      <ul style="margin-top: 12px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;"><strong>Binomni koeficijent (kombinacija):</strong>
+          <div class="math-box">\[ \binom{n}{k} = \frac{n!}{k!(n-k)!} \]</div>
+          Broj nacina da se izabere \(k\) elemenata iz skupa od \(n\) elemenata (bez ponavljanja, redosled nije bitan).
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Princip inkluzije-ekskluzije (za dva dogadjaja):</strong>
+          <div class="math-box">\[ |A \cup B| = |A| + |B| - |A \cap B| \]</div>
+          ili ekvivalentno, za komplemente:
+          <div class="math-box">\[ |A \cap B| = |U| - |A'| - |B'| + |A' \cap B'| \]</div>
+          gde je \(U\) univerzalni skup, \(A' = U \setminus A\) i \(B' = U \setminus B\).
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Princip komplementa:</strong>
+          <div class="math-box">\[ |A| = |U| - |A'| \]</div>
+          Cesto je lakse izbrojati ono sto NE zelimo i oduzeti od ukupnog broja.
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz &mdash; Venov dijagram</div>
+    <canvas id="vennCanvas" width="900" height="560"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-title"><span class="step-badge">1</span> Identifikujemo relevantne skupove</div>
+      <p class="step-explanation">
+        Polazni skup je \(S = \{1, 2, 3, 4, 5, 6, 7, 8, 9\}\) sa \(|S| = 9\) elemenata.
+      </p>
+      <p class="step-explanation">
+        Elementi deljivi sa 4:
+      </p>
+      <div class="math-box">
+        \[ D = \{4,\; 8\} \quad \Rightarrow \quad |D| = 2 \]
+      </div>
+      <p class="step-explanation">
+        Elementi strogo veci od 5:
+      </p>
+      <div class="math-box">
+        \[ V = \{6,\; 7,\; 8,\; 9\} \quad \Rightarrow \quad |V| = 4 \]
+      </div>
+      <p class="step-explanation">
+        Primetimo da je broj \(8\) u obe grupe &mdash; on je i deljiv sa 4 i strogo veci od 5.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-title"><span class="step-badge">2</span> Izracunamo ukupan broj 4-elementnih podskupova</div>
+      <p class="step-explanation">
+        Ukupan broj nacina da se izaberu 4 elementa iz skupa od 9:
+      </p>
+      <div class="math-box">
+        \[ \binom{9}{4} = \frac{9!}{4! \cdot 5!} = \frac{9 \cdot 8 \cdot 7 \cdot 6}{4 \cdot 3 \cdot 2 \cdot 1} = \frac{3024}{24} = 126 \]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-title"><span class="step-badge">3</span> Definisemo dogadjaje i njihove komplemente</div>
+      <p class="step-explanation">
+        Neka je:
+      </p>
+      <ul style="padding-left: 20px; margin-bottom: 12px;">
+        <li style="margin-bottom: 6px;">\(A\) = skup podskupova koji sadrze <strong>bar jedan element deljiv sa 4</strong></li>
+        <li style="margin-bottom: 6px;">\(B\) = skup podskupova koji sadrze <strong>bar jedan element strogo veci od 5</strong></li>
+      </ul>
+      <p class="step-explanation">
+        Trazimo \(|A \cap B|\) &mdash; podskupove koji zadovoljavaju <span class="highlight">oba uslova istovremeno</span>.
+      </p>
+      <p class="step-explanation">
+        Komplementi:
+      </p>
+      <ul style="padding-left: 20px; margin-bottom: 12px;">
+        <li style="margin-bottom: 6px;">\(A'\) = nijedan element nije deljiv sa 4 &rArr; biramo iz \(S \setminus D = \{1,2,3,5,6,7,9\}\)</li>
+        <li style="margin-bottom: 6px;">\(B'\) = nijedan element nije strogo veci od 5 &rArr; biramo iz \(\{1,2,3,4,5\}\)</li>
+      </ul>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-title"><span class="step-badge">4</span> Izracunamo \(|A'|\) &mdash; podskupovi bez elementa deljivog sa 4</div>
+      <p class="step-explanation">
+        Ako iskljucimo brojeve \(4\) i \(8\), ostaje nam 7 elemenata: \(\{1, 2, 3, 5, 6, 7, 9\}\).
+      </p>
+      <div class="math-box">
+        \[ |A'| = \binom{7}{4} = \frac{7!}{4! \cdot 3!} = \frac{7 \cdot 6 \cdot 5}{3 \cdot 2 \cdot 1} = \frac{210}{6} = 35 \]
+      </div>
+      <details>
+        <summary>Proveri se: Zasto iskljucujemo samo 4 i 8?</summary>
+        <p>Jedini umnozci broja 4 u skupu \(\{1, \ldots, 9\}\) su \(4 = 4 \cdot 1\) i \(8 = 4 \cdot 2\). Sledeci bi bio \(12 = 4 \cdot 3\), ali on nije u nasem skupu. Dakle, iskljucivanjem brojeva 4 i 8, garantujemo da nijedan izabrani broj nece biti deljiv sa 4.</p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" data-step="5">
+      <div class="step-title"><span class="step-badge">5</span> Izracunamo \(|B'|\) &mdash; podskupovi bez elementa veceg od 5</div>
+      <p class="step-explanation">
+        Ako nijedan element ne sme biti strogo veci od 5, biramo iskljucivo iz \(\{1, 2, 3, 4, 5\}\) &mdash; 5 elemenata.
+      </p>
+      <div class="math-box">
+        \[ |B'| = \binom{5}{4} = \frac{5!}{4! \cdot 1!} = 5 \]
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container" data-step="6">
+      <div class="step-title"><span class="step-badge">6</span> Izracunamo \(|A' \cap B'|\) &mdash; podskupovi bez oba svojstva</div>
+      <p class="step-explanation">
+        Ako nijedan element ne sme biti deljiv sa 4 <strong>i</strong> nijedan ne sme biti strogo veci od 5, onda biramo iz:
+      </p>
+      <div class="math-box">
+        \[ \{1,2,3,4,5\} \setminus \{4,8\} = \{1, 2, 3, 5\} \quad \Rightarrow \quad 4 \text{ elementa} \]
+      </div>
+      <p class="step-explanation">
+        Posto biramo 4 elementa iz skupa od 4:
+      </p>
+      <div class="math-box">
+        \[ |A' \cap B'| = \binom{4}{4} = 1 \]
+      </div>
+      <p class="step-explanation">
+        Taj jedini podskup je \(\{1, 2, 3, 5\}\) &mdash; jedini izbor koji ne sadrzi ni element deljiv sa 4, ni element veci od 5.
+      </p>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container" data-step="7">
+      <div class="step-title"><span class="step-badge">7</span> Primenimo inkluziju-ekskluziju</div>
+      <p class="step-explanation">
+        Po principu inkluzije-ekskluzije:
+      </p>
+      <div class="math-box">
+        \[ |A \cap B| = |U| - |A'| - |B'| + |A' \cap B'| \]
+      </div>
+      <p class="step-explanation">
+        Ovo sledi iz De Morganovih zakona: \((A \cap B)' = A' \cup B'\), pa:
+      </p>
+      <div class="math-box">
+        \[ |A \cap B| = |U| - |A' \cup B'| = |U| - \bigl(|A'| + |B'| - |A' \cap B'|\bigr) \]
+      </div>
+      <p class="step-explanation">
+        Uvrstimo izracunate vrednosti:
+      </p>
+      <div class="math-box">
+        \[ |A \cap B| = 126 - 35 - 5 + 1 = \boxed{87} \]
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step-container" data-step="8">
+      <div class="step-title"><span class="step-badge">8</span> Verifikacija &mdash; pregled svih kategorija</div>
+      <p class="step-explanation">
+        Proverimo da se sve kategorije sabiraju u 126:
+      </p>
+      <div class="table-wrapper">
+        <table class="combo-table">
+          <thead>
+            <tr>
+              <th>Kategorija</th>
+              <th>Opis</th>
+              <th>Broj podskupova</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>\(A \cap B\)</td>
+              <td>Bar jedan deljiv sa 4 <strong>i</strong> bar jedan &gt; 5</td>
+              <td>87</td>
+            </tr>
+            <tr>
+              <td>\(A \cap B'\)</td>
+              <td>Bar jedan deljiv sa 4, ali nijedan &gt; 5</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>\(A' \cap B\)</td>
+              <td>Nijedan deljiv sa 4, ali bar jedan &gt; 5</td>
+              <td>34</td>
+            </tr>
+            <tr class="highlight-row">
+              <td>\(A' \cap B'\)</td>
+              <td>Nijedan deljiv sa 4 <strong>i</strong> nijedan &gt; 5</td>
+              <td>1</td>
+            </tr>
+            <tr class="result-row">
+              <td colspan="2"><strong>Ukupno</strong></td>
+              <td><strong>126</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Proveri se: Odakle dolaze brojevi 4 i 34?</summary>
+        <p style="margin-bottom: 8px;">
+          <strong>\(|A \cap B'| = |B'| - |A' \cap B'| = 5 - 1 = 4\)</strong><br>
+          Ovo su podskupovi iz \(\{1,2,3,4,5\}\) koji sadrze broj 4. Nabrojmo ih:
+          \(\{1,2,3,4\}\), \(\{1,2,4,5\}\), \(\{1,3,4,5\}\), \(\{2,3,4,5\}\)\). Zaista, 4 podskupa.
+        </p>
+        <p>
+          <strong>\(|A' \cap B| = |A'| - |A' \cap B'| = 35 - 1 = 34\)</strong><br>
+          Ovo su podskupovi iz \(\{1,2,3,5,6,7,9\}\) koji sadrze bar jedan element veci od 5. Od 35 takvih podskupova, samo jedan (\(\{1,2,3,5\}\)) nema element veci od 5, pa ih je \(35 - 1 = 34\).
+        </p>
+        <p style="margin-top: 8px;">
+          Kontrola: \(87 + 4 + 34 + 1 = 126\) &#10004;
+        </p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Kljucni uvid</div>
+    <p>
+      Kada imamo vise uslova oblika "bar jedan element mora da...", gotovo uvek je lakse brojati <strong>komplemente</strong> (podskupove koji <em>ne</em> zadovoljavaju uslov) i primeniti inkluziju-ekskluziju. U ovom zadatku, direktno prebrojavanje podskupova koji imaju i element deljiv sa 4 i element veci od 5 zahtevalo bi razmatranje mnogih slucajeva (da li je 4 ili 8 izabran, koliko elemenata vecih od 5, itd.). Komplement pristup svodi sve na tri jednostavne kombinacije: \(\binom{7}{4}\), \(\binom{5}{4}\) i \(\binom{4}{4}\).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konacan odgovor</div>
+    <div class="answer">\(87\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(202\)</div>
+      <div class="final-option correct" data-option="B">(B) \(87\)</div>
+      <div class="final-option" data-option="C">(C) \(367\)</div>
+      <div class="final-option" data-option="D">(D) \(91\)</div>
+      <div class="final-option" data-option="E">(E) \(108\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(126 - 35 - 5 + 1 = 87\) &#10004; &nbsp;|&nbsp; Kontrolni zbir: \(87 + 4 + 34 + 1 = 126\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboravljanje clana \(|A' \cap B'|\) u inkluziji-ekskluziji</div>
+      <p>Mnogi ucenici izracunaju \(126 - 35 - 5 = 86\) i dobiju pogresan rezultat jer zaborave da dodaju \(|A' \cap B'| = 1\). U principu inkluzije-ekskluzije, ovaj clan se dodaje jer smo ga oduzeli dvaput &mdash; jednom kroz \(|A'|\) i jednom kroz \(|B'|\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Mesanje "strogo veci od 5" i "veci ili jednak 5"</div>
+      <p>Postavka kaze <strong>strogo veci</strong> od 5, sto znaci da 5 <em>ne</em> pripada skupu \(V\). Skup je \(\{6,7,8,9\}\), a ne \(\{5,6,7,8,9\}\). Ova razlika menja rezultat.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Racunanje sa varijacijama umesto kombinacija</div>
+      <p>Posto nas zanima <em>izbor</em> (a ne <em>raspored</em>) cetiri broja, koristimo kombinacije \(\binom{n}{k}\), ne varijacije. Redosled izbora nije bitan &mdash; skup \(\{2,4,7,9\}\) je isti izbor kao \(\{9,4,2,7\}\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogresan komplement za uslov deljivosti</div>
+      <p>Prilikom formiranja skupa \(S \setminus D\) za komplement \(A'\), treba iskljuciti <strong>sve</strong> elemente deljive sa 4 iz skupa \(\{1, \ldots, 9\}\). To su samo 4 i 8 (ne zaboravite 8!). Ostaje \(\{1,2,3,5,6,7,9\}\) sa 7 elemenata.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Na koliko nacina se moze izabrati pet razlicitih brojeva iz skupa \(\{1, 2, \ldots, 12\}\) tako da bar jedan od njih bude deljiv sa 3 i bar jedan bude prost broj?
+    </p>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p style="margin-bottom: 8px;">
+        Primenite isti princip inkluzije-ekskluzije. Elementi deljivi sa 3 u \(\{1,\ldots,12\}\) su \(\{3, 6, 9, 12\}\). Prosti brojevi u istom skupu su \(\{2, 3, 5, 7, 11\}\).
+      </p>
+      <p style="margin-bottom: 8px;">
+        Ukupno: \(\binom{12}{5} = 792\).
+        Bez deljivih sa 3: biramo iz 8 elemenata, \(\binom{8}{5} = 56\).
+        Bez prostih: biramo iz 7 elemenata \(\{1, 4, 6, 8, 9, 10, 12\}\), \(\binom{7}{5} = 21\).
+        Bez deljivih sa 3 i bez prostih: biramo iz \(\{1, 4, 8, 10\}\), \(\binom{4}{5} = 0\) (nemoguce!).
+      </p>
+      <p>
+        Rezultat: \(792 - 56 - 21 + 0 = 715\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('vennCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 560 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 560;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Inkluzija-ekskluzija: vizuelni prikaz', W / 2, 30);
+
+    // === TOP SECTION: The set S with elements colored ===
+    var setY = 55;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Skup S = {1, 2, 3, 4, 5, 6, 7, 8, 9}', W / 2, setY);
+
+    // Draw the 9 number circles
+    var numY = setY + 40;
+    var numSpacing = Math.min(60, (W - 80) / 9);
+    var numStartX = W / 2 - numSpacing * 4;
+
+    var divisibleBy4 = [4, 8];
+    var greaterThan5 = [6, 7, 8, 9];
+
+    for (var i = 1; i <= 9; i++) {
+      var nx = numStartX + (i - 1) * numSpacing;
+      var inD = divisibleBy4.indexOf(i) !== -1;
+      var inV = greaterThan5.indexOf(i) !== -1;
+
+      var circleR = 20;
+      ctx.beginPath();
+      ctx.arc(nx, numY, circleR, 0, Math.PI * 2);
+
+      if (inD && inV) {
+        // Both: gradient-like highlight
+        ctx.fillStyle = 'rgba(244, 114, 182, 0.3)';
+        ctx.fill();
+        ctx.strokeStyle = '#f472b6';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      } else if (inD) {
+        ctx.fillStyle = 'rgba(96, 165, 250, 0.2)';
+        ctx.fill();
+        ctx.strokeStyle = '#60a5fa';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else if (inV) {
+        ctx.fillStyle = 'rgba(167, 139, 250, 0.2)';
+        ctx.fill();
+        ctx.strokeStyle = '#a78bfa';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = 'rgba(51, 65, 85, 0.5)';
+        ctx.fill();
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = (inD && inV) ? '#f472b6' : inD ? '#60a5fa' : inV ? '#a78bfa' : '#94a3b8';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(i), nx, numY);
+    }
+    ctx.textBaseline = 'alphabetic';
+
+    // Legend for the number circles
+    var legendY = numY + 40;
+    var legendX = W / 2 - 220;
+
+    function drawLegendDot(x, y, color, label) {
+      ctx.beginPath();
+      ctx.arc(x, y, 7, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(label, x + 14, y + 4);
+    }
+
+    drawLegendDot(legendX, legendY, '#60a5fa', 'Deljiv sa 4 (D)');
+    drawLegendDot(legendX + 170, legendY, '#a78bfa', 'Strogo > 5 (V)');
+    drawLegendDot(legendX + 330, legendY, '#f472b6', 'Oba (D \u2229 V)');
+
+    // === MIDDLE SECTION: Venn Diagram for subsets ===
+    var vennCenterY = 245;
+    var vennCenterX = W / 2;
+    var circRadius = 85;
+    var circOffset = 55;
+
+    // Left circle: A (bar jedan deljiv sa 4)
+    var leftCX = vennCenterX - circOffset;
+    var rightCX = vennCenterX + circOffset;
+
+    // Universe rectangle
+    ctx.beginPath();
+    ctx.roundRect(vennCenterX - 210, vennCenterY - 110, 420, 220, 14);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('U = svi 4-elem. podskupovi', vennCenterX - 200, vennCenterY - 94);
+    ctx.fillText('|U| = C(9,4) = 126', vennCenterX - 200, vennCenterY - 78);
+
+    // Left circle (A)
+    ctx.beginPath();
+    ctx.arc(leftCX, vennCenterY, circRadius, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.12)';
+    ctx.fill();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Right circle (B)
+    ctx.beginPath();
+    ctx.arc(rightCX, vennCenterY, circRadius, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.12)';
+    ctx.fill();
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Labels
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('A', leftCX - 50, vennCenterY - 70);
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('bar 1 deljiv', leftCX - 50, vennCenterY - 55);
+    ctx.fillText('sa 4', leftCX - 50, vennCenterY - 42);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('B', rightCX + 50, vennCenterY - 70);
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('bar 1 strogo', rightCX + 50, vennCenterY - 55);
+    ctx.fillText('> 5', rightCX + 50, vennCenterY - 42);
+
+    // Intersection region highlight
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(leftCX, vennCenterY, circRadius, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.arc(rightCX, vennCenterY, circRadius, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.2)';
+    ctx.fill();
+    ctx.restore();
+
+    // Numbers in regions
+    ctx.font = 'bold 24px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    // A only
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('4', leftCX - 48, vennCenterY + 15);
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('A \u2229 B\'', leftCX - 48, vennCenterY + 32);
+
+    // Intersection
+    ctx.font = 'bold 28px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('87', vennCenterX, vennCenterY + 10);
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('A \u2229 B', vennCenterX, vennCenterY + 30);
+
+    // B only
+    ctx.font = 'bold 24px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('34', rightCX + 48, vennCenterY + 15);
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('A\' \u2229 B', rightCX + 48, vennCenterY + 32);
+
+    // Outside both circles
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('1', vennCenterX + 170, vennCenterY + 80);
+    ctx.font = '10px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('A\' \u2229 B\'', vennCenterX + 170, vennCenterY + 95);
+
+    // === BOTTOM SECTION: The formula walkthrough ===
+    var formulaY = 385;
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Primena inkluzije-ekskluzije', W / 2, formulaY);
+
+    // Boxes for each term
+    var boxH = 72;
+    var boxW2 = Math.min(160, W * 0.17);
+    var gap = 12;
+    var totalBoxW = boxW2 * 4 + gap * 3;
+    var startX = (W - totalBoxW) / 2 + boxW2 / 2;
+    var boxY = formulaY + 50;
+
+    // Box: Total
+    drawFormulaBox(startX, boxY, boxW2, boxH, '|U|', 'C(9,4)', '126', '#e2e8f0');
+    // Minus sign
+    drawOperator(startX + boxW2 / 2 + gap / 2, boxY, '\u2212', '#f472b6');
+    // Box: |A'|
+    drawFormulaBox(startX + boxW2 + gap, boxY, boxW2, boxH, '|A\'|', 'C(7,4)', '35', '#60a5fa');
+    // Minus sign
+    drawOperator(startX + boxW2 * 1.5 + gap * 1.5, boxY, '\u2212', '#f472b6');
+    // Box: |B'|
+    drawFormulaBox(startX + (boxW2 + gap) * 2, boxY, boxW2, boxH, '|B\'|', 'C(5,4)', '5', '#a78bfa');
+    // Plus sign
+    drawOperator(startX + boxW2 * 2.5 + gap * 2.5, boxY, '+', '#34d399');
+    // Box: |A' ∩ B'|
+    drawFormulaBox(startX + (boxW2 + gap) * 3, boxY, boxW2, boxH, '|A\'\u2229B\'|', 'C(4,4)', '1', '#f472b6');
+
+    // Equals and result
+    var resultY = boxY + boxH / 2 + 40;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('126 \u2212 35 \u2212 5 + 1 =', W / 2 - 50, resultY);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 28px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('87', W / 2 + 70, resultY + 4);
+
+    // Result box
+    ctx.beginPath();
+    ctx.roundRect(W / 2 + 48, resultY - 22, 46, 34, 8);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+
+  function drawFormulaBox(x, y, w, h, label, formula, value, color) {
+    ctx.beginPath();
+    ctx.roundRect(x - w / 2, y - h / 2, w, h, 10);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, y - 20);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(formula, x, y + 2);
+
+    ctx.fillStyle = color;
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(value, x, y + 26);
+  }
+
+  function drawOperator(x, y, op, color) {
+    ctx.fillStyle = color;
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(op, x, y + 4);
+  }
+
+  // Step interactivity
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(container) {
+    container.addEventListener('click', function() {
+      stepContainers.forEach(function(c) { c.classList.remove('active'); });
+      container.classList.add('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Izbor cetiri broja sa uslovima deljivosti i velicine",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "inkluzija-ekskluzija", "binomni koeficijent", "podskupovi", "princip komplementa"]
+}
+BRAINSPARK_META-->

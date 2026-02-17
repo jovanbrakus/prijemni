@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jednakost funkcija - analiza domena i formula</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Date su cetiri funkcije. Odrediti koji iskaz o njihovoj jednakosti je tacan.
+
+f1(x) = sqrt((x-1)^2) = |x-1|, domen: R (ceo skup realnih brojeva)
+f2(x) = (x^2-1)/(x+1) = (x-1)(x+1)/(x+1) = x-1, ali x != -1, domen: R\{-1}
+f3(x) = x^2 - (x^3+1)/(x+1)
+      = x^2 - (x+1)(x^2-x+1)/(x+1)
+      = x^2 - (x^2-x+1)
+      = x - 1, ali x != -1, domen: R\{-1}
+f4(x) = 2^(log_2(x-1)) = x-1, ali x-1 > 0 => x > 1, domen: (1, +inf)
+
+Uporedimo:
+- f2 i f3: isti domen R\{-1}, ista formula x-1 => f2 = f3
+- f1: domen R, formula |x-1| (ne x-1) => f1 != f2, f1 != f3
+- f4: domen (1,+inf), formula x-1, ali domen razlicit od f2 i f3 => f4 != f2, f4 != f3
+- f1 i f4: razlicit domen i razlicita formula => f1 != f4
+
+Dakle: f2 = f3, a sve ostale su medjusobno razlicite.
+To odgovara: f1 != f2 = f3 != f4 != f1
+
+Odgovor: (C)
+
+Napomena: Dve funkcije su jednake akko imaju isti domen I istu vrednost za svako x iz tog domena.
+Kljucna razlika:
+- f1 ima domen R i daje |x-1| (uvek >= 0)
+- f2 i f3 imaju domen R\{-1} i daju x-1 (moze biti negativno)
+- f4 ima domen (1,+inf) i daje x-1 (uvek > 0, ali restriktivniji domen)
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.func-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.func-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.func-label {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.arrow {
+  color: #60a5fa;
+  margin: 0 4px;
+}
+
+.checkpoint {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 12px 0;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.domain-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.domain-table th, .domain-table td {
+  border: 1px solid #334155;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.domain-table th {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.domain-table td {
+  background: rgba(30, 41, 59, 0.6);
+}
+
+.domain-table tr:hover td {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.compare-box {
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #334155;
+}
+
+.compare-box.equal {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.compare-box.not-equal {
+  background: rgba(244, 114, 182, 0.08);
+  border-color: rgba(244, 114, 182, 0.3);
+}
+
+.compare-label {
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 1.05rem;
+}
+
+.compare-box.equal .compare-label {
+  color: #34d399;
+}
+
+.compare-box.not-equal .compare-label {
+  color: #f472b6;
+}
+
+.quiz-container {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+.quiz-question {
+  color: #34d399;
+  font-weight: 600;
+  margin-bottom: 12px;
+  font-size: 1.05rem;
+}
+
+.quiz-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quiz-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.quiz-btn:hover {
+  border-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.quiz-btn.correct-answer {
+  background: rgba(52, 211, 153, 0.2);
+  border-color: #34d399;
+  color: #4ade80;
+}
+
+.quiz-btn.wrong-answer {
+  background: rgba(244, 114, 182, 0.2);
+  border-color: #f472b6;
+  color: #f472b6;
+}
+
+.quiz-feedback {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: none;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: 1fr; }
+  .func-grid { grid-template-columns: 1fr; }
+  .compare-grid { grid-template-columns: 1fr; }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .domain-table { font-size: 0.9rem; }
+  .domain-table th, .domain-table td { padding: 8px 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Jednakost funkcija &mdash; analiza domena i formula</h1>
+  <p class="subtitle">Odredjivanje koji parovi funkcija su jednaki na osnovu domena i formule</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Date su funkcije:
+      <div class="func-grid">
+        <div class="func-item">
+          <div class="func-label">Funkcija \(f_1\):</div>
+          \( f_1(x) = \sqrt{(x-1)^2} \)
+        </div>
+        <div class="func-item">
+          <div class="func-label">Funkcija \(f_2\):</div>
+          \( f_2(x) = \dfrac{x^2 - 1}{x + 1} \)
+        </div>
+        <div class="func-item">
+          <div class="func-label">Funkcija \(f_3\):</div>
+          \( f_3(x) = x^2 - \dfrac{x^3 + 1}{x + 1} \)
+        </div>
+        <div class="func-item">
+          <div class="func-label">Funkcija \(f_4\):</div>
+          \( f_4(x) = 2^{\log_2(x-1)} \)
+        </div>
+      </div>
+      <p style="margin-top: 16px;">Tacan iskaz glasi:</p>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">(A) \( f_1 \neq f_2 = f_3 = f_4 \)</div>
+      <div class="given-item answer-option" data-option="B">(B) \( f_1 \neq f_2 = f_4 \neq f_3 \neq f_1 \)</div>
+      <div class="given-item answer-option" data-option="C">(C) \( f_1 \neq f_2 = f_3 \neq f_4 \neq f_1 \)</div>
+      <div class="given-item answer-option" data-option="D">(D) \( f_1 = f_4 \neq f_2 = f_3 \)</div>
+      <div class="given-item answer-option" data-option="E">(E) sve funkcije su razlicite</div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      Za svaku funkciju odredjujemo njenu <strong>uproseenu formulu</strong> i <strong>domen</strong>.
+      <span class="arrow">&#8594;</span> Dve funkcije su jednake akko imaju <strong>isti domen</strong> i <strong>istu vrednost</strong> za svaki \(x\) iz tog domena.
+      <span class="arrow">&#8594;</span> Poredimo sve parove po oba kriterijuma: domen i formula.
+      <span class="arrow">&#8594;</span> Biramo tacan iskaz medju ponudjenim odgovorima.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsecanje na teoriju</div>
+    <details>
+      <summary>Jednakost funkcija</summary>
+      <p style="margin-top: 8px;">
+        Dve funkcije \(f\) i \(g\) su <strong>jednake</strong> (pisemo \(f = g\)) ako i samo ako:
+      </p>
+      <ol style="margin: 8px 0 8px 20px; color: #cbd5e1;">
+        <li>Imaju <strong>isti domen</strong>: \(D_f = D_g\)</li>
+        <li>Za svako \(x\) iz tog domena vazi \(f(x) = g(x)\)</li>
+      </ol>
+      <p>Ako se domeni razlikuju, funkcije <strong>nisu jednake</strong>, cak i kada se formule poklapaju na zajednickom delu domena.</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Svojstvo apsolutne vrednosti i korena</summary>
+      <div class="math-box">
+        \[ \sqrt{a^2} = |a| \quad \text{za svako } a \in \mathbb{R} \]
+      </div>
+      <p>Ovo je kljucno svojstvo: koren iz kvadrata nije \(a\), vec \(|a|\). Na primer, \(\sqrt{(-3)^2} = \sqrt{9} = 3 = |-3|\), a ne \(-3\).</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Faktorizacija suma i razlika kubova</summary>
+      <div class="math-box">
+        \[ a^3 + b^3 = (a + b)(a^2 - ab + b^2) \]
+      </div>
+      <p>Specijalno, za \(b = 1\):</p>
+      <div class="math-box">
+        \[ x^3 + 1 = (x + 1)(x^2 - x + 1) \]
+      </div>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Svojstvo logaritma kao eksponenta</summary>
+      <div class="math-box">
+        \[ a^{\log_a(x)} = x \quad \text{za } x > 0,\; a > 0,\; a \neq 1 \]
+      </div>
+      <p>Ali paznja: \(\log_a(x)\) je definisan samo za \(x > 0\), pa funkcija \(a^{\log_a(x)}\) ima restriktivniji domen od obicnog \(x\).</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Graficki prikaz funkcija i njihovih domena</div>
+    <canvas id="funcCanvas" width="900" height="600"></canvas>
+    <p style="color:#94a3b8; font-size:0.9rem; text-align:center; margin-top:10px;">
+      Grafici svih cetiri funkcija sa oznacenim domenima. Obratite paznju na razlike: \(f_1\) (narandzasta) je oblika &bdquo;V&ldquo;, dok \(f_2\), \(f_3\), \(f_4\) daju pravu \(y = x - 1\) ali na razlicitim domenima.
+    </p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 28px;">
+      <div class="step-title"><span class="step-badge">1</span> Analiza funkcije \(f_1(x) = \sqrt{(x-1)^2}\)</div>
+      <p class="step-explanation">
+        Primenjujemo svojstvo \(\sqrt{a^2} = |a|\):
+      </p>
+      <div class="math-box">
+        \[ f_1(x) = \sqrt{(x-1)^2} = |x - 1| \]
+      </div>
+      <p class="step-explanation">
+        <strong>Domen:</strong> Izraz \((x-1)^2\) je definisan za svako \(x \in \mathbb{R}\), i koren iz nenegativnog broja je uvek definisan. Dakle:
+      </p>
+      <div class="math-box">
+        \[ D_{f_1} = \mathbb{R} \]
+      </div>
+      <p class="step-explanation">
+        <strong>Formula:</strong> \(f_1(x) = |x-1|\). Ovo je funkcija apsolutne vrednosti &mdash; za \(x \geq 1\) daje \(x-1\), a za \(x < 1\) daje \(1-x\). Uvek je nenegativna.
+      </p>
+      <div class="checkpoint">Rezime: \(f_1(x) = |x-1|\), \(D_{f_1} = \mathbb{R}\)</div>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 28px;">
+      <div class="step-title"><span class="step-badge">2</span> Analiza funkcije \(f_2(x) = \dfrac{x^2 - 1}{x + 1}\)</div>
+      <p class="step-explanation">
+        Faktorizujemo brojilac koristeci razliku kvadrata:
+      </p>
+      <div class="math-box">
+        \[ f_2(x) = \frac{x^2 - 1}{x + 1} = \frac{(x-1)(x+1)}{x+1} \]
+      </div>
+      <p class="step-explanation">
+        Za \(x \neq -1\) mozemo da skratimo \((x+1)\):
+      </p>
+      <div class="math-box">
+        \[ f_2(x) = x - 1, \quad x \neq -1 \]
+      </div>
+      <p class="step-explanation">
+        <strong>Domen:</strong> Imenilac \(x + 1 \neq 0\), tj. \(x \neq -1\). Dakle:
+      </p>
+      <div class="math-box">
+        \[ D_{f_2} = \mathbb{R} \setminus \{-1\} \]
+      </div>
+      <p class="step-explanation" style="color: #f472b6;">
+        <strong>Vazno:</strong> Iako smo skratili \((x+1)\), tacka \(x = -1\) i dalje ne pripada domenu! Skracivanje ne menja domen polazne funkcije.
+      </p>
+      <div class="checkpoint">Rezime: \(f_2(x) = x - 1\), \(D_{f_2} = \mathbb{R} \setminus \{-1\}\)</div>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 28px;">
+      <div class="step-title"><span class="step-badge">3</span> Analiza funkcije \(f_3(x) = x^2 - \dfrac{x^3 + 1}{x + 1}\)</div>
+      <p class="step-explanation">
+        Faktorizujemo \(x^3 + 1\) koristeci formulu za zbir kubova:
+      </p>
+      <div class="math-box">
+        \[ x^3 + 1 = (x + 1)(x^2 - x + 1) \]
+      </div>
+      <p class="step-explanation">
+        Zamenjujemo u izraz za \(f_3\):
+      </p>
+      <div class="math-box">
+        \[ f_3(x) = x^2 - \frac{(x+1)(x^2 - x + 1)}{x + 1} \]
+      </div>
+      <p class="step-explanation">
+        Za \(x \neq -1\), skracujemo \((x+1)\):
+      </p>
+      <div class="math-box">
+        \[ f_3(x) = x^2 - (x^2 - x + 1) = x^2 - x^2 + x - 1 = x - 1 \]
+      </div>
+      <p class="step-explanation">
+        <strong>Domen:</strong> Imenilac \(x + 1 \neq 0\), tj. \(x \neq -1\):
+      </p>
+      <div class="math-box">
+        \[ D_{f_3} = \mathbb{R} \setminus \{-1\} \]
+      </div>
+      <div class="checkpoint">Rezime: \(f_3(x) = x - 1\), \(D_{f_3} = \mathbb{R} \setminus \{-1\}\)</div>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 28px;">
+      <div class="step-title"><span class="step-badge">4</span> Analiza funkcije \(f_4(x) = 2^{\log_2(x-1)}\)</div>
+      <p class="step-explanation">
+        Primenjujemo svojstvo \(a^{\log_a(t)} = t\) (za \(t > 0\)):
+      </p>
+      <div class="math-box">
+        \[ f_4(x) = 2^{\log_2(x-1)} = x - 1 \]
+      </div>
+      <p class="step-explanation">
+        <strong>Domen:</strong> Logaritam \(\log_2(x-1)\) je definisan samo za \(x - 1 > 0\), tj. \(x > 1\):
+      </p>
+      <div class="math-box">
+        \[ D_{f_4} = (1, +\infty) \]
+      </div>
+      <p class="step-explanation" style="color: #f472b6;">
+        <strong>Paznja:</strong> Iako je formula ista (\(x - 1\)) kao kod \(f_2\) i \(f_3\), domen je znatno manji &mdash; samo pozitivne vrednosti \(x - 1\)!
+      </p>
+      <div class="checkpoint">Rezime: \(f_4(x) = x - 1\), \(D_{f_4} = (1, +\infty)\)</div>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 28px;">
+      <div class="step-title"><span class="step-badge">5</span> Pregled: tabela domena i formula</div>
+      <div style="overflow-x: auto;">
+        <table class="domain-table">
+          <thead>
+            <tr>
+              <th>Funkcija</th>
+              <th>Uproseena formula</th>
+              <th>Domen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>\(f_1\)</td>
+              <td>\(|x - 1|\)</td>
+              <td>\(\mathbb{R}\)</td>
+            </tr>
+            <tr>
+              <td>\(f_2\)</td>
+              <td>\(x - 1\)</td>
+              <td>\(\mathbb{R} \setminus \{-1\}\)</td>
+            </tr>
+            <tr>
+              <td>\(f_3\)</td>
+              <td>\(x - 1\)</td>
+              <td>\(\mathbb{R} \setminus \{-1\}\)</td>
+            </tr>
+            <tr>
+              <td>\(f_4\)</td>
+              <td>\(x - 1\)</td>
+              <td>\((1, +\infty)\)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 28px;">
+      <div class="step-title"><span class="step-badge">6</span> Poredjenje parova funkcija</div>
+
+      <div class="compare-grid">
+        <div class="compare-box equal">
+          <div class="compare-label">\(f_2 = f_3\) &ensp; &#10004;</div>
+          <p style="color: #cbd5e1;">Isti domen: \(\mathbb{R} \setminus \{-1\}\).<br>Ista formula: \(x - 1\).<br>Dakle, \(f_2 = f_3\).</p>
+        </div>
+        <div class="compare-box not-equal">
+          <div class="compare-label">\(f_1 \neq f_2\) &ensp; &#10008;</div>
+          <p style="color: #cbd5e1;">Razliciti domeni: \(\mathbb{R}\) vs. \(\mathbb{R}\setminus\{-1\}\).<br>Razlicite formule: \(|x-1|\) vs. \(x-1\).<br>Na primer, \(f_1(0) = 1\), ali \(f_2(0) = -1\).</p>
+        </div>
+        <div class="compare-box not-equal">
+          <div class="compare-label">\(f_2 \neq f_4\) &ensp; &#10008;</div>
+          <p style="color: #cbd5e1;">Ista formula: \(x - 1\).<br>Ali razliciti domeni: \(\mathbb{R}\setminus\{-1\}\) vs. \((1,+\infty)\).<br>\(f_2(0) = -1\), ali \(f_4(0)\) nije definisano.</p>
+        </div>
+        <div class="compare-box not-equal">
+          <div class="compare-label">\(f_1 \neq f_4\) &ensp; &#10008;</div>
+          <p style="color: #cbd5e1;">Razliciti domeni: \(\mathbb{R}\) vs. \((1,+\infty)\).<br>Razlicite formule: \(|x-1|\) vs. \(x-1\).<br></p>
+        </div>
+      </div>
+
+      <p class="step-explanation" style="margin-top: 16px;">
+        Rezime poredjenja: jedini par jednakih funkcija je \(f_2 = f_3\). Sve ostale funkcije su medjusobno razlicite:
+      </p>
+      <div class="math-box">
+        \[ f_1 \neq f_2 = f_3 \neq f_4 \neq f_1 \]
+      </div>
+      <div class="checkpoint">Ovo odgovara odgovoru (C).</div>
+    </div>
+
+    <!-- Proveri se -->
+    <div class="quiz-container">
+      <div class="quiz-question">Proveri se: Zasto \(f_2\) i \(f_4\) nisu jednake, iako obe daju \(x - 1\)?</div>
+      <div class="quiz-options">
+        <button class="quiz-btn" onclick="checkQuiz(this, false)">Zato sto imaju razlicit oblik pre uproseenja</button>
+        <button class="quiz-btn" onclick="checkQuiz(this, true)">Zato sto imaju razlicite domene</button>
+        <button class="quiz-btn" onclick="checkQuiz(this, false)">Zato sto su im vrednosti razlicite za \(x = 2\)</button>
+      </div>
+      <div class="quiz-feedback" id="quizFeedback1"></div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Kljucni uvid</div>
+    <p>
+      Jednakost funkcija zahteva poklapanje <strong>i domena i formule</strong>. Cesta greska je posmatrati samo formulu posle uproseivanja. Ovde tri funkcije daju istu formulu \(x - 1\), ali na tri razlicita domena: \(\mathbb{R}\setminus\{-1\}\) (za \(f_2\) i \(f_3\)) i \((1, +\infty)\) (za \(f_4\)). Funkcija \(f_1\) daje \(|x-1|\), sto je potpuno drugacija funkcija od \(x - 1\).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konacan odgovor</div>
+    <div class="answer">(C) \( f_1 \neq f_2 = f_3 \neq f_4 \neq f_1 \)</div>
+    <p style="color:#94a3b8; margin-bottom: 12px;">
+      Jedini par jednakih funkcija je \(f_2 = f_3\) (isti domen \(\mathbb{R}\setminus\{-1\}\), ista formula \(x-1\)).
+    </p>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \( f_1 \neq f_2 = f_3 = f_4 \)</div>
+      <div class="final-option" data-option="B">(B) \( f_1 \neq f_2 = f_4 \neq f_3 \neq f_1 \)</div>
+      <div class="final-option correct" data-option="C">(C) \( f_1 \neq f_2 = f_3 \neq f_4 \neq f_1 \)</div>
+      <div class="final-option" data-option="D">(D) \( f_1 = f_4 \neq f_2 = f_3 \)</div>
+      <div class="final-option" data-option="E">(E) sve su razlicite</div>
+    </div>
+    <p class="verification-note">Verifikacija: \(f_2\) i \(f_3\) imaju isti domen \(\mathbb{R}\setminus\{-1\}\) i istu formulu \(x - 1\), dok \(f_4\) ima uzi domen \((1,+\infty)\), a \(f_1 = |x-1|\) ima potpuno drugaciji oblik i domen \(\mathbb{R}\).</p>
+  </div>
+
+  <!-- Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboravljanje domena pri skracivanju</div>
+      Kada skratimo \(\frac{(x-1)(x+1)}{x+1} = x - 1\), tacka \(x = -1\) i dalje ne pripada domenu. Skracivanje ne prosiruje domen polazne funkcije.
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Mesanje \(|x-1|\) i \(x-1\)</div>
+      Funkcija \(|x-1|\) je uvek nenegativna i ima oblik slova &bdquo;V&ldquo;, dok \(x-1\) moze biti i negativna. Na primer, za \(x = 0\): \(|0-1| = 1\), ali \(0 - 1 = -1\). To su razlicite funkcije!
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Ignorisanje uslova logaritma</div>
+      U funkciji \(f_4(x) = 2^{\log_2(x-1)}\), logaritam zahteva \(x - 1 > 0\), tj. \(x > 1\). Domen \((1, +\infty)\) je znatno uzi od \(\mathbb{R}\setminus\{-1\}\), pa \(f_4 \neq f_2\) uprkos istoj formuli.
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Brkanje &bdquo;iste vrednosti na preseku domena&ldquo; sa jednakoscu</div>
+      Funkcije \(f_2\) i \(f_4\) daju iste vrednosti na \((1, +\infty)\), ali to nije dovoljno za jednakost. Potrebno je da im se domeni <strong>potpuno poklapaju</strong>.
+    </div>
+  </div>
+
+  <!-- Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Izazov za razmisljanje</div>
+    <p class="step-explanation">
+      Definisimo funkciju \(f_5(x) = \sqrt{x-1} \cdot \sqrt{x-1}\). Da li je \(f_5 = f_4\)? Koji je domen funkcije \(f_5\)?
+    </p>
+    <details>
+      <summary>Pogledaj odgovor</summary>
+      <p style="margin-top: 8px;">
+        Vazi \(f_5(x) = \sqrt{x-1} \cdot \sqrt{x-1} = (\sqrt{x-1})^2 = x - 1\), ali samo za \(x - 1 \geq 0\), tj. \(x \geq 1\).<br><br>
+        Dakle, \(D_{f_5} = [1, +\infty)\), dok \(D_{f_4} = (1, +\infty)\).<br><br>
+        Razlika je u tacki \(x = 1\): \(f_5(1) = 0\) je definisano, ali \(f_4(1) = 2^{\log_2(0)}\) nije definisano jer \(\log_2(0)\) ne postoji.<br><br>
+        Dakle, \(f_5 \neq f_4\) &mdash; ponovo zbog razlicitih domena (tacka \(x = 1\) pripada jednom, ali ne i drugom domenu).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var canvas = document.getElementById('funcCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+
+  function resize() {
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var w = Math.min(rect.width - 48, 900);
+    var h = Math.round(w * 0.65);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw(w, h);
+  }
+
+  function draw(W, H) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    var pad = { left: 70, right: 40, top: 40, bottom: 60 };
+    var gw = W - pad.left - pad.right;
+    var gh = H - pad.top - pad.bottom;
+
+    var xMin = -4;
+    var xMax = 5;
+    var yMin = -4;
+    var yMax = 4;
+
+    function toX(v) { return pad.left + (v - xMin) / (xMax - xMin) * gw; }
+    function toY(v) { return pad.top + (1 - (v - yMin) / (yMax - yMin)) * gh; }
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (var i = Math.ceil(yMin); i <= Math.floor(yMax); i++) {
+      ctx.beginPath();
+      ctx.moveTo(pad.left, toY(i));
+      ctx.lineTo(W - pad.right, toY(i));
+      ctx.stroke();
+    }
+    for (var i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+      ctx.beginPath();
+      ctx.moveTo(toX(i), pad.top);
+      ctx.lineTo(toX(i), H - pad.bottom);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, toY(0));
+    ctx.lineTo(W - pad.right, toY(0));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toX(0), pad.top);
+    ctx.lineTo(toX(0), H - pad.bottom);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+      if (i === 0) continue;
+      ctx.fillText(i.toString(), toX(i), toY(0) + 18);
+    }
+    ctx.textAlign = 'right';
+    for (var i = Math.ceil(yMin); i <= Math.floor(yMax); i++) {
+      if (i === 0) continue;
+      ctx.fillText(i.toString(), toX(0) - 8, toY(i) + 4);
+    }
+    ctx.textAlign = 'center';
+    ctx.fillText('x', W - pad.right + 15, toY(0) + 5);
+    ctx.fillText('y', toX(0) + 3, pad.top - 12);
+    ctx.fillText('0', toX(0) - 10, toY(0) + 16);
+
+    var steps = 600;
+
+    // f1(x) = |x - 1| — orange, full domain
+    ctx.strokeStyle = '#fb923c';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (var i = 0; i <= steps; i++) {
+      var x = xMin + (xMax - xMin) * i / steps;
+      var y = Math.abs(x - 1);
+      if (y < yMin || y > yMax) {
+        ctx.moveTo(toX(x), toY(Math.max(yMin, Math.min(yMax, y))));
+        continue;
+      }
+      if (i === 0) ctx.moveTo(toX(x), toY(y));
+      else ctx.lineTo(toX(x), toY(y));
+    }
+    ctx.stroke();
+
+    // f2(x) = x - 1 for x != -1 — blue, with hole at x=-1
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    var started = false;
+    for (var i = 0; i <= steps; i++) {
+      var x = xMin + (xMax - xMin) * i / steps;
+      if (Math.abs(x - (-1)) < 0.02) {
+        started = false;
+        continue;
+      }
+      var y = x - 1;
+      if (y < yMin || y > yMax) { started = false; continue; }
+      if (!started) { ctx.moveTo(toX(x), toY(y)); started = true; }
+      else ctx.lineTo(toX(x), toY(y));
+    }
+    ctx.stroke();
+
+    // Hole at x = -1 for f2
+    ctx.beginPath();
+    ctx.arc(toX(-1), toY(-2), 5, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+    ctx.stroke();
+
+    // f3 same as f2 — draw dashed green on top to show overlap
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    started = false;
+    for (var i = 0; i <= steps; i++) {
+      var x = xMin + (xMax - xMin) * i / steps;
+      if (Math.abs(x - (-1)) < 0.02) {
+        started = false;
+        continue;
+      }
+      var y = x - 1;
+      if (y < yMin || y > yMax) { started = false; continue; }
+      if (!started) { ctx.moveTo(toX(x), toY(y)); started = true; }
+      else ctx.lineTo(toX(x), toY(y));
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Hole at x = -1 for f3
+    ctx.beginPath();
+    ctx.arc(toX(-1), toY(-2), 8, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // f4(x) = x - 1 for x > 1 — magenta/pink, thick
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    started = false;
+    for (var i = 0; i <= steps; i++) {
+      var x = xMin + (xMax - xMin) * i / steps;
+      if (x <= 1.001) continue;
+      var y = x - 1;
+      if (y < yMin || y > yMax) { started = false; continue; }
+      if (!started) { ctx.moveTo(toX(x), toY(y)); started = true; }
+      else ctx.lineTo(toX(x), toY(y));
+    }
+    ctx.stroke();
+
+    // Open circle at x = 1 for f4 (not included)
+    ctx.beginPath();
+    ctx.arc(toX(1), toY(0), 5, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+    ctx.stroke();
+
+    // Mark key point: x = -1 vertical dashed line
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(toX(-1), pad.top);
+    ctx.lineTo(toX(-1), H - pad.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Mark key point: x = 1 vertical dashed line
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(toX(1), pad.top);
+    ctx.lineTo(toX(1), H - pad.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Labels for key x values
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x = -1', toX(-1), H - pad.bottom + 32);
+    ctx.fillText('x = 1', toX(1), H - pad.bottom + 32);
+
+    // Highlight the difference at x = 0
+    var x0 = 0;
+    // f1(0) = |0-1| = 1
+    ctx.beginPath();
+    ctx.arc(toX(x0), toY(1), 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fb923c';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // f2(0) = 0-1 = -1
+    ctx.beginPath();
+    ctx.arc(toX(x0), toY(-1), 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Annotation for difference
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('f\u2081(0) = 1', toX(x0) + 10, toY(1) - 4);
+    ctx.fillText('f\u2082(0) = -1', toX(x0) + 10, toY(-1) + 16);
+
+    // Legend
+    var lx = W - pad.right - 220;
+    var ly = pad.top + 8;
+    var lw = 210;
+    var lh = 115;
+    ctx.fillStyle = 'rgba(15,23,42,0.9)';
+    ctx.fillRect(lx, ly, lw, lh);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(lx, ly, lw, lh);
+
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    // f1
+    ctx.strokeStyle = '#fb923c';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(lx + 10, ly + 20);
+    ctx.lineTo(lx + 40, ly + 20);
+    ctx.stroke();
+    ctx.fillStyle = '#fb923c';
+    ctx.fillText('f\u2081 = |x\u22121|, D = \u211D', lx + 48, ly + 24);
+
+    // f2
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(lx + 10, ly + 44);
+    ctx.lineTo(lx + 40, ly + 44);
+    ctx.stroke();
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('f\u2082 = x\u22121, D = \u211D\\{\u22121}', lx + 48, ly + 48);
+
+    // f3
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(lx + 10, ly + 68);
+    ctx.lineTo(lx + 40, ly + 68);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('f\u2083 = x\u22121, D = \u211D\\{\u22121}', lx + 48, ly + 72);
+
+    // f4
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(lx + 10, ly + 92);
+    ctx.lineTo(lx + 40, ly + 92);
+    ctx.stroke();
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('f\u2084 = x\u22121, D = (1, +\u221E)', lx + 48, ly + 96);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+})();
+
+// Quiz functionality
+function checkQuiz(btn, isCorrect) {
+  var container = btn.parentElement;
+  var buttons = container.querySelectorAll('.quiz-btn');
+  var feedback = container.nextElementSibling;
+
+  buttons.forEach(function(b) {
+    b.disabled = true;
+    b.style.opacity = '0.7';
+    b.style.cursor = 'default';
+  });
+
+  if (isCorrect) {
+    btn.classList.add('correct-answer');
+    feedback.style.display = 'block';
+    feedback.style.background = 'rgba(52, 211, 153, 0.1)';
+    feedback.style.border = '1px solid rgba(52, 211, 153, 0.3)';
+    feedback.style.color = '#34d399';
+    feedback.textContent = 'Tacno! Funkcije f\u2082 i f\u2084 imaju istu formulu (x \u2212 1), ali razlicite domene: \u211D\\{\u22121} naspram (1, +\u221E). Razlicit domen znaci razlicite funkcije.';
+  } else {
+    btn.classList.add('wrong-answer');
+    // Highlight the correct one
+    buttons.forEach(function(b) {
+      if (b !== btn) {
+        var text = b.textContent;
+        if (text.indexOf('domene') !== -1) {
+          b.classList.add('correct-answer');
+        }
+      }
+    });
+    feedback.style.display = 'block';
+    feedback.style.background = 'rgba(244, 114, 182, 0.1)';
+    feedback.style.border = '1px solid rgba(244, 114, 182, 0.3)';
+    feedback.style.color = '#f472b6';
+    feedback.textContent = 'Netacno. Kljucni razlog je razlicit domen: D(f\u2082) = \u211D\\{\u22121}, a D(f\u2084) = (1, +\u221E). Formule su iste, ali domeni se ne poklapaju.';
+  }
+}
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Jednakost funkcija - analiza domena i formula","subject":"math","unit":"functions","topic_tags":["jednakost funkcija","domen funkcije","apsolutna vrednost","logaritamska funkcija","razlika kvadrata","zbir kubova","uproseivanje izraza"]}
+BRAINSPARK_META-->

@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir realnih resenja jednacine sa kubnim korenima</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Zbir svih realnih resenja jednacine
+  cbrt(x-3) + cbrt(x-1) = cbrt(2x-4)
+
+Let a = cbrt(x-3), b = cbrt(x-1).
+Then a^3 = x-3, b^3 = x-1.
+a^3 + b^3 = (x-3) + (x-1) = 2x - 4.
+
+So the equation becomes: a + b = cbrt(a^3 + b^3).
+
+Cube both sides: (a+b)^3 = a^3 + b^3.
+Expand: a^3 + 3a^2*b + 3a*b^2 + b^3 = a^3 + b^3.
+Simplify: 3a^2*b + 3a*b^2 = 0.
+Factor: 3ab(a + b) = 0.
+
+Case 1: a = 0 => x - 3 = 0 => x = 3
+  Check: cbrt(0) + cbrt(2) = cbrt(2). 0 + cbrt(2) = cbrt(2). OK.
+
+Case 2: b = 0 => x - 1 = 0 => x = 1
+  Check: cbrt(-2) + cbrt(0) = cbrt(-2). cbrt(-2) + 0 = cbrt(-2). OK.
+
+Case 3: a + b = 0 => cbrt(x-3) = -cbrt(x-1)
+  Cube: x - 3 = -(x - 1) = -x + 1
+  2x = 4 => x = 2
+  Check: cbrt(-1) + cbrt(1) = cbrt(0). -1 + 1 = 0. OK.
+
+All three solutions are valid: x = 1, 2, 3.
+Sum = 1 + 2 + 3 = 6.
+
+Answer: (B) 6
+
+Important note about cubing step:
+When we cube both sides of a + b = cbrt(a^3 + b^3), we need to verify
+that this is an equivalence, not just an implication.
+- If a + b >= 0, then cbrt((a+b)^3) = a + b, so the equation
+  a + b = cbrt(a^3 + b^3) is equivalent to (a+b)^3 = a^3 + b^3.
+- If a + b < 0, then cbrt((a+b)^3) = a + b (cube root preserves sign),
+  so again the equation is equivalent to cubing both sides.
+Cube root is a bijection on R, so f(x) = x^3 is strictly increasing,
+meaning x = y iff x^3 = y^3. No extraneous solutions.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.arrow {
+  color: #60a5fa;
+  margin: 0 4px;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.data-item {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 10px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.data-item .data-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.data-item .data-value {
+  color: #60a5fa;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.quiz-btn {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1rem;
+  border: 1px solid #60a5fa;
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.quiz-btn:hover {
+  background: rgba(96, 165, 250, 0.2);
+}
+
+.quiz-result {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: none;
+}
+
+.quiz-result.correct {
+  display: block;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #34d399;
+}
+
+.quiz-result.incorrect {
+  display: block;
+  background: rgba(244, 114, 182, 0.12);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  color: #f472b6;
+}
+
+.solution-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.solution-table th,
+.solution-table td {
+  border: 1px solid #334155;
+  padding: 10px 16px;
+  text-align: center;
+}
+
+.solution-table th {
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.solution-table td {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.solution-table tr:hover td {
+  background: rgba(96, 165, 250, 0.06);
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .data-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Jednacina sa kubnim korenima</h1>
+  <p class="subtitle">Supstitucija, identitet zbira kubova i faktorisanje &mdash; ETF 2024, zadatak 10</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Zbir svih realnih resenja jednacine \(\sqrt[3]{x-3} + \sqrt[3]{x-1} = \sqrt[3]{2x-4}\) iznosi:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">(A) \(0\)</div>
+      <div class="given-item answer-option" data-option="B">(B) \(6\)</div>
+      <div class="given-item answer-option" data-option="C">(C) \(3\)</div>
+      <div class="given-item answer-option" data-option="D">(D) \(4\)</div>
+      <div class="given-item answer-option" data-option="E">(E) \(7\)</div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      Jednacina sadrzi tri kubna korena. Kljucno zapazanje je da je izraz pod korenom na desnoj strani jednak zbiru izraza pod korenima na levoj strani: \((x-3) + (x-1) = 2x-4\). To nam omogucava elegantnu supstituciju.
+    </p>
+    <p class="plan-text" style="margin-top: 8px;">
+      <span class="arrow">&#8594;</span> Uvedi smenu \(a = \sqrt[3]{x-3}\), \(b = \sqrt[3]{x-1}\)
+      <span class="arrow">&#8594;</span> Uoci da je \(a^3 + b^3 = 2x - 4\)
+      <span class="arrow">&#8594;</span> Kubiranje obe strane
+      <span class="arrow">&#8594;</span> Faktorisanje i nalazenje svih resenja
+      <span class="arrow">&#8594;</span> Provera i zbir
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsecanje na teoriju</div>
+    <details>
+      <summary>Zbir kubova i kubiranje zbira</summary>
+      <p style="margin-top: 8px;">
+        Razlika izmedju <strong>zbira kubova</strong> i <strong>kuba zbira</strong> je kljucna za ovaj zadatak:
+      </p>
+      <div class="math-box">
+        \[ a^3 + b^3 = (a + b)(a^2 - ab + b^2) \]
+      </div>
+      <div class="math-box">
+        \[ (a + b)^3 = a^3 + 3a^2b + 3ab^2 + b^3 \]
+      </div>
+      <p style="margin-top: 8px;">
+        Oduzimanjem dobijamo: \((a+b)^3 - (a^3 + b^3) = 3ab(a+b)\).
+      </p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Svojstva kubnog korena</summary>
+      <p style="margin-top: 8px;">
+        Funkcija \(f(t) = \sqrt[3]{t}\) je definisana za sve realne brojeve i <strong>strogo rastuca</strong> (bijekcija na \(\mathbb{R}\)). To znaci da vazi:
+      </p>
+      <div class="math-box">
+        \[ \sqrt[3]{u} = \sqrt[3]{v} \;\Longleftrightarrow\; u = v \]
+      </div>
+      <p>
+        Kubiranje obe strane jednacine sa kubnim korenima <strong>ne uvodi lazna resenja</strong>, jer je \(t \mapsto t^3\) takodje bijekcija na \(\mathbb{R}\).
+      </p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Faktorisanje izraza \(3ab(a+b) = 0\)</summary>
+      <p style="margin-top: 8px;">
+        Proizvod tri faktora je nula ako i samo ako je bar jedan od njih nula:
+      </p>
+      <div class="math-box">
+        \[ 3ab(a+b) = 0 \;\Longleftrightarrow\; a = 0 \;\lor\; b = 0 \;\lor\; a + b = 0 \]
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Graficki prikaz</div>
+    <p class="step-explanation" style="margin-bottom: 12px;">
+      Grafik prikazuje levu stranu \(f(x) = \sqrt[3]{x-3} + \sqrt[3]{x-1}\) (plavo) i desnu stranu \(g(x) = \sqrt[3]{2x-4}\) (ljubicasto). Presecne tacke su resenja jednacine.
+    </p>
+    <canvas id="graphCanvas" width="900" height="500"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Supstitucija</div>
+      <p class="step-explanation">
+        Uvedimo smenu da bismo pojednostavili jednacinu:
+      </p>
+      <div class="math-box">
+        \[ a = \sqrt[3]{x - 3}, \qquad b = \sqrt[3]{x - 1} \]
+      </div>
+      <p class="step-explanation">
+        Primetimo kljucnu vezu &mdash; kubovi ovih velicina daju:
+      </p>
+      <div class="math-box">
+        \[ a^3 + b^3 = (x - 3) + (x - 1) = 2x - 4 \]
+      </div>
+      <p class="step-explanation">
+        Dakle, desna strana jednacine je upravo \(\sqrt[3]{a^3 + b^3}\), pa jednacina postaje:
+      </p>
+      <div class="math-box">
+        \[ a + b = \sqrt[3]{a^3 + b^3} \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Kubiranje obe strane</div>
+      <p class="step-explanation">
+        Posto je funkcija \(t \mapsto t^3\) bijekcija na \(\mathbb{R}\), kubiranje je ekvivalentna transformacija (ne uvodi lazna resenja i ne gubi prava):
+      </p>
+      <div class="math-box">
+        \[ (a + b)^3 = a^3 + b^3 \]
+      </div>
+      <p class="step-explanation">
+        Razvijemo levu stranu:
+      </p>
+      <div class="math-box">
+        \[ a^3 + 3a^2b + 3ab^2 + b^3 = a^3 + b^3 \]
+      </div>
+      <p class="step-explanation">
+        Oduzimajuci \(a^3 + b^3\) sa obe strane:
+      </p>
+      <div class="math-box">
+        \[ 3a^2b + 3ab^2 = 0 \]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Faktorisanje</div>
+      <p class="step-explanation">
+        Iznosimo zajednicki faktor \(3ab\):
+      </p>
+      <div class="math-box">
+        \[ 3ab(a + b) = 0 \]
+      </div>
+      <p class="step-explanation">
+        Proizvod je nula ako i samo ako je bar jedan faktor nula. Dobijamo tri slucaja:
+      </p>
+      <div class="math-box">
+        \[ a = 0 \qquad \text{ili} \qquad b = 0 \qquad \text{ili} \qquad a + b = 0 \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Resavanje svakog slucaja</div>
+
+      <p class="step-explanation" style="color: #60a5fa; font-weight: 600; margin-top: 16px;">Slucaj 1: \(a = 0\)</p>
+      <div class="math-box">
+        \[ \sqrt[3]{x - 3} = 0 \;\;\Longrightarrow\;\; x - 3 = 0 \;\;\Longrightarrow\;\; \boxed{x_1 = 3} \]
+      </div>
+
+      <p class="step-explanation" style="color: #a78bfa; font-weight: 600; margin-top: 16px;">Slucaj 2: \(b = 0\)</p>
+      <div class="math-box">
+        \[ \sqrt[3]{x - 1} = 0 \;\;\Longrightarrow\;\; x - 1 = 0 \;\;\Longrightarrow\;\; \boxed{x_2 = 1} \]
+      </div>
+
+      <p class="step-explanation" style="color: #34d399; font-weight: 600; margin-top: 16px;">Slucaj 3: \(a + b = 0\)</p>
+      <div class="math-box">
+        \[ \sqrt[3]{x - 3} + \sqrt[3]{x - 1} = 0 \]
+        \[ \sqrt[3]{x - 3} = -\sqrt[3]{x - 1} \]
+      </div>
+      <p class="step-explanation">
+        Kubiramo obe strane:
+      </p>
+      <div class="math-box">
+        \[ x - 3 = -(x - 1) = -x + 1 \]
+        \[ 2x = 4 \;\;\Longrightarrow\;\; \boxed{x_3 = 2} \]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Provera svih resenja</div>
+      <p class="step-explanation">
+        Svako resenje moramo proveriti u polaznoj jednacini \(\sqrt[3]{x-3} + \sqrt[3]{x-1} = \sqrt[3]{2x-4}\):
+      </p>
+
+      <table class="solution-table">
+        <thead>
+          <tr>
+            <th>\(x\)</th>
+            <th>Leva strana</th>
+            <th>Desna strana</th>
+            <th>Jednako?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>\(x = 3\)</td>
+            <td>\(\sqrt[3]{0} + \sqrt[3]{2} = \sqrt[3]{2}\)</td>
+            <td>\(\sqrt[3]{2}\)</td>
+            <td style="color: #34d399;">&#10004;</td>
+          </tr>
+          <tr>
+            <td>\(x = 1\)</td>
+            <td>\(\sqrt[3]{-2} + \sqrt[3]{0} = \sqrt[3]{-2}\)</td>
+            <td>\(\sqrt[3]{-2}\)</td>
+            <td style="color: #34d399;">&#10004;</td>
+          </tr>
+          <tr>
+            <td>\(x = 2\)</td>
+            <td>\(\sqrt[3]{-1} + \sqrt[3]{1} = -1 + 1 = 0\)</td>
+            <td>\(\sqrt[3]{0} = 0\)</td>
+            <td style="color: #34d399;">&#10004;</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="step-explanation">
+        Sva tri resenja su ispravna.
+      </p>
+
+      <details>
+        <summary>Proveri se: Koliki je zbir?</summary>
+        <div id="quizArea" style="margin-top: 10px;">
+          <p>Koliki je zbir resenja \(x_1 + x_2 + x_3\)?</p>
+          <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+            <button class="quiz-btn" onclick="checkQuiz(4, this)">4</button>
+            <button class="quiz-btn" onclick="checkQuiz(6, this)">6</button>
+            <button class="quiz-btn" onclick="checkQuiz(7, this)">7</button>
+            <button class="quiz-btn" onclick="checkQuiz(3, this)">3</button>
+          </div>
+          <div id="quizResult" class="quiz-result"></div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">6</span> Izracunavanje zbira</div>
+      <div class="math-box">
+        \[ x_1 + x_2 + x_3 = 3 + 1 + 2 = \boxed{6} \]
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Kljucni uvid</div>
+    <p>
+      Sustina zadatka je prepoznati da izraz \(2x - 4\) na desnoj strani nije proizvoljan &mdash; on je tacno <strong>zbir izraza pod korenima leve strane</strong>: \((x-3) + (x-1) = 2x - 4\). To nam je omogucilo supstituciju koja transformise jednacinu u algebarski identitet \((a+b)^3 = a^3 + b^3\), cije je resenje trivijalno: \(3ab(a+b) = 0\). Ovaj trik je primenljiv kad god se u jednacini sa kubnim korenima pojavi takva "zbir-pod-korenom" struktura.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konacni odgovor</div>
+    <div class="answer">\(x_1 + x_2 + x_3 = 1 + 2 + 3 = 6\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(0\)</div>
+      <div class="final-option correct" data-option="B">(B) \(6\)</div>
+      <div class="final-option" data-option="C">(C) \(3\)</div>
+      <div class="final-option" data-option="D">(D) \(4\)</div>
+      <div class="final-option" data-option="E">(E) \(7\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Za \(x \in \{1, 2, 3\}\) smo proverili da su leva i desna strana jednake. &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Nalazenje samo jednog resenja</div>
+      <p>Mnogi ucenici uoce samo \(a = 0\) (tj. \(x = 3\)) i odgovore \(3\), ili uoce samo dva resenja i dobiju pogresan zbir. Jednacina \(3ab(a+b) = 0\) ima <strong>tri</strong> odvojena slucaja i svi moraju biti razmotreni.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Strah od kubiranja &mdash; "lazna resenja"</div>
+      <p>Kod kvadriranja jednacina cesto nastaju lazna resenja, pa neki ucenici izbegavaju kubiranje. Medutim, <strong>kubiranje je ekvivalentna transformacija</strong> jer je \(t^3\) strogo rastuca funkcija na \(\mathbb{R}\). Nema opasnosti od laznih resenja!</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogresno razvijanje \((a+b)^3\)</div>
+      <p>Cesta greska je pisati \((a+b)^3 = a^3 + b^3\) (izostavljajuci mesovite clanove). Ispravan razvoj je \((a+b)^3 = a^3 + 3a^2b + 3ab^2 + b^3\). Ironicno, upravo ta "greska" je ovde <em>uslov</em> koji mora da vazi!</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboravljanje da kubni koren moze biti negativan</div>
+      <p>Za razliku od kvadratnog korena, kubni koren je definisan i za negativne brojeve: \(\sqrt[3]{-8} = -2\). Zato resenje \(x = 1\) (gde je \(\sqrt[3]{-2}\) negativno) jeste validno.</p>
+    </div>
+  </div>
+
+  <!-- Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Resiti jednacinu \(\sqrt[3]{x+1} + \sqrt[3]{x-1} = \sqrt[3]{5x}\) istim postupkom. Koliko realnih resenja ima ova jednacina, i koliki je njihov zbir?
+    </p>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p style="margin-top: 8px;">
+        Primetite da \((x+1) + (x-1) = 2x \neq 5x\). Dakle, trik sa zbirom kubova ovde ne radi direktno! Potrebno je naci drugu vezu. Pokusajte sa \(a = \sqrt[3]{x+1}\), \(b = \sqrt[3]{x-1}\) i kubirati obe strane: \((a+b)^3 = 5x\). Kako \(a^3 + b^3 = 2x\), to daje \(2x + 3ab(a+b) = 5x\), pa \(3ab(a+b) = 3x\), tj. \(ab(a+b) = x\). Sada uvrstavamo \(ab = \sqrt[3]{x^2-1}\) i \(a + b = \sqrt[3]{5x}\), pa \(\sqrt[3]{(x^2-1) \cdot 5x} = x\), tj. \(5x(x^2-1) = x^3\). Resenja: \(x = 0\), \(x = \pm\sqrt{\frac{5}{4}} = \pm\frac{\sqrt{5}}{2}\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Quiz functionality
+  window.checkQuiz = function(answer, btn) {
+    const result = document.getElementById('quizResult');
+    if (answer === 6) {
+      result.className = 'quiz-result correct';
+      result.textContent = 'Tacno! 3 + 1 + 2 = 6.';
+    } else {
+      result.className = 'quiz-result incorrect';
+      result.textContent = 'Netacno. Pokusaj ponovo. Seti se da su resenja x = 1, x = 2 i x = 3.';
+    }
+  };
+
+  // Graph canvas
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function cbrt(x) {
+    return x < 0 ? -Math.pow(-x, 1/3) : Math.pow(x, 1/3);
+  }
+
+  function f(x) {
+    return cbrt(x - 3) + cbrt(x - 1);
+  }
+
+  function g(x) {
+    return cbrt(2 * x - 4);
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width;
+    const H = 500;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Coordinate system
+    const xMin = -3, xMax = 7;
+    const yMin = -3.5, yMax = 3.5;
+    const padL = 50, padR = 20, padT = 20, padB = 40;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    function toScreenX(x) { return padL + (x - xMin) / (xMax - xMin) * plotW; }
+    function toScreenY(y) { return padT + (yMax - y) / (yMax - yMin) * plotH; }
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let gx = Math.ceil(xMin); gx <= xMax; gx++) {
+      ctx.beginPath();
+      ctx.moveTo(toScreenX(gx), padT);
+      ctx.lineTo(toScreenX(gx), H - padB);
+      ctx.stroke();
+    }
+    for (let gy = Math.ceil(yMin); gy <= yMax; gy++) {
+      ctx.beginPath();
+      ctx.moveTo(padL, toScreenY(gy));
+      ctx.lineTo(W - padR, toScreenY(gy));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    // x-axis
+    if (yMin <= 0 && yMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(padL, toScreenY(0));
+      ctx.lineTo(W - padR, toScreenY(0));
+      ctx.stroke();
+    }
+    // y-axis
+    if (xMin <= 0 && xMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(toScreenX(0), padT);
+      ctx.lineTo(toScreenX(0), H - padB);
+      ctx.stroke();
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let gx = Math.ceil(xMin); gx <= xMax; gx++) {
+      if (gx === 0) continue;
+      ctx.fillText(gx.toString(), toScreenX(gx), toScreenY(0) + 18);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = Math.ceil(yMin); gy <= yMax; gy++) {
+      if (gy === 0) continue;
+      ctx.fillText(gy.toString(), toScreenX(0) - 8, toScreenY(gy) + 4);
+    }
+
+    // Plot f(x) = cbrt(x-3) + cbrt(x-1) in blue
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    const steps = 600;
+    let started = false;
+    for (let i = 0; i <= steps; i++) {
+      const x = xMin + (xMax - xMin) * i / steps;
+      const y = f(x);
+      if (y < yMin - 1 || y > yMax + 1) { started = false; continue; }
+      const sx = toScreenX(x);
+      const sy = toScreenY(y);
+      if (!started) { ctx.moveTo(sx, sy); started = true; }
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+
+    // Plot g(x) = cbrt(2x-4) in purple
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    started = false;
+    for (let i = 0; i <= steps; i++) {
+      const x = xMin + (xMax - xMin) * i / steps;
+      const y = g(x);
+      if (y < yMin - 1 || y > yMax + 1) { started = false; continue; }
+      const sx = toScreenX(x);
+      const sy = toScreenY(y);
+      if (!started) { ctx.moveTo(sx, sy); started = true; }
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+
+    // Mark intersection points
+    const solutions = [1, 2, 3];
+    solutions.forEach((x) => {
+      const y = f(x);
+      const sx = toScreenX(x);
+      const sy = toScreenY(y);
+
+      // Outer glow
+      ctx.beginPath();
+      ctx.arc(sx, sy, 10, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(52, 211, 153, 0.2)';
+      ctx.fill();
+
+      // Point
+      ctx.beginPath();
+      ctx.arc(sx, sy, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#34d399';
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#34d399';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      const label = 'x = ' + x;
+      ctx.fillText(label, sx, sy - 16);
+    });
+
+    // Legend
+    const legendX = padL + 12;
+    const legendY = padT + 20;
+
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(legendX, legendY);
+    ctx.lineTo(legendX + 28, legendY);
+    ctx.stroke();
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('f(x) = \u00B3\u221A(x\u22123) + \u00B3\u221A(x\u22121)', legendX + 35, legendY + 4);
+
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(legendX, legendY + 22);
+    ctx.lineTo(legendX + 28, legendY + 22);
+    ctx.stroke();
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('g(x) = \u00B3\u221A(2x\u22124)', legendX + 35, legendY + 26);
+
+    ctx.beginPath();
+    ctx.arc(legendX + 14, legendY + 46, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#34d399';
+    ctx.fill();
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('Resenja: x = 1, x = 2, x = 3', legendX + 35, legendY + 50);
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x', W - padR + 10, toScreenY(0) + 4);
+    ctx.fillText('y', toScreenX(0), padT - 6);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Zbir realnih resenja jednacine sa kubnim korenima","subject":"math","unit":"algebra","topic_tags":["kubni koren","iracionalne jednacine","faktorisanje","supstitucija","zbir kubova"]}
+BRAINSPARK_META-->

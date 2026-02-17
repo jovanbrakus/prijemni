@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje racionalnog izraza</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Za a in R, a != 3, izraz:
+  (a^3 - 27) / (a-3)^2  *  (a^2 - 2a - 3) / ((a+3)^2 - 3a)
+je jednak:
+(A) a-3  (B) 3/2  (C) a+1  (D) a  (E) 1
+
+Step 1: Factor a^3 - 27
+  This is a difference of cubes: a^3 - 3^3 = (a-3)(a^2 + 3a + 9)
+
+Step 2: Factor (a-3)^2
+  Already factored: (a-3)(a-3)
+
+Step 3: Factor a^2 - 2a - 3
+  Find two numbers that multiply to -3 and add to -2: -3 and 1
+  a^2 - 2a - 3 = (a-3)(a+1)
+
+Step 4: Simplify (a+3)^2 - 3a
+  (a+3)^2 - 3a = a^2 + 6a + 9 - 3a = a^2 + 3a + 9
+
+Step 5: Put it all together
+  [(a-3)(a^2+3a+9)] / [(a-3)^2] * [(a-3)(a+1)] / [a^2+3a+9]
+
+  Numerator: (a-3)(a^2+3a+9)(a-3)(a+1) = (a-3)^2 (a^2+3a+9)(a+1)
+  Denominator: (a-3)^2 (a^2+3a+9)
+
+  Cancel (a-3)^2 and (a^2+3a+9):
+  = a + 1
+
+Step 6: Verification with a = 0:
+  Numerator part 1: (0 - 27) / (0-3)^2 = -27/9 = -3
+  Numerator part 2: (0 - 0 - 3) / ((0+3)^2 - 0) = -3/9 = -1/3
+  Product: (-3) * (-1/3) = 1
+  a + 1 = 0 + 1 = 1  ✓
+
+Step 7: Verification with a = 1:
+  a^3 - 27 = 1 - 27 = -26
+  (a-3)^2 = (-2)^2 = 4
+  a^2 - 2a - 3 = 1 - 2 - 3 = -4
+  (a+3)^2 - 3a = 16 - 3 = 13
+  Result: (-26/4) * (-4/13) = (26*4)/(4*13) = 104/52 = 2
+  a + 1 = 1 + 1 = 2  ✓
+
+Answer: (C) a + 1
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.factor-color {
+  color: #60a5fa;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Pojednostavljivanje racionalnog algebarskog izraza</h1>
+  <p class="subtitle">Faktorizacija polinoma i skracivanje razlomaka</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Postavka zadatka</div>
+    <div class="problem-text">
+      Za \(a \in \mathbb{R},\; a \neq 3\), izraz:
+      <div class="math-box">
+        \[ \frac{a^3 - 27}{(a-3)^2} \cdot \frac{a^2 - 2a - 3}{(a+3)^2 - 3a} \]
+      </div>
+      je jednak:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">(A) \(a - 3\)</div>
+      <div class="given-item answer-option" data-option="B">(B) \(\dfrac{3}{2}\)</div>
+      <div class="given-item answer-option" data-option="C">(C) \(a + 1\)</div>
+      <div class="given-item answer-option" data-option="D">(D) \(a\)</div>
+      <div class="given-item answer-option" data-option="E">(E) \(1\)</div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      Svaki od cetiri elementa izraza (dva brojioca i dva imenioca) cemo rastaviti na faktore. Zatim cemo skratiti zajednicke faktore i dobiti konacni rezultat.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Kljucne formule i teoreme</summary>
+      <ul style="margin-top: 12px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;"><strong>Razlika kubova:</strong>
+          <div class="math-box">\[ a^3 - b^3 = (a - b)(a^2 + ab + b^2) \]</div>
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Faktorizacija kvadratnog trinoma:</strong>
+          <div class="math-box">\[ ax^2 + bx + c = a(x - x_1)(x - x_2) \]</div>
+          gde su \(x_1\) i \(x_2\) nule trinoma.
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Kvadrat binoma:</strong>
+          <div class="math-box">\[ (a + b)^2 = a^2 + 2ab + b^2 \]</div>
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz faktorizacije</div>
+    <canvas id="solutionCanvas" width="900" height="520"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-title"><span class="step-badge">1</span> Rastavimo \(a^3 - 27\) na faktore</div>
+      <p class="step-explanation">
+        Primetimo da je \(27 = 3^3\), pa imamo razliku kubova:
+      </p>
+      <div class="math-box">
+        \[ a^3 - 27 = a^3 - 3^3 = \underbrace{(a - 3)}_{\text{linearan faktor}} \cdot \underbrace{(a^2 + 3a + 9)}_{\text{kvadratni faktor}} \]
+      </div>
+      <details>
+        <summary>Proveri se: Zasto je \(a^2 + 3a + 9\)?</summary>
+        <p>Po formuli \(a^3 - b^3 = (a-b)(a^2 + ab + b^2)\), za \(b = 3\) dobijamo: \(a^2 + a \cdot 3 + 3^2 = a^2 + 3a + 9\). Mozete i da proverite mnozenjem: \((a-3)(a^2+3a+9) = a^3 + 3a^2 + 9a - 3a^2 - 9a - 27 = a^3 - 27\). Tacno!</p>
+      </details>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-title"><span class="step-badge">2</span> Rastavimo \(a^2 - 2a - 3\) na faktore</div>
+      <p class="step-explanation">
+        Trazimo dva broja ciji je proizvod \(-3\) a zbir \(-2\). To su \(-3\) i \(1\):
+      </p>
+      <div class="math-box">
+        \[ a^2 - 2a - 3 = (a - 3)(a + 1) \]
+      </div>
+      <p class="step-explanation">
+        Proverimo: \((a-3)(a+1) = a^2 + a - 3a - 3 = a^2 - 2a - 3\). Tacno!
+      </p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-title"><span class="step-badge">3</span> Sredimo imenilac \((a+3)^2 - 3a\)</div>
+      <p class="step-explanation">
+        Razvijemo kvadrat binoma i pojednostavimo:
+      </p>
+      <div class="math-box">
+        \[ (a+3)^2 - 3a = a^2 + 6a + 9 - 3a = a^2 + 3a + 9 \]
+      </div>
+      <p class="step-explanation">
+        Vidimo da je ovo <span class="highlight">isti izraz</span> koji se pojavljuje u razlici kubova iz koraka 1!
+      </p>
+      <details>
+        <summary>Proveri se: Da li se \(a^2 + 3a + 9\) moze dalje rastavljati?</summary>
+        <p>Diskriminanta: \(D = 9 - 36 = -27 < 0\). Posto je diskriminanta negativna, ovaj izraz nema realnih korena i ne moze se rastaviti nad realnim brojevima. Ali to nam i ne treba &mdash; skraticemo ga kao celinu!</p>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-title"><span class="step-badge">4</span> Zapisemo ceo izraz u faktorizovanom obliku</div>
+      <p class="step-explanation">
+        Zamenjujemo sve faktorizovane oblike:
+      </p>
+      <div class="math-box">
+        \[ \frac{(a-3)(a^2 + 3a + 9)}{(a-3)^2} \cdot \frac{(a-3)(a+1)}{a^2 + 3a + 9} \]
+      </div>
+      <p class="step-explanation">
+        Sada objedinimo sve faktore u jedan razlomak:
+      </p>
+      <div class="math-box">
+        \[ \frac{(a-3) \cdot (a^2+3a+9) \cdot (a-3) \cdot (a+1)}{(a-3)^2 \cdot (a^2+3a+9)} \]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" data-step="5">
+      <div class="step-title"><span class="step-badge">5</span> Skratimo zajednicke faktore</div>
+      <p class="step-explanation">
+        U brojiocu imamo \((a-3)^2\) a u imeniocu takodje \((a-3)^2\) &mdash; skracujemo ih (moguce jer \(a \neq 3\)):
+      </p>
+      <div class="math-box">
+        \[ \frac{\cancel{(a-3)^2} \cdot (a^2+3a+9) \cdot (a+1)}{\cancel{(a-3)^2} \cdot (a^2+3a+9)} \]
+      </div>
+      <p class="step-explanation">
+        Takodje, \(a^2 + 3a + 9\) se pojavljuje i u brojiocu i u imeniocu, pa i njega skracujemo:
+      </p>
+      <div class="math-box">
+        \[ \frac{\cancel{(a^2+3a+9)} \cdot (a+1)}{\cancel{(a^2+3a+9)}} = \boxed{a + 1} \]
+      </div>
+      <details>
+        <summary>Proveri se: Zasto smemo skratiti \(a^2+3a+9\)?</summary>
+        <p>Smemo jer je \(a^2+3a+9 > 0\) za svako realno \(a\) (diskriminanta je \(-27 < 0\), a vodecu koeficijent je pozitivan, pa je izraz uvek pozitivan). Dakle, \(a^2+3a+9 \neq 0\) i deljenje je dozvoljeno.</p>
+      </details>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container" data-step="6">
+      <div class="step-title"><span class="step-badge">6</span> Verifikacija numerickom proverom</div>
+      <p class="step-explanation">
+        Uvrstimo \(a = 0\) (razlicit od 3, pa je dozvoljeno):
+      </p>
+      <div class="math-box">
+        \[ \frac{0 - 27}{(0-3)^2} \cdot \frac{0 - 0 - 3}{(0+3)^2 - 0} = \frac{-27}{9} \cdot \frac{-3}{9} = (-3) \cdot \left(-\frac{1}{3}\right) = 1 \]
+      </div>
+      <p class="step-explanation">
+        A \(a + 1 = 0 + 1 = 1\). Slaze se!
+      </p>
+      <p class="step-explanation">
+        Proverimo jos za \(a = 1\):
+      </p>
+      <div class="math-box">
+        \[ \frac{1 - 27}{(1-3)^2} \cdot \frac{1 - 2 - 3}{(4)^2 - 3} = \frac{-26}{4} \cdot \frac{-4}{13} = \frac{104}{52} = 2 \]
+      </div>
+      <p class="step-explanation">
+        A \(a + 1 = 1 + 1 = 2\). Takodje se slaze!
+      </p>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Kljucni uvid</div>
+    <p>
+      Sustina ovog zadatka lezi u prepoznavanju da se \((a+3)^2 - 3a\) pojednostavljuje u \(a^2 + 3a + 9\) &mdash; isti izraz koji nastaje pri faktorizaciji razlike kubova \(a^3 - 27\). Kada to uocite, sve se savrseno skrati i ostaje elegantan rezultat \(a+1\). Ovo je tipican primer gde se naizgled slozeni algebarski izraz dramaticno pojednostavljuje zahvaljujuci vestoj faktorizaciji.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konacan odgovor</div>
+    <div class="answer">\(a + 1\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(a - 3\)</div>
+      <div class="final-option" data-option="B">(B) \(\dfrac{3}{2}\)</div>
+      <div class="final-option correct" data-option="C">(C) \(a + 1\)</div>
+      <div class="final-option" data-option="D">(D) \(a\)</div>
+      <div class="final-option" data-option="E">(E) \(1\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija za \(a = 0\): izraz \(= 1\), a \(a+1 = 1\) &#10004; &nbsp;|&nbsp; Za \(a = 1\): izraz \(= 2\), a \(a+1 = 2\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogresna faktorizacija razlike kubova</div>
+      <p>Ucestala greska je pisati \(a^3 - 27 = (a-3)(a^2 - 3a + 9)\) sa pogrenim predznakom u sredisnjim clanu. Tacna formula je \(a^3 - b^3 = (a-b)(a^2 + ab + b^2)\) sa plusom ispred \(ab\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Previd prilikom sredjivanja \((a+3)^2 - 3a\)</div>
+      <p>Ako se ovaj izraz ne razvije pravilno, nece se uociti da je jednak \(a^2+3a+9\) i nece biti moguce skracivanje. Kljucno je pazljivo razviti \((a+3)^2 = a^2 + 6a + 9\) i tek onda oduzeti \(3a\).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Pojednostavite slican izraz:
+    </p>
+    <div class="math-box">
+      \[ \frac{a^3 + 8}{(a+2)^2} \cdot \frac{a^2 + 3a + 2}{(a-2)^2 + 4a} \]
+    </div>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p>Koristite zbir kubova: \(a^3 + 8 = (a+2)(a^2 - 2a + 4)\). Zatim rastavite \(a^2 + 3a + 2 = (a+1)(a+2)\) i sredite \((a-2)^2 + 4a = a^2 - 4a + 4 + 4a = a^2 + 4\). Hm, ali \(a^2 - 2a + 4 \neq a^2 + 4\)! Ovaj izraz ne izlazi tako elegantno. Pokusajte da nadjete za koje \(a\) vrednost iznosi \(a + 1\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('solutionCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 520;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tok faktorizacije i skracivanja', W / 2, 30);
+
+    const boxW = Math.min(200, W * 0.22);
+    const boxH = 52;
+    const col1 = W * 0.17;
+    const col2 = W * 0.42;
+    const col3 = W * 0.63;
+    const col4 = W * 0.85;
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Brojilac 1', col1, 55);
+    ctx.fillText('Imenilac 1', col2, 55);
+    ctx.fillText('Brojilac 2', col3, 55);
+    ctx.fillText('Imenilac 2', col4, 55);
+
+    var y1 = 90;
+    drawBox(col1, y1, boxW, boxH, 'a\u00B3 \u2212 27', 'razlika kubova', '#a78bfa');
+    drawBox(col2, y1, boxW, boxH, '(a \u2212 3)\u00B2', 'vec faktorisan', '#60a5fa');
+    drawBox(col3, y1, boxW, boxH, 'a\u00B2 \u2212 2a \u2212 3', 'kvadratni trinom', '#a78bfa');
+    drawBox(col4, y1, boxW, boxH, '(a+3)\u00B2 \u2212 3a', 'razviti i srediti', '#60a5fa');
+
+    var y2 = 175;
+    drawArrow(col1, y1 + boxH / 2 + 2, col1, y2 - boxH / 2);
+    drawArrow(col2, y1 + boxH / 2 + 2, col2, y2 - boxH / 2);
+    drawArrow(col3, y1 + boxH / 2 + 2, col3, y2 - boxH / 2);
+    drawArrow(col4, y1 + boxH / 2 + 2, col4, y2 - boxH / 2);
+
+    drawBox(col1, y2, boxW, boxH, '(a\u22123)(a\u00B2+3a+9)', 'faktorizovano', '#34d399');
+    drawBox(col2, y2, boxW, boxH, '(a\u22123)(a\u22123)', 'faktorizovano', '#34d399');
+    drawBox(col3, y2, boxW, boxH, '(a\u22123)(a+1)', 'faktorizovano', '#34d399');
+    drawBox(col4, y2, boxW, boxH, 'a\u00B2 + 3a + 9', 'pojednostavljeno', '#34d399');
+
+    var y3 = 270;
+    drawArrow(col1, y2 + boxH / 2 + 2, W * 0.32, y3 - boxH / 2);
+    drawArrow(col2, y2 + boxH / 2 + 2, W * 0.32, y3 - boxH / 2);
+    drawArrow(col3, y2 + boxH / 2 + 2, W * 0.68, y3 - boxH / 2);
+    drawArrow(col4, y2 + boxH / 2 + 2, W * 0.68, y3 - boxH / 2);
+
+    var mergeW = Math.min(340, W * 0.35);
+    drawBox(W * 0.32, y3, mergeW, boxH, 'Prvi razlomak:', '(a\u22123)(a\u00B2+3a+9) / (a\u22123)\u00B2', '#f472b6');
+    drawBox(W * 0.68, y3, mergeW, boxH, 'Drugi razlomak:', '(a\u22123)(a+1) / (a\u00B2+3a+9)', '#f472b6');
+
+    var y4 = 355;
+    drawArrow(W * 0.32, y3 + boxH / 2 + 2, W * 0.5, y4 - boxH / 2);
+    drawArrow(W * 0.68, y3 + boxH / 2 + 2, W * 0.5, y4 - boxH / 2);
+
+    var fullW = Math.min(500, W * 0.75);
+    drawBox(W * 0.5, y4, fullW, boxH + 6, 'Objedinjeno:', '(a\u22123)\u00B2(a\u00B2+3a+9)(a+1) / (a\u22123)\u00B2(a\u00B2+3a+9)', '#a78bfa');
+
+    var y5 = 435;
+    drawArrow(W * 0.5, y4 + (boxH + 6) / 2 + 2, W * 0.5, y5 - boxH / 2);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('skracujemo (a\u22123)\u00B2 i (a\u00B2+3a+9)', W * 0.5, y4 + (boxH + 6) / 2 + 16);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 26px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('= a + 1', W / 2, y5 + 8);
+
+    ctx.beginPath();
+    ctx.roundRect(W / 2 - 65, y5 - 22, 130, 50, 14);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+
+  function drawBox(x, y, w, h, title, sub, color) {
+    var r = 10;
+    ctx.beginPath();
+    ctx.roundRect(x - w / 2, y - h / 2, w, h, r);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(title, x, y - 5);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(sub, x, y + 14);
+  }
+
+  function drawArrow(x1, y1, x2, y2) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    var size = 7;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - size * Math.cos(angle - 0.4), y2 - size * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - size * Math.cos(angle + 0.4), y2 - size * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fillStyle = '#475569';
+    ctx.fill();
+  }
+
+  const stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(container) {
+    container.addEventListener('click', function() {
+      stepContainers.forEach(function(c) { c.classList.remove('active'); });
+      container.classList.add('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje racionalnog izraza sa razlikom kubova",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["razlika kubova", "faktorizacija", "racionalni izrazi", "skracivanje razlomaka", "kvadratni trinom"]
+}
+BRAINSPARK_META-->

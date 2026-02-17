@@ -21,9 +21,16 @@ export interface RawCategory {
 
 export interface ProblemEntry {
   order: number;
+  document: string;
   category: string | null;
   categorySr: string | null;
   solutionUrl: string;
+}
+
+export interface Report {
+  document: string;
+  order: number;
+  description: string;
 }
 
 export interface YearEntry {

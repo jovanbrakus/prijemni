@@ -1,11 +1,11 @@
 #!/bin/bash
 
 files=(
-  "univerzitet_u_beogradu_elektrotehnicki_fakultet_2014.pdf"
-  "univerzitet_u_beogradu_elektrotehnicki_fakultet_2015.pdf"
-  "univerzitet_u_beogradu_elektrotehnicki_fakultet_2016.pdf"
-  "univerzitet_u_beogradu_elektrotehnicki_fakultet_2017.pdf"
-  "univerzitet_u_beogradu_elektrotehnicki_fakultet_2018.pdf"
+  "univerzitet_u_beogradu_elektrotehnicki_fakultet_2021.pdf"
+  "univerzitet_u_beogradu_elektrotehnicki_fakultet_2022.pdf"
+  "univerzitet_u_beogradu_elektrotehnicki_fakultet_2023.pdf"
+  "univerzitet_u_beogradu_elektrotehnicki_fakultet_2024.pdf"
+  "univerzitet_u_beogradu_elektrotehnicki_fakultet_2025.pdf"
 )
 
 for file in "${files[@]}"; do

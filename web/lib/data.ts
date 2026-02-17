@@ -50,6 +50,7 @@ export function loadData(): FacultyEntry[] {
         const cat = p.category ? categoryMap.get(p.category) : null;
         return {
           order: p.order,
+          document: docFilename,
           category: p.category,
           categorySr: cat?.sr ?? null,
           solutionUrl: `/api/solution/${p.solution_path.replace(/^problems\//, "")}`,

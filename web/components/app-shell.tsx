@@ -1,18 +1,19 @@
 "use client";
 
-import { useState, useCallback, useMemo, Suspense } from "react";
+import { useState, useCallback, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { ProblemViewer } from "./problem-viewer";
 import { cn } from "@/lib/utils";
-import type { FacultyEntry } from "@/lib/types";
+import type { FacultyEntry, Report } from "@/lib/types";
 
 function AppShellInner({ faculties }: { faculties: FacultyEntry[] }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [reports, setReports] = useState<Report[]>([]);
 
   const selectedFaculty = searchParams.get("faculty");
   const selectedYear = searchParams.get("year")
@@ -27,15 +28,43 @@ function AppShellInner({ faculties }: { faculties: FacultyEntry[] }) {
   );
   const [expandedYear, setExpandedYear] = useState<number | null>(selectedYear);
 
-  const solutionUrl = useMemo(() => {
+  const fetchReports = useCallback(async () => {
+    try {
+      const res = await fetch("/api/reports");
+      if (res.ok) {
+        const data = await res.json();
+        setReports(data);
+      }
+    } catch {
+      // silently fail — reports are non-critical
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
+
+  const selectedEntry = useMemo(() => {
     if (!selectedFaculty || !selectedYear || !selectedProblem) return null;
     const faculty = faculties.find((f) => f.slug === selectedFaculty);
     if (!faculty) return null;
     const year = faculty.years.find((y) => y.year === selectedYear);
     if (!year) return null;
     const problem = year.problems.find((p) => p.order === selectedProblem);
-    return problem?.solutionUrl ?? null;
+    return problem ?? null;
   }, [faculties, selectedFaculty, selectedYear, selectedProblem]);
+
+  const solutionUrl = selectedEntry?.solutionUrl ?? null;
+  const selectedDocument = selectedEntry?.document ?? null;
+
+  const currentReport = useMemo(() => {
+    if (!selectedDocument || !selectedProblem) return null;
+    return (
+      reports.find(
+        (r) => r.document === selectedDocument && r.order === selectedProblem
+      ) ?? null
+    );
+  }, [reports, selectedDocument, selectedProblem]);
 
   const handleSelectProblem = useCallback(
     (faculty: string, year: number, order: number) => {
@@ -90,9 +119,9 @@ function AppShellInner({ faculties }: { faculties: FacultyEntry[] }) {
         <aside
           className={cn(
             "shrink-0 border-r border-white/10 bg-card",
-            "md:relative md:block md:w-[280px]",
+            "md:relative md:block md:w-[360px]",
             mobileOpen
-              ? "fixed inset-y-14 left-0 z-30 w-[280px]"
+              ? "fixed inset-y-14 left-0 z-30 w-[360px]"
               : "hidden md:block"
           )}
         >
@@ -111,7 +140,13 @@ function AppShellInner({ faculties }: { faculties: FacultyEntry[] }) {
 
         {/* Viewer */}
         <main className="min-h-0 flex-1">
-          <ProblemViewer solutionUrl={solutionUrl} />
+          <ProblemViewer
+            solutionUrl={solutionUrl}
+            document={selectedDocument}
+            order={selectedProblem}
+            report={currentReport}
+            onReportChange={fetchReports}
+          />
         </main>
       </div>
     </div>

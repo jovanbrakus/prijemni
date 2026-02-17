@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Racionalni članovi u razvoju binoma</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Odnos binomnih koeficijenata četvrtog i trećeg člana u razvoju (∛5 − ⁵√3)^n jednak je 10.
+Treba naći broj racionalnih članova u razvoju.
+
+Korak 1: Nalaženje n
+Binomni koeficijent k-tog člana (1-indeksiran) u razvoju (a+b)^n je C(n, k−1).
+- Treći član: koeficijent C(n, 2)
+- Četvrti član: koeficijent C(n, 3)
+
+Odnos: C(n,3)/C(n,2) = 10
+
+C(n,3)/C(n,2) = [n!/(3!(n−3)!)] / [n!/(2!(n−2)!)]
+              = [2!(n−2)!] / [3!(n−3)!]
+              = (n−2) / 3
+
+Dakle: (n−2)/3 = 10
+       n − 2 = 30
+       n = 32
+
+Korak 2: Opšti član razvoja
+Binom: (5^(1/3) − 3^(1/5))^32
+
+T_{k+1} = C(32, k) · (5^(1/3))^(32−k) · (−3^(1/5))^k
+        = C(32, k) · (−1)^k · 5^((32−k)/3) · 3^(k/5)
+
+Korak 3: Uslovi za racionalnost
+Član je racionalan ako su oba eksponenta celi brojevi:
+- (32−k)/3 ∈ ℤ  →  32−k ≡ 0 (mod 3)  →  k ≡ 2 (mod 3)
+- k/5 ∈ ℤ       →  k ≡ 0 (mod 5)
+
+Iz k ≡ 2 (mod 3): k = 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32
+Iz k ≡ 0 (mod 5): k = 0, 5, 10, 15, 20, 25, 30
+
+Presek (k ≡ 2 (mod 3) i k ≡ 0 (mod 5)):
+Po Kineskoj teoremi o ostacima: k ≡ 5 (mod 15)
+k = 5, 20  (za 0 ≤ k ≤ 32)
+
+Dakle postoje tačno 2 racionalna člana.
+
+Provera:
+- k=5: T_6 = C(32,5)·(−1)^5·5^(27/3)·3^(5/5) = −C(32,5)·5^9·3 — racionalan ✓
+- k=20: T_21 = C(32,20)·(−1)^20·5^(12/3)·3^(20/5) = C(32,20)·5^4·3^4 — racionalan ✓
+
+Odgovor: (A) 2
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #a78bfa;
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+  margin-top: 8px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 12px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 100px;
+  flex: 1;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.given-item .unit {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: border-color 0.2s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step {
+  position: relative;
+  padding-left: 40px;
+  margin-bottom: 24px;
+}
+
+.step-number {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.step p {
+  margin-bottom: 8px;
+}
+
+.insight-box {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer {
+  background: rgba(52, 211, 153, 0.1);
+  border: 2px solid rgba(52, 211, 153, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer h2 {
+  color: #34d399;
+  justify-content: center;
+}
+
+.final-answer .answer-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 12px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.option-card {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 90px;
+}
+
+.option-card.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+}
+
+.option-card .opt-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.option-card .opt-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #e2e8f0;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.pitfall-box {
+  background: rgba(224, 148, 104, 0.08);
+  border: 1px solid rgba(224, 148, 104, 0.25);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.pitfall-box h2 {
+  color: #e09468;
+}
+
+.pitfall-box ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.pitfall-box li {
+  padding: 6px 0 6px 24px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfall-box li::before {
+  content: '\26A0';
+  position: absolute;
+  left: 0;
+}
+
+.challenge-box {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.challenge-box h2 {
+  color: #60a5fa;
+}
+
+details {
+  margin-bottom: 24px;
+}
+
+details summary {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  color: #e2e8f0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details[open] summary {
+  border-radius: 12px 12px 0 0;
+  margin-bottom: 0;
+}
+
+details .details-content {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+details .details-content ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+details .details-content li {
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.crt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+}
+
+.crt-table th, .crt-table td {
+  border: 1px solid #334155;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.crt-table th {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.crt-table td {
+  color: #e2e8f0;
+}
+
+.crt-table tr.highlight-row td {
+  background: rgba(52, 211, 153, 0.12);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 80px; padding: 10px 12px; }
+  .step { padding-left: 34px; }
+  .final-answer .answer-value { font-size: 1.5rem; }
+  .options-row { gap: 6px; }
+  .option-card { min-width: 70px; padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Racionalni članovi u razvoju binoma</h1>
+  <p class="subtitle">Binomna formula, iracionalni koreni i uslovi racionalnosti</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Ako je odnos binomnih koeficijenata četvrtog i trećeg člana u razvoju binoma
+      \( \left(\sqrt[3]{5} - \sqrt[5]{3}\right)^n \) \((n \in \mathbb{N},\; n \geq 3)\)
+      jednak <span class="highlight">10</span>, onda je broj racionalnih članova u ovom razvoju jednak:
+    </p>
+    <h3>Ponuđeni odgovori</h3>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">2</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">1</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">4</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">3</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">veći od 4</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      <strong>Faza 1:</strong> Iz datog odnosa binomnih koeficijenata odrediti vrednost \( n \).<br>
+      <strong>Faza 2:</strong> Napisati opšti član razvoja binoma i izraziti eksponente baza 5 i 3.<br>
+      <strong>Faza 3:</strong> Postaviti uslove da oba eksponenta budu celi brojevi (uslov racionalnosti) i naći presek rešenja pomoću Kineske teoreme o ostacima.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <details>
+    <summary>📐 Ključne formule i teoreme</summary>
+    <div class="details-content">
+      <ul>
+        <li>
+          <strong>Binomna formula:</strong>
+          \( (a + b)^n = \displaystyle\sum_{k=0}^{n} \binom{n}{k}\, a^{n-k}\, b^k \)
+        </li>
+        <li>
+          <strong>Opšti (\( (k+1) \))-ti član:</strong>
+          \( T_{k+1} = \binom{n}{k}\, a^{n-k}\, b^k \), \quad za \( k = 0, 1, \ldots, n \)
+        </li>
+        <li>
+          <strong>Binomni koeficijent \( k \)-tog člana (1-indeksirano):</strong>
+          \( \binom{n}{k-1} \)
+        </li>
+        <li>
+          <strong>Odnos uzastopnih koeficijenata:</strong>
+          \( \dfrac{\binom{n}{k}}{\binom{n}{k-1}} = \dfrac{n - k + 1}{k} \)
+        </li>
+        <li>
+          <strong>Kineska teorema o ostacima:</strong> Sistem kongruencija
+          \( x \equiv a_1 \pmod{m_1} \) i \( x \equiv a_2 \pmod{m_2} \),
+          gde je \( \gcd(m_1, m_2) = 1 \), ima jedinstveno rešenje modulo \( m_1 \cdot m_2 \).
+        </li>
+        <li>
+          <strong>Uslov racionalnosti:</strong> Član koji sadrži \( 5^{p/q} \) je racionalan samo ako je \( p/q \in \mathbb{Z} \). Analogno za bazu 3.
+        </li>
+      </ul>
+    </div>
+  </details>
+
+  <!-- Visual Canvas -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="binomCanvas" height="520"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step">
+      <div class="step-number">1</div>
+      <p><strong>Nalazimo \( n \) iz odnosa binomnih koeficijenata</strong></p>
+      <p>
+        Binomni koeficijent trećeg člana je \( \binom{n}{2} \), a četvrtog je \( \binom{n}{3} \).
+        Po uslovu zadatka:
+      </p>
+      <div class="math-box">
+        \[ \frac{\binom{n}{3}}{\binom{n}{2}} = 10 \]
+      </div>
+      <p>Primenjujemo formulu za odnos uzastopnih binomnih koeficijenata:</p>
+      <div class="math-box">
+        \[ \frac{\binom{n}{3}}{\binom{n}{2}} = \frac{\dfrac{n!}{3!(n-3)!}}{\dfrac{n!}{2!(n-2)!}} = \frac{2!\,(n-2)!}{3!\,(n-3)!} = \frac{(n-2)}{3} \]
+      </div>
+      <p>Dakle:</p>
+      <div class="math-box">
+        \[ \frac{n-2}{3} = 10 \quad \Longrightarrow \quad n - 2 = 30 \quad \Longrightarrow \quad \boxed{n = 32} \]
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">2</div>
+      <p><strong>Zapisujemo opšti član razvoja</strong></p>
+      <p>Binom ima oblik \( \left(5^{1/3} - 3^{1/5}\right)^{32} \), pa je opšti član:</p>
+      <div class="math-box">
+        \[ T_{k+1} = \binom{32}{k} \cdot \left(5^{1/3}\right)^{32-k} \cdot \left(-3^{1/5}\right)^k \]
+      </div>
+      <p>Sređujemo eksponente:</p>
+      <div class="math-box">
+        \[ T_{k+1} = \binom{32}{k} \cdot (-1)^k \cdot 5^{\frac{32-k}{3}} \cdot 3^{\frac{k}{5}} \]
+      </div>
+      <p>gde je \( k = 0, 1, 2, \ldots, 32 \).</p>
+    </div>
+
+    <div class="step">
+      <div class="step-number">3</div>
+      <p><strong>Postavljamo uslove racionalnosti</strong></p>
+      <p>
+        Član \( T_{k+1} \) je racionalan ako i samo ako su oba eksponenta celi brojevi, jer su baze 5 i 3 prosti brojevi,
+        pa iracionalni koreni ne mogu da se „skrate":
+      </p>
+      <div class="math-box">
+        \[ \frac{32 - k}{3} \in \mathbb{Z} \quad \text{i} \quad \frac{k}{5} \in \mathbb{Z} \]
+      </div>
+      <p><strong>Uslov 1:</strong> \( \dfrac{32-k}{3} \in \mathbb{Z} \) znači \( 32 - k \equiv 0 \pmod{3} \), tj. \( k \equiv 32 \equiv 2 \pmod{3} \)</p>
+      <p>Vrednosti: \( k = 2,\; 5,\; 8,\; 11,\; 14,\; 17,\; 20,\; 23,\; 26,\; 29,\; 32 \)</p>
+      <p style="margin-top: 12px;"><strong>Uslov 2:</strong> \( \dfrac{k}{5} \in \mathbb{Z} \) znači \( k \equiv 0 \pmod{5} \)</p>
+      <p>Vrednosti: \( k = 0,\; 5,\; 10,\; 15,\; 20,\; 25,\; 30 \)</p>
+    </div>
+
+    <div class="step">
+      <div class="step-number">4</div>
+      <p><strong>Tražimo presek rešenja (Kineska teorema o ostacima)</strong></p>
+      <p>Trebamo naći \( k \) takvo da:</p>
+      <div class="math-box">
+        \[ k \equiv 2 \pmod{3} \quad \text{i} \quad k \equiv 0 \pmod{5} \]
+      </div>
+      <p>
+        Pošto su moduli 3 i 5 uzajamno prosti (\( \gcd(3, 5) = 1 \)), po Kineskoj teoremi o ostacima
+        postoji jedinstveno rešenje modulo \( 15 \).
+      </p>
+      <p>Iz \( k \equiv 0 \pmod{5} \) sledi \( k = 5m \) za \( m \in \mathbb{Z}_{\geq 0} \). Uvrstimo u prvi uslov:</p>
+      <div class="math-box">
+        \[ 5m \equiv 2 \pmod{3} \quad \Longrightarrow \quad 2m \equiv 2 \pmod{3} \quad \Longrightarrow \quad m \equiv 1 \pmod{3} \]
+      </div>
+      <p>Dakle \( m = 1, 4, 7, \ldots \), pa \( k = 5, 20, 35, \ldots \)</p>
+      <p>Za \( 0 \leq k \leq 32 \) ostaju samo:</p>
+      <div class="math-box">
+        \[ \boxed{k = 5 \quad \text{i} \quad k = 20} \]
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-number">5</div>
+      <p><strong>Provera oba racionalna člana</strong></p>
+      <p><span class="highlight-blue">Za \( k = 5 \):</span></p>
+      <div class="math-box">
+        \[ T_6 = \binom{32}{5} \cdot (-1)^5 \cdot 5^{\frac{32-5}{3}} \cdot 3^{\frac{5}{5}} = -\binom{32}{5} \cdot 5^9 \cdot 3 \]
+      </div>
+      <p>Eksponenti \( 9 \) i \( 1 \) su celi brojevi &mdash; <span class="highlight-green">racionalan</span>.</p>
+
+      <p style="margin-top: 14px;"><span class="highlight-blue">Za \( k = 20 \):</span></p>
+      <div class="math-box">
+        \[ T_{21} = \binom{32}{20} \cdot (-1)^{20} \cdot 5^{\frac{32-20}{3}} \cdot 3^{\frac{20}{5}} = \binom{32}{20} \cdot 5^4 \cdot 3^4 \]
+      </div>
+      <p>Eksponenti \( 4 \) i \( 4 \) su celi brojevi &mdash; <span class="highlight-green">racionalan</span>.</p>
+
+      <p style="margin-top: 14px;">Ukupno: <strong>2 racionalna člana</strong> u razvoju.</p>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>💡 Ključni uvid</h2>
+    <p>
+      Racionalnost člana zavisi od toga da li su eksponenti iracionalnih baza (ovde \( 5^{1/3} \) i \( 3^{1/5} \))
+      celi brojevi. To nas dovodi do sistema linearnih kongruencija. Ključ je prepoznati da su moduli 3 i 5 uzajamno prosti,
+      pa Kineska teorema o ostacima garantuje jedinstveno rešenje modulo 15 &mdash; u našem opsegu \( [0, 32] \)
+      to daje tačno dva rešenja: \( k = 5 \) i \( k = 20 \).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">2 racionalna člana</div>
+    <p style="color: #94a3b8; margin-bottom: 12px;">Tačan odgovor je <strong style="color:#4ade80;">(A)</strong></p>
+    <div class="options-row">
+      <div class="option-card correct">
+        <div class="opt-label">(A) ✓</div>
+        <div class="opt-value">2</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">1</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">4</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">3</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">&gt; 4</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="pitfall-box">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>
+        <strong>Mešanje indeksiranja:</strong> Treći član ima binomni koeficijent \( \binom{n}{2} \), ne \( \binom{n}{3} \).
+        Član sa rednim brojem \( k \) (brojeći od 1) ima koeficijent \( \binom{n}{k-1} \). Zamena indeksa dovodi do pogrešnog \( n \).
+      </li>
+      <li>
+        <strong>Zaboravljanje znaka:</strong> Drugi član binoma je \( -3^{1/5} \), pa svaki član sa neparnim \( k \) nosi faktor \( (-1)^k = -1 \).
+        Ovo ne utiče na racionalnost, ali utiče na vrednost člana.
+      </li>
+      <li>
+        <strong>Samo jedan uslov:</strong> Provera samo jednog uslova (npr. samo deljivost sa 5) daje previše kandidata.
+        Potrebno je zadovoljiti <em>oba</em> uslova istovremeno.
+      </li>
+      <li>
+        <strong>Granice za \( k \):</strong> Posle nalaženja rešenja \( k \equiv 5 \pmod{15} \), treba proveriti koja rešenja
+        padaju u opseg \( 0 \leq k \leq 32 \). Vrednost \( k = 35 \) je van opsega!
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <h2>Dodatni izazov 🚀</h2>
+    <p>
+      Za koji najmanji \( n \in \mathbb{N} \) razvoj binoma \( \left(\sqrt[4]{2} + \sqrt[6]{3}\right)^n \)
+      sadrži tačno <strong>3 racionalna člana</strong>?
+      <em>(Savet: postavi sistem \( k \equiv 0 \pmod{6} \) i \( (n-k) \equiv 0 \pmod{4} \), pa traži najmanji \( n \) sa tačno 3 rešenja.)</em>
+    </p>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('binomCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 520;
+    ctx.clearRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Vrednosti k od 0 do 32: uslovi racionalnosti', W / 2, 28);
+
+    // Subtitle
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('k \u2261 2 (mod 3) \u2229 k \u2261 0 (mod 5) \u2192 k \u2261 5 (mod 15)', W / 2, 50);
+
+    // Grid parameters
+    const cols = 11;
+    const rows = 3;
+    const marginX = 30;
+    const marginY = 75;
+    const cellW = Math.min((W - 2 * marginX) / cols, 65);
+    const cellH = 42;
+    const gridW = cols * cellW;
+    const startX = (W - gridW) / 2;
+
+    // All k values from 0 to 32
+    const allK = [];
+    for (let i = 0; i <= 32; i++) allK.push(i);
+
+    // Conditions
+    const mod3 = new Set(); // k ≡ 2 (mod 3)
+    const mod5 = new Set(); // k ≡ 0 (mod 5)
+    for (let k = 0; k <= 32; k++) {
+      if (k % 3 === 2) mod3.add(k);
+      if (k % 5 === 0) mod5.add(k);
+    }
+    const both = new Set([...mod3].filter(k => mod5.has(k)));
+
+    // Draw grid of k values
+    let idx = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (idx > 32) break;
+        const k = idx;
+        const x = startX + c * cellW;
+        const y = marginY + r * (cellH + 14);
+
+        // Determine cell color
+        let bgColor = 'rgba(30, 41, 59, 0.8)';
+        let borderColor = '#334155';
+        let textColor = '#64748b';
+
+        const inMod3 = mod3.has(k);
+        const inMod5 = mod5.has(k);
+        const inBoth = both.has(k);
+
+        if (inBoth) {
+          bgColor = 'rgba(52, 211, 153, 0.25)';
+          borderColor = '#34d399';
+          textColor = '#4ade80';
+        } else if (inMod3) {
+          bgColor = 'rgba(96, 165, 250, 0.15)';
+          borderColor = 'rgba(96, 165, 250, 0.4)';
+          textColor = '#60a5fa';
+        } else if (inMod5) {
+          bgColor = 'rgba(244, 114, 182, 0.15)';
+          borderColor = 'rgba(244, 114, 182, 0.4)';
+          textColor = '#f472b6';
+        }
+
+        // Draw cell
+        ctx.fillStyle = bgColor;
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = inBoth ? 2.5 : 1;
+        ctx.beginPath();
+        ctx.roundRect(x + 2, y, cellW - 4, cellH, 8);
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw text
+        ctx.fillStyle = textColor;
+        ctx.font = inBoth ? 'bold 16px Segoe UI, system-ui, sans-serif' : '14px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('k=' + k, x + cellW / 2, y + cellH / 2);
+
+        idx++;
+      }
+    }
+
+    // Legend
+    const legendY = marginY + rows * (cellH + 14) + 30;
+
+    // Legend items
+    const legends = [
+      { color: 'rgba(96, 165, 250, 0.4)', border: '#60a5fa', text: 'k \u2261 2 (mod 3) — eksponent baze 5 ceo', textColor: '#60a5fa' },
+      { color: 'rgba(244, 114, 182, 0.4)', border: '#f472b6', text: 'k \u2261 0 (mod 5) — eksponent baze 3 ceo', textColor: '#f472b6' },
+      { color: 'rgba(52, 211, 153, 0.4)', border: '#34d399', text: 'OBA uslova — RACIONALAN \u010Dlan (k = 5, k = 20)', textColor: '#4ade80' }
+    ];
+
+    legends.forEach((leg, i) => {
+      const ly = legendY + i * 30;
+      ctx.fillStyle = leg.color;
+      ctx.strokeStyle = leg.border;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(startX, ly, 20, 20, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = leg.textColor;
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(leg.text, startX + 30, ly + 10);
+    });
+
+    // Draw the two rational terms detail
+    const detailY = legendY + 110;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Racionalni \u010Dlanovi:', W / 2, detailY);
+
+    // Term k=5
+    const termY1 = detailY + 28;
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.12)';
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.3)';
+    ctx.lineWidth = 1.5;
+    const boxW = Math.min(W - 60, 500);
+    const boxX = (W - boxW) / 2;
+
+    ctx.beginPath();
+    ctx.roundRect(boxX, termY1, boxW, 40, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('k = 5:   T\u2086 = \u2212C(32,5) \u00B7 5\u2079 \u00B7 3', W / 2, termY1 + 20);
+
+    // Term k=20
+    const termY2 = termY1 + 52;
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.12)';
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.3)';
+    ctx.beginPath();
+    ctx.roundRect(boxX, termY2, boxW, 40, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('k = 20:   T\u2082\u2081 = C(32,20) \u00B7 5\u2074 \u00B7 3\u2074', W / 2, termY2 + 20);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Racionalni članovi u razvoju binoma",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["binomna_formula", "binomni_koeficijenti", "racionalnost", "kineska_teorema_o_ostacima", "kongruencije"]
+}
+BRAINSPARK_META-->

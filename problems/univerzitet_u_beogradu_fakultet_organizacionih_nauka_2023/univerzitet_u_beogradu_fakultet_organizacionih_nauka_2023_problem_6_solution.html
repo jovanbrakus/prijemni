@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir članova aritmetičkog niza</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Za članove aritmetičkog niza a1, a2, a3, ... važi:
+  a4 + a5 + a11 + a12 = 32
+Naći: S15 = zbir prvih 15 članova.
+
+Opšti član aritmetičkog niza: a_n = a1 + (n-1)d
+
+Izrazimo date članove:
+  a4  = a1 + 3d
+  a5  = a1 + 4d
+  a11 = a1 + 10d
+  a12 = a1 + 11d
+
+Saberimo:
+  a4 + a5 + a11 + a12 = (a1+3d) + (a1+4d) + (a1+10d) + (a1+11d)
+                       = 4*a1 + 28d
+                       = 4*(a1 + 7d)
+                       = 32
+
+Dakle: a1 + 7d = 8
+
+Ovo znači da je a8 = a1 + 7d = 8 (srednji član za niz od 15 članova).
+
+Zbir prvih n članova: S_n = n/2 * (2*a1 + (n-1)*d)
+
+S15 = 15/2 * (2*a1 + 14*d)
+    = 15/2 * 2*(a1 + 7d)
+    = 15 * (a1 + 7d)
+    = 15 * 8
+    = 120
+
+Takođe, za neparno n, S_n = n * a_{(n+1)/2}, pa:
+S15 = 15 * a8 = 15 * 8 = 120
+
+Odgovor: E) 120
+
+Ključno zapažanje: a4 + a12 = a5 + a11 = 2*a8 (svojstvo simetričnih parova).
+Dakle: 4*a8 = 32, pa a8 = 8, i S15 = 15*a8 = 120.
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #cbd5e1;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+.theory-list {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+  color: #cbd5e1;
+}
+
+.theory-list li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  cursor: pointer;
+  transition: border-left 0.2s, padding-left 0.2s;
+  border-left: 3px solid transparent;
+  padding-left: 0;
+}
+
+.step-container:hover, .step-container.active {
+  border-left: 3px solid #4ade80;
+  padding-left: 12px;
+}
+
+.step-container:last-of-type {
+  border-bottom: none;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint p {
+  color: #cbd5e1;
+  padding-top: 8px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .formula {
+  font-size: 1.3rem;
+  color: #e2e8f0;
+  margin: 12px 0;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid rgba(74,222,128,0.3);
+  background: rgba(74,222,128,0.06);
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.answer-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.answer-options-final .option {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(51,65,85,0.5);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.answer-options-final .option.correct {
+  background: rgba(74,222,128,0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #334155;
+  color: #cbd5e1;
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-icon {
+  color: #e09468;
+  margin-right: 8px;
+}
+
+.challenge-box {
+  border-left: 3px solid #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 700px;
+  border-radius: 10px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { gap: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Zbir članova aritmetičkog niza</h1>
+  <p class="subtitle">Aritmetički nizovi — primena svojstva simetričnih parova i formule za zbir</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Za članove aritmetičkog niza \(a_1, a_2, a_3, \ldots\) važi jednakost:</p>
+    <div class="math-block">
+      \[ a_4 + a_5 + a_{11} + a_{12} = 32 \]
+    </div>
+    <p>Zbir prvih <span style="color:#60a5fa; font-weight:600;">15</span> članova tog niza jednak je:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(128\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(144\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(64\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(96\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(120\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Iskoristićemo svojstvo aritmetičkog niza da su zbiri simetričnih parova jednaki, čime ćemo odrediti vrednost srednjeg člana \(a_8\). Zatim ćemo primeniti formulu za zbir neparnog broja članova: \(S_n = n \cdot a_{\text{srednji}}\).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Ključne formule i teoreme</summary>
+      <ul class="theory-list">
+        <li><strong>Opšti član aritmetičkog niza:</strong> \(a_n = a_1 + (n-1)d\), gde je \(d\) razlika niza.</li>
+        <li><strong>Svojstvo simetričnih parova:</strong> Za članove udaljene jednako od krajeva važi \(a_k + a_{n+1-k} = a_1 + a_n\). Specijalnije, ako je \(i + j = p + q\), onda je \(a_i + a_j = a_p + a_q\).</li>
+        <li><strong>Zbir prvih \(n\) članova:</strong> \(S_n = \dfrac{n}{2}(2a_1 + (n-1)d)\), ili ekvivalentno \(S_n = \dfrac{n}{2}(a_1 + a_n)\).</li>
+        <li><strong>Zbir za neparno \(n\):</strong> Ako je \(n\) neparan, onda je \(S_n = n \cdot a_{\frac{n+1}{2}}\), tj. zbir je jednak broju članova pomnoženom sa srednjim članom.</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="seqCanvas" width="700" height="380"></canvas>
+    <p class="canvas-hint">Prikaz članova aritmetičkog niza sa istaknutim simetričnim parovima</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje — korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapišimo date članove pomoću formule za opšti član</h3>
+        <p>Svaki član aritmetičkog niza možemo izraziti preko prvog člana \(a_1\) i razlike \(d\):</p>
+        <div class="math-block">
+          \[ \begin{align}
+          a_4 &= a_1 + 3d \\
+          a_5 &= a_1 + 4d \\
+          a_{11} &= a_1 + 10d \\
+          a_{12} &= a_1 + 11d
+          \end{align} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Uočimo simetrične parove</h3>
+        <p>Primetimo da važi \(4 + 12 = 16\) i \(5 + 11 = 16\). To znači da su ovo dva simetrična para — zbir indeksa u svakom paru je isti!</p>
+        <p>Zato:</p>
+        <div class="math-block">
+          \[ a_4 + a_{12} = (a_1 + 3d) + (a_1 + 11d) = 2a_1 + 14d \]
+        </div>
+        <div class="math-block">
+          \[ a_5 + a_{11} = (a_1 + 4d) + (a_1 + 10d) = 2a_1 + 14d \]
+        </div>
+        <p class="note">Oba para daju isti zbir — to je suštinsko svojstvo aritmetičkog niza.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>&#9989; Proveri sebe: Koliko je \(a_4 + a_{12}\) u odnosu na \(a_5 + a_{11}\)?</summary>
+      <p>Jednaki su! Oba su jednaka \(2a_1 + 14d\). U aritmetičkom nizu, svi parovi sa istim zbirom indeksa imaju isti zbir vrednosti.</p>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Saberimo sve četiri člana</h3>
+        <p>Pošto su oba para jednaka, ukupan zbir je:</p>
+        <div class="math-block">
+          \[ a_4 + a_5 + a_{11} + a_{12} = 2 \cdot (2a_1 + 14d) = 4a_1 + 28d = 32 \]
+        </div>
+        <p>Podelimo obe strane sa 4:</p>
+        <div class="math-block">
+          \[ a_1 + 7d = 8 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Prepoznajmo šta je \(a_1 + 7d\)</h3>
+        <p>Po formuli za opšti član:</p>
+        <div class="math-block">
+          \[ a_8 = a_1 + (8-1)d = a_1 + 7d = 8 \]
+        </div>
+        <p>Dakle, osmi član niza je <span style="color:#4ade80; font-weight:700;">8</span>.</p>
+        <p class="note">Osmi član je upravo srednji (centralni) član u nizu od 15 članova, jer je (15+1)/2 = 8.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>&#9989; Proveri sebe: Koji je srednji član u nizu od 15 članova?</summary>
+      <p>Srednji član je \(a_8\), jer ima po 7 članova sa obe strane: \(a_1, \ldots, a_7\) levo i \(a_9, \ldots, a_{15}\) desno.</p>
+    </details>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Izračunajmo zbir prvih 15 članova</h3>
+        <p>Za neparan broj članova \(n\), zbir prvih \(n\) članova je:</p>
+        <div class="math-block">
+          \[ S_n = n \cdot a_{\frac{n+1}{2}} \]
+        </div>
+        <p>Primenimo za \(n = 15\):</p>
+        <div class="math-block">
+          \[ S_{15} = 15 \cdot a_8 = 15 \cdot 8 = 120 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Verifikacija standardnom formulom</h3>
+        <p>Možemo proveriti i primenom opšte formule za zbir:</p>
+        <div class="math-block">
+          \[ S_{15} = \frac{15}{2}(2a_1 + 14d) = \frac{15}{2} \cdot 2(a_1 + 7d) = 15 \cdot 8 = 120 \]
+        </div>
+        <p class="note">Obe formule daju isti rezultat, čime potvrđujemo tačnost.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>&#9989; Proveri sebe: Da li je rezultat deljiv sa 15?</summary>
+      <p>Da! \(120 = 15 \cdot 8\). To ima smisla jer je zbir 15 članova jednak 15 puta srednji član.</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključno zapažanje</h2>
+    <p>U aritmetičkom nizu sa neparnim brojem članova, zbir svih članova jednak je broju članova pomnoženom sa <strong>srednjim članom</strong>:</p>
+    <div class="formula">
+      \[ S_{15} = 15 \cdot a_8 = 15 \cdot 8 = \color{#4ade80}{120} \]
+    </div>
+    <p style="color:#94a3b8; font-size:0.95rem; margin-top:8px;">Simetrični parovi \((a_4, a_{12})\) i \((a_5, a_{11})\) imaju isti zbir kao \(2 \cdot a_8\), što nam omogućava da odmah odredimo srednji član.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\(S_{15} = 120\)</div>
+
+    <div class="answer-options-final">
+      <div class="option">(A) 128</div>
+      <div class="option">(B) 144</div>
+      <div class="option">(C) 64</div>
+      <div class="option">(D) 96</div>
+      <div class="option correct">(E) 120</div>
+    </div>
+
+    <p class="verification"><strong>Provera:</strong> Uslov \(a_4 + a_5 + a_{11} + a_{12} = 32\) daje \(4 \cdot a_8 = 32\), odakle \(a_8 = 8\). Zbir 15 članova je \(15 \cdot 8 = 120\). Rezultat se poklapa sa odgovorom (E). Dodatno, 120 je jedini ponuđeni odgovor deljiv sa 15, što ima smisla jer je \(S_{15} = 15 \cdot a_8\).</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li><span class="pitfall-icon">&#9888;</span> <strong>Pogrešna primena formule za opšti član:</strong> Pisanje \(a_4 = a_1 + 4d\) umesto \(a_4 = a_1 + 3d\). Zapamtite: koeficijent uz \(d\) je \(n - 1\), ne \(n\).</li>
+      <li><span class="pitfall-icon">&#9888;</span> <strong>Neprepoznavanje simetričnog para:</strong> Ručno rešavanje sistema od dve jednačine za \(a_1\) i \(d\) — moguće, ali nepotrebno komplikovano. Svojstvo simetričnih parova daje rezultat brže i elegantnije.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Ako za isti aritmetički niz dodatno važi da je \(a_3 \cdot a_{13} = 0\), odredi \(a_1\) i \(d\), a zatim izračunaj zbir prvih 20 članova.</p>
+    <details>
+      <summary>&#128161; Hint</summary>
+      <p>Iz \(a_3 \cdot a_{13} = 0\) sledi da je bar jedan od ta dva člana jednak nuli. Kombinovano sa uslovom \(a_1 + 7d = 8\), dobijaš dva moguća rešenja. Za svako, nađi \(S_{20}\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas visualization
+  const canvas = document.getElementById('seqCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function drawSequence() {
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // Clear
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // We'll draw 15 bars representing members of the sequence
+    // Use a1=1, d=1 as a concrete example where a8=8 (a1+7d = 1+7=8)
+    const a1 = 1;
+    const d = 1;
+    const n = 15;
+    const members = [];
+    for (let i = 1; i <= n; i++) {
+      members.push(a1 + (i - 1) * d);
+    }
+
+    const barWidth = 30;
+    const gap = 14;
+    const totalWidth = n * barWidth + (n - 1) * gap;
+    const startX = (W - totalWidth) / 2;
+    const baseY = H - 60;
+    const maxVal = members[n - 1];
+    const scale = (H - 140) / maxVal;
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let v = 0; v <= maxVal; v += 2) {
+      const y = baseY - v * scale;
+      ctx.beginPath();
+      ctx.moveTo(startX - 10, y);
+      ctx.lineTo(startX + totalWidth + 10, y);
+      ctx.stroke();
+    }
+
+    // Highlighted indices: 4, 5, 8, 11, 12
+    const highlighted = new Set([4, 5, 11, 12]);
+    const middle = 8;
+
+    // Draw bars
+    for (let i = 0; i < n; i++) {
+      const x = startX + i * (barWidth + gap);
+      const val = members[i];
+      const barH = val * scale;
+      const idx = i + 1;
+
+      if (idx === middle) {
+        // Middle member - green
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.25)';
+        ctx.fillRect(x - 3, baseY - barH - 3, barWidth + 6, barH + 6);
+        ctx.fillStyle = '#4ade80';
+      } else if (highlighted.has(idx)) {
+        // Highlighted symmetric pair members - blue/purple
+        ctx.fillStyle = (idx === 4 || idx === 12) ? '#60a5fa' : '#a78bfa';
+      } else {
+        ctx.fillStyle = '#334155';
+      }
+
+      // Bar
+      ctx.beginPath();
+      ctx.roundRect(x, baseY - barH, barWidth, barH, [4, 4, 0, 0]);
+      ctx.fill();
+
+      // Value on top
+      ctx.fillStyle = (idx === middle) ? '#4ade80' : (highlighted.has(idx) ? '#e2e8f0' : '#64748b');
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(val, x + barWidth / 2, baseY - barH - 8);
+
+      // Index label below
+      ctx.fillStyle = (idx === middle) ? '#4ade80' : (highlighted.has(idx) ? '#60a5fa' : '#64748b');
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('a' + idx, x + barWidth / 2, baseY + 18);
+    }
+
+    // Draw symmetric pair arcs
+    // Pair 1: a4 and a12
+    drawArc(ctx, startX, barWidth, gap, baseY, 3, 11, '#60a5fa', 'a\u2084 + a\u2081\u2082 = 2a\u2088', -50);
+    // Pair 2: a5 and a11
+    drawArc(ctx, startX, barWidth, gap, baseY, 4, 10, '#a78bfa', 'a\u2085 + a\u2081\u2081 = 2a\u2088', -30);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Primer: a\u2081 = 1, d = 1 \u2192 a\u2088 = 8, S\u2081\u2085 = 120', W / 2, H - 20);
+
+    // Legend
+    ctx.textAlign = 'left';
+    const legendY = 22;
+    const legendX = 20;
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(legendX, legendY - 8, 12, 12);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Simetrični par 1 (a\u2084, a\u2081\u2082)', legendX + 18, legendY + 2);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillRect(legendX, legendY + 12, 12, 12);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Simetrični par 2 (a\u2085, a\u2081\u2081)', legendX + 18, legendY + 22);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(legendX, legendY + 32, 12, 12);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Srednji član a\u2088 = 8', legendX + 18, legendY + 42);
+  }
+
+  function drawArc(ctx, startX, barWidth, gap, baseY, i1, i2, color, label, offsetY) {
+    const x1 = startX + i1 * (barWidth + gap) + barWidth / 2;
+    const x2 = startX + i2 * (barWidth + gap) + barWidth / 2;
+    const midX = (x1 + x2) / 2;
+    const arcY = baseY + 35 + Math.abs(offsetY);
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x1, baseY + 25);
+    ctx.quadraticCurveTo(midX, arcY, x2, baseY + 25);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label at the top of arc is not needed here, but let's place it
+  }
+
+  drawSequence();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir članova aritmetičkog niza korišćenjem simetričnih parova",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["aritmetički niz", "zbir članova niza", "simetrični parovi", "srednji član"]
+}
+BRAINSPARK_META-->

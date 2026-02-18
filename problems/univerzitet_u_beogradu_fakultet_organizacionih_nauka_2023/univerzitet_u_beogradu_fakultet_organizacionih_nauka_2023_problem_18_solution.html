@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binomni razvoj i zbir koeficijenata</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Proizvod trećeg člana od početka i trećeg člana od kraja razvoja
+(2023^(1/n) + 1/2023^(1/n))^n je 66^2. Naći zbir binomnih koeficijenata.
+
+Let a = 2023^(1/n).
+Expansion: (a + 1/a)^n
+
+General term (k-th term, 0-indexed):
+T_{k+1} = C(n,k) * a^(n-k) * (1/a)^k = C(n,k) * a^(n-2k)
+
+Third term from the beginning (k=2):
+T_3 = C(n,2) * a^(n-4)
+
+Third term from the end:
+The expansion has (n+1) terms total. Third from end is term number (n+1-2) = (n-1),
+which corresponds to k = n-2:
+T_{n-1} = C(n, n-2) * a^(n - 2(n-2)) = C(n,2) * a^(4-n)
+
+Product of T_3 and T_{n-1}:
+T_3 * T_{n-1} = C(n,2)^2 * a^((n-4)+(4-n)) = C(n,2)^2 * a^0 = C(n,2)^2
+
+Given: C(n,2)^2 = 66^2
+=> C(n,2) = 66
+=> n(n-1)/2 = 66
+=> n(n-1) = 132
+=> n^2 - n - 132 = 0
+=> n = (1 + sqrt(1+528))/2 = (1 + sqrt(529))/2 = (1+23)/2 = 12
+
+Sum of binomial coefficients of (a+b)^n = 2^n = 2^12 = 4096
+4096 = 64^2
+
+Answer: C) 64^2
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #cbd5e1;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+  list-style: none;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: '\25B6';
+  display: inline-block;
+  margin-right: 8px;
+  transition: transform 0.2s;
+  font-size: 0.8rem;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.theory-list {
+  padding-left: 20px;
+  margin-top: 10px;
+}
+
+.theory-list li {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+  line-height: 1.8;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 1rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-formula {
+  font-size: 1.3rem;
+  color: #4ade80;
+  margin: 12px 0;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  text-align: center;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 800;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 20px;
+  min-width: 90px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.option-card.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(52,211,153,0.2);
+}
+
+.option-card .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+
+.option-card .opt-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  text-align: left;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.verification strong {
+  color: #4ade80;
+}
+
+.pitfall-list {
+  padding-left: 20px;
+}
+
+.pitfall-list li {
+  color: #cbd5e1;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.pitfall-list li strong {
+  color: #e09468;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 10px;
+  width: 100%;
+  max-width: 700px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.challenge-card {
+  border-left: 3px solid #f472b6;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 80px; padding: 10px 12px; }
+  .step-container { padding: 12px; gap: 10px; }
+  .options-row { gap: 8px; }
+  .option-card { min-width: 70px; padding: 10px 14px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Binomni razvoj i zbir koeficijenata</h1>
+  <p class="subtitle">Binomna formula, opšti član razvoja i osobine binomnih koeficijenata</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Proizvod <span class="highlight-blue">trećeg člana od početka</span> i <span class="highlight-blue">trećeg člana od kraja</span> razvoja
+      \(\left(\sqrt[n]{2023} + \dfrac{1}{\sqrt[n]{2023}}\right)^n\) je \(66^2\).
+    </p>
+    <p style="margin-top: 12px;">
+      Zbir binomnih koeficijenata datog razvoja jednak je:
+    </p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(128^2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(32^2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(64^2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(256^2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(16^2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Nađićemo opšti član binomnog razvoja, odrediti treći član od početka i treći od kraja,
+      izračunati njihov proizvod i iz uslova \(66^2\) odrediti \(n\). Zatim koristimo činjenicu da
+      je zbir svih binomnih koeficijenata razvoja \((a + b)^n\) jednak \(2^n\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <ul class="theory-list">
+        <li>
+          <strong>Binomna formula:</strong>
+          \[(a + b)^n = \sum_{k=0}^{n} \binom{n}{k}\, a^{n-k}\, b^k\]
+          Opšti \((k+1)\)-vi član je \(T_{k+1} = \binom{n}{k}\, a^{n-k}\, b^k\).
+        </li>
+        <li>
+          <strong>Simetričnost binomnih koeficijenata:</strong>
+          \[\binom{n}{k} = \binom{n}{n-k}\]
+          Član koji je \(r\)-ti od kraja razvoja ima indeks \(k = n - r + 1\) (nula-indeksirano).
+        </li>
+        <li>
+          <strong>Zbir binomnih koeficijenata:</strong>
+          \[\sum_{k=0}^{n}\binom{n}{k} = 2^n\]
+          Dobija se kada u \((1 + 1)^n\) uvrstimo \(a = b = 1\).
+        </li>
+        <li>
+          <strong>Binomni koeficijent &mdash; formula:</strong>
+          \[\binom{n}{2} = \frac{n(n-1)}{2}\]
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid: Pascal's Triangle -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz &mdash; Paskalov trougao i razvoj</h2>
+    <canvas id="mainCanvas" width="700" height="420"></canvas>
+    <p class="canvas-hint">Prikaz Paskalovog trougla za \(n = 12\) sa istaknutim koeficijentima trećeg člana od početka i kraja</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Uvodimo smenu</h3>
+        <p>Neka je \(a = \sqrt[n]{2023} = 2023^{1/n}\). Tada je:</p>
+        <div class="math-block">
+          \[\frac{1}{\sqrt[n]{2023}} = 2023^{-1/n} = \frac{1}{a}\]
+        </div>
+        <p>Naš razvoj postaje \(\left(a + \dfrac{1}{a}\right)^n\).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Opšti član razvoja</h3>
+        <p>Prema binomnoj formuli, \((k+1)\)-vi član razvoja je:</p>
+        <div class="math-block">
+          \[T_{k+1} = \binom{n}{k}\, a^{n-k}\, \left(\frac{1}{a}\right)^k = \binom{n}{k}\, a^{n-2k}\]
+        </div>
+        <p class="note">Stepen od \(a\) je \((n-k) - k = n - 2k\).</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Treći član od početka</h3>
+        <p>Treći član od početka znači \(k = 2\) (jer brojimo od \(k = 0\)):</p>
+        <div class="math-block">
+          \[T_3 = \binom{n}{2}\, a^{n-4}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Treći član od kraja</h3>
+        <p>Razvoj ima \(n + 1\) članova. Treći od kraja je \((n+1-2)\)-gi, tj. \((n-1)\)-vi član:</p>
+        <div class="math-block">
+          \[T_{n-1} = \binom{n}{n-2}\, a^{n - 2(n-2)} = \binom{n}{2}\, a^{4-n}\]
+        </div>
+        <p class="note">Koristili smo simetričnost: \(\binom{n}{n-2} = \binom{n}{2}\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliki je zbir eksponenata od \(a\) u \(T_3\) i \(T_{n-1}\)?</summary>
+      <div class="answer">
+        \((n-4) + (4-n) = 0\). Stepeni od \(a\) se poništavaju!
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Računamo proizvod</h3>
+        <p>Pomnožimo treći član od početka i treći član od kraja:</p>
+        <div class="math-block">
+          \[T_3 \cdot T_{n-1} = \binom{n}{2}\, a^{n-4} \cdot \binom{n}{2}\, a^{4-n}\]
+        </div>
+        <p>Stepeni od \(a\) se poništavaju:</p>
+        <div class="math-block">
+          \[T_3 \cdot T_{n-1} = \binom{n}{2}^2 \cdot a^{(n-4)+(4-n)} = \binom{n}{2}^2 \cdot a^0 = \binom{n}{2}^2\]
+        </div>
+        <p>Ovo je ključna osobina &mdash; <span class="highlight-pink">proizvod ne zavisi od vrednosti 2023!</span></p>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Primenjujemo uslov zadatka</h3>
+        <p>Prema uslovu, ovaj proizvod iznosi \(66^2\):</p>
+        <div class="math-block">
+          \[\binom{n}{2}^2 = 66^2\]
+        </div>
+        <p>Korenovanjem obe strane:</p>
+        <div class="math-block">
+          \[\binom{n}{2} = 66\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Određujemo \(n\)</h3>
+        <p>Koristimo formulu za binomni koeficijent:</p>
+        <div class="math-block">
+          \[\binom{n}{2} = \frac{n(n-1)}{2} = 66\]
+        </div>
+        <p>Množimo sa 2:</p>
+        <div class="math-block">
+          \[n(n-1) = 132\]
+        </div>
+        <p>Rešavamo kvadratnu jednačinu:</p>
+        <div class="math-block">
+          \[n^2 - n - 132 = 0\]
+        </div>
+        <p>Diskriminanta: \(D = 1 + 528 = 529 = 23^2\)</p>
+        <div class="math-block">
+          \[n = \frac{1 + 23}{2} = 12\]
+        </div>
+        <p class="note">Drugo rešenje \(n = -11\) odbacujemo jer \(n\) mora biti pozitivan ceo broj.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Da li \(\binom{12}{2} = 66\)?</summary>
+      <div class="answer">
+        \(\binom{12}{2} = \dfrac{12 \cdot 11}{2} = \dfrac{132}{2} = 66\) &mdash; tačno!
+      </div>
+    </details>
+
+    <!-- Step 8 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3>Zbir binomnih koeficijenata</h3>
+        <p>Za razvoj \((a + b)^n\), zbir svih binomnih koeficijenata je:</p>
+        <div class="math-block">
+          \[\sum_{k=0}^{n}\binom{n}{k} = 2^n\]
+        </div>
+        <p>Za \(n = 12\):</p>
+        <div class="math-block">
+          \[2^{12} = 4096 = 64^2\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(2^{12}\)?</summary>
+      <div class="answer">
+        \(2^{12} = 2^{10} \cdot 2^2 = 1024 \cdot 4 = 4096 = 64^2\). Tačno!
+      </div>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p style="color: #cbd5e1; margin-bottom: 12px;">
+      Proizvod \(r\)-tog člana od početka i \(r\)-tog člana od kraja binomnog razvoja
+      \((a + b)^n\) je uvek jednak \(\binom{n}{r-1}^2 \cdot (ab)^n/(ab)^0 \ldots\) &mdash; ali u ovom
+      posebnom slučaju gde je \(b = 1/a\), stepeni osnove se poništavaju i ostaje samo:
+    </p>
+    <div class="insight-formula">
+      \[T_r \cdot T_{n+2-r} = \binom{n}{r-1}^2\]
+    </div>
+    <p style="color: #94a3b8; font-size: 0.95rem;">
+      Zato je vrednost 2023 potpuno nebitna za rešenje!
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\(n = 12, \quad \text{zbir} = 2^{12} = 64^2 = 4096\)</div>
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(128^2\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(32^2\)</div>
+      </div>
+      <div class="option-card correct">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(64^2\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(256^2\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(16^2\)</div>
+      </div>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Proverimo odgovore. Za \(n = 12\):
+      \(\binom{12}{2} = 66\), pa je \(\binom{12}{2}^2 = 66^2\) &mdash; odgovara uslovu.
+      Zbir koeficijenata: \(2^{12} = 4096 = 64^2\). Takođe, \(128^2 = 2^{14}\), \(32^2 = 2^{10}\),
+      \(256^2 = 2^{16}\), \(16^2 = 2^8\) &mdash; nijedan od ovih ne odgovara \(2^{12}\).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li>
+        <strong>Pogrešno brojanje članova od kraja:</strong> Treći član od kraja nije \(T_{n-2}\),
+        već \(T_{n-1}\) (jer razvoj ima \(n + 1\) članova, treći od kraja ima indeks \(n + 1 - 3 + 1 = n - 1\),
+        tj. odgovara \(k = n - 2\) u nula-indeksiranom zapisu).
+      </li>
+      <li>
+        <strong>Zaborav da je zbir binomnih koeficijenata \(2^n\), a ne \(n!\):</strong>
+        Zbir se dobija uvrštavanjem \(a = b = 1\) u \((a+b)^n = 2^n\), što je potpuno različito od broja
+        permutacija ili faktorijelnih izraza.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Šta ako bi u zadatku umesto \(66^2\) pisalo da je proizvod <span class="highlight-pink">četvrtog</span>
+      člana od početka i četvrtog člana od kraja jednak \(220^2\)?
+      Koliki bi tada bio zbir binomnih koeficijenata?
+    </p>
+    <details style="margin: 15px 0;">
+      <summary style="color: #f472b6;">Prikaži nagoveštaj</summary>
+      <p style="color: #cbd5e1; margin-top: 10px;">
+        Po istom principu, \(\binom{n}{3}^2 = 220^2\), dakle \(\binom{n}{3} = 220\).
+        Reši \(\frac{n(n-1)(n-2)}{6} = 220\), tj. \(n(n-1)(n-2) = 1320\).
+        Probaj \(n = 12\): \(12 \cdot 11 \cdot 10 = 1320\). Ponovo \(n = 12\), pa je zbir \(2^{12} = 4096 = 64^2\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas: Pascal's Triangle for n=12
+  const canvas = document.getElementById('mainCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function drawPascal() {
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const n = 12;
+    // Compute Pascal's triangle
+    const tri = [];
+    for (let i = 0; i <= n; i++) {
+      tri[i] = [];
+      for (let j = 0; j <= i; j++) {
+        if (j === 0 || j === i) {
+          tri[i][j] = 1;
+        } else {
+          tri[i][j] = tri[i-1][j-1] + tri[i-1][j];
+        }
+      }
+    }
+
+    const rowHeight = 30;
+    const startY = 18;
+    const centerX = W / 2;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Paskalov trougao (n = 0 do n = 12)', centerX, startY);
+
+    for (let i = 0; i <= n; i++) {
+      const y = startY + 15 + i * rowHeight;
+      const numItems = i + 1;
+      const spacing = Math.min(55, (W - 60) / (numItems));
+
+      for (let j = 0; j <= i; j++) {
+        const x = centerX + (j - i / 2) * spacing;
+        const val = tri[i][j];
+
+        // Highlight row n=12 (last row)
+        if (i === n) {
+          // Highlight 3rd from start (j=2) and 3rd from end (j=n-2=10)
+          if (j === 2 || j === n - 2) {
+            // Special highlight
+            ctx.fillStyle = 'rgba(244, 114, 182, 0.2)';
+            ctx.beginPath();
+            ctx.arc(x, y, 17, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#f472b6';
+            ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(val.toString(), x, y);
+          } else {
+            ctx.fillStyle = '#60a5fa';
+            ctx.font = '10px Segoe UI, system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(val.toString(), x, y);
+          }
+        } else if (i <= 6) {
+          // Smaller rows: show all values
+          ctx.fillStyle = '#475569';
+          ctx.font = '11px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(val.toString(), x, y);
+        } else {
+          // Middle rows: dots for middle, show edges
+          if (j <= 1 || j >= i - 1) {
+            ctx.fillStyle = '#475569';
+            ctx.font = '10px Segoe UI, system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(val.toString(), x, y);
+          } else if (j === 2) {
+            ctx.fillStyle = '#334155';
+            ctx.font = '10px Segoe UI, system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('...', x + spacing * (i/2 - 2), y);
+          }
+        }
+      }
+
+      // Row label
+      ctx.fillStyle = '#334155';
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('n=' + i, centerX - (i / 2) * Math.min(55, (W - 60) / (i + 1)) - 20, startY + 15 + i * rowHeight);
+    }
+
+    // Annotation arrows for highlighted cells
+    const lastRowY = startY + 15 + n * rowHeight;
+    const lastSpacing = Math.min(55, (W - 60) / (n + 1));
+    const x2 = centerX + (2 - n / 2) * lastSpacing;
+    const x10 = centerX + (10 - n / 2) * lastSpacing;
+
+    // Labels
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    ctx.fillText('T\u2083 (treći od početka)', x2, lastRowY + 25);
+    ctx.fillText('C(12,2) = 66', x2, lastRowY + 40);
+
+    ctx.fillText('T\u2081\u2081 (treći od kraja)', x10, lastRowY + 25);
+    ctx.fillText('C(12,10) = 66', x10, lastRowY + 40);
+
+    // Product annotation
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Proizvod: 66 \u00D7 66 = 66\u00B2', centerX, lastRowY + 58);
+  }
+
+  drawPascal();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Binomni razvoj: proizvod simetričnih članova i zbir koeficijenata",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["binomna formula", "binomni koeficijenti", "Paskalov trougao", "opšti član razvoja", "zbir binomnih koeficijenata"]
+}
+BRAINSPARK_META-->

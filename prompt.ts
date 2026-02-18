@@ -21,7 +21,7 @@ that explains and solves the problem step by step with rich visual aids and inte
 
 Respond with ONLY the HTML content. No markdown, no code fences, no explanation outside the HTML.
 Your output must be a complete, valid HTML document starting with <!DOCTYPE html> and
-ending with </html>. NO markdown fences, NO external explanation.
+ending with </html>.
 
 ## Content Guard
 
@@ -167,6 +167,11 @@ b. **Problem Statement** (first content section)
      All answer option cards must look identical. If the correct answer is known from the
      source PDF, use it only to verify your solution in the logic scratchpad — never expose
      it in the problem statement UI.
+   - **Answer options are static display only:** Answer option cards in the problem statement
+     must have NO JavaScript event listeners — no click handlers, no hover effects via JS,
+     no correct/wrong class toggling, no "select an answer" call-to-action text. They are
+     purely static display elements. Do NOT define \`.correct\`, \`.wrong\`, or \`.selected\`
+     CSS classes for answer options in the problem statement.
 
 c. **Plan** (short card)
    - 1-2 sentences: how we'll solve it, what approach we'll take.
@@ -309,15 +314,8 @@ Before outputting the HTML, verify these structural requirements:
 
 ## Language
 
-Respond entirely in: ${langName}
-- "en" = English
-- "sl" = Slovenian (Slovenski)
-- "sr" = Serbian (Srpski, use Latin script)
+Respond entirely in: ${langName}. All text in the HTML (headings, explanations, labels, button text, canvas text, metadata title, topic_tags) must be in this language.
 
 ${decimalInstruction}
-For decimal-comma languages (sl/sr): inside LaTeX math mode, write decimals as 3{,}14
-(not 3,14) to avoid the comma being treated as punctuation spacing.
-
-All text in the HTML (headings, explanations, labels, button text, canvas text) must be in
-the specified language. The metadata (title, topic_tags) must also be in the specified language.`;
+In LaTeX math mode, write decimals as 3{,}14 (not 3,14) to prevent comma spacing.`;
 }

@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje razlomljenog izraza</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+For a != 0, b != 0 and |a| != |b|, simplify:
+
+  ( ab/(a-b) + a ) * ( ab/(a+b) - a ) : ( a^2 b^2 / (a^2 - b^2) )
+
+STEP 1: First parenthesis: ab/(a-b) + a
+  = (ab + a(a - b)) / (a - b)
+  = (ab + a^2 - ab) / (a - b)
+  = a^2 / (a - b)
+
+STEP 2: Second parenthesis: ab/(a+b) - a
+  = (ab - a(a + b)) / (a + b)
+  = (ab - a^2 - ab) / (a + b)
+  = -a^2 / (a + b)
+
+STEP 3: Product of the two parentheses:
+  [a^2/(a-b)] * [-a^2/(a+b)]
+  = -a^4 / ((a-b)(a+b))
+  = -a^4 / (a^2 - b^2)
+
+STEP 4: Division by the third fraction (dividing = multiplying by reciprocal):
+  [-a^4 / (a^2 - b^2)] : [a^2 b^2 / (a^2 - b^2)]
+  = [-a^4 / (a^2 - b^2)] * [(a^2 - b^2) / (a^2 b^2)]
+  = -a^4 / (a^2 b^2)
+  = -a^2 / b^2
+
+ANSWER: (A) -a^2/b^2
+
+VERIFICATION: Matches expected answer key.
+
+Quick numerical check: let a=2, b=1.
+  First parenthesis: (2*1)/(2-1) + 2 = 2/1 + 2 = 4
+  Second parenthesis: (2*1)/(2+1) - 2 = 2/3 - 2 = -4/3
+  Product: 4 * (-4/3) = -16/3
+  Divisor: (4*1)/(4-1) = 4/3
+  Result: (-16/3) / (4/3) = (-16/3) * (3/4) = -4
+  Check: -a^2/b^2 = -4/1 = -4. Correct!
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.subtitle {
+  color: #94a3b8;
+  text-align: center;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.12);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: default;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #a78bfa;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.theory-card ul {
+  list-style: none;
+  padding: 12px 0;
+}
+
+.theory-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+.theory-card li:last-child {
+  border-bottom: none;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 20px 0;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.checkpoint .answer {
+  padding-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(96,165,250,0.25);
+  text-align: center;
+  padding: 28px;
+}
+
+.insight-card .big-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+  color: #4ade80;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(74,222,128,0.04));
+  text-align: center;
+  padding: 28px;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+  justify-content: center;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 800;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  color: #4ade80;
+  box-shadow: 0 0 20px rgba(74,222,128,0.15);
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+  text-align: left;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #cbd5e1;
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-label {
+  color: #e09468;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-weight: 600;
+  user-select: none;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.section-label {
+  color: #60a5fa;
+  margin: 16px 0 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.section-label.purple { color: #a78bfa; }
+.section-label.pink { color: #f472b6; }
+.section-label.green { color: #4ade80; }
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { padding: 12px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .final-answer-value { font-size: 1.4rem; }
+  .options-row { gap: 8px; }
+  .option-card { padding: 8px 14px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Pojednostavljivanje razlomljenog izraza</h1>
+  <p class="subtitle">Algebarski razlomci &mdash; sabiranje, oduzimanje, mnozenje i deljenje racionalnih izraza</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Za \( a \neq 0 \), \( b \neq 0 \) i \( |a| \neq |b| \) izraz:
+    </p>
+    <div class="math-block">
+      \[ \left(\frac{ab}{a-b} + a\right) \cdot \left(\frac{ab}{a+b} - a\right) : \frac{a^2 b^2}{a^2 - b^2} \]
+    </div>
+    <p>identicki je jednak izrazu:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(-\dfrac{a^2}{b^2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{1}{a^2 b^2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{b^2}{a^2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-ab\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-\dfrac{1}{b^2}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>
+      Izraz se sastoji od tri dela: dve zagrade (koje sabiramo/oduzimamo sa razlomkom) i deljenje. Strategija:
+    </p>
+    <ol style="color: #cbd5e1; padding-left: 20px; margin-top: 10px;">
+      <li>Pojednostaviti prvu zagradu: \( \frac{ab}{a-b} + a \) &mdash; svesti na jedan razlomak.</li>
+      <li>Pojednostaviti drugu zagradu: \( \frac{ab}{a+b} - a \) &mdash; svesti na jedan razlomak.</li>
+      <li>Pomnoziti rezultate dve zagrade.</li>
+      <li>Podeliti proizvod sa \( \frac{a^2 b^2}{a^2 - b^2} \) (tj. pomnoziti reciprocnom vrednoscu).</li>
+      <li>Skratiti zajednicke faktore i dobiti konacni izraz.</li>
+    </ol>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Kljucne formule i pojmovi</summary>
+      <ul>
+        <li>
+          <strong>Sabiranje razlomaka:</strong>
+          \( \frac{p}{q} + r = \frac{p + rq}{q} \) &mdash; ceo broj prebacujemo na zajednicki imenilac.
+        </li>
+        <li>
+          <strong>Razlika kvadrata:</strong>
+          \( a^2 - b^2 = (a - b)(a + b) \) &mdash; kljucna formula za faktorizaciju.
+        </li>
+        <li>
+          <strong>Deljenje razlomaka:</strong>
+          \( \frac{P}{Q} : \frac{R}{S} = \frac{P}{Q} \cdot \frac{S}{R} \) &mdash; deljenje se svodi na mnozenje reciprocnom vrednoscu.
+        </li>
+        <li>
+          <strong>Skracivanje:</strong>
+          Kada se isti faktor pojavljuje u brojiocu i imeniocu, mozemo ga skratiti (pod uslovom da nije nula).
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color:#94a3b8; margin-bottom: 14px;">
+      Dijagram koji prikazuje tok pojednostavljivanja izraza korak po korak.
+    </p>
+    <canvas id="diagramCanvas" width="800" height="560"></canvas>
+    <p class="canvas-hint">Shematski prikaz toka pojednostavljivanja</p>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <!-- Part I -->
+    <h3 class="section-label">I deo: Pojednostavljivanje prve zagrade</h3>
+
+    <!-- Step 1 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Svedimo \( \frac{ab}{a-b} + a \) na jedan razlomak</h3>
+        <p>
+          Ceo broj \( a \) zapisujemo kao razlomak sa imeniocem \( (a - b) \):
+        </p>
+        <div class="math-block">
+          \[\begin{align}
+            \frac{ab}{a-b} + a &= \frac{ab}{a-b} + \frac{a(a-b)}{a-b} \\[8pt]
+            &= \frac{ab + a(a - b)}{a - b} \\[8pt]
+            &= \frac{ab + a^2 - ab}{a - b} \\[8pt]
+            &= \frac{a^2}{a - b}
+          \end{align}\]
+        </div>
+        <p class="note">
+          Clanovi \( ab \) i \( -ab \) se poniste, ostaje samo \( a^2 \) u brojiocu.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Svedimo \( \frac{ab}{a+b} - a \) na jedan razlomak</h3>
+        <p>
+          Analogno, ceo broj \( a \) zapisujemo sa imeniocem \( (a + b) \):
+        </p>
+        <div class="math-block">
+          \[\begin{align}
+            \frac{ab}{a+b} - a &= \frac{ab}{a+b} - \frac{a(a+b)}{a+b} \\[8pt]
+            &= \frac{ab - a(a + b)}{a + b} \\[8pt]
+            &= \frac{ab - a^2 - ab}{a + b} \\[8pt]
+            &= \frac{-a^2}{a + b}
+          \end{align}\]
+        </div>
+        <p class="note">
+          Ponovo se \( ab \) i \( -ab \) poniste; ostaje \( -a^2 \) u brojiocu.
+        </p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Da li smo dobro pojednostavili zagrade?</summary>
+      <div class="answer">
+        Brza provera za \( a = 2, b = 1 \):
+        Prva zagrada: \( \frac{2}{1} + 2 = 4 \). Formula: \( \frac{4}{1} = 4 \). Tacno!
+        Druga zagrada: \( \frac{2}{3} - 2 = -\frac{4}{3} \). Formula: \( \frac{-4}{3} \). Tacno!
+      </div>
+    </details>
+
+    <!-- Part II -->
+    <h3 class="section-label purple">II deo: Mnozenje zagrada</h3>
+
+    <!-- Step 3 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Pomnozimo rezultate dve zagrade</h3>
+        <p>
+          Sada mnozimo razlomke iz koraka 1 i 2:
+        </p>
+        <div class="math-block">
+          \[\begin{align}
+            \frac{a^2}{a - b} \cdot \frac{-a^2}{a + b}
+            &= \frac{a^2 \cdot (-a^2)}{(a - b)(a + b)} \\[8pt]
+            &= \frac{-a^4}{(a - b)(a + b)}
+          \end{align}\]
+        </div>
+        <p>
+          Prepoznajemo u imeniocu <span class="highlight-blue">razliku kvadrata</span>:
+        </p>
+        <div class="math-block">
+          \[
+            (a - b)(a + b) = a^2 - b^2
+          \]
+        </div>
+        <p>
+          Dakle, proizvod je:
+        </p>
+        <div class="math-block">
+          \[ \boxed{\frac{-a^4}{a^2 - b^2}} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Part III -->
+    <h3 class="section-label pink">III deo: Deljenje</h3>
+
+    <!-- Step 4 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Podelimo sa \( \frac{a^2 b^2}{a^2 - b^2} \)</h3>
+        <p>
+          Deljenje razlomkom svodi se na mnozenje reciprocnom vrednoscu:
+        </p>
+        <div class="math-block">
+          \[\begin{align}
+            \frac{-a^4}{a^2 - b^2} : \frac{a^2 b^2}{a^2 - b^2}
+            &= \frac{-a^4}{a^2 - b^2} \cdot \frac{a^2 - b^2}{a^2 b^2}
+          \end{align}\]
+        </div>
+        <p class="note">
+          Primetite da se faktor \( (a^2 - b^2) \) pojavljuje i u brojiocu i u imeniocu &mdash; mozemo ga skratiti!
+        </p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Zasto smemo skratiti \( a^2 - b^2 \)?</summary>
+      <div class="answer">
+        Uslov zadatka kaze \( |a| \neq |b| \), sto znaci da je \( a \neq b \) i \( a \neq -b \).
+        Zato je \( a^2 - b^2 = (a-b)(a+b) \neq 0 \), pa smemo skratiti.
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Skracivanje i konacno pojednostavljivanje</h3>
+        <p>
+          Posle skracivanja \( (a^2 - b^2) \) ostaje:
+        </p>
+        <div class="math-block">
+          \[\begin{align}
+            \frac{-a^4}{\cancel{a^2 - b^2}} \cdot \frac{\cancel{a^2 - b^2}}{a^2 b^2}
+            &= \frac{-a^4}{a^2 b^2}
+          \end{align}\]
+        </div>
+        <p>
+          Sada skracujemo \( a^2 \) iz brojioca i imenioca (mozemo jer \( a \neq 0 \)):
+        </p>
+        <div class="math-block">
+          \[
+            \frac{-a^4}{a^2 b^2} = \frac{-a^{4-2}}{b^2} = \boxed{-\frac{a^2}{b^2}}
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Numericka provera za \( a = 2, b = 1 \)</summary>
+      <div class="answer">
+        Polazni izraz za \( a = 2, b = 1 \):
+        Prva zagrada: \( \frac{2}{1} + 2 = 4 \).
+        Druga zagrada: \( \frac{2}{3} - 2 = -\frac{4}{3} \).
+        Proizvod: \( 4 \cdot \left(-\frac{4}{3}\right) = -\frac{16}{3} \).
+        Delilac: \( \frac{4}{3} \).
+        Rezultat: \( -\frac{16}{3} : \frac{4}{3} = -\frac{16}{3} \cdot \frac{3}{4} = -4 \).
+        Formula: \( -\frac{a^2}{b^2} = -\frac{4}{1} = -4 \). Tacno!
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2 style="justify-content: center;">Kljucno zapazanje</h2>
+    <p>
+      U obe zagrade dolazi do istog efekta: clanovi sa \( ab \) se poniste, a ostaje samo \( \pm a^2 \).
+      To znaci da se brojioci dramaticno pojednostavljuju.
+    </p>
+    <p style="margin-top: 12px;">
+      Zatim, faktor \( a^2 - b^2 \) koji nastaje u imeniocu proizvoda
+      <span class="highlight-pink">potpuno se skracuje</span> sa istim faktorom iz delioca.
+      Ovo je kljuc koji cini zadatak elegantnim.
+    </p>
+    <div class="big-formula">
+      \[ \frac{a^2}{a-b} \cdot \frac{-a^2}{a+b} : \frac{a^2b^2}{a^2-b^2} = -\frac{a^2}{b^2} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konacan odgovor</h2>
+    <div class="final-answer-value">
+      \( \displaystyle -\frac{a^2}{b^2} \)
+    </div>
+    <div class="options-row">
+      <div class="option-card correct">(A) \(-\dfrac{a^2}{b^2}\)</div>
+      <div class="option-card">(B) \(\dfrac{1}{a^2 b^2}\)</div>
+      <div class="option-card">(C) \(\dfrac{b^2}{a^2}\)</div>
+      <div class="option-card">(D) \(-ab\)</div>
+      <div class="option-card">(E) \(-\dfrac{1}{b^2}\)</div>
+    </div>
+    <p class="verification-note">
+      <strong>Verifikacija:</strong>
+      Za \( a = 3, b = 2 \):
+      Prva zagrada: \( \frac{6}{1} + 3 = 9 \).
+      Druga zagrada: \( \frac{6}{5} - 3 = -\frac{9}{5} \).
+      Proizvod: \( 9 \cdot \left(-\frac{9}{5}\right) = -\frac{81}{5} \).
+      Delilac: \( \frac{36}{5} \).
+      Rezultat: \( -\frac{81}{5} \cdot \frac{5}{36} = -\frac{81}{36} = -\frac{9}{4} \).
+      Formula: \( -\frac{9}{4} = -\frac{3^2}{2^2} \). Tacno &mdash; poklapa se sa opcijom <strong>(A)</strong>.
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <ul class="pitfall-list">
+      <li>
+        <span class="pitfall-label">Greska 1:</span>
+        Pogresan znak u drugoj zagradi. Kod \( \frac{ab}{a+b} - a \) ucenik zaboravi da \( -a \cdot (a+b) = -a^2 - ab \),
+        pa dobije pogresan rezultat. Posebno paziti na raspodelu minusa.
+      </li>
+      <li>
+        <span class="pitfall-label">Greska 2:</span>
+        Zaboravljanje razlike kvadrata. Imenilac \( (a-b)(a+b) \) se mora prepoznati kao \( a^2 - b^2 \),
+        inace se ne uoci mogucnost skracivanja sa deliocem.
+      </li>
+      <li>
+        <span class="pitfall-label">Greska 3:</span>
+        Zamena deljenja i mnozenja. Deljenje sa \( \frac{a^2b^2}{a^2-b^2} \) znaci mnozenje sa
+        \( \frac{a^2-b^2}{a^2b^2} \), a ne obrnuto. Cesta greska je da se reciprocna vrednost primeni na pogresan razlomak.
+      </li>
+      <li>
+        <span class="pitfall-label">Greska 4:</span>
+        Pogresan stepen u brojiocu. Rezultat \( a^2 \cdot a^2 = a^4 \), a ne \( a^2 \). Posle deljenja sa \( a^2 \)
+        iz delioca, ostaje \( a^2 \) (ne \( a^0 = 1 \)).
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Pojednostaviti izraz:
+    </p>
+    <div class="math-block">
+      \[ \left(\frac{xy}{x-y} - x\right) \cdot \left(\frac{xy}{x+y} + x\right) : \frac{x^2 y^2}{x^2 - y^2} \]
+    </div>
+    <p style="margin-top: 8px;">
+      za \( x \neq 0 \), \( y \neq 0 \) i \( |x| \neq |y| \).
+    </p>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p style="padding-top: 10px; color: #cbd5e1;">
+        Primenite istu tehniku. Prva zagrada daje \( \frac{xy - x(x-y)}{x-y} = \frac{-x^2 + 2xy}{x-y} \)...
+        ili ne! Pazljivo raspisite. Primetite da je struktura slicna, ali znakovi su obrnuti u odnosu na polazni zadatak.
+        Konacni rezultat bi trebalo da bude \( -\frac{x^2}{y^2} \).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Diagram visualization
+  const canvas = document.getElementById('diagramCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 800 * dpr;
+  canvas.height = 560 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = 800;
+  const H = 560;
+
+  function drawRoundedRect(x, y, w, h, r, fillColor, strokeColor) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+    if (fillColor) {
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    if (strokeColor) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
+  function drawArrow(fromX, fromY, toX, toY, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.stroke();
+
+    var angle = Math.atan2(toY - fromY, toX - fromX);
+    var headLen = 8;
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headLen * Math.cos(angle - 0.4), toY - headLen * Math.sin(angle - 0.4));
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headLen * Math.cos(angle + 0.4), toY - headLen * Math.sin(angle + 0.4));
+    ctx.stroke();
+  }
+
+  function draw() {
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tok pojednostavljivanja izraza', W / 2, 24);
+
+    var boxW = 260;
+    var boxH = 42;
+    var gap = 18;
+
+    // ======= ROW 1: Two parentheses side by side =======
+    var leftX = 40;
+    var rightX = 500;
+    var startY = 50;
+
+    // Left: First parenthesis
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Prva zagrada', leftX + boxW / 2, startY);
+
+    var y1 = startY + 10;
+    drawRoundedRect(leftX, y1, boxW, boxH, 8, 'rgba(96,165,250,0.08)', 'rgba(96,165,250,0.3)');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('ab/(a\u2212b) + a', leftX + boxW / 2, y1 + 17);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('zajednicki imenilac (a\u2212b)', leftX + boxW / 2, y1 + 35);
+
+    var y2 = y1 + boxH + gap;
+    drawArrow(leftX + boxW / 2, y1 + boxH, leftX + boxW / 2, y2, '#475569');
+
+    drawRoundedRect(leftX + 30, y2, boxW - 60, 36, 8, 'rgba(96,165,250,0.12)', 'rgba(96,165,250,0.4)');
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('a\u00B2 / (a \u2212 b)', leftX + boxW / 2, y2 + 23);
+
+    // Right: Second parenthesis
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Druga zagrada', rightX + boxW / 2, startY);
+
+    drawRoundedRect(rightX, y1, boxW, boxH, 8, 'rgba(167,139,250,0.08)', 'rgba(167,139,250,0.3)');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('ab/(a+b) \u2212 a', rightX + boxW / 2, y1 + 17);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('zajednicki imenilac (a+b)', rightX + boxW / 2, y1 + 35);
+
+    drawArrow(rightX + boxW / 2, y1 + boxH, rightX + boxW / 2, y2, '#475569');
+
+    drawRoundedRect(rightX + 30, y2, boxW - 60, 36, 8, 'rgba(167,139,250,0.12)', 'rgba(167,139,250,0.4)');
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2212a\u00B2 / (a + b)', rightX + boxW / 2, y2 + 23);
+
+    // ======= ROW 2: Multiplication =======
+    var multY = y2 + 36 + gap + 15;
+    var multBoxW = 320;
+    var multX = (W - multBoxW) / 2;
+
+    // Multiplication symbol
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u00D7', W / 2, multY - 10);
+
+    // Arrows from both results down to multiplication
+    drawArrow(leftX + boxW / 2, y2 + 36, W / 2 - 40, multY + 2, '#60a5fa');
+    drawArrow(rightX + boxW / 2, y2 + 36, W / 2 + 40, multY + 2, '#a78bfa');
+
+    drawRoundedRect(multX, multY, multBoxW, 44, 8, 'rgba(244,114,182,0.08)', 'rgba(244,114,182,0.3)');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Proizvod:', W / 2, multY + 16);
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2212a\u2074 / (a\u00B2 \u2212 b\u00B2)', W / 2, multY + 36);
+
+    // ======= ROW 3: Division =======
+    var divY = multY + 44 + gap + 10;
+    var divBoxW = 340;
+    var divX = (W - divBoxW) / 2;
+
+    drawArrow(W / 2, multY + 44, W / 2, divY, '#475569');
+
+    // Division label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u00F7  a\u00B2b\u00B2 / (a\u00B2 \u2212 b\u00B2)  =  \u00D7  (a\u00B2 \u2212 b\u00B2) / a\u00B2b\u00B2', W / 2, divY + 14);
+
+    var divY2 = divY + 28;
+    drawRoundedRect(divX, divY2, divBoxW, 50, 8, 'rgba(56,189,248,0.06)', 'rgba(56,189,248,0.2)');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2212a\u2074 / (a\u00B2\u2212b\u00B2)  \u00D7  (a\u00B2\u2212b\u00B2) / a\u00B2b\u00B2', W / 2, divY2 + 20);
+
+    // Cancellation note
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'italic 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(a\u00B2 \u2212 b\u00B2) se skracuje!', W / 2, divY2 + 40);
+
+    // ======= ROW 4: Simplification =======
+    var simpY = divY2 + 50 + gap;
+
+    drawArrow(W / 2, divY2 + 50, W / 2, simpY, '#475569');
+
+    var simpBoxW = 240;
+    var simpX = (W - simpBoxW) / 2;
+    drawRoundedRect(simpX, simpY, simpBoxW, 40, 8, 'rgba(56,189,248,0.06)', 'rgba(56,189,248,0.2)');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2212a\u2074 / (a\u00B2b\u00B2) = \u2212a\u00B2/b\u00B2', W / 2, simpY + 25);
+
+    // ======= ROW 5: Final result =======
+    var finalY = simpY + 40 + gap;
+
+    drawArrow(W / 2, simpY + 40, W / 2, finalY, '#4ade80');
+
+    var finalBoxW = 180;
+    var finalX = (W - finalBoxW) / 2;
+    drawRoundedRect(finalX, finalY, finalBoxW, 46, 10, 'rgba(74,222,128,0.1)', 'rgba(74,222,128,0.4)');
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2212a\u00B2/b\u00B2', W / 2, finalY + 29);
+
+    // Final label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Odgovor: (A)', W / 2, finalY + 66);
+  }
+
+  draw();
+
+  // Step click interactivity
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje razlomljenog izraza",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["algebarski razlomci", "razlika kvadrata", "pojednostavljivanje izraza", "racionalni izrazi", "deljenje razlomaka"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspored u vrstu bez susednih dečaka</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: 4 boys and 6 girls arranged in a row such that no two boys are adjacent. How many ways?
+
+APPROACH: "Gaps method" — first place girls, then insert boys into the gaps between them.
+
+Step 1: Arrange the 6 girls in a row.
+  Number of ways = 6!
+
+Step 2: After placing 6 girls, there are 7 possible gap positions for boys:
+  _ G _ G _ G _ G _ G _ G _
+  (before girl 1, between each consecutive pair, after girl 6)
+  Gaps: 7
+
+Step 3: Choose 4 of the 7 gaps for boys.
+  Number of ways = C(7, 4) = 7! / (4! * 3!) = 35
+
+Step 4: Arrange the 4 boys in the chosen 4 positions.
+  Number of ways = 4! = 24
+
+Step 5: Total = 6! * C(7, 4) * 4!
+  = 6! * 35 * 24
+  = 6! * 840
+
+Express in terms of 7!:
+  C(7, 4) * 4! = 7! / (4! * 3!) * 4! = 7! / 3! = 7! / 6
+
+  Total = 6! * 7! / 3!
+        = (6! / 3!) * 7!
+        = (720 / 6) * 7!
+        = 120 * 7!
+
+Numerical verification:
+  120 * 7! = 120 * 5040 = 604800
+  6! * C(7,4) * 4! = 720 * 35 * 24 = 720 * 840 = 604800  ✓
+
+Check other options:
+  A) 140 * 7! = 140 * 5040 = 705600 ≠ 604800
+  B) 160 * 7! = 160 * 5040 = 806400 ≠ 604800
+  C) 150 * 7! = 150 * 5040 = 756000 ≠ 604800
+  D) 120 * 7! = 120 * 5040 = 604800 ✓  CORRECT
+  E) 180 * 7! = 180 * 5040 = 907200 ≠ 604800
+
+Note: 6!/3! = 720/6 = 120, which is also P(6,3) = 6*5*4 = 120.
+
+Answer: D) 120 * 7!
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 90px;
+  text-align: center;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+.step-container:hover, .step-container.active {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+.step-content {
+  flex: 1;
+}
+.step-content h3 {
+  margin-bottom: 8px;
+}
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+details {
+  margin: 15px 0;
+}
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 14px;
+  background: rgba(96,165,250,0.08);
+  border-radius: 8px;
+  list-style: none;
+  user-select: none;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::before {
+  content: '\25B6 ';
+  display: inline-block;
+  transition: transform 0.2s;
+}
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+details .details-content {
+  padding: 14px 16px;
+  margin-top: 8px;
+  background: rgba(96,165,250,0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(96,165,250,0.1);
+}
+details .details-content ul {
+  padding-left: 20px;
+}
+details .details-content li {
+  margin-bottom: 10px;
+  color: #cbd5e1;
+}
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+.checkpoint summary {
+  background: rgba(167,139,250,0.1);
+  color: #a78bfa;
+}
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 14px;
+}
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.35);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.final-answer-box h2 {
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+.final-answer-text {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 12px 0;
+}
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 18px;
+}
+.answer-opt {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(96,165,250,0.06);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+.answer-opt.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+.pitfall-box {
+  background: rgba(224,148,104,0.06);
+  border: 1px solid rgba(224,148,104,0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.pitfall-box h2 {
+  color: #e09468;
+  margin-bottom: 12px;
+}
+.pitfall-box ul {
+  padding-left: 20px;
+}
+.pitfall-box li {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+  max-width: 100%;
+}
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { flex-direction: column; gap: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .final-answer-text { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Raspored u vrstu bez susednih dečaka</h1>
+  <p class="subtitle">Kombinatorika — raspoređivanje uz ograničenje nesusednosti</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Broj načina na koji se <span class="highlight-blue">4 dečaka</span> i
+      <span class="highlight-pink">6 devojčica</span> mogu rasporediti u jednu vrstu,
+      tako da nikoja dva dečaka ne budu raspoređeni jedan pored drugog, jednak je:
+    </p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Dečaka</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Devojčica</div>
+        <div class="value">\(6\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Uslov</div>
+        <div class="value" style="font-size:0.9rem;">Nikoja dva dečaka nisu susedna</div>
+      </div>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(140 \cdot 7!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(160 \cdot 7!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(150 \cdot 7!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(120 \cdot 7!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(180 \cdot 7!\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Koristićemo <span class="highlight-pink">metod praznina (gaps method)</span>: prvo rasporedimo
+      devojčice u vrstu, pa onda umetamo dečake u praznine između njih tako da nikoja dvojica ne budu susedna.
+      Na kraju ćemo rezultat izraziti u obliku ponuđenih odgovora.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="details-content">
+        <ul>
+          <li>
+            <strong>Permutacije \(n\) različitih elemenata:</strong> Broj načina da se \(n\) različitih elemenata rasporedi u vrstu:
+            \[P(n) = n!\]
+          </li>
+          <li>
+            <strong>Kombinacije bez ponavljanja:</strong> Broj načina da se iz \(n\) elemenata izabere \(k\):
+            \[\binom{n}{k} = \frac{n!}{k!(n-k)!}\]
+          </li>
+          <li>
+            <strong>Princip množenja:</strong> Ako se jedan nezavisni događaj može desiti na \(m\) načina, a drugi na \(n\) načina, oba se zajedno mogu desiti na \(m \cdot n\) načina.
+          </li>
+          <li>
+            <strong>Metod praznina:</strong> Kada raspoređujemo \(k\) elemenata tako da nijedna dva ne budu susedna, prvo postavimo ostalih \(n\) elemenata, čime nastaje \(n+1\) praznina, a zatim biramo \(k\) od tih praznina.
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz — metod praznina</h2>
+    <p style="color:#94a3b8; margin-bottom:14px;">
+      Dijagram ispod prikazuje kako nastaju praznine nakon postavljanja devojčica.
+      Koristite dugme da vidite korak po korak kako se dečaci umeću u praznine.
+    </p>
+    <div style="text-align:center; margin-bottom:12px;">
+      <button id="btn-step-girls" style="padding:8px 20px; margin:0 6px; border-radius:8px; border:1px solid #f472b6; background:rgba(244,114,182,0.15); color:#f472b6; cursor:pointer; font-size:0.95rem; font-weight:600;">Korak 1: Devojčice</button>
+      <button id="btn-step-gaps" style="padding:8px 20px; margin:0 6px; border-radius:8px; border:1px solid #334155; background:rgba(96,165,250,0.05); color:#94a3b8; cursor:pointer; font-size:0.95rem;">Korak 2: Praznine</button>
+      <button id="btn-step-boys" style="padding:8px 20px; margin:0 6px; border-radius:8px; border:1px solid #334155; background:rgba(96,165,250,0.05); color:#94a3b8; cursor:pointer; font-size:0.95rem;">Korak 3: Dečaci</button>
+    </div>
+    <canvas id="gaps-canvas" width="750" height="320"></canvas>
+    <p class="canvas-hint">Kliknite na dugmad iznad da vidite svaki korak</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje — korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" id="step-1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Rasporedimo devojčice u vrstu</h3>
+        <p>
+          Imamo <span class="highlight-pink">6 devojčica</span> koje su sve međusobno različite.
+          Njih raspoređujemo u vrstu na sve moguće načine.
+        </p>
+        <div class="math-block">
+          \[\text{Broj rasporeda devojčica} = 6!\]
+        </div>
+        <p class="note">
+          Za sada ne razmišljamo o dečacima — samo smeštamo devojčice.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" id="step-2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Identifikujemo praznine</h3>
+        <p>
+          Kada su devojčice raspoređene u vrstu, nastaje <span class="highlight-blue">7 mogućih mesta</span>
+          (praznina) za dečake:
+        </p>
+        <div class="math-block">
+          \[\underset{1}{\square} \; D_1 \; \underset{2}{\square} \; D_2 \; \underset{3}{\square} \; D_3 \; \underset{4}{\square} \; D_4 \; \underset{5}{\square} \; D_5 \; \underset{6}{\square} \; D_6 \; \underset{7}{\square}\]
+        </div>
+        <p>
+          Praznine su: pre prve devojčice, između svake dve susedne devojčice, i posle poslednje.
+          Za 6 devojčica to je \(6 + 1 = \) <span class="highlight-green">7 praznina</span>.
+        </p>
+        <p class="note">
+          Ako stavimo svakog dečaka u različitu prazninu, nikoja dva dečaka neće biti susedna!
+        </p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <div class="checkpoint">
+      <details>
+        <summary>🧠 Proveri sebe: Zašto je dovoljno da svaki dečak bude u različitoj praznini?</summary>
+        <div class="details-content">
+          <p>
+            Svaka praznina je odvojena bar jednom devojčicom od susedne praznine.
+            Ako dva dečaka zauzmu dve različite praznine, između njih se nalazi barem jedna devojčica,
+            pa <strong>ne mogu biti susedni</strong>.
+          </p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" id="step-3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Biramo praznine za dečake</h3>
+        <p>
+          Treba da izaberemo <span class="highlight-blue">4 od 7 praznina</span> u koje ćemo smestiti dečake.
+          Redosled izbora ovde nije bitan — samo biramo koje praznine zauzimaju.
+        </p>
+        <div class="math-block">
+          \[\text{Broj načina za izbor praznina} = \binom{7}{4}\]
+        </div>
+        <p>Izračunavamo:</p>
+        <div class="math-block">
+          \[\binom{7}{4} = \frac{7!}{4! \cdot 3!} = \frac{7 \cdot 6 \cdot 5}{3 \cdot 2 \cdot 1} = \frac{210}{6} = 35\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" id="step-4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Rasporedimo dečake po izabranim prazninama</h3>
+        <p>
+          Imamo <span class="highlight-blue">4 različita dečaka</span> i 4 izabrane praznine.
+          Raspoređujemo dečake po tim prazninama — redosled je bitan jer su dečaci međusobno različiti.
+        </p>
+        <div class="math-block">
+          \[\text{Broj rasporeda dečaka} = 4! = 24\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <div class="checkpoint">
+      <details>
+        <summary>🧠 Proveri sebe: Šta se dobija kada se kombinuju koraci 3 i 4?</summary>
+        <div class="details-content">
+          <p>
+            Koraci 3 i 4 zajedno daju: \(\binom{7}{4} \cdot 4! = \frac{7!}{4! \cdot 3!} \cdot 4! = \frac{7!}{3!}\).
+            To je zapravo <strong>varijacija</strong> — broj načina da iz 7 praznina izaberemo i rasporedimo 4 dečaka:
+            \(V_4^7 = \frac{7!}{3!} = 7 \cdot 6 \cdot 5 \cdot 4 = 840\).
+          </p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" id="step-5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Primena principa množenja</h3>
+        <p>
+          Svi koraci su nezavisni, pa primenjujemo <span class="highlight-pink">princip množenja</span>:
+        </p>
+        <div class="math-block">
+          \[\text{Ukupno} = \underbrace{6!}_{\text{devojčice}} \cdot \underbrace{\binom{7}{4}}_{\text{izbor praznina}} \cdot \underbrace{4!}_{\text{dečaci}}\]
+        </div>
+        <p>Zamenjujemo vrednosti:</p>
+        <div class="math-block">
+          \[\text{Ukupno} = 6! \cdot 35 \cdot 24 = 6! \cdot 840\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container" id="step-6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Izražavanje u obliku ponuđenih odgovora</h3>
+        <p>
+          Odgovori su u obliku \(N \cdot 7!\), pa treba da izrazimo rezultat u tom obliku.
+          Uočimo da korake 3 i 4 možemo zapisati zajedno:
+        </p>
+        <div class="math-block">
+          \[\binom{7}{4} \cdot 4! = \frac{7!}{4! \cdot 3!} \cdot 4! = \frac{7!}{3!}\]
+        </div>
+        <p>Sada je ukupan broj:</p>
+        <div class="math-block">
+          \[\text{Ukupno} = 6! \cdot \frac{7!}{3!} = \frac{6!}{3!} \cdot 7!\]
+        </div>
+        <p>Izračunavamo koeficijent:</p>
+        <div class="math-block">
+          \[\frac{6!}{3!} = \frac{720}{6} = 120\]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[\text{Ukupno} = \color{#4ade80}{120 \cdot 7!}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <div class="checkpoint">
+      <details>
+        <summary>🧠 Proveri sebe: Koliko je 120 &middot; 7! numerički?</summary>
+        <div class="details-content">
+          <p>
+            \(7! = 5040\), pa je \(120 \cdot 5040 = 604\,800\).
+            Isto dobijamo i direktno: \(6! \cdot 840 = 720 \cdot 840 = 604\,800\). Tačno!
+          </p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p style="color:#cbd5e1; margin-bottom:14px;">
+      Metod praznina (gaps method) je standardni pristup za rasporede sa uslovom nesusednosti.
+      Postavljanjem devojčica prvo, stvaramo „zaštitne barijere" koje garantuju razdvojenost dečaka.
+    </p>
+    <div class="math-block" style="display:inline-block; font-size:1.1rem;">
+      \[6! \cdot \binom{7}{4} \cdot 4! = \frac{6!}{3!} \cdot 7! = \color{#4ade80}{120 \cdot 7!}\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-text">\(120 \cdot 7!\)</div>
+    <div class="answer-options-final">
+      <div class="answer-opt">(A) \(140 \cdot 7!\)</div>
+      <div class="answer-opt">(B) \(160 \cdot 7!\)</div>
+      <div class="answer-opt">(C) \(150 \cdot 7!\)</div>
+      <div class="answer-opt correct">(D) \(120 \cdot 7!\) ✓</div>
+      <div class="answer-opt">(E) \(180 \cdot 7!\)</div>
+    </div>
+    <p style="color:#94a3b8; margin-top:16px; font-size:0.95rem;">
+      <strong>Verifikacija:</strong> Numerički, \(120 \cdot 7! = 120 \cdot 5040 = 604\,800\).
+      Alternativno, \(6! \cdot \frac{7!}{3!} = 720 \cdot 840 = 604\,800\). Rezultati se poklapaju.
+      Takođe, 120 = 6!/3! = 6 &middot; 5 &middot; 4 — što je broj varijacija 3 klase od 6 elemenata, a tu vidimo ostatak nakon deljenja 6! sa 3!.
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="pitfall-box">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>
+        <strong>Zaboraviti permutacije dečaka:</strong> Ako izračunate samo \(6! \cdot \binom{7}{4}\),
+        dobijate 720 &middot; 35 = 25.200 — to je premalo jer niste uzeli u obzir da su dečaci
+        međusobno različiti i da se mogu rasporediti po izabranim prazninama na 4! = 24 načina.
+      </li>
+      <li>
+        <strong>Koristiti ukupne permutacije pa oduzimati:</strong> Pristup „svih 10! rasporeda minus oni
+        gde su bar dva dečaka susedna" vodi u komplikovano uključivanje-isključivanje (inclusion-exclusion).
+        Metod praznina je daleko elegantniji za ovaj tip zadatka.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Na koliko načina se 5 dečaka i 5 devojčica mogu rasporediti u vrstu tako da
+      nikoja dva dečaka <em>i</em> nikoje dve devojčice ne budu raspoređeni jedno pored drugog?
+      (Drugim rečima, da se naizmenično smenjuju.)
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <div class="details-content">
+        <p>
+          Ako se naizmenično smenjuju, postoje samo dva moguća šablona: DMDMDMDMDM ili MDMDMDMDMD
+          (gde je D dečak, M devojčica). Za svaki šablon, dečaci se rasporede na 5! načina, a devojčice na 5! načina.
+          Ukupno: \(2 \cdot 5! \cdot 5!\). Koliko je to?
+        </p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('gaps-canvas');
+  const ctx = canvas.getContext('2d');
+  let currentStep = 1;
+
+  const btnGirls = document.getElementById('btn-step-girls');
+  const btnGaps = document.getElementById('btn-step-gaps');
+  const btnBoys = document.getElementById('btn-step-boys');
+
+  const buttons = [btnGirls, btnGaps, btnBoys];
+  const activeColors = ['#f472b6', '#60a5fa', '#4ade80'];
+
+  function setActiveButton(idx) {
+    buttons.forEach((btn, i) => {
+      if (i === idx) {
+        btn.style.borderColor = activeColors[i];
+        btn.style.background = 'rgba(' + (i === 0 ? '244,114,182' : i === 1 ? '96,165,250' : '74,222,128') + ',0.15)';
+        btn.style.color = activeColors[i];
+        btn.style.fontWeight = '600';
+      } else {
+        btn.style.borderColor = '#334155';
+        btn.style.background = 'rgba(96,165,250,0.05)';
+        btn.style.color = '#94a3b8';
+        btn.style.fontWeight = 'normal';
+      }
+    });
+  }
+
+  btnGirls.addEventListener('click', () => { currentStep = 1; setActiveButton(0); draw(); });
+  btnGaps.addEventListener('click', () => { currentStep = 2; setActiveButton(1); draw(); });
+  btnBoys.addEventListener('click', () => { currentStep = 3; setActiveButton(2); draw(); });
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const girlLabels = ['D₁', 'D₂', 'D₃', 'D₄', 'D₅', 'D₆'];
+    const boyLabels = ['Č₁', 'Č₂', 'Č₃', 'Č₄'];
+
+    const centerY = H / 2;
+    const cellSize = 52;
+    const gapWidth = 38;
+    const totalWidth = 6 * cellSize + 7 * gapWidth;
+    const startX = (W - totalWidth) / 2;
+
+    // Draw gap positions
+    for (let i = 0; i <= 6; i++) {
+      const gx = startX + i * (cellSize + gapWidth) + gapWidth / 2;
+
+      if (currentStep >= 2) {
+        // Gap indicator
+        ctx.strokeStyle = 'rgba(96,165,250,0.5)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.roundRect(gx - gapWidth / 2 + 4, centerY - 28, gapWidth - 8, 56, 8);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Gap number
+        ctx.fillStyle = '#60a5fa';
+        ctx.font = 'bold 13px Segoe UI, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText((i + 1).toString(), gx, centerY + 48);
+      }
+
+      // Boy placed in selected gaps (gaps 1, 3, 5, 7 for example)
+      if (currentStep >= 3) {
+        const selectedGaps = [0, 2, 4, 6]; // 0-indexed: gaps 1, 3, 5, 7
+        const boyIdx = selectedGaps.indexOf(i);
+        if (boyIdx !== -1) {
+          // Boy circle
+          ctx.fillStyle = 'rgba(96,165,250,0.2)';
+          ctx.beginPath();
+          ctx.roundRect(gx - gapWidth / 2 + 4, centerY - 28, gapWidth - 8, 56, 8);
+          ctx.fill();
+
+          ctx.fillStyle = '#60a5fa';
+          ctx.beginPath();
+          ctx.arc(gx, centerY, 18, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#0c1222';
+          ctx.font = 'bold 12px Segoe UI, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(boyLabels[boyIdx], gx, centerY);
+        }
+      }
+    }
+
+    // Draw girls
+    for (let i = 0; i < 6; i++) {
+      const gx = startX + gapWidth + i * (cellSize + gapWidth) + cellSize / 2;
+
+      // Girl rectangle
+      ctx.fillStyle = 'rgba(244,114,182,0.2)';
+      ctx.beginPath();
+      ctx.roundRect(gx - cellSize / 2, centerY - 28, cellSize, 56, 10);
+      ctx.fill();
+
+      ctx.strokeStyle = '#f472b6';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.roundRect(gx - cellSize / 2, centerY - 28, cellSize, 56, 10);
+      ctx.stroke();
+
+      // Girl label
+      ctx.fillStyle = '#f472b6';
+      ctx.font = 'bold 16px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(girlLabels[i], gx, centerY);
+    }
+
+    // Title text at top
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    if (currentStep === 1) {
+      ctx.fillText('Korak 1: Rasporedimo 6 devojčica u vrstu (6! načina)', W / 2, 16);
+    } else if (currentStep === 2) {
+      ctx.fillText('Korak 2: Nastaje 7 praznina — biramo 4 od 7 za dečake', W / 2, 16);
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.fillText('C(7, 4) = 35 načina', W / 2, 38);
+    } else {
+      ctx.fillText('Korak 3: Umetamo 4 dečaka u izabrane praznine (4! načina)', W / 2, 16);
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.fillText('Ukupno: 6! · C(7, 4) · 4! = 120 · 7!', W / 2, 38);
+    }
+
+    // Bottom caption
+    if (currentStep >= 2) {
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('Brojevi ispod označavaju 7 mogućih praznina', W / 2, H - 12);
+    }
+
+    // Legend
+    const legendY = H - 50;
+    ctx.fillStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.roundRect(W / 2 - 160, legendY, 14, 14, 3);
+    ctx.fill();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Devojčice', W / 2 - 142, legendY + 7);
+
+    if (currentStep >= 3) {
+      ctx.fillStyle = '#60a5fa';
+      ctx.beginPath();
+      ctx.arc(W / 2 + 20, legendY + 7, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('Dečaci', W / 2 + 32, legendY + 7);
+    }
+  }
+
+  // Step container click interaction
+  document.querySelectorAll('.step-container').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+
+  // Initial draw
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Raspored dečaka i devojčica u vrstu bez susednih dečaka",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "metod praznina", "permutacije", "kombinacije", "princip množenja", "raspoređivanje uz ograničenje"]
+}
+BRAINSPARK_META-->

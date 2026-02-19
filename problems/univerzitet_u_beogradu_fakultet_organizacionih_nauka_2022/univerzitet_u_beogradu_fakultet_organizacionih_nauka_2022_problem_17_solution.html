@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eksponencijalna funkcija — ekstremne vrednosti na intervalu</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Find the product of the minimum and maximum values of f(x) = 8^x - (3/2) * 16^x on [-4, 4].
+
+APPROACH:
+Substitution t = 2^x to convert to a polynomial in t.
+
+8^x = 2^(3x) = (2^x)^3 = t^3
+16^x = 2^(4x) = (2^x)^4 = t^4
+
+So f(x) = g(t) = t^3 - (3/2) * t^4 = t^3(1 - (3/2)t)
+
+Since x in [-4, 4], we have t = 2^x in [2^(-4), 2^4] = [1/16, 16].
+
+FINDING EXTREMA:
+g'(t) = 3t^2 - 6t^3 = 3t^2(1 - 2t)
+g'(t) = 0 when t = 0 (not in domain) or t = 1/2.
+
+t = 1/2 means 2^x = 1/2, so x = -1 (in [-4, 4], valid).
+
+Second derivative test:
+g''(t) = 6t - 18t^2 = 6t(1 - 3t)
+g''(1/2) = 6(1/2)(1 - 3/2) = 3(-1/2) = -3/2 < 0
+So t = 1/2 is a local maximum.
+
+EVALUATING at critical point and endpoints:
+
+At t = 1/2 (x = -1):
+g(1/2) = (1/2)^3 - (3/2)(1/2)^4
+       = 1/8 - (3/2)(1/16)
+       = 1/8 - 3/32
+       = 4/32 - 3/32
+       = 1/32
+
+At t = 1/16 (x = -4):
+g(1/16) = (1/16)^3 - (3/2)(1/16)^4
+        = 1/4096 - (3/2)(1/65536)
+        = 1/4096 - 3/131072
+        = 32/131072 - 3/131072
+        = 29/131072
+        = 29/2^17
+This is approximately 0.000221... which is much less than 1/32 = 0.03125.
+
+At t = 16 (x = 4):
+g(16) = 16^3 - (3/2) * 16^4
+      = 4096 - (3/2)(65536)
+      = 4096 - 98304
+      = -94208
+
+Comparison:
+g(1/16) = 29/2^17 ≈ 0.000221 (positive, small)
+g(1/2) = 1/32 = 0.03125 (positive, this is the MAXIMUM)
+g(16) = -94208 (negative, this is the MINIMUM)
+
+PRODUCT of max and min:
+(1/32) * (-94208) = -94208/32 = -2944
+
+Factor: 2944 = 23 * 128 = 23 * 2^7
+So product = -23 * 2^7
+
+ANSWER: A) -23 * 2^7
+
+VERIFICATION:
+23 * 128 = 2944
+2944 / 32 = 92 (wait, let me recheck)
+Actually: 94208 / 32 = 2944. Let me verify: 32 * 2944 = 32 * 3000 - 32 * 56 = 96000 - 1792 = 94208. Yes!
+And 2944 / 128 = 23. Verify: 128 * 23 = 2944. 128 * 20 = 2560, 128 * 3 = 384, total = 2944. Correct!
+
+So the answer is -23 * 2^7 = option A. ✓
+
+Let me also check the other options to make sure:
+B) -3 * 2^10 = -3 * 1024 = -3072. Not equal to -2944.
+C) -5 * 2^9 = -5 * 512 = -2560. Not equal to -2944.
+D) -21 * 2^7 = -21 * 128 = -2688. Not equal to -2944.
+E) -25 * 2^7 = -25 * 128 = -3200. Not equal to -2944.
+
+Only A matches. ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 28px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 14px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(30,41,59,0.8);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  min-width: 120px;
+  transition: none;
+  cursor: default;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card h2 {
+  color: #a78bfa;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+  list-style: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6 ';
+  font-size: 0.8rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  content: '\25BC ';
+}
+
+.theory-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.theory-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+.theory-list li:last-child { border-bottom: none; }
+
+.canvas-container {
+  text-align: center;
+}
+
+canvas {
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(30,41,59,0.5);
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+  border: 1px solid rgba(96,165,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-formula {
+  font-size: 1.3rem;
+  color: #e2e8f0;
+  margin: 12px 0;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.12), rgba(74,222,128,0.12));
+  border: 2px solid rgba(74,222,128,0.35);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box h2 {
+  color: #4ade80;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.final-answer-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.answer-opt {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.answer-opt.correct {
+  border-color: #4ade80;
+  color: #4ade80;
+  background: rgba(74,222,128,0.12);
+}
+
+.verification-note {
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.92rem;
+  text-align: left;
+  background: rgba(30,41,59,0.6);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.pitfall-card {
+  border-left: 3px solid #f472b6;
+}
+
+.pitfall-card h2 {
+  color: #f472b6;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 8px 0;
+  color: #cbd5e1;
+  border-bottom: 1px solid rgba(51,65,85,0.4);
+}
+
+.pitfall-list li:last-child { border-bottom: none; }
+
+.pitfall-list li::before {
+  content: '\26A0 ';
+  color: #e09468;
+}
+
+.challenge-card {
+  border-left: 3px solid #60a5fa;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .answer-option { min-width: 100px; }
+  .step-container { flex-direction: column; gap: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- a. Title & Subtitle -->
+  <h1>Ekstremne vrednosti eksponencijalne funkcije</h1>
+  <p class="subtitle">Eksponencijalne funkcije — supstitucija i analiza na zatvorenom intervalu</p>
+
+  <!-- b. Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Proizvod najmanje i najvece vrednosti funkcije \(f(x) = 8^x - \dfrac{3}{2} \cdot 16^x\) na intervalu \([-4,\, 4]\) jednak je:
+    </p>
+
+    <div class="given-grid" style="margin-bottom: 16px;">
+      <div class="given-item">
+        <div class="label">Funkcija</div>
+        <div class="value">\(f(x) = 8^x - \frac{3}{2} \cdot 16^x\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Interval</div>
+        <div class="value">\([-4,\, 4]\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Trazimo</div>
+        <div class="value">\(f_{\min} \cdot f_{\max}\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(-23 \cdot 2^7\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(-3 \cdot 2^{10}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(-5 \cdot 2^9\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-21 \cdot 2^7\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-25 \cdot 2^7\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- c. Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>
+      Prepisacemo \(8^x\) i \(16^x\) kao stepene dvojke, zatim uvescemo smenu \(t = 2^x\) da
+      svedemo problem na analizu polinoma po \(t\). Nadji krajnje vrednosti na zatvorenom intervalu
+      (kritichne tachke + krajevi intervala), pa izrachunaj proizvod minimuma i maksimuma.
+    </p>
+  </div>
+
+  <!-- d. Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <ul class="theory-list">
+        <li>
+          <strong>Stepeni iste osnove:</strong>
+          \[ 8^x = (2^3)^x = 2^{3x}, \qquad 16^x = (2^4)^x = 2^{4x} \]
+        </li>
+        <li>
+          <strong>Supstitucija \(t = 2^x\):</strong>
+          Ako je \(t = 2^x\), onda je \(2^{3x} = t^3\) i \(2^{4x} = t^4\).
+          Za \(x \in [a, b]\), vazi \(t \in [2^a, 2^b]\) jer je \(2^x\) rastuca funkcija.
+        </li>
+        <li>
+          <strong>Vajerstrasova teorema:</strong>
+          Neprekidna funkcija na zatvorenom intervalu \([a, b]\) dostize svoj maksimum i minimum.
+          Ekstremne vrednosti se nalaze u kritichnim tachkama ili na krajevima intervala.
+        </li>
+        <li>
+          <strong>Kritichne tachke:</strong>
+          Tachke u kojima je izvod jednak nuli: \(g'(t) = 0\).
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- e. Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Grafik funkcije \(g(t) = t^3 - \frac{3}{2}\,t^4\)</h2>
+    <div class="canvas-container">
+      <canvas id="mainCanvas" width="700" height="480"></canvas>
+      <p class="drag-hint">Pomerajte klizac da vidite vrednost funkcije u razlicitim tackama</p>
+    </div>
+  </div>
+
+  <!-- f. Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Prepisemo funkciju pomocu osnove 2</h3>
+        <p>
+          Baze 8 i 16 su stepeni dvojke: \(8 = 2^3\) i \(16 = 2^4\). Koristimo pravilo \((a^m)^n = a^{mn}\):
+        </p>
+        <div class="math-block">
+          \[ 8^x = (2^3)^x = 2^{3x} \]
+        </div>
+        <div class="math-block">
+          \[ 16^x = (2^4)^x = 2^{4x} \]
+        </div>
+        <p>Funkcija postaje:</p>
+        <div class="math-block">
+          \[ f(x) = 2^{3x} - \frac{3}{2} \cdot 2^{4x} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Uvedemo smenu \(t = 2^x\)</h3>
+        <p>
+          Neka je \(t = 2^x\). Tada je:
+        </p>
+        <div class="math-block">
+          \[ 2^{3x} = (2^x)^3 = t^3, \qquad 2^{4x} = (2^x)^4 = t^4 \]
+        </div>
+        <p>
+          Posto je \(x \in [-4, 4]\) i funkcija \(2^x\) je strogo rastuca, dobijamo:
+        </p>
+        <div class="math-block">
+          \[ t \in \left[2^{-4},\; 2^4\right] = \left[\frac{1}{16},\; 16\right] \]
+        </div>
+        <p>Funkcija se svodi na:</p>
+        <div class="math-block">
+          \[ g(t) = t^3 - \frac{3}{2}\,t^4 = t^3\!\left(1 - \frac{3}{2}\,t\right) \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko je \(2^{-4}\)?</summary>
+      <p style="margin-top: 8px; color: #4ade80;">
+        \(2^{-4} = \dfrac{1}{2^4} = \dfrac{1}{16}\). Dakle, donja granica za \(t\) je \(\dfrac{1}{16}\).
+      </p>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Nademo kritichne tachke</h3>
+        <p>Izrachunavamo izvod funkcije \(g(t)\):</p>
+        <div class="math-block">
+          \[ g'(t) = 3t^2 - 6t^3 \]
+        </div>
+        <p>Izluchimo zajednichki chlan:</p>
+        <div class="math-block">
+          \[ g'(t) = 3t^2(1 - 2t) \]
+        </div>
+        <p>Postavimo \(g'(t) = 0\):</p>
+        <div class="math-block">
+          \[ 3t^2(1 - 2t) = 0 \]
+        </div>
+        <p>Odavde: \(t = 0\) (nije u domenu) ili \(t = \dfrac{1}{2}\).</p>
+        <p>
+          Posto je \(\dfrac{1}{16} \le \dfrac{1}{2} \le 16\), tachka \(t = \dfrac{1}{2}\) pripada intervalu.
+        </p>
+        <p class="note">
+          Ovo odgovara \(x = -1\), jer \(2^{-1} = \dfrac{1}{2}\).
+        </p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Odredimo prirodu kritichne tachke</h3>
+        <p>Izrachunajmo drugi izvod:</p>
+        <div class="math-block">
+          \[ g''(t) = 6t - 18t^2 = 6t(1 - 3t) \]
+        </div>
+        <p>Za \(t = \dfrac{1}{2}\):</p>
+        <div class="math-block">
+          \[ g''\!\left(\frac{1}{2}\right) = 6 \cdot \frac{1}{2} \cdot \left(1 - \frac{3}{2}\right) = 3 \cdot \left(-\frac{1}{2}\right) = -\frac{3}{2} < 0 \]
+        </div>
+        <p>
+          Drugi izvod je negativan, pa je \(t = \dfrac{1}{2}\) tachka <strong>lokalnog maksimuma</strong>.
+        </p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Ako je \(g''(t_0) < 0\), kakvu tachku imamo?</summary>
+      <p style="margin-top: 8px; color: #4ade80;">
+        Lokalni maksimum! Negativan drugi izvod znachi da je funkcija konkavna (okrenuta nadole) u toj tachki.
+      </p>
+    </details>
+
+    <div class="step-container" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Izrachunamo vrednosti u svim kandidatima</h3>
+        <p>
+          Po Vajerstrasovoj teoremi, ekstremne vrednosti su u kritichnim tachkama ili na krajevima intervala.
+          Racunamo \(g(t)\) za \(t \in \left\{\dfrac{1}{16},\; \dfrac{1}{2},\; 16\right\}\):
+        </p>
+
+        <p><strong>Na levom kraju: \(t = \dfrac{1}{16}\) (tj. \(x = -4\))</strong></p>
+        <div class="math-block">
+          \[ g\!\left(\frac{1}{16}\right) = \left(\frac{1}{16}\right)^{\!3} - \frac{3}{2} \cdot \left(\frac{1}{16}\right)^{\!4} = \frac{1}{4096} - \frac{3}{2} \cdot \frac{1}{65536} \]
+        </div>
+        <div class="math-block">
+          \[ = \frac{1}{4096} - \frac{3}{131072} = \frac{32}{131072} - \frac{3}{131072} = \frac{29}{131072} = \frac{29}{2^{17}} \]
+        </div>
+        <p class="note">Ovo je veoma mali pozitivan broj (\(\approx 0{,}000221\)).</p>
+
+        <p><strong>U kritichnoj tachki: \(t = \dfrac{1}{2}\) (tj. \(x = -1\))</strong></p>
+        <div class="math-block">
+          \[ g\!\left(\frac{1}{2}\right) = \left(\frac{1}{2}\right)^{\!3} - \frac{3}{2} \cdot \left(\frac{1}{2}\right)^{\!4} = \frac{1}{8} - \frac{3}{2} \cdot \frac{1}{16} \]
+        </div>
+        <div class="math-block">
+          \[ = \frac{1}{8} - \frac{3}{32} = \frac{4}{32} - \frac{3}{32} = \frac{1}{32} \]
+        </div>
+
+        <p><strong>Na desnom kraju: \(t = 16\) (tj. \(x = 4\))</strong></p>
+        <div class="math-block">
+          \[ g(16) = 16^3 - \frac{3}{2} \cdot 16^4 = 4096 - \frac{3}{2} \cdot 65536 \]
+        </div>
+        <div class="math-block">
+          \[ = 4096 - 98304 = -94208 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step6">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Odredimo maksimum i minimum</h3>
+        <p>Uporedimo tri vrednosti:</p>
+        <div class="math-block">
+          \[ g\!\left(\frac{1}{16}\right) = \frac{29}{2^{17}} \approx 0{,}000221 \]
+        </div>
+        <div class="math-block">
+          \[ g\!\left(\frac{1}{2}\right) = \frac{1}{32} = 0{,}03125 \]
+        </div>
+        <div class="math-block">
+          \[ g(16) = -94208 \]
+        </div>
+        <p>
+          Najveca vrednost (maksimum): \(f_{\max} = \dfrac{1}{32}\), za \(x = -1\).
+        </p>
+        <p>
+          Najmanja vrednost (minimum): \(f_{\min} = -94208\), za \(x = 4\).
+        </p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step7">
+      <div class="step-number">7</div>
+      <div class="step-content">
+        <h3>Izrachunamo proizvod</h3>
+        <p>Trazeni proizvod najmanje i najvece vrednosti:</p>
+        <div class="math-block">
+          \[ f_{\min} \cdot f_{\max} = (-94208) \cdot \frac{1}{32} \]
+        </div>
+        <p>Podelimo:</p>
+        <div class="math-block">
+          \[ = -\frac{94208}{32} = -2944 \]
+        </div>
+        <p>Rastavimo 2944 na chinioca sa stepenom dvojke:</p>
+        <div class="math-block">
+          \[ 2944 = 23 \cdot 128 = 23 \cdot 2^7 \]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[ f_{\min} \cdot f_{\max} = -23 \cdot 2^7 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko je \(23 \times 128\)?</summary>
+      <p style="margin-top: 8px; color: #4ade80;">
+        \(23 \times 128 = 23 \times 100 + 23 \times 28 = 2300 + 644 = 2944\). Takodje, \(2944 / 32 = 92\)...
+        Ups, hajde ponovo: \(94208 / 32 = 2944\). Proverimo: \(32 \times 2944 = 32 \times 3000 - 32 \times 56 = 96000 - 1792 = 94208\). Tachno!
+      </p>
+    </details>
+  </div>
+
+  <!-- g. Key Insight -->
+  <div class="insight-box">
+    <h2>Kljuchni uvid</h2>
+    <p>Smena \(t = 2^x\) pretvara eksponencijalnu funkciju u polinom chija analiza je standardna:</p>
+    <div class="insight-formula">
+      \[ g(t) = t^3\!\left(1 - \frac{3}{2}\,t\right) \]
+    </div>
+    <p style="color: #94a3b8;">
+      Maksimum nastaje u \(t = \frac{1}{2}\) (lokalni ekstrrem), a minimum na desnom kraju intervala \(t = 16\), gde chlan \(-\frac{3}{2}\,t^4\) dominira.
+    </p>
+  </div>
+
+  <!-- h. Final Answer -->
+  <div class="final-answer-box">
+    <h2>Konachan odgovor</h2>
+    <div class="final-answer-value">\(-23 \cdot 2^7\)</div>
+
+    <div class="answer-options-final">
+      <div class="answer-opt correct">(A) \(-23 \cdot 2^7\)</div>
+      <div class="answer-opt">(B) \(-3 \cdot 2^{10}\)</div>
+      <div class="answer-opt">(C) \(-5 \cdot 2^9\)</div>
+      <div class="answer-opt">(D) \(-21 \cdot 2^7\)</div>
+      <div class="answer-opt">(E) \(-25 \cdot 2^7\)</div>
+    </div>
+
+    <div class="verification-note">
+      <strong>Provera:</strong> Maksimalna vrednost je \(\frac{1}{32} = \frac{1}{2^5}\) za \(x = -1\).
+      Minimalna vrednost je \(-94208\) za \(x = 4\).
+      Proizvod: \(\frac{1}{2^5} \cdot (-94208) = -\frac{94208}{32} = -2944 = -23 \cdot 128 = -23 \cdot 2^7\).
+      Rezultat se lepo rasstavlja na stepene dvojke, sto potvrdjuje tachnost.
+    </div>
+  </div>
+
+  <!-- i. Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2>Cheste greske</h2>
+    <ul class="pitfall-list">
+      <li>
+        <strong>Zaboraviti krajeve intervala:</strong> Kritichna tachka \(t = \frac{1}{2}\) daje
+        lokalni maksimum, ali globalni minimum se nalazi na kraju intervala (\(t = 16\), tj. \(x = 4\)).
+        Uvek proverite sve tri kandidat-tachke!
+      </li>
+      <li>
+        <strong>Pogreshan opseg za \(t\):</strong> Posto je \(2^x\) uvek pozitivna i rastuca,
+        za \(x \in [-4, 4]\) je \(t \in [\frac{1}{16}, 16]\), a ne \([-4, 4]\).
+        Ne prenosite granice bukvalno.
+      </li>
+    </ul>
+  </div>
+
+  <!-- j. Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Koliki je proizvod najmanje i najvece vrednosti funkcije \(h(x) = 4^x - 3 \cdot 8^x\) na intervalu \([-2, 3]\)?
+    </p>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p style="margin-top: 8px; color: #94a3b8;">
+        Koristite istu smenu \(t = 2^x\). Dobicete \(h = t^2 - 3t^3 = t^2(1 - 3t)\). Odredite
+        opseg za \(t\) i nadjite kritichnu tachku iz \(h'(t) = 0\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // We'll plot g(t) = t^3 - 1.5*t^4 on [0, 2] for a zoomed view around the max,
+  // and also show a mini-inset for the full range.
+
+  // Main plot: show two views
+  // View 1 (left half): g(t) near the max, t in [0, 1]
+  // View 2 (right half): g(t) on full range, t in [0, 16]
+
+  const leftW = W * 0.48;
+  const rightW = W * 0.48;
+  const gap = W * 0.04;
+  const plotH = H - 80;
+  const topPad = 50;
+
+  function g(t) {
+    return t * t * t - 1.5 * t * t * t * t;
+  }
+
+  // Slider state
+  let sliderT = 0.5;
+  let dragging = false;
+
+  function drawBackground() {
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Draw a plot in a given rectangle
+  function drawPlot(ox, oy, pw, ph, tMin, tMax, gMin, gMax, title, showSlider) {
+    // Card background
+    ctx.fillStyle = '#1e293b';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(ox - 10, oy - 35, pw + 50, ph + 55, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    // Title
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(title, ox + pw / 2 + 15, oy - 10);
+
+    var padL = 45;
+    var padR = 10;
+    var padT = 5;
+    var padB = 30;
+    var pxMin = ox + padL;
+    var pxMax = ox + pw - padR;
+    var pyMin = oy + padT;
+    var pyMax = oy + ph - padB;
+
+    function toPixel(t, gv) {
+      var px = pxMin + (t - tMin) / (tMax - tMin) * (pxMax - pxMin);
+      var py = pyMax - (gv - gMin) / (gMax - gMin) * (pyMax - pyMin);
+      return { x: px, y: py };
+    }
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(51,65,85,0.4)';
+    ctx.lineWidth = 0.5;
+    var tStep = (tMax - tMin) / 8;
+    for (var i = 0; i <= 8; i++) {
+      var t = tMin + i * tStep;
+      var p = toPixel(t, 0);
+      ctx.beginPath();
+      ctx.moveTo(p.x, pyMin);
+      ctx.lineTo(p.x, pyMax);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    // t-axis (y=0 line if visible)
+    var zeroP = toPixel(tMin, 0);
+    var zeroP2 = toPixel(tMax, 0);
+    if (zeroP.y >= pyMin && zeroP.y <= pyMax) {
+      ctx.beginPath();
+      ctx.moveTo(pxMin, zeroP.y);
+      ctx.lineTo(pxMax, zeroP.y);
+      ctx.stroke();
+    }
+
+    // Left axis
+    ctx.beginPath();
+    ctx.moveTo(pxMin, pyMin);
+    ctx.lineTo(pxMin, pyMax);
+    ctx.stroke();
+
+    // Bottom axis
+    ctx.beginPath();
+    ctx.moveTo(pxMin, pyMax);
+    ctx.lineTo(pxMax, pyMax);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    var labelStep = tMax <= 2 ? 0.25 : 4;
+    for (var t = tMin; t <= tMax + 0.001; t += labelStep) {
+      var p = toPixel(t, gMin);
+      var labelStr = tMax <= 2 ? t.toFixed(2).replace('.', ',') : t.toFixed(0);
+      if (Math.abs(t) < 0.001) labelStr = '0';
+      ctx.fillText(labelStr, p.x, pyMax + 4);
+    }
+
+    // Y-axis labels
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    var gRange = gMax - gMin;
+    var gStep;
+    if (gRange < 0.1) gStep = 0.01;
+    else if (gRange < 1) gStep = 0.1;
+    else if (gRange < 100) gStep = 20;
+    else if (gRange < 10000) gStep = 2000;
+    else gStep = 20000;
+
+    for (var gv = Math.ceil(gMin / gStep) * gStep; gv <= gMax; gv += gStep) {
+      var p = toPixel(tMin, gv);
+      if (p.y >= pyMin && p.y <= pyMax) {
+        var labelStr;
+        if (gStep < 1) labelStr = gv.toFixed(2).replace('.', ',');
+        else if (Math.abs(gv) >= 1000) labelStr = (gv / 1000).toFixed(0) + 'k';
+        else labelStr = gv.toFixed(0);
+        ctx.fillText(labelStr, pxMin - 5, p.y);
+      }
+    }
+
+    // Axis name
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('t', pxMax + 5, pyMax + 4);
+
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('g(t)', pxMin - 5, pyMin - 2);
+
+    // Plot the function
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    var steps = 300;
+    for (var i = 0; i <= steps; i++) {
+      var t = tMin + (tMax - tMin) * i / steps;
+      if (t < 0) continue;
+      var gv = g(t);
+      if (gv < gMin || gv > gMax * 1.2) { continue; }
+      var p = toPixel(t, Math.max(gMin, Math.min(gMax, gv)));
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+
+    // Mark critical point t=0.5
+    if (tMin <= 0.5 && tMax >= 0.5) {
+      var gCrit = g(0.5);
+      if (gCrit >= gMin && gCrit <= gMax) {
+        var cp = toPixel(0.5, gCrit);
+        var grd = ctx.createRadialGradient(cp.x, cp.y, 0, cp.x, cp.y, 12);
+        grd.addColorStop(0, '#4ade8080');
+        grd.addColorStop(1, '#4ade8000');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(cp.x, cp.y, 12, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = '#4ade80';
+        ctx.beginPath();
+        ctx.arc(cp.x, cp.y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+        ctx.fillStyle = '#4ade80';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('MAX: 1/32', cp.x, cp.y - 10);
+      }
+    }
+
+    // Mark endpoints
+    // t = 1/16
+    if (tMin <= 1/16 && tMax >= 1/16) {
+      var ep = toPixel(1/16, g(1/16));
+      if (ep.y >= pyMin && ep.y <= pyMax) {
+        ctx.fillStyle = '#a78bfa';
+        ctx.beginPath();
+        ctx.arc(ep.x, ep.y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.font = '10px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('t=1/16', ep.x + 5, ep.y - 3);
+      }
+    }
+
+    // t = 16
+    if (tMax >= 16 && tMin <= 16) {
+      var gEnd = g(16);
+      if (gEnd >= gMin) {
+        var ep = toPixel(16, Math.max(gMin, gEnd));
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath();
+        ctx.arc(ep.x, ep.y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('MIN: -94208', ep.x - 5, ep.y - 8);
+      }
+    }
+
+    // Slider marker
+    if (showSlider && sliderT >= tMin && sliderT <= tMax) {
+      var gVal = g(sliderT);
+      if (gVal >= gMin && gVal <= gMax) {
+        var sp = toPixel(sliderT, gVal);
+
+        // Vertical dashed line
+        ctx.strokeStyle = 'rgba(244,114,182,0.4)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 3]);
+        var zp = toPixel(sliderT, 0);
+        ctx.beginPath();
+        ctx.moveTo(sp.x, sp.y);
+        ctx.lineTo(sp.x, zeroP.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Point
+        var sgrd = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, 10);
+        sgrd.addColorStop(0, '#f472b680');
+        sgrd.addColorStop(1, '#f472b600');
+        ctx.fillStyle = sgrd;
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, 10, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = '#f472b6';
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Value label
+        ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+        ctx.fillStyle = '#f472b6';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        var valStr = 'g(' + sliderT.toFixed(2).replace('.', ',') + ') = ' + gVal.toFixed(4).replace('.', ',');
+        ctx.fillText(valStr, sp.x, sp.y - 12);
+      }
+    }
+
+    // Slider bar at bottom
+    if (showSlider) {
+      var slY = pyMax + 22;
+      var slX1 = pxMin;
+      var slX2 = pxMax;
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(slX1, slY);
+      ctx.lineTo(slX2, slY);
+      ctx.stroke();
+
+      var slPos = slX1 + (sliderT - tMin) / (tMax - tMin) * (slX2 - slX1);
+      ctx.fillStyle = '#f472b6';
+      ctx.beginPath();
+      ctx.arc(slPos, slY, 6, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    return { pxMin: pxMin, pxMax: pxMax, pyMin: pyMin, pyMax: pyMax, tMin: tMin, tMax: tMax, gMin: gMin, gMax: gMax, sliderY: pyMax + 22 };
+  }
+
+  var leftPlotInfo;
+
+  function draw() {
+    drawBackground();
+
+    // Left plot: zoomed around max, t in [0, 1]
+    leftPlotInfo = drawPlot(10, topPad, leftW, plotH, 0, 1, -0.05, 0.05,
+      'Uvecano: okolina maksimuma', true);
+
+    // Right plot: full range, t in [0, 16]
+    drawPlot(leftW + gap + 10, topPad, rightW, plotH, 0, 16, -100000, 5000,
+      'Ceo interval [1/16, 16]', false);
+
+    // Info box
+    ctx.fillStyle = 'rgba(30,41,59,0.92)';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(W / 2 - 130, 5, 260, 38, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('g(t) = t\u00B3 - (3/2)\u00B7t\u2074', W / 2, 24);
+  }
+
+  // Interaction - slider on left plot
+  function getEventPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    var clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function handleStart(e) {
+    e.preventDefault();
+    var pos = getEventPos(e);
+    if (leftPlotInfo) {
+      var slY = leftPlotInfo.sliderY;
+      var slX = leftPlotInfo.pxMin + (sliderT - leftPlotInfo.tMin) / (leftPlotInfo.tMax - leftPlotInfo.tMin) * (leftPlotInfo.pxMax - leftPlotInfo.pxMin);
+      if (Math.abs(pos.x - slX) < 20 && Math.abs(pos.y - slY) < 20) {
+        dragging = true;
+      }
+    }
+  }
+
+  function handleMove(e) {
+    e.preventDefault();
+    if (!dragging || !leftPlotInfo) return;
+    var pos = getEventPos(e);
+    var ratio = (pos.x - leftPlotInfo.pxMin) / (leftPlotInfo.pxMax - leftPlotInfo.pxMin);
+    sliderT = leftPlotInfo.tMin + ratio * (leftPlotInfo.tMax - leftPlotInfo.tMin);
+    sliderT = Math.max(leftPlotInfo.tMin + 0.01, Math.min(leftPlotInfo.tMax - 0.01, sliderT));
+    draw();
+  }
+
+  function handleEnd(e) {
+    e.preventDefault();
+    dragging = false;
+  }
+
+  canvas.addEventListener('mousedown', handleStart);
+  canvas.addEventListener('mousemove', handleMove);
+  canvas.addEventListener('mouseup', handleEnd);
+  canvas.addEventListener('mouseleave', handleEnd);
+  canvas.addEventListener('touchstart', handleStart);
+  canvas.addEventListener('touchmove', handleMove);
+  canvas.addEventListener('touchend', handleEnd);
+
+  // Step click highlight
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Proizvod ekstremnih vrednosti eksponencijalne funkcije na intervalu",
+  "subject": "math",
+  "unit": "calculus",
+  "topic_tags": ["eksponencijalna funkcija", "supstitucija", "ekstremne vrednosti", "zatvoreni interval", "prvi izvod"]
+}
+BRAINSPARK_META-->

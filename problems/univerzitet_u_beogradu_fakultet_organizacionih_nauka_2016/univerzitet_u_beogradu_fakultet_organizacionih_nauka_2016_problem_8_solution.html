@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ostatak pri deljenju polinoma</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Find the remainder when P(x) = x^2016 - x^2015 - 1 is divided by x^2 + 1.
+
+APPROACH: Since divisor x^2 + 1 is degree 2, remainder R(x) = ax + b.
+We have P(x) = (x^2 + 1) * Q(x) + ax + b.
+
+The roots of x^2 + 1 = 0 are x = i and x = -i.
+Substituting these into P(x):
+  P(i) = ai + b
+  P(-i) = -ai + b
+
+COMPUTING P(i):
+Powers of i cycle with period 4: i^0=1, i^1=i, i^2=-1, i^3=-i, i^4=1, ...
+
+i^2016: 2016 mod 4 = 0, so i^2016 = 1
+i^2015: 2015 mod 4 = 3, so i^2015 = i^3 = -i
+
+P(i) = i^2016 - i^2015 - 1 = 1 - (-i) - 1 = 1 + i - 1 = i
+
+So ai + b = i => a = 1, b = 0
+
+COMPUTING P(-i):
+(-i)^2016 = (-1)^2016 * i^2016 = 1 * 1 = 1
+(-i)^2015 = (-1)^2015 * i^2015 = (-1)(-i) = i
+
+P(-i) = 1 - i - 1 = -i
+
+So -ai + b = -i => a = 1, b = 0
+
+BOTH give a = 1, b = 0, so R(x) = x.
+
+ANSWER: B) x
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 90px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #cbd5e1;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+.theory-content {
+  padding: 16px 0;
+  color: #cbd5e1;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-left: 3px solid transparent;
+  padding-left: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 8px;
+}
+
+.step-container:hover, .step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 10px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+}
+
+.checkpoint-answer {
+  padding: 10px 0;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(96,165,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-formula {
+  font-size: 1.4rem;
+  color: #4ade80;
+  margin: 12px 0;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(74,222,128,0.3);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-box h2 {
+  color: #4ade80;
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+}
+
+.final-answer-value {
+  font-size: 2rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  background: rgba(30,41,59,0.8);
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 12px 22px;
+  text-align: center;
+  min-width: 80px;
+  transition: transform 0.2s;
+}
+
+.option-card.correct-final {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.12);
+  transform: scale(1.08);
+}
+
+.option-card .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.option-card.correct-final .opt-label {
+  color: #4ade80;
+}
+
+.option-card .opt-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.option-card.correct-final .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: rgba(56,189,248,0.06);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfalls-card {
+  border-left: 3px solid #e09468;
+}
+
+.pitfalls-card h2 {
+  color: #e09468;
+}
+
+.pitfalls-card ul {
+  padding-left: 20px;
+  color: #cbd5e1;
+}
+
+.pitfalls-card li {
+  margin-bottom: 8px;
+}
+
+.challenge-card {
+  border-left: 3px solid #f472b6;
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  border-radius: 10px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .step-container { padding-left: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Ostatak pri deljenju polinoma</h1>
+  <p class="subtitle">Algebra polinoma - deljenje polinoma i ostatak</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ostatak koji se dobija deljenjem polinoma \( P(x) = x^{2016} - x^{2015} - 1 \) polinomom \( x^2 + 1 \) jednak je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( x + 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( x \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( -x + 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( -x \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Posto delimo polinomom drugog stepena \( x^2 + 1 \), ostatak je oblika \( ax + b \). Iskoristicemo cinjenicu da su koreni polinoma \( x^2 + 1 \) imaginarne jedinice \( i \) i \( -i \), pa cemo uvrstavanjem naci koeficijente \( a \) i \( b \).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Teorema o deljenju polinoma:</strong> Za svaki polinom \( P(x) \) i delilac \( D(x) \) vazi: \( P(x) = D(x) \cdot Q(x) + R(x) \), gde je stepen ostatka \( R(x) \) strogo manji od stepena delioca \( D(x) \).</li>
+          <li><strong>Ostatak pri deljenju kvadratnim polinomom:</strong> Ako je delilac stepena 2, ostatak je oblika \( R(x) = ax + b \). Da bismo nasli \( a \) i \( b \), dovoljno je uvrstiti dva razlicita broja (najzgodnije korene delioca).</li>
+          <li><strong>Imaginarna jedinica:</strong> \( i^2 = -1 \), a stepeni od \( i \) se ponavljaju sa periodom 4:
+          \[ i^0 = 1, \quad i^1 = i, \quad i^2 = -1, \quad i^3 = -i, \quad i^4 = 1, \quad \ldots \]</li>
+          <li><strong>Kljucno svojstvo:</strong> Ako je \( r \) koren delioca \( D(r) = 0 \), tada iz \( P(r) = D(r) \cdot Q(r) + R(r) \) sledi \( P(r) = R(r) \).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid: Powers of i on the complex plane -->
+  <div class="card">
+    <h2>Vizuelni prikaz: Stepeni broja \( i \) na kompleksnoj ravni</h2>
+    <canvas id="complexCanvas" width="500" height="500"></canvas>
+    <p class="canvas-hint">Stepeni imaginarne jedinice \( i \) kruze po jedinicnom krugu sa periodom 4</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapisujemo oblik ostatka</h3>
+        <p>Posto delimo polinomom \( x^2 + 1 \) koji je stepena 2, ostatak mora biti stepena najvise 1. Dakle:</p>
+        <div class="math-block">
+          \[ P(x) = (x^2 + 1) \cdot Q(x) + ax + b \]
+        </div>
+        <p>gde su \( a \) i \( b \) nepoznati koeficijenti koje treba odrediti, a \( Q(x) \) je kolicnik.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Nalazimo korene delioca</h3>
+        <p>Resavamo jednacinu \( x^2 + 1 = 0 \):</p>
+        <div class="math-block">
+          \[ x^2 = -1 \implies x = i \quad \text{ili} \quad x = -i \]
+        </div>
+        <p>Za ove vrednosti, desna strana jednakosti iz koraka 1 postaje:</p>
+        <div class="math-block">
+          \[ P(i) = 0 \cdot Q(i) + ai + b = ai + b \]
+          \[ P(-i) = 0 \cdot Q(-i) + a(-i) + b = -ai + b \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Racunamo \( i^{2016} \) i \( i^{2015} \)</h3>
+        <p>Stepeni broja \( i \) se ponavljaju sa periodom 4. Odredjujemo ostatke pri deljenju sa 4:</p>
+        <div class="math-block">
+          \[ 2016 = 4 \cdot 504 + 0 \implies i^{2016} = i^0 = 1 \]
+        </div>
+        <div class="math-block">
+          \[ 2015 = 4 \cdot 503 + 3 \implies i^{2015} = i^3 = -i \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko iznosi \( i^{2015} \)?</summary>
+      <div class="checkpoint-answer">
+        Odgovor: \( i^{2015} = -i \), jer je \( 2015 \mod 4 = 3 \), a \( i^3 = -i \).
+      </div>
+    </details>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Racunamo \( P(i) \)</h3>
+        <p>Uvrstavamo \( x = i \) u polinom \( P(x) = x^{2016} - x^{2015} - 1 \):</p>
+        <div class="math-block">
+          \[ P(i) = i^{2016} - i^{2015} - 1 \]
+        </div>
+        <div class="math-block">
+          \[ P(i) = 1 - (-i) - 1 \]
+        </div>
+        <div class="math-block">
+          \[ P(i) = 1 + i - 1 = i \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Postavljamo sistem jednacina</h3>
+        <p>Iz koraka 2 znamo da \( P(i) = ai + b \). Uporedjujemo sa rezultatom iz koraka 4:</p>
+        <div class="math-block">
+          \[ ai + b = i \]
+        </div>
+        <p>Izjednacavanjem realnih i imaginarnih delova dobijamo:</p>
+        <div class="math-block">
+          \[ \text{Realni deo: } b = 0 \]
+          \[ \text{Imaginarni deo: } a = 1 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koji je ostatak na osnovu koeficijenata \( a = 1 \), \( b = 0 \)?</summary>
+      <div class="checkpoint-answer">
+        Odgovor: \( R(x) = ax + b = 1 \cdot x + 0 = x \).
+      </div>
+    </details>
+
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Verifikacija pomocu \( P(-i) \)</h3>
+        <p>Za potpunu sigurnost proveravamo i sa \( x = -i \). Potrebni su nam stepeni:</p>
+        <div class="math-block">
+          \[ (-i)^{2016} = (-1)^{2016} \cdot i^{2016} = 1 \cdot 1 = 1 \]
+        </div>
+        <div class="math-block">
+          \[ (-i)^{2015} = (-1)^{2015} \cdot i^{2015} = (-1) \cdot (-i) = i \]
+        </div>
+        <p>Sada racunamo:</p>
+        <div class="math-block">
+          \[ P(-i) = 1 - i - 1 = -i \]
+        </div>
+        <p>Sa druge strane, \( R(-i) = a(-i) + b = -1 \cdot i + 0 = -i \). Rezultati se poklapaju!</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>Umesto dugog deljenja polinoma visokog stepena, koreni delioca nam omogucavaju da direktno izracunamo ostatak. Periodicnost stepena broja \( i \) (sa periodom 4) pretvara problem sa eksponentom 2016 u trivijalan racun.</p>
+    <div class="insight-formula">
+      \[ R(x) = x \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2>Konacan odgovor</h2>
+    <div class="final-answer-value">\( R(x) = x \)</div>
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\( x + 1 \)</div>
+      </div>
+      <div class="option-card correct-final">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\( x \)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\( -x + 1 \)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\( 1 \)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\( -x \)</div>
+      </div>
+    </div>
+    <div class="verification">
+      <strong>Provera:</strong> Potvrdili smo rezultat uvrstavanjem obe vrednosti \( x = i \) i \( x = -i \). U oba slucaja, \( P(x) = R(x) \), sto znaci da je ostatak zaista \( x \). Takodje, ostatak je stepena 1, sto je manje od stepena delioca (2) - kako i treba da bude.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls-card">
+    <h2>Ceste greske</h2>
+    <ul>
+      <li><strong>Pogresan ostatak pri deljenju eksponenta sa 4:</strong> Npr. pogresno izracunavanje \( 2015 \mod 4 \). Proverite: \( 2015 = 4 \cdot 503 + 3 \), dakle ostatak je 3, ne 1 ili 2.</li>
+      <li><strong>Zaboravljen minus u \( (-i)^{2015} \):</strong> Lako je napraviti gresku sa znakom. Koristite pravilo \( (-i)^n = (-1)^n \cdot i^n \) da biste bili sigurni.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Koji je ostatak pri deljenju polinoma \( P(x) = x^{2017} + x^{2016} + 1 \) polinomom \( x^2 + 1 \)?</p>
+    <details>
+      <summary>Nagovestaaj</summary>
+      <div class="theory-content">
+        <p>Koristite isti metod: uvrstite \( x = i \) i \( x = -i \). Izracunajte \( i^{2017} \) (\( 2017 \mod 4 = 1 \), dakle \( i^{2017} = i \)) i \( i^{2016} = 1 \). Postavite sistem i resitee za \( a \) i \( b \).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Complex plane diagram showing powers of i
+  const canvas = document.getElementById('complexCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const r = Math.min(w, h) * 0.32;
+
+    // Clear
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, w, h);
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let gx = 0; gx <= w; gx += 50) {
+      ctx.beginPath();
+      ctx.moveTo(gx, 0);
+      ctx.lineTo(gx, h);
+      ctx.stroke();
+    }
+    for (let gy = 0; gy <= h; gy += 50) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(w, gy);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, cy);
+    ctx.lineTo(w, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, 0);
+    ctx.lineTo(cx, h);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', w - 25, cy - 10);
+    ctx.fillText('Im', cx + 18, 20);
+
+    // Unit circle
+    ctx.strokeStyle = 'rgba(96,165,250,0.25)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrow for cycle direction
+    ctx.strokeStyle = 'rgba(167,139,250,0.4)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 6]);
+    const arrowR = r + 20;
+    ctx.beginPath();
+    ctx.arc(cx, cy, arrowR, -Math.PI * 0.45, Math.PI * 1.35);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Points for powers of i
+    const powers = [
+      { x: 1, y: 0, label: 'i\u2070 = 1', color: '#4ade80', sub: '(i\u2074\u2070\u00B9\u2076 = 1)' },
+      { x: 0, y: 1, label: 'i\u00B9 = i', color: '#60a5fa', sub: '' },
+      { x: -1, y: 0, label: 'i\u00B2 = -1', color: '#f472b6', sub: '' },
+      { x: 0, y: -1, label: 'i\u00B3 = -i', color: '#a78bfa', sub: '(i\u00B2\u2070\u00B9\u2075 = -i)' }
+    ];
+
+    powers.forEach((p, idx) => {
+      const px = cx + p.x * r;
+      const py = cy - p.y * r;
+
+      // Glow
+      const grd = ctx.createRadialGradient(px, py, 0, px, py, 20);
+      grd.addColorStop(0, p.color + '44');
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(px, py, 20, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(px, py, 7, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Outline
+      ctx.strokeStyle = '#0c1222';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = p.color;
+      ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      let labelOffsetX = 0;
+      let labelOffsetY = 0;
+      if (idx === 0) { labelOffsetX = 0; labelOffsetY = 28; }
+      else if (idx === 1) { labelOffsetX = 0; labelOffsetY = -22; }
+      else if (idx === 2) { labelOffsetX = 0; labelOffsetY = 28; }
+      else { labelOffsetX = 0; labelOffsetY = 28; }
+      ctx.fillText(p.label, px + labelOffsetX, py + labelOffsetY);
+
+      // Sub-label for relevant powers
+      if (p.sub) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '12px Segoe UI, system-ui, sans-serif';
+        ctx.fillText(p.sub, px + labelOffsetX, py + labelOffsetY + 16);
+      }
+    });
+
+    // Dashed lines from origin to points
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1.5;
+    powers.forEach(p => {
+      const px = cx + p.x * r;
+      const py = cy - p.y * r;
+      ctx.strokeStyle = p.color + '55';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // Title on canvas
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Jedinicni krug u kompleksnoj ravni', cx, h - 15);
+
+    // Period label
+    ctx.fillStyle = 'rgba(167,139,250,0.6)';
+    ctx.font = 'italic 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Period = 4', cx + arrowR * 0.5, cy - arrowR - 5);
+  }
+
+  draw();
+
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Ostatak pri deljenju polinoma x^2016 - x^2015 - 1 polinomom x^2 + 1",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["deljenje polinoma", "ostatak", "kompleksni brojevi", "imaginarna jedinica", "stepeni od i"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permutacije sa uslovom - Reč MOSKVA</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Find the number of permutations of the letters of the word MOSKVA
+such that between the two vowels there is at least one consonant.
+
+Letters: M, O, S, K, V, A (6 distinct letters)
+Vowels: O, A (2 vowels)
+Consonants: M, S, K, V (4 consonants)
+
+Approach: Complementary counting.
+Count all permutations, then subtract those where the two vowels are adjacent
+(i.e., no consonant between them).
+
+Total permutations of 6 distinct letters:
+6! = 720
+
+Permutations where O and A are adjacent (treated as a single block):
+- Treat {O, A} as one block → 5 objects to permute: [OA], M, S, K, V
+- Number of arrangements of 5 objects: 5! = 120
+- Within the block, O and A can swap: 2! = 2
+- Total adjacent vowel permutations: 5! × 2! = 120 × 2 = 240
+
+Permutations where at least one consonant is between the two vowels:
+720 - 240 = 480
+
+Answer: B) 480
+
+Verification:
+- Total = 720, adjacent vowels = 240, non-adjacent = 480
+- Sanity check: more than half (480/720 = 2/3) of permutations have vowels
+  separated, which makes sense since there are 4 consonants and only 2 vowels,
+  so it's more likely they'll be separated than adjacent.
+- Alternative verification: count directly.
+  Place O at position i and A at position j (i ≠ j), with |i - j| ≥ 2.
+  Total ways to place O and A in 6 positions: 6 × 5 = 30
+  Adjacent pairs: positions (1,2),(2,1),(2,3),(3,2),(3,4),(4,3),(4,5),(5,4),(5,6),(6,5) = 10
+  Non-adjacent pairs: 30 - 10 = 20
+  Remaining 4 consonants: 4! = 24
+  Total: 20 × 24 = 480 ✓
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.step:hover, .step.active {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.final-answer {
+  background: linear-gradient(135deg, rgba(52,211,153,0.15), rgba(74,222,128,0.15));
+  border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer h2 {
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-answer .answer-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #4ade80;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.option-card {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  min-width: 90px;
+  transition: all 0.2s ease;
+}
+
+.option-card.correct {
+  background: rgba(52,211,153,0.2);
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(52,211,153,0.15);
+}
+
+.option-card .opt-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+
+.option-card .opt-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.pitfall {
+  border-left: 3px solid #e09468;
+  padding-left: 16px;
+  margin: 12px 0;
+  color: #e2e8f0;
+}
+
+.pitfall strong {
+  color: #e09468;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfd;
+}
+
+details[open] > summary {
+  margin-bottom: 10px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 10px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.challenge-card {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.challenge-card h2 {
+  color: #a78bfa;
+}
+
+.verification-note {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step { flex-direction: column; gap: 8px; }
+  .options-row { gap: 8px; }
+  .option-card { min-width: 70px; padding: 8px 14px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Permutacije sa uslovom razdvojenosti samoglasnika</h1>
+<p class="subtitle">Kombinatorika - prebrojavanje permutacija sa ogranicenjima</p>
+
+<!-- Problem Statement -->
+<div class="card problem-statement">
+  <h2>Postavka zadatka</h2>
+  <p>Broj svih permutacija slova reci <span class="highlight">MOSKVA</span> kod kojih se izmedju dva samoglasnika nalazi <span class="highlight">bar jedan suglasnik</span> jednak je:</p>
+
+  <div class="given-grid" style="margin-bottom: 16px;">
+    <div class="given-item">
+      <div class="label">Rec</div>
+      <div class="value">MOSKVA</div>
+    </div>
+    <div class="given-item">
+      <div class="label">Samoglasnici</div>
+      <div class="value">O, A</div>
+    </div>
+    <div class="given-item">
+      <div class="label">Suglasnici</div>
+      <div class="value">M, S, K, V</div>
+    </div>
+    <div class="given-item">
+      <div class="label">Ukupno slova</div>
+      <div class="value">6</div>
+    </div>
+  </div>
+
+  <div class="given-grid">
+    <div class="given-item answer-option" data-option="A">
+      <div class="label">(A)</div>
+      <div class="value">450</div>
+    </div>
+    <div class="given-item answer-option" data-option="B">
+      <div class="label">(B)</div>
+      <div class="value">480</div>
+    </div>
+    <div class="given-item answer-option" data-option="C">
+      <div class="label">(C)</div>
+      <div class="value">520</div>
+    </div>
+    <div class="given-item answer-option" data-option="D">
+      <div class="label">(D)</div>
+      <div class="value">560</div>
+    </div>
+    <div class="given-item answer-option" data-option="E">
+      <div class="label">(E)</div>
+      <div class="value">600</div>
+    </div>
+  </div>
+</div>
+
+<!-- Plan -->
+<div class="card">
+  <h2>Plan resavanja</h2>
+  <p>Koristicemo <span class="highlight">metod komplementa</span>: od ukupnog broja permutacija oduzmemo one u kojima su dva samoglasnika susedna (nema suglasnika izmedju njih). Razlika ce nam dati trazeni broj permutacija.</p>
+</div>
+
+<!-- Theory Refresher -->
+<div class="card">
+  <details>
+    <summary>Kljucne formule i teoreme</summary>
+    <ul style="list-style: disc; padding-left: 20px; margin-top: 10px;">
+      <li style="margin-bottom: 10px;"><strong>Permutacije bez ponavljanja:</strong> Broj nacina da se rasporedi \( n \) razlicitih elemenata je \( n! = n \cdot (n-1) \cdot \ldots \cdot 2 \cdot 1 \).</li>
+      <li style="margin-bottom: 10px;"><strong>Princip komplementa:</strong> Ako zelimo da prebrojimo dogadjaje koji zadovoljavaju uslov \( A \), mozemo izracunati \( |A| = |U| - |\overline{A}| \), gde je \( U \) skup svih mogucih ishoda, a \( \overline{A} \) skup onih koji NE zadovoljavaju uslov.</li>
+      <li style="margin-bottom: 10px;"><strong>Metod bloka:</strong> Kada zelimo da dva elementa budu susedna, tretiramo ih kao jedan blok. Tada imamo \( (n-1) \) objekata za permutovanje, a unutar bloka postoji \( 2! \) rasporeda.</li>
+    </ul>
+  </details>
+</div>
+
+<!-- Visual Aid -->
+<div class="card">
+  <h2>Vizuelni prikaz</h2>
+  <canvas id="mainCanvas" width="800" height="420"></canvas>
+  <p class="canvas-hint">Ilustracija: permutacije sa susednim i razdvojenim samoglasnicima</p>
+</div>
+
+<!-- Step-by-step Solution -->
+<div class="card">
+  <h2>Resenje korak po korak</h2>
+
+  <div class="step" id="step1">
+    <div class="step-number">1</div>
+    <div class="step-content">
+      <h3>Identifikujemo slova</h3>
+      <p>Rec MOSKVA ima <span class="highlight">6 razlicitih slova</span>:</p>
+      <div class="math-block">
+        \[ \text{M, O, S, K, V, A} \]
+      </div>
+      <p>Od toga su <span class="highlight">O</span> i <span class="highlight">A</span> samoglasnici, a <span class="highlight">M, S, K, V</span> suglasnici.</p>
+    </div>
+  </div>
+
+  <div class="step" id="step2">
+    <div class="step-number">2</div>
+    <div class="step-content">
+      <h3>Izracunamo ukupan broj permutacija</h3>
+      <p>Posto su svih 6 slova razlicita, ukupan broj permutacija je:</p>
+      <div class="math-block">
+        \[ 6! = 6 \cdot 5 \cdot 4 \cdot 3 \cdot 2 \cdot 1 = 720 \]
+      </div>
+    </div>
+  </div>
+
+  <div class="step" id="step3">
+    <div class="step-number">3</div>
+    <div class="step-content">
+      <h3>Definisemo komplementaran dogadjaj</h3>
+      <p>Komplementaran dogadjaj je: samoglasnici O i A su <span class="highlight">susedni</span> (nema nijednog suglasnika izmedju njih).</p>
+      <p class="note">Ako od svih permutacija oduzmemo one u kojima su O i A susedni, dobicemo permutacije u kojima izmedju O i A stoji bar jedan suglasnik.</p>
+    </div>
+  </div>
+
+  <details style="margin: 15px 0; padding: 12px 18px; background: rgba(96,165,250,0.08); border-radius: 8px; border: 1px solid rgba(96,165,248,0.15);">
+    <summary>Proveri sebe: Koliko objekata imamo kad O i A tretiramo kao blok?</summary>
+    <p style="margin-top: 10px;">Kada O i A spojimo u jedan blok, imamo: <span class="highlight-green">5 objekata</span> - blok {O,A} i cetiri suglasnika M, S, K, V.</p>
+  </details>
+
+  <div class="step" id="step4">
+    <div class="step-number">4</div>
+    <div class="step-content">
+      <h3>Brojimo permutacije sa susednim samoglasnicima</h3>
+      <p>Tretiramo O i A kao jedan blok. Sada imamo <span class="highlight">5 objekata</span> za permutovanje:</p>
+      <div class="math-block">
+        \[ \underbrace{[O, A]}_{\text{blok}},\ M,\ S,\ K,\ V \]
+      </div>
+      <p>Ovih 5 objekata moze da se rasporedi na:</p>
+      <div class="math-block">
+        \[ 5! = 120 \text{ nacina} \]
+      </div>
+    </div>
+  </div>
+
+  <div class="step" id="step5">
+    <div class="step-number">5</div>
+    <div class="step-content">
+      <h3>Unutrasnji raspored bloka</h3>
+      <p>Unutar bloka, O i A mogu da zamene mesta (OA ili AO):</p>
+      <div class="math-block">
+        \[ 2! = 2 \text{ rasporeda} \]
+      </div>
+      <p>Dakle, ukupan broj permutacija sa susednim samoglasnicima je:</p>
+      <div class="math-block">
+        \[ 5! \cdot 2! = 120 \cdot 2 = 240 \]
+      </div>
+    </div>
+  </div>
+
+  <details style="margin: 15px 0; padding: 12px 18px; background: rgba(96,165,250,0.08); border-radius: 8px; border: 1px solid rgba(96,165,248,0.15);">
+    <summary>Proveri sebe: Koliko iznosi 720 - 240?</summary>
+    <p style="margin-top: 10px;"><span class="highlight-green">480</span> - to je nas konacni odgovor!</p>
+  </details>
+
+  <div class="step" id="step6">
+    <div class="step-number">6</div>
+    <div class="step-content">
+      <h3>Primena principa komplementa</h3>
+      <p>Trazeni broj permutacija (izmedju O i A bar jedan suglasnik):</p>
+      <div class="math-block">
+        \[ 6! - 5! \cdot 2! = 720 - 240 = 480 \]
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Key Insight -->
+<div class="insight-box">
+  <h2>Kljucni uvid</h2>
+  <p>Umesto da direktno brojimo slozene rasporede, koristimo princip komplementa:</p>
+  <div class="math-block" style="font-size: 1.2rem; text-align: center;">
+    \[ \underbrace{720}_{\text{sve permutacije}} - \underbrace{240}_{\text{susedni samoglasnici}} = \underbrace{480}_{\text{razdvojeni samoglasnici}} \]
+  </div>
+  <p style="margin-top: 10px; color: #94a3b8;">Tacno dve trecine svih permutacija ima bar jedan suglasnik izmedju samoglasnika.</p>
+</div>
+
+<!-- Final Answer -->
+<div class="final-answer">
+  <h2>Konacan odgovor</h2>
+  <div class="answer-value">\( 480 \)</div>
+
+  <div class="options-row">
+    <div class="option-card">
+      <div class="opt-label">(A)</div>
+      <div class="opt-value">450</div>
+    </div>
+    <div class="option-card correct">
+      <div class="opt-label">(B)</div>
+      <div class="opt-value">480</div>
+    </div>
+    <div class="option-card">
+      <div class="opt-label">(C)</div>
+      <div class="opt-value">520</div>
+    </div>
+    <div class="option-card">
+      <div class="opt-label">(D)</div>
+      <div class="opt-value">560</div>
+    </div>
+    <div class="option-card">
+      <div class="opt-label">(E)</div>
+      <div class="opt-value">600</div>
+    </div>
+  </div>
+
+  <div class="verification-note">
+    <strong>Verifikacija:</strong> Alternativni nacin - direktno prebrojavanje. Biramo 2 pozicije od 6 za samoglasnike tako da nisu susedne.
+    Ukupno parova pozicija za O i A: \( 6 \times 5 = 30 \). Susednih parova: 10 (pozicije (1,2), (2,1), (2,3), (3,2), itd.).
+    Nesusednih parova: \( 30 - 10 = 20 \). Preostala 4 suglasnika na 4 mesta: \( 4! = 24 \).
+    Ukupno: \( 20 \times 24 = 480 \). Potvrdjeno!
+  </div>
+</div>
+
+<!-- Common Pitfalls -->
+<div class="card">
+  <h2>Ceste greske</h2>
+  <div class="pitfall">
+    <strong>Greska 1:</strong> Zaboraviti da unutar bloka {O, A} postoje 2 rasporeda (OA i AO). Bez mnozenja sa \( 2! \), dobili bismo samo 120 umesto 240 za susedne samoglasnike, sto bi dalo pogresan rezultat od 600.
+  </div>
+  <div class="pitfall">
+    <strong>Greska 2:</strong> Pokusaj direktnog prebrojavanja bez principa komplementa. Bilo bi potrebno razmatrati mnogo razlicitih slucajeva u zavisnosti od rastojanja izmedju samoglasnika, sto je mnogo slozenije.
+  </div>
+</div>
+
+<!-- Optional Challenge -->
+<div class="challenge-card">
+  <h2>Dodatni izazov</h2>
+  <p>Koliko permutacija slova reci MOSKVA postoji takvih da se izmedju dva samoglasnika nalaze <strong>tacno dva</strong> suglasnika?</p>
+  <details>
+    <summary>Nagoveštaj</summary>
+    <p style="margin-top: 10px;">Razmisli o tome na koliko nacina mozes da odaberes pozicije za O i A tako da izmedju njih budu tacno 2 mesta, pa onda rasporedi suglasnike. Na primer, ako je O na poziciji 1 i A na poziciji 4, izmedju njih su pozicije 2 i 3 koje moraju biti zauzete suglasnicima.</p>
+  </details>
+</div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interaction
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+
+  // Canvas visualization
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function drawRoundedRect(x, y, w, h, r, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); }
+  }
+
+  function drawLetterBox(x, y, letter, isVowel, highlight) {
+    const size = 44;
+    let fill = isVowel ? 'rgba(244,114,182,0.2)' : 'rgba(96,165,250,0.15)';
+    let border = isVowel ? '#f472b6' : '#60a5fa';
+    if (highlight === 'green') {
+      fill = 'rgba(74,222,128,0.2)';
+      border = '#4ade80';
+    } else if (highlight === 'red') {
+      fill = 'rgba(239,68,68,0.15)';
+      border = '#ef4444';
+    }
+    drawRoundedRect(x - size/2, y - size/2, size, size, 8, fill, border);
+    ctx.fillStyle = isVowel ? '#f472b6' : '#e2e8f0';
+    if (highlight === 'green') ctx.fillStyle = '#4ade80';
+    if (highlight === 'red') ctx.fillStyle = '#ef4444';
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, x, y);
+  }
+
+  function drawBracket(x1, y1, x2, y2, label, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    const bH = 12;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1, y1 + bH);
+    ctx.lineTo(x2, y2 + bH);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(label, (x1 + x2) / 2, y1 + bH + 4);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title section
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Princip komplementa', W / 2, 30);
+
+    // === Row 1: All permutations ===
+    const row1Y = 75;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Sve permutacije:', 30, row1Y);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('6! = 720', W - 30, row1Y);
+
+    // Example: M O S K V A
+    const letters1 = ['M', 'O', 'S', 'K', 'V', 'A'];
+    const vowels = new Set(['O', 'A']);
+    const startX1 = 260;
+    const spacing = 56;
+    letters1.forEach((l, i) => {
+      drawLetterBox(startX1 + i * spacing, row1Y, l, vowels.has(l), null);
+    });
+
+    // Divider line
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(30, row1Y + 40);
+    ctx.lineTo(W - 30, row1Y + 40);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // === Row 2: Adjacent vowels (subtract) ===
+    const row2Y = 170;
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Susedni samoglasnici (-):', 30, row2Y - 30);
+
+    ctx.fillStyle = '#ef4444';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('5! x 2! = 240', W - 30, row2Y - 30);
+
+    // Example: M [O A] S K V  - vowels adjacent
+    const letters2 = ['M', 'O', 'A', 'S', 'K', 'V'];
+    letters2.forEach((l, i) => {
+      drawLetterBox(startX1 + i * spacing, row2Y, l, vowels.has(l), vowels.has(l) ? 'red' : null);
+    });
+
+    // Bracket around O and A
+    const oX = startX1 + 1 * spacing;
+    const aX = startX1 + 2 * spacing;
+    drawBracket(oX - 22, row2Y + 22, aX + 22, row2Y + 22, 'blok', '#ef4444');
+
+    // Divider
+    ctx.strokeStyle = '#334155';
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(30, row2Y + 60);
+    ctx.lineTo(W - 30, row2Y + 60);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // === Equals sign area ===
+    const eqY = row2Y + 80;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 24px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('=', W / 2, eqY);
+
+    // === Row 3: Result - separated vowels ===
+    const row3Y = eqY + 50;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Razdvojeni samoglasnici:', 30, row3Y - 30);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('720 - 240 = 480', W - 30, row3Y - 30);
+
+    // Example: S O M K A V  - vowels separated
+    const letters3 = ['S', 'O', 'M', 'K', 'A', 'V'];
+    letters3.forEach((l, i) => {
+      drawLetterBox(startX1 + i * spacing, row3Y, l, vowels.has(l), vowels.has(l) ? 'green' : null);
+    });
+
+    // Arrow showing consonant between vowels
+    const oPos3 = startX1 + 1 * spacing;
+    const aPos3 = startX1 + 4 * spacing;
+    ctx.strokeStyle = 'rgba(74,222,128,0.4)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(oPos3, row3Y + 28);
+    ctx.quadraticCurveTo((oPos3 + aPos3) / 2, row3Y + 65, aPos3, row3Y + 28);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('bar 1 suglasnik izmedju', (oPos3 + aPos3) / 2, row3Y + 62);
+
+    // Formula summary at bottom
+    const bottomY = H - 30;
+    drawRoundedRect(W/2 - 200, bottomY - 25, 400, 40, 10, 'rgba(74,222,128,0.1)', 'rgba(74,222,128,0.3)');
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Odgovor: B) 480', W / 2, bottomY);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Permutacije sa uslovom razdvojenosti samoglasnika - Rec MOSKVA",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["permutacije", "princip komplementa", "kombinatorika", "prebrojavanje"]
+}
+BRAINSPARK_META-->

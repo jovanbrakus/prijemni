@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uproscavanje algebarskog izraza sa korenima</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Simplify the expression
+    sqrt((a-b)^2) / cbrt((a-b)^3) * (a^2 - b^2 - c^2 + 2bc) / (a + b - c)
+  given b > a and a + b != c.
+
+  Step 1: Simplify sqrt((a-b)^2)
+    sqrt((a-b)^2) = |a - b|
+    Since b > a, we have a - b < 0, so |a - b| = b - a = -(a - b).
+
+  Step 2: Simplify cbrt((a-b)^3)
+    The cube root of a cube is the original value (preserves sign):
+    cbrt((a-b)^3) = a - b
+
+  Step 3: First fraction
+    |a - b| / (a - b) = -(a - b) / (a - b) = -1
+
+  Step 4: Simplify numerator a^2 - b^2 - c^2 + 2bc
+    = a^2 - (b^2 - 2bc + c^2)
+    = a^2 - (b - c)^2
+    This is a difference of squares:
+    = (a - (b - c))(a + (b - c))
+    = (a - b + c)(a + b - c)
+
+  Step 5: Second fraction
+    (a - b + c)(a + b - c) / (a + b - c) = a - b + c
+    (valid since a + b - c != 0, given a + b != c)
+
+  Step 6: Total expression
+    (-1) * (a - b + c) = -a + b - c
+
+  Answer: C) -a + b - c
+
+  Verification:
+    Let a = 1, b = 3, c = 2 (b > a, a + b = 4 != 2 = c)
+    First factor: sqrt((1-3)^2) / cbrt((1-3)^3) = sqrt(4) / cbrt(-8) = 2 / (-2) = -1
+    Second factor numerator: 1 - 9 - 4 + 12 = 0
+    Second factor: 0 / (1 + 3 - 2) = 0 / 2 = 0
+    Total: -1 * 0 = 0
+    Check: -a + b - c = -1 + 3 - 2 = 0. CORRECT!
+
+    Let a = 1, b = 5, c = 3
+    First factor: sqrt((-4)^2) / cbrt((-4)^3) = 4 / (-4) = -1
+    Second factor numerator: 1 - 25 - 9 + 30 = -3
+    Second factor: -3 / (1 + 5 - 3) = -3 / 3 = -1
+    Total: (-1)(-1) = 1
+    Check: -1 + 5 - 3 = 1. CORRECT!
+
+    Check other options with a=1, b=5, c=3 (result should be 1):
+    A) a + b + c = 1 + 5 + 3 = 9 != 1. WRONG.
+    B) (a-b)(a-b-c) = (-4)(-4-3) = (-4)(-7) = 28 != 1. WRONG.
+    C) -a + b - c = -1 + 5 - 3 = 1. CORRECT!
+    D) (b+c-a)/(a-b) = (5+3-1)/(1-5) = 7/(-4) = -1.75 != 1. WRONG.
+    E) a - b + c = 1 - 5 + 3 = -1 != 1. WRONG.
+
+  Answer confirmed: C) -a + b - c
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #a78bfa;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.theory-card summary:hover {
+  color: #c4b5fd;
+}
+
+.theory-content {
+  padding: 16px 0;
+  color: #e2e8f0;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  padding-left: 20px;
+  position: relative;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.theory-content li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 16px;
+  width: 8px;
+  height: 8px;
+  background: #a78bfa;
+  border-radius: 50%;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-left: 3px solid transparent;
+  padding-left: 16px;
+  margin-left: -16px;
+  cursor: pointer;
+  transition: border-color 0.3s, background 0.2s;
+  border-radius: 0 8px 8px 0;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.03);
+}
+
+.step-badge {
+  min-width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+}
+
+.checkpoint details {
+  margin: 15px 0;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+.checkpoint-answer {
+  padding-top: 10px;
+  color: #e2e8f0;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  text-align: center;
+  padding: 32px;
+}
+
+.insight-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  text-align: center;
+  padding: 32px;
+}
+
+.final-answer-text {
+  font-size: 1.6rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.answer-option-final {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 12px 20px;
+  min-width: 90px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.answer-option-final.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.15);
+}
+
+.answer-option-final .opt-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.answer-option-final.correct .opt-label {
+  color: #4ade80;
+}
+
+.answer-option-final .opt-value {
+  font-size: 1.05rem;
+  color: #e2e8f0;
+}
+
+.answer-option-final.correct .opt-value {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.verification-note {
+  margin-top: 20px;
+  padding: 14px 18px;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfalls-card {
+  border-left: 3px solid #e09468;
+}
+
+.pitfalls-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfalls-card li {
+  padding: 8px 0;
+  padding-left: 24px;
+  position: relative;
+  color: #94a3b8;
+}
+
+.pitfalls-card li::before {
+  content: '!';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 16px;
+  height: 16px;
+  background: #e09468;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-weight: 600;
+  user-select: none;
+}
+
+canvas {
+  touch-action: none;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.highlight {
+  color: #f472b6;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .given-grid {
+    gap: 8px;
+  }
+
+  .given-item {
+    min-width: 80px;
+    padding: 8px 12px;
+  }
+
+  .step {
+    gap: 10px;
+  }
+
+  .answer-options-final {
+    gap: 8px;
+  }
+
+  .answer-option-final {
+    min-width: 75px;
+    padding: 8px 12px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Uproscavanje algebarskog izraza sa korenima</h1>
+  <p class="subtitle">Algebra -- apsolutna vrednost, razlika kvadrata, kvadratni i kubni koren</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title">Postavka zadatka</h2>
+    <p>Ako su \( a \), \( b \) i \( c \) realni brojevi takvi da je \( b > a \) i \( a + b \neq c \), onda je izraz</p>
+    <div class="math-block">
+      \[ \frac{\sqrt{(a-b)^2}}{\sqrt[3]{(a-b)^3}} \cdot \frac{a^2 - b^2 - c^2 + 2bc}{a + b - c} \]
+    </div>
+    <p>identicki jednak izrazu:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( a + b + c \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( (a-b)(a-b-c) \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( -a + b - c \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( \dfrac{b+c-a}{a-b} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( a - b + c \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2 class="card-title">Plan resavanja</h2>
+    <p>Razlozicemo izraz na dva faktora. Prvi faktor (razlomak sa korenima) uprosteremo koristeci svojstva apsolutne vrednosti i kubnog korena. Drugi faktor (algebarski razlomak) uprosteremo faktorisanjem brojioca pomocu razlike kvadrata. Na kraju, pomnozicemo dobijene rezultate.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Kvadratni koren kvadrata:</strong> \( \sqrt{x^2} = |x| \). Rezultat je uvek nenegativan -- to je apsolutna vrednost.</li>
+          <li><strong>Kubni koren kuba:</strong> \( \sqrt[3]{x^3} = x \). Kubni koren cuva znak argumenta (za razliku od kvadratnog korena).</li>
+          <li><strong>Apsolutna vrednost:</strong> \( |x| = \begin{cases} x, & x \geq 0 \\ -x, & x < 0 \end{cases} \)</li>
+          <li><strong>Razlika kvadrata:</strong> \( A^2 - B^2 = (A - B)(A + B) \). Moze se primeniti i kada su \( A \) i \( B \) slozeniji izrazi.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2 class="card-title">Vizuelni prikaz strukture izraza</h2>
+    <canvas id="expressionDiagram" width="700" height="400"></canvas>
+    <p class="canvas-hint">Dijagram prikazuje kako se izraz razlaze i uprosterava korak po korak</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title">Resenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Uprosterimo brojilac prvog razlomka: \( \sqrt{(a-b)^2} \)</h3>
+        <p>Koristimo svojstvo da je kvadratni koren kvadrata jednak apsolutnoj vrednosti:</p>
+        <div class="math-block">
+          \[ \sqrt{(a-b)^2} = |a - b| \]
+        </div>
+        <p>Posto je dato da je \( b > a \), sledi da je \( a - b < 0 \). Kada je argument negativan, apsolutna vrednost menja znak:</p>
+        <div class="math-block">
+          \[ |a - b| = -(a - b) = b - a \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Uprosterimo imenilac prvog razlomka: \( \sqrt[3]{(a-b)^3} \)</h3>
+        <p>Kubni koren kuba uvek vraca sam argument, ukljucujuci i predznak:</p>
+        <div class="math-block">
+          \[ \sqrt[3]{(a-b)^3} = a - b \]
+        </div>
+        <p class="note">Za razliku od kvadratnog korena, kubni koren je definisan i za negativne brojeve i cuva predznak. Na primer, \( \sqrt[3]{-8} = -2 \).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko iznosi prvi razlomak?</summary>
+        <div class="checkpoint-answer">
+          <p>Prvi razlomak je \( \dfrac{b - a}{a - b} = \dfrac{-(a-b)}{a-b} = -1 \). Kljucno je primetiti da su brojilac i imenilac suprotnog znaka!</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Izracunajmo vrednost prvog razlomka</h3>
+        <p>Delimo brojilac sa imeniocem:</p>
+        <div class="math-block">
+          \[ \frac{\sqrt{(a-b)^2}}{\sqrt[3]{(a-b)^3}} = \frac{b - a}{a - b} \]
+        </div>
+        <p>Uocimo da je \( b - a = -(a - b) \), pa:</p>
+        <div class="math-block">
+          \[ \frac{-(a-b)}{a-b} = -1 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Faktorisimo brojilac drugog razlomka: \( a^2 - b^2 - c^2 + 2bc \)</h3>
+        <p>Grupisimo poslednja tri clana:</p>
+        <div class="math-block">
+          \[ a^2 - b^2 - c^2 + 2bc = a^2 - (b^2 - 2bc + c^2) \]
+        </div>
+        <p>Izraz u zagradi je potpun kvadrat:</p>
+        <div class="math-block">
+          \[ b^2 - 2bc + c^2 = (b - c)^2 \]
+        </div>
+        <p>Sada imamo razliku kvadrata:</p>
+        <div class="math-block">
+          \[ a^2 - (b-c)^2 = \big(a - (b-c)\big)\big(a + (b-c)\big) \]
+        </div>
+        <div class="math-block">
+          \[ = (a - b + c)(a + b - c) \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koji uslov garantuje da mozemo da skratimo \( (a + b - c) \)?</summary>
+        <div class="checkpoint-answer">
+          <p>Uslov iz zadatka \( a + b \neq c \) garantuje da je \( a + b - c \neq 0 \), pa deljenje sa \( (a + b - c) \) jeste dozvoljeno.</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Skratimo drugi razlomak</h3>
+        <p>Zamenimo faktorisani oblik u razlomak:</p>
+        <div class="math-block">
+          \[ \frac{a^2 - b^2 - c^2 + 2bc}{a + b - c} = \frac{(a - b + c)(a + b - c)}{a + b - c} \]
+        </div>
+        <p>Posto je \( a + b - c \neq 0 \), mozemo da skratimo:</p>
+        <div class="math-block">
+          \[ = a - b + c \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Pomnozimo oba faktora</h3>
+        <p>Konacno, pomnozimo rezultate iz koraka 3 i koraka 5:</p>
+        <div class="math-block">
+          \[ (-1) \cdot (a - b + c) = -a + b - c \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Da li se rezultat poklapa sa nekim od ponudjenih odgovora?</summary>
+        <div class="checkpoint-answer">
+          <p>Da! Izraz \( -a + b - c \) odgovara opciji (C). Obratite paznju da se opcija (E) \( a - b + c \) razlikuje po predznacima -- da nismo pomnozili sa \( -1 \), dobili bismo pogresan odgovor.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2 class="card-title" style="justify-content: center;">Kljucni uvid</h2>
+    <p>Suština ovog zadatka lezi u razlici izmedju kvadratnog i kubnog korena: <span class="highlight">kvadratni koren</span> uvek daje pozitivan rezultat (apsolutnu vrednost), dok <span class="highlight">kubni koren</span> cuva predznak. Kada je argument negativan, ova razlika proizvodi faktor \( -1 \).</p>
+    <div class="insight-formula">
+      \[ \frac{|x|}{x} = \begin{cases} 1, & x > 0 \\ -1, & x < 0 \end{cases} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2 class="card-title" style="justify-content: center; color: #4ade80;">Konacan odgovor</h2>
+    <div class="final-answer-text">
+      \( -a + b - c \)
+    </div>
+
+    <div class="answer-options-final">
+      <div class="answer-option-final">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\( a + b + c \)</div>
+      </div>
+      <div class="answer-option-final">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\( (a-b)(a-b-c) \)</div>
+      </div>
+      <div class="answer-option-final correct">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\( -a + b - c \)</div>
+      </div>
+      <div class="answer-option-final">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\( \dfrac{b+c-a}{a-b} \)</div>
+      </div>
+      <div class="answer-option-final">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\( a - b + c \)</div>
+      </div>
+    </div>
+
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> Proverimo sa konkretnim vrednostima \( a = 1 \), \( b = 5 \), \( c = 3 \) (ispunjavaju uslove \( b > a \) i \( a + b = 6 \neq 3 = c \)):
+      <br>Prvi razlomak: \( \frac{\sqrt{(1-5)^2}}{\sqrt[3]{(1-5)^3}} = \frac{\sqrt{16}}{\sqrt[3]{-64}} = \frac{4}{-4} = -1 \).
+      <br>Drugi razlomak: \( \frac{1 - 25 - 9 + 30}{1 + 5 - 3} = \frac{-3}{3} = -1 \).
+      <br>Proizvod: \( (-1) \cdot (-1) = 1 \).
+      <br>Provera: \( -a + b - c = -1 + 5 - 3 = 1 \). Tacno!
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls-card">
+    <h2 class="card-title" style="color: #e09468;">Ceste greske</h2>
+    <ul>
+      <li><strong>Zaboravljanje apsolutne vrednosti:</strong> Mnogi ucenici napisu \( \sqrt{(a-b)^2} = a - b \), sto nije tacno. Ispravan rezultat je \( |a - b| \), a posto je \( a - b < 0 \), to je \( b - a \). Bez ovog koraka, prvi razlomak bi bio \( +1 \) umesto \( -1 \), sto daje pogresan odgovor (E) umesto (C).</li>
+      <li><strong>Mesanje kvadratnog i kubnog korena:</strong> Kubni koren cuva predznak (\( \sqrt[3]{-8} = -2 \)), dok kvadratni koren uvek daje nenegativan rezultat (\( \sqrt{4} = 2 \), ne \( -2 \)). Ova razlika je kljucna za ceo zadatak.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2 class="card-title" style="color: #f472b6;">Dodatni izazov</h2>
+    <p>Sta bi se desilo sa celim izrazom da umesto uslova \( b > a \) imamo uslov \( a > b \)?</p>
+    <details>
+      <summary>Pogledaj hint</summary>
+      <div class="checkpoint-answer">
+        <p>Ako je \( a > b \), onda je \( a - b > 0 \), pa je \( |a - b| = a - b \). To znaci da prvi razlomak postaje \( \frac{a - b}{a - b} = +1 \) umesto \( -1 \). Konacni rezultat bi tada bio \( a - b + c \), sto je odgovor (E).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+
+  // Canvas: Expression structure diagram
+  const canvas = document.getElementById('expressionDiagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function drawAll() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Struktura izraza', W / 2, 30);
+
+    // Draw the two main branches
+    const midX = W / 2;
+    const topY = 55;
+
+    // Main expression box
+    drawBox(ctx, midX - 180, topY, 360, 36, 'Ceo izraz = Faktor 1 \u00D7 Faktor 2', '#60a5fa', 'rgba(96,165,250,0.1)');
+
+    // Connecting lines
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    // Left branch
+    ctx.beginPath();
+    ctx.moveTo(midX - 90, topY + 36);
+    ctx.lineTo(midX - 160, topY + 70);
+    ctx.stroke();
+    // Right branch
+    ctx.beginPath();
+    ctx.moveTo(midX + 90, topY + 36);
+    ctx.lineTo(midX + 160, topY + 70);
+    ctx.stroke();
+
+    // Factor 1 box
+    const f1X = midX - 280;
+    const f1Y = topY + 70;
+    drawBox(ctx, f1X, f1Y, 240, 34, 'Faktor 1: \u221A(a\u2212b)\u00B2 / \u00B3\u221A(a\u2212b)\u00B3', '#a78bfa', 'rgba(167,139,250,0.1)');
+
+    // Factor 2 box
+    const f2X = midX + 40;
+    const f2Y = topY + 70;
+    drawBox(ctx, f2X, f2Y, 240, 34, 'Faktor 2: (a\u00B2\u2212b\u00B2\u2212c\u00B2+2bc)/(a+b\u2212c)', '#60a5fa', 'rgba(96,165,250,0.1)');
+
+    // Factor 1 breakdown
+    const s1Y = f1Y + 55;
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    // Lines from Factor 1
+    ctx.beginPath();
+    ctx.moveTo(f1X + 80, f1Y + 34);
+    ctx.lineTo(f1X + 40, s1Y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(f1X + 160, f1Y + 34);
+    ctx.lineTo(f1X + 200, s1Y);
+    ctx.stroke();
+
+    // Numerator
+    drawBox(ctx, f1X - 20, s1Y, 140, 30, '\u221A(a\u2212b)\u00B2 = |a\u2212b|', '#e2e8f0', 'rgba(56,189,248,0.06)');
+
+    // Denominator
+    drawBox(ctx, f1X + 140, s1Y, 140, 30, '\u00B3\u221A(a\u2212b)\u00B3 = a\u2212b', '#e2e8f0', 'rgba(56,189,248,0.06)');
+
+    // Since b > a arrow
+    const arrowY = s1Y + 50;
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(f1X + 40, s1Y + 30);
+    ctx.lineTo(f1X + 40, arrowY);
+    ctx.stroke();
+
+    drawBox(ctx, f1X - 30, arrowY, 160, 28, 'b > a \u21D2 |a\u2212b| = b\u2212a', '#f472b6', 'rgba(244,114,182,0.1)');
+
+    // Result of Factor 1
+    const resY = arrowY + 48;
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(f1X + 120, arrowY + 28);
+    ctx.lineTo(f1X + 120, resY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(f1X + 210, s1Y + 30);
+    ctx.lineTo(f1X + 210, resY - 10);
+    ctx.lineTo(f1X + 165, resY);
+    ctx.stroke();
+
+    drawBox(ctx, f1X + 30, resY, 190, 32, '(b\u2212a) / (a\u2212b) = \u22121', '#4ade80', 'rgba(74,222,128,0.1)');
+
+    // Factor 2 breakdown
+    const s2Y = f2Y + 55;
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(f2X + 120, f2Y + 34);
+    ctx.lineTo(f2X + 120, s2Y);
+    ctx.stroke();
+
+    drawBox(ctx, f2X + 10, s2Y, 220, 30, 'a\u00B2 \u2212 (b\u2212c)\u00B2 = razlika kv.', '#e2e8f0', 'rgba(56,189,248,0.06)');
+
+    // Factor
+    const s2bY = s2Y + 50;
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(f2X + 120, s2Y + 30);
+    ctx.lineTo(f2X + 120, s2bY);
+    ctx.stroke();
+
+    drawBox(ctx, f2X - 10, s2bY, 260, 30, '(a\u2212b+c)(a+b\u2212c) / (a+b\u2212c)', '#e2e8f0', 'rgba(56,189,248,0.06)');
+
+    // Result of Factor 2
+    const res2Y = s2bY + 48;
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(f2X + 120, s2bY + 30);
+    ctx.lineTo(f2X + 120, res2Y);
+    ctx.stroke();
+
+    drawBox(ctx, f2X + 35, res2Y, 170, 32, 'a \u2212 b + c', '#4ade80', 'rgba(74,222,128,0.1)');
+
+    // Final result
+    const finY = Math.max(resY, res2Y) + 50;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath();
+    ctx.moveTo(f1X + 125, resY + 32);
+    ctx.lineTo(midX, finY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(f2X + 120, res2Y + 32);
+    ctx.lineTo(midX, finY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    drawBox(ctx, midX - 120, finY, 240, 36, '(\u22121) \u00D7 (a\u2212b+c) = \u2212a+b\u2212c', '#4ade80', 'rgba(74,222,128,0.15)');
+  }
+
+  function drawBox(ctx, x, y, w, h, text, textColor, bgColor) {
+    ctx.fillStyle = bgColor;
+    ctx.strokeStyle = textColor === '#4ade80' ? 'rgba(74,222,128,0.4)' : 'rgba(51,65,85,0.6)';
+    ctx.lineWidth = 1;
+    const r = 8;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = textColor;
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x + w / 2, y + h / 2);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  drawAll();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Uproscavanje algebarskog izraza sa korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["apsolutna vrednost", "razlika kvadrata", "kvadratni koren", "kubni koren", "algebarski izrazi"]
+}
+BRAINSPARK_META-->

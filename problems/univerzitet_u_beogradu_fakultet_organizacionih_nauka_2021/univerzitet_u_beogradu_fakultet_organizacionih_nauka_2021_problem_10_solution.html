@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logaritamski izrazi sa stepenima</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Compute (25^{log_{sqrt(5)} sqrt(2)} + 9^{log_{1/3} 1/2})^{1/3}
+
+  Strategy: Simplify each exponential term separately using logarithm properties,
+  then combine and take the cube root.
+
+  === First term: 25^{log_{sqrt(5)} sqrt(2)} ===
+
+  Step 1: Simplify the base log_{sqrt(5)} sqrt(2)
+    log_{sqrt(5)} sqrt(2) = log_{5^{1/2}} 2^{1/2}
+
+  Step 2: Use the change-of-base identity:
+    log_{a^m} b^n = (n/m) * log_a b
+
+    So log_{5^{1/2}} 2^{1/2} = (1/2)/(1/2) * log_5 2 = log_5 2
+
+  Step 3: Now compute 25^{log_5 2}
+    25 = 5^2, so:
+    25^{log_5 2} = (5^2)^{log_5 2} = 5^{2 * log_5 2}
+
+  Step 4: Use the identity a^{log_a x} = x:
+    5^{2 * log_5 2} = 5^{log_5 2^2} = 5^{log_5 4} = 4
+
+  First term = 4
+
+  === Second term: 9^{log_{1/3} 1/2} ===
+
+  Step 5: Simplify log_{1/3} 1/2
+    Using change of base:
+    log_{1/3} 1/2 = ln(1/2) / ln(1/3) = (-ln 2) / (-ln 3) = ln 2 / ln 3 = log_3 2
+
+    Alternative derivation using property log_{1/a} 1/b = log_a b:
+    log_{a^{-1}} b^{-1} = (-1)/(-1) * log_a b = log_a b
+    So log_{1/3} 1/2 = log_3 2
+
+  Step 6: Now compute 9^{log_3 2}
+    9 = 3^2, so:
+    9^{log_3 2} = (3^2)^{log_3 2} = 3^{2 * log_3 2} = 3^{log_3 4} = 4
+
+  Second term = 4
+
+  === Combining ===
+
+  Step 7: (4 + 4)^{1/3} = 8^{1/3} = 2
+
+  Answer: (D) 2
+
+  Verification:
+  - 25^{log_5 2}: let x = log_5 2, then 5^x = 2, so 25^x = (5^x)^2 = 4. Correct.
+  - 9^{log_3 2}: let y = log_3 2, then 3^y = 2, so 9^y = (3^y)^2 = 4. Correct.
+  - (4+4)^{1/3} = 8^{1/3} = 2. Correct.
+  - Matches answer key: (D) 2 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-family: 'Courier New', monospace;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.theory-card summary:hover {
+  color: #93c5fd;
+}
+
+.theory-content {
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(96, 165, 250, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(96, 165, 250, 0.1);
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  line-height: 1.8;
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  padding: 20px;
+  padding-left: 24px;
+  border-left: 3px solid #334155;
+  border-radius: 0 12px 12px 0;
+  background: rgba(30, 41, 59, 0.5);
+  cursor: pointer;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.step-container:hover,
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step-note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.checkpoint {
+  margin: 15px 0;
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+.checkpoint summary:hover {
+  color: #c4b5fd;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(52, 211, 153, 0.1);
+  border-radius: 8px;
+  color: #34d399;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(167, 139, 250, 0.15));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  text-align: center;
+  padding: 32px;
+}
+
+.insight-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+  color: #e2e8f0;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  text-align: center;
+  padding: 32px;
+}
+
+.final-answer-text {
+  font-size: 2rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.final-option {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(51, 65, 85, 0.5);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.final-option.correct {
+  background: rgba(74, 222, 128, 0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: rgba(52, 211, 153, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfalls-card {
+  border-left: 4px solid #f472b6;
+}
+
+.pitfalls-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfalls-card li {
+  padding: 8px 0;
+  padding-left: 20px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfalls-card li::before {
+  content: '!';
+  position: absolute;
+  left: 0;
+  color: #f472b6;
+  font-weight: 700;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+.challenge-card .hint {
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: rgba(167, 139, 250, 0.08);
+  border-radius: 8px;
+  color: #c4b5fd;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+canvas {
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { padding: 14px; padding-left: 16px; }
+  .final-answer-text { font-size: 1.5rem; }
+  .container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Logaritamski izrazi sa stepenima</h1>
+  <p class="subtitle">Pojednostavljivanje eksponencijalnih izraza korišćenjem svojstava logaritama</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title"><span class="icon">📋</span> Tekst zadatka</h2>
+    <p>Vrednost izraza</p>
+    \[\left(25^{\log_{\sqrt{5}} \sqrt{2}} + 9^{\log_{\frac{1}{3}} \frac{1}{2}}\right)^{\frac{1}{3}}\]
+    <p>jednaka je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2\sqrt{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(2\sqrt[3]{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\sqrt[3]{4}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2 class="card-title"><span class="icon">🧭</span> Plan rešavanja</h2>
+    <p>Svaki od dva sabirka u zagradi ćemo pojednostaviti zasebno, koristeći svojstva logaritama i identitet \(a^{\log_a x} = x\). Zatim ćemo sabrati rezultate i izvaditi kubni koren.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Promena baze stepena u logaritmu:</strong> \(\log_{a^m} b^n = \dfrac{n}{m} \cdot \log_a b\)
+          <br>Ovo svojstvo omogućava da logaritam sa složenijom bazom i argumentom svedemo na jednostavniji oblik.</li>
+          <li><strong>Stepenovanje logaritma:</strong> \(n \cdot \log_a b = \log_a b^n\)
+          <br>Koeficijent ispred logaritma možemo prebaciti kao eksponent argumenta.</li>
+          <li><strong>Fundamentalni identitet:</strong> \(a^{\log_a x} = x\)
+          <br>Stepenovanje baze \(a\) logaritmom sa istom bazom \(a\) daje sam argument \(x\).</li>
+          <li><strong>Logaritam recipročne vrednosti:</strong> \(\log_{a^{-1}} b^{-1} = \log_a b\)
+          <br>Dva negativna znaka (u bazi i argumentu) se poništavaju.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">📊</span> Vizuelni prikaz postupka</h2>
+    <canvas id="diagramCanvas" width="700" height="380"></canvas>
+    <p class="canvas-hint">Dijagram prikazuje tok pojednostavljivanja oba sabirka</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">📝</span> Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-header">
+        <div class="step-number">1</div>
+        <h3 class="step-title">Zapišemo baze kao stepene prostih brojeva</h3>
+      </div>
+      <p>Prepoznajmo da su baze i argumenti logaritama zapravo stepeni brojeva 5, 3 i 2:</p>
+      <div class="math-block">
+        \[\sqrt{5} = 5^{1/2}, \quad \sqrt{2} = 2^{1/2}, \quad \frac{1}{3} = 3^{-1}, \quad \frac{1}{2} = 2^{-1}\]
+      </div>
+      <p>Takođe, baze eksponencijalnih izraza:</p>
+      <div class="math-block">
+        \[25 = 5^2, \quad 9 = 3^2\]
+      </div>
+      <p class="step-note">Svođenje na proste brojeve je ključan prvi korak kod logaritamskih zadataka.</p>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-header">
+        <div class="step-number">2</div>
+        <h3 class="step-title">Pojednostavimo prvi logaritam: \(\log_{\sqrt{5}} \sqrt{2}\)</h3>
+      </div>
+      <p>Primenimo svojstvo \(\log_{a^m} b^n = \frac{n}{m} \cdot \log_a b\):</p>
+      <div class="math-block">
+        \[\log_{\sqrt{5}} \sqrt{2} = \log_{5^{1/2}} 2^{1/2} = \frac{1/2}{1/2} \cdot \log_5 2 = 1 \cdot \log_5 2 = \log_5 2\]
+      </div>
+      <p class="step-note">Pošto su eksponenti u bazi i argumentu jednaki (\(\frac{1}{2}\) i \(\frac{1}{2}\)), oni se skrate!</p>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-header">
+        <div class="step-number">3</div>
+        <h3 class="step-title">Izračunamo \(25^{\log_5 2}\)</h3>
+      </div>
+      <p>Zamenimo \(25\) sa \(5^2\):</p>
+      <div class="math-block">
+        \[25^{\log_5 2} = \left(5^2\right)^{\log_5 2} = 5^{2 \cdot \log_5 2}\]
+      </div>
+      <p>Koristimo svojstvo \(n \cdot \log_a b = \log_a b^n\):</p>
+      <div class="math-block">
+        \[5^{2 \cdot \log_5 2} = 5^{\log_5 2^2} = 5^{\log_5 4}\]
+      </div>
+      <p>Primenimo fundamentalni identitet \(a^{\log_a x} = x\):</p>
+      <div class="math-block">
+        \[5^{\log_5 4} = \color{#4ade80}{4}\]
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Kolika je vrednost prvog sabirka?</summary>
+      <div class="answer">
+        <p>Prvi sabirak \(25^{\log_{\sqrt{5}} \sqrt{2}} = 4\).</p>
+      </div>
+    </details>
+
+    <div class="step-container" id="step4">
+      <div class="step-header">
+        <div class="step-number">4</div>
+        <h3 class="step-title">Pojednostavimo drugi logaritam: \(\log_{1/3}\, \frac{1}{2}\)</h3>
+      </div>
+      <p>Zapišemo bazu i argument kao stepene sa negativnim eksponentom:</p>
+      <div class="math-block">
+        \[\log_{1/3} \frac{1}{2} = \log_{3^{-1}} 2^{-1}\]
+      </div>
+      <p>Primenimo isto svojstvo kao u koraku 2:</p>
+      <div class="math-block">
+        \[\log_{3^{-1}} 2^{-1} = \frac{-1}{-1} \cdot \log_3 2 = 1 \cdot \log_3 2 = \log_3 2\]
+      </div>
+      <p class="step-note">I ovde se eksponenti skrate, jer su oba jednaka \(-1\).</p>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-header">
+        <div class="step-number">5</div>
+        <h3 class="step-title">Izračunamo \(9^{\log_3 2}\)</h3>
+      </div>
+      <p>Postupak je analogan koraku 3. Zamenimo \(9\) sa \(3^2\):</p>
+      <div class="math-block">
+        \[9^{\log_3 2} = \left(3^2\right)^{\log_3 2} = 3^{2 \cdot \log_3 2} = 3^{\log_3 2^2} = 3^{\log_3 4}\]
+      </div>
+      <p>Primenimo fundamentalni identitet:</p>
+      <div class="math-block">
+        \[3^{\log_3 4} = \color{#4ade80}{4}\]
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Koliki je zbir sabiraka u zagradi?</summary>
+      <div class="answer">
+        <p>Zbir je \(4 + 4 = 8\).</p>
+      </div>
+    </details>
+
+    <div class="step-container" id="step6">
+      <div class="step-header">
+        <div class="step-number">6</div>
+        <h3 class="step-title">Izračunamo konačnu vrednost</h3>
+      </div>
+      <p>Saberemo oba sabirka i izvadimo kubni koren:</p>
+      <div class="math-block">
+        \[\left(25^{\log_{\sqrt{5}} \sqrt{2}} + 9^{\log_{\frac{1}{3}} \frac{1}{2}}\right)^{1/3} = \left(4 + 4\right)^{1/3} = 8^{1/3} = \sqrt[3]{8} = \color{#4ade80}{2}\]
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Zašto je \(\sqrt[3]{8} = 2\)?</summary>
+      <div class="answer">
+        <p>Zato što \(2^3 = 2 \cdot 2 \cdot 2 = 8\), pa je kubni koren od 8 jednak 2.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2 class="card-title" style="justify-content: center;"><span class="icon">💡</span> Ključni uvid</h2>
+    <p>Oba sabirka su dala isti rezultat &mdash; broj 4. To nije slučajnost! U oba slučaja koristimo istu strukturu:</p>
+    <div class="insight-formula">
+      \[\left(a^2\right)^{\log_a 2} = a^{\log_a 4} = 4\]
+    </div>
+    <p>Bez obzira na to što su baze različite (5 i 3), identitet \(a^{\log_a x} = x\) uvek daje isti rezultat.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2 class="card-title" style="justify-content: center;"><span class="icon">✅</span> Konačan odgovor</h2>
+    <div class="final-answer-text">\(2\)</div>
+    <div class="final-options">
+      <div class="final-option">(A) \(4\)</div>
+      <div class="final-option">(B) \(2\sqrt{2}\)</div>
+      <div class="final-option">(C) \(2\sqrt[3]{2}\)</div>
+      <div class="final-option correct">(D) \(2\)</div>
+      <div class="final-option">(E) \(\sqrt[3]{4}\)</div>
+    </div>
+    <div class="verification">
+      <strong>Provera:</strong> Neka je \(x = \log_5 2\). Tada \(5^x = 2\), pa \(25^x = (5^x)^2 = 4\). Analogno, neka je \(y = \log_3 2\), tada \(3^y = 2\), pa \(9^y = (3^y)^2 = 4\). Zbir je \(4 + 4 = 8\), a \(\sqrt[3]{8} = 2\). Rezultat ima smisla jer oba logaritma (\(\log_5 2\) i \(\log_3 2\)) su pozitivna i manja od 1, pa su stepeni umjereni.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls-card">
+    <h2 class="card-title"><span class="icon">⚠️</span> Česte greške</h2>
+    <ul>
+      <li><strong>Pogrešna primena formule za promenu baze:</strong> Kod \(\log_{a^m} b^n\) se eksponenti dele (\(n/m\)), a ne množe. Česta greška je napisati \(m \cdot n \cdot \log_a b\) umesto \(\frac{n}{m} \cdot \log_a b\).</li>
+      <li><strong>Zaboravljanje da se recipročne vrednosti poništavaju:</strong> Kod \(\log_{1/3} \frac{1}{2}\) studenti ponekad uvedu dodatni minus umesto da prepoznaju da se \(\frac{-1}{-1} = 1\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2 class="card-title"><span class="icon">🎯</span> Dodatni izazov</h2>
+    <p>Izračunaj vrednost izraza \(\left(16^{\log_{\sqrt{2}} \sqrt{3}} + 81^{\log_{1/3} \frac{1}{2}}\right)^{1/4}\).</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="hint">
+        Primeni isti postupak: zapiši baze kao stepene prostih brojeva, pojednostavi logaritme korišćenjem svojstva \(\log_{a^m} b^n = \frac{n}{m} \log_a b\), a zatim primeni identitet \(a^{\log_a x} = x\). Obrati pažnju na to koji se eksponent pojavljuje pri stepenima.
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interaction
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+
+  // Canvas diagram
+  const canvas = document.getElementById('diagramCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function drawDiagram() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    const colLeft = 175;
+    const colRight = 525;
+
+    // Title
+    ctx.font = 'bold 16px Segoe UI, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText('Prvi sabirak', colLeft, 30);
+    ctx.fillText('Drugi sabirak', colRight, 30);
+
+    // Dividing line
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(350, 15);
+    ctx.lineTo(350, H - 15);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    function drawBox(x, y, w, h, text, color, bgColor) {
+      ctx.fillStyle = bgColor;
+      ctx.beginPath();
+      ctx.roundRect(x - w/2, y - h/2, w, h, 8);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x - w/2, y - h/2, w, h, 8);
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.font = '14px Courier New, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+    }
+
+    function drawArrow(fromX, fromY, toX, toY, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+      const aLen = 8;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(toX - aLen * Math.cos(angle - 0.4), toY - aLen * Math.sin(angle - 0.4));
+      ctx.lineTo(toX - aLen * Math.cos(angle + 0.4), toY - aLen * Math.sin(angle + 0.4));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawLabel(x, y, text, color) {
+      ctx.fillStyle = color;
+      ctx.font = '11px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+    }
+
+    // LEFT column
+    const row1 = 70, row2 = 140, row3 = 210, row4 = 280, row5 = 350;
+
+    drawBox(colLeft, row1, 260, 32, '25^(log_{√5} √2)', '#60a5fa', 'rgba(96,165,250,0.1)');
+    drawArrow(colLeft, row1 + 16, colLeft, row2 - 16, '#60a5fa');
+    drawLabel(colLeft + 75, (row1 + row2) / 2, 'log_{a^m} b^n = (n/m)·log_a b', '#94a3b8');
+
+    drawBox(colLeft, row2, 200, 32, '25^(log_5  2)', '#a78bfa', 'rgba(167,139,250,0.1)');
+    drawArrow(colLeft, row2 + 16, colLeft, row3 - 16, '#a78bfa');
+    drawLabel(colLeft + 60, (row2 + row3) / 2, '25 = 5², pa (5²)^(log_5 2)', '#94a3b8');
+
+    drawBox(colLeft, row3, 200, 32, '5^(log_5  4)', '#a78bfa', 'rgba(167,139,250,0.1)');
+    drawArrow(colLeft, row3 + 16, colLeft, row4 - 16, '#a78bfa');
+    drawLabel(colLeft + 55, (row3 + row4) / 2, 'a^(log_a x) = x', '#94a3b8');
+
+    drawBox(colLeft, row4, 100, 36, '= 4', '#4ade80', 'rgba(74,222,128,0.12)');
+
+    // RIGHT column
+    drawBox(colRight, row1, 240, 32, '9^(log_{1/3} 1/2)', '#60a5fa', 'rgba(96,165,250,0.1)');
+    drawArrow(colRight, row1 + 16, colRight, row2 - 16, '#60a5fa');
+    drawLabel(colRight + 75, (row1 + row2) / 2, 'log_{a^(-1)} b^(-1) = log_a b', '#94a3b8');
+
+    drawBox(colRight, row2, 200, 32, '9^(log_3  2)', '#a78bfa', 'rgba(167,139,250,0.1)');
+    drawArrow(colRight, row2 + 16, colRight, row3 - 16, '#a78bfa');
+    drawLabel(colRight + 60, (row2 + row3) / 2, '9 = 3², pa (3²)^(log_3 2)', '#94a3b8');
+
+    drawBox(colRight, row3, 200, 32, '3^(log_3  4)', '#a78bfa', 'rgba(167,139,250,0.1)');
+    drawArrow(colRight, row3 + 16, colRight, row4 - 16, '#a78bfa');
+    drawLabel(colRight + 55, (row3 + row4) / 2, 'a^(log_a x) = x', '#94a3b8');
+
+    drawBox(colRight, row4, 100, 36, '= 4', '#4ade80', 'rgba(74,222,128,0.12)');
+
+    // Combining arrows to center bottom
+    const centerX = 350;
+    drawArrow(colLeft, row4 + 18, centerX, row5 - 18, '#4ade80');
+    drawArrow(colRight, row4 + 18, centerX, row5 - 18, '#4ade80');
+
+    // Final result
+    drawBox(centerX, row5, 220, 36, '(4 + 4)^(1/3) = 8^(1/3) = 2', '#4ade80', 'rgba(74,222,128,0.15)');
+
+    // Glow around final result
+    ctx.shadowColor = '#4ade80';
+    ctx.shadowBlur = 15;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(centerX - 110, row5 - 18, 220, 36, 8);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  drawDiagram();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Logaritamski izrazi sa stepenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["logaritmi", "eksponencijalni izrazi", "svojstva logaritama", "promena baze", "kubni koren"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepenovanje i racionalni eksponenti</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Compute [(0.5)^{-1/2} * 8^{2/3}]^2 : (2/3)^2 * 0.125
+  Operations : and * are left-to-right, so:
+    ((bracket^2) / (2/3)^2) * 0.125
+
+  Step 1: Compute (0,5)^{-1/2}
+    0,5 = 1/2
+    (1/2)^{-1/2} = (2^{-1})^{-1/2} = 2^{1/2} = sqrt(2)
+
+  Step 2: Compute 8^{2/3}
+    8 = 2^3
+    (2^3)^{2/3} = 2^{3 * 2/3} = 2^2 = 4
+
+  Step 3: Compute the product inside the brackets
+    sqrt(2) * 4 = 4*sqrt(2)
+
+  Step 4: Square the bracket
+    (4*sqrt(2))^2 = 4^2 * (sqrt(2))^2 = 16 * 2 = 32
+
+  Step 5: Compute (2/3)^2
+    (2/3)^2 = 4/9
+
+  Step 6: Divide: 32 : (4/9) = 32 * 9/4 = 288/4 = 72
+
+  Step 7: Multiply by 0,125
+    0,125 = 1/8
+    72 * 1/8 = 72/8 = 9
+
+  Final answer: 9, which is option (C).
+
+  Verification:
+    Full expression = [(0.5)^{-1/2} * 8^{2/3}]^2 / (2/3)^2 * 0.125
+    = [sqrt(2) * 4]^2 / (4/9) * (1/8)
+    = [4*sqrt(2)]^2 * (9/4) * (1/8)
+    = 32 * 9/4 * 1/8
+    = 32 * 9 / 32
+    = 9 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 14px 20px;
+  text-align: center;
+  min-width: 80px;
+  flex: 1;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-container.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(167, 139, 250, 0.15));
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #60a5fa;
+  margin-bottom: 12px;
+  font-size: 1.3rem;
+}
+
+.insight-formula {
+  font-size: 1.4rem;
+  color: #e2e8f0;
+  margin: 16px 0;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(74, 222, 128, 0.12));
+  border: 2px solid rgba(52, 211, 153, 0.4);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-box h2 {
+  color: #34d399;
+  margin-bottom: 16px;
+  font-size: 1.4rem;
+}
+
+.final-answer-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.option-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 2px solid #334155;
+  border-radius: 12px;
+  padding: 12px 24px;
+  text-align: center;
+  min-width: 90px;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.15);
+}
+
+.option-card .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+
+.option-card .opt-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.pitfall-box {
+  background: rgba(224, 148, 104, 0.08);
+  border: 1px solid rgba(224, 148, 104, 0.25);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.pitfall-box h3 {
+  color: #e09468;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.pitfall-box ul {
+  padding-left: 20px;
+}
+
+.pitfall-box li {
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #a78bfa;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.theory-content ul {
+  padding-left: 20px;
+  list-style: disc;
+}
+
+.theory-content li {
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+.checkpoint {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint p {
+  color: #e2e8f0;
+  margin-top: 8px;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid #34d399;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.06);
+  border: 1px solid rgba(244, 114, 182, 0.2);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.challenge-box h3 {
+  color: #f472b6;
+  margin-bottom: 10px;
+}
+
+.challenge-box p {
+  color: #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.plan-text {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+canvas {
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .given-grid {
+    flex-direction: column;
+  }
+
+  .options-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .step-container {
+    padding: 10px;
+  }
+
+  .container {
+    padding: 10px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Stepenovanje i racionalni eksponenti</h1>
+  <p class="subtitle">Racionalnih eksponenti, stepenovanje i aritmetika razlomaka</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title"><span class="icon">📋</span> Postavka zadatka</h2>
+    <p>Vrednost izraza</p>
+    <div class="math-block">
+      \[\left[\left(0{,}5\right)^{-\frac{1}{2}} \cdot 8^{\frac{2}{3}}\right]^2 : \left(\frac{2}{3}\right)^2 \cdot 0{,}125\]
+    </div>
+    <p>jednaka je:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(11\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(7\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(9\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(6\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(12\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">🎯</span> Plan rešavanja</h2>
+    <p class="plan-text">
+      Svaki deo izraza ćemo pretvoriti u stepen osnove 2, iskoristiti pravila stepenovanja da izračunamo
+      vrednost izraza unutar zagrada, a zatim primeniti operacije deljenja i množenja sleva nadesno.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i pravila</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Negativan eksponent:</strong> \( a^{-n} = \dfrac{1}{a^n} \), odnosno \( \left(\dfrac{1}{a}\right)^{-n} = a^n \)</li>
+          <li><strong>Racionalan eksponent:</strong> \( a^{\frac{m}{n}} = \sqrt[n]{a^m} = \left(\sqrt[n]{a}\right)^m \)</li>
+          <li><strong>Stepen proizvoda:</strong> \( (a \cdot b)^n = a^n \cdot b^n \)</li>
+          <li><strong>Stepen stepena:</strong> \( \left(a^m\right)^n = a^{m \cdot n} \)</li>
+          <li><strong>Deljenje razlomkom:</strong> \( a : \dfrac{b}{c} = a \cdot \dfrac{c}{b} \)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">📊</span> Vizuelni prikaz izraza</h2>
+    <canvas id="exprCanvas" width="700" height="320"></canvas>
+    <p class="canvas-hint">Dijagram prikazuje tok izračunavanja kroz ključne korake</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">📝</span> Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Izračunajmo \((0{,}5)^{-\frac{1}{2}}\)</h3>
+        <p>Zapišimo \(0{,}5\) kao razlomak:</p>
+        <div class="math-block">
+          \[0{,}5 = \frac{1}{2} = 2^{-1}\]
+        </div>
+        <p>Sada primenimo pravilo za stepen stepena:</p>
+        <div class="math-block">
+          \[\left(2^{-1}\right)^{-\frac{1}{2}} = 2^{(-1) \cdot \left(-\frac{1}{2}\right)} = 2^{\frac{1}{2}} = \sqrt{2}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Izračunajmo \(8^{\frac{2}{3}}\)</h3>
+        <p>Zapišimo \(8\) kao stepen dvojke:</p>
+        <div class="math-block">
+          \[8 = 2^3\]
+        </div>
+        <p>Primenimo pravilo za stepen stepena:</p>
+        <div class="math-block">
+          \[\left(2^3\right)^{\frac{2}{3}} = 2^{3 \cdot \frac{2}{3}} = 2^2 = 4\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Koliko iznosi proizvod \(\sqrt{2} \cdot 4\)?</summary>
+      <p>Odgovor: \(\sqrt{2} \cdot 4 = 4\sqrt{2}\). To je vrednost izraza unutar uglastih zagrada.</p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Izračunajmo vrednost uglaste zagrade</h3>
+        <p>Pomnožimo rezultate iz koraka 1 i 2:</p>
+        <div class="math-block">
+          \[(0{,}5)^{-\frac{1}{2}} \cdot 8^{\frac{2}{3}} = \sqrt{2} \cdot 4 = 4\sqrt{2}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Kvadrirajmo uglaste zagrade</h3>
+        <p>Primenimo formulu \((a \cdot b)^2 = a^2 \cdot b^2\):</p>
+        <div class="math-block">
+          \[\left(4\sqrt{2}\right)^2 = 4^2 \cdot \left(\sqrt{2}\right)^2 = 16 \cdot 2 = 32\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Koliko iznosi \(\left(\frac{2}{3}\right)^2\)?</summary>
+      <p>Odgovor: \(\left(\frac{2}{3}\right)^2 = \frac{4}{9}\).</p>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container" data-step="5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Podelimo sa \(\left(\frac{2}{3}\right)^2\)</h3>
+        <p>Deljenje razlomkom zamenjujemo množenjem recipročnom vrednošću:</p>
+        <div class="math-block">
+          \[32 : \frac{4}{9} = 32 \cdot \frac{9}{4} = \frac{32 \cdot 9}{4} = \frac{288}{4} = 72\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container" data-step="6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Pomnožimo sa \(0{,}125\)</h3>
+        <p>Pretvorimo decimalni broj u razlomak:</p>
+        <div class="math-block">
+          \[0{,}125 = \frac{125}{1000} = \frac{1}{8}\]
+        </div>
+        <p>Sada pomnožimo:</p>
+        <div class="math-block">
+          \[72 \cdot \frac{1}{8} = \frac{72}{8} = 9\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Da li je \(72 : 8 = 9\)?</summary>
+      <p>Da! \(8 \cdot 9 = 72\), pa je \(72 : 8 = 9\). ✓</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>💡 Ključni uvid</h2>
+    <p style="color: #94a3b8; margin-bottom: 12px;">Kada sve brojeve zapišemo kao stepene broja 2, ceo izraz se dramatično pojednostavi:</p>
+    <div class="insight-formula">
+      \[\frac{\left[2^{\frac{1}{2}} \cdot 2^2\right]^2}{\frac{4}{9}} \cdot \frac{1}{8} = \frac{2^5 \cdot 9}{4 \cdot 8} = \frac{32 \cdot 9}{32} = 9\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\(9\)</div>
+
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(11\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(7\)</div>
+      </div>
+      <div class="option-card correct">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(9\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(6\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(12\)</div>
+      </div>
+    </div>
+
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> Proverimo sve u jednom koraku sa stepenima dvojke:
+      \(2^{1/2} \cdot 4 = 4\sqrt{2}\), pa \((4\sqrt{2})^2 = 32\). Zatim \(32 \cdot \frac{9}{4} \cdot \frac{1}{8} = \frac{32 \cdot 9}{32} = 9\). ✓
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="pitfall-box">
+    <h3>⚠️ Česte greške</h3>
+    <ul>
+      <li><strong>Pogrešan redosled operacija:</strong> Operacije \(:\) (deljenje) i \(\cdot\) (množenje) se izvršavaju sleva nadesno. Greška nastaje ako se prvo pomnoži \(\left(\frac{2}{3}\right)^2 \cdot 0{,}125\) pa zatim podeli.</li>
+      <li><strong>Pogrešan predznak eksponenta:</strong> Kod \((0{,}5)^{-1/2}\), negativan eksponent znači recipročnu vrednost. Česta greška je da se zaboravi promeniti predznak, pa se dobije \(\frac{1}{\sqrt{2}}\) umesto \(\sqrt{2}\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <h3>🚀 Dodatni izazov</h3>
+    <p>Izračunaj vrednost izraza: \(\left[(0{,}25)^{-\frac{1}{2}} \cdot 27^{\frac{2}{3}}\right]^2 : \left(\frac{3}{4}\right)^2 \cdot 0{,}0625\)</p>
+    <details>
+      <summary>💡 Pomoć</summary>
+      <p style="color: #e2e8f0; margin-top: 8px;">Primeni istu strategiju: \(0{,}25 = 2^{-2}\) i \(27 = 3^3\), a \(0{,}0625 = \frac{1}{16}\). Zapiši sve kao stepene prostih brojeva i pojednostavi.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas visualization
+  const canvas = document.getElementById('exprCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function drawRoundedRect(x, y, w, h, r, fillColor, strokeColor) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+    if (fillColor) {
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    if (strokeColor) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
+  function drawArrow(x1, y1, x2, y2, color) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const headLen = 8;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Define computation flow boxes
+    const boxes = [
+      { x: 20, y: 20, w: 130, h: 55, text1: '(0,5)^(-1/2)', text2: '= \u221A2', color: '#60a5fa' },
+      { x: 20, y: 100, w: 130, h: 55, text1: '8^(2/3)', text2: '= 4', color: '#a78bfa' },
+      { x: 210, y: 55, w: 130, h: 55, text1: '\u221A2 \u00B7 4', text2: '= 4\u221A2', color: '#f472b6' },
+      { x: 400, y: 55, w: 130, h: 55, text1: '(4\u221A2)\u00B2', text2: '= 32', color: '#60a5fa' },
+      { x: 400, y: 160, w: 130, h: 55, text1: '(2/3)\u00B2', text2: '= 4/9', color: '#94a3b8' },
+      { x: 270, y: 235, w: 130, h: 55, text1: '32 : 4/9', text2: '= 72', color: '#a78bfa' },
+      { x: 460, y: 235, w: 130, h: 55, text1: '0,125', text2: '= 1/8', color: '#94a3b8' },
+      { x: 360, y: 160, w: 0, h: 0, text1: '', text2: '', color: '' }, // placeholder
+    ];
+
+    // Final result box
+    const finalBox = { x: 540, y: 130, w: 130, h: 60, text1: '72 \u00B7 1/8', text2: '= 9', color: '#4ade80' };
+
+    // Draw boxes
+    const drawBox = (b) => {
+      drawRoundedRect(b.x, b.y, b.w, b.h, 10, 'rgba(30, 41, 59, 0.9)', b.color);
+      ctx.fillStyle = b.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(b.text1, b.x + b.w / 2, b.y + 22);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '600 15px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(b.text2, b.x + b.w / 2, b.y + 43);
+    };
+
+    // Draw computation boxes 0-6
+    for (let i = 0; i < 7; i++) {
+      if (i !== 7) drawBox(boxes[i]);
+    }
+    drawBox(finalBox);
+
+    // Draw final result with glow
+    ctx.save();
+    ctx.shadowColor = '#4ade80';
+    ctx.shadowBlur = 15;
+    drawRoundedRect(finalBox.x, finalBox.y, finalBox.w, finalBox.h, 10, 'rgba(74, 222, 128, 0.1)', '#4ade80');
+    ctx.restore();
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(finalBox.text1, finalBox.x + finalBox.w / 2, finalBox.y + 24);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(finalBox.text2, finalBox.x + finalBox.w / 2, finalBox.y + 47);
+
+    // Draw arrows
+    const arrowColor = '#475569';
+    // box 0 -> box 2
+    drawArrow(150, 47, 210, 75, arrowColor);
+    // box 1 -> box 2
+    drawArrow(150, 127, 210, 90, arrowColor);
+    // box 2 -> box 3
+    drawArrow(340, 82, 400, 82, arrowColor);
+    // box 3 -> box 5 (down-left)
+    drawArrow(465, 110, 370, 235, arrowColor);
+    // box 4 -> box 5
+    drawArrow(465, 215, 370, 250, arrowColor);
+    // box 5 -> final
+    drawArrow(400, 262, 540, 175, arrowColor);
+    // box 6 -> final
+    drawArrow(525, 250, 580, 190, arrowColor);
+
+    // Operation labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u00B7', 180, 70);
+    ctx.fillText('( )²', 370, 72);
+    ctx.fillText(':', 410, 230);
+    ctx.fillText('\u00B7', 560, 225);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje i racionalni eksponenti",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["stepenovanje", "racionalni eksponenti", "razlomci", "aritmetika"]
+}
+BRAINSPARK_META-->

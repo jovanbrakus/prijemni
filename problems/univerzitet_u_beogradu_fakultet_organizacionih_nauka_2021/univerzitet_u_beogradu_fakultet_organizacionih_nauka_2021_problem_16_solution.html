@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspoređivanje parova na susedna sedišta</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: 3 married couples, 12 numbered seats in a row.
+Choose 6 seats and seat the couples so each couple is on adjacent seats.
+Find total number of arrangements.
+
+APPROACH:
+1) Choose 3 pairs of adjacent seats (non-overlapping) from seats 1-12.
+2) Assign couples to chosen pairs.
+3) Within each pair, two people can swap positions.
+
+STEP 1: Count non-overlapping adjacent pairs.
+Adjacent pairs in row of 12: P1=(1,2), P2=(2,3), ..., P11=(11,12) → 11 pairs.
+Two pairs Pi and Pj overlap iff |i-j| <= 1.
+They don't overlap iff |i-j| >= 2.
+
+So we need 3 indices from {1,...,11} with pairwise difference >= 2.
+This equals choosing 3 non-consecutive elements from {1,...,11}.
+
+Using the substitution: if a1 < a2 < a3 with gaps >= 2,
+let b1 = a1, b2 = a2 - 1, b3 = a3 - 2.
+Then b1 < b2 < b3 are any 3 elements from {1,...,9}.
+Count = C(9,3) = 84.
+
+STEP 2: Assign 3 couples to 3 pairs of seats: 3! = 6 ways.
+
+STEP 3: Within each couple, 2 arrangements: 2^3 = 8 ways.
+
+TOTAL = 84 × 6 × 8 = 84 × 48 = 4032.
+
+ANSWER: (A) 4032. ✓ Matches answer key.
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+.plan-card h2 { color: #a78bfa; }
+details {
+  margin: 15px 0;
+}
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+}
+details summary:hover { color: #93c5fd; }
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+.step:hover, .step.active {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+.step-content { flex: 1; }
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.4);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.final-answer-box h2 {
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+.final-answer-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 12px 0;
+}
+.option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.option-card {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(52,211,153,0.12);
+  box-shadow: 0 0 15px rgba(52,211,153,0.2);
+}
+.option-card .opt-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+.pitfall-card {
+  border-left: 3px solid #f472b6;
+}
+.pitfall-card h2 { color: #f472b6; }
+.challenge-card {
+  border-left: 3px solid #60a5fa;
+}
+.canvas-wrapper {
+  background: #0c1222;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  overflow: hidden;
+  margin: 10px 0;
+}
+canvas {
+  display: block;
+  width: 100%;
+  touch-action: none;
+}
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 8px;
+  font-style: italic;
+}
+.verification {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 12px;
+  font-style: italic;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 8px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Raspoređivanje parova na susedna sedišta</h1>
+  <p class="subtitle">Kombinatorika — prebrojavanje rasporeda sa ograničenjem susednosti</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Tri bračna para treba rasporediti na <span style="color:#60a5fa;font-weight:600">6 različitih sedišta</span> u jednom redu bioskopske sale sa <span style="color:#60a5fa;font-weight:600">12 numerisanih sedišta</span>. Broj načina na koji se to može učiniti tako da svaki par bude raspoređen na <span style="color:#f472b6;font-weight:600">dva susedna sedišta</span> jednak je:
+    </p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Broj parova</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Ukupno sedišta</div>
+        <div class="value">\(12\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Sedišta za zauzimanje</div>
+        <div class="value">\(6\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Uslov</div>
+        <div class="value">Susedna sedišta po paru</div>
+      </div>
+    </div>
+    <div class="given-grid" style="margin-top: 20px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(4032\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(4080\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(4128\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(3936\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(3984\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Rastavićemo problem na tri nezavisna dela: izbor tri para susednih sedišta koja se ne preklapaju, raspoređivanje parova na izabrana mesta, i raspored članova unutar svakog para. Konačan rezultat je proizvod ova tri broja.</p>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div style="margin-top: 12px;">
+        <ul style="list-style: none; padding-left: 0;">
+          <li style="margin-bottom: 12px;">
+            <strong style="color:#60a5fa;">Kombinacije bez ponavljanja:</strong>
+            \[\binom{n}{k} = \frac{n!}{k!(n-k)!}\]
+            Broj načina da se izabere \(k\) elemenata iz skupa od \(n\) elemenata, bez obzira na redosled.
+          </li>
+          <li style="margin-bottom: 12px;">
+            <strong style="color:#60a5fa;">Izbor ne-susednih elemenata:</strong>
+            Broj načina da se izabere \(k\) elemenata iz niza \(\{1, 2, \ldots, n\}\) tako da nijedan par izabranih nije susedan jednak je:
+            \[\binom{n - k + 1}{k}\]
+          </li>
+          <li style="margin-bottom: 12px;">
+            <strong style="color:#60a5fa;">Pravilo proizvoda:</strong>
+            Ako se nezavisni izbori mogu napraviti na \(n_1, n_2, \ldots, n_m\) načina, ukupan broj kombinovanih ishoda je \(n_1 \cdot n_2 \cdots n_m\).
+          </li>
+          <li>
+            <strong style="color:#60a5fa;">Permutacije:</strong>
+            Broj rasporeda \(n\) različitih objekata je \(n!\).
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <h2>Vizualni prikaz</h2>
+    <p style="margin-bottom:10px; color:#94a3b8;">Ispod je prikazan red od 12 sedišta. Kliknite dugme da vidite primere rasporeda tri para na susedna sedišta.</p>
+    <div class="canvas-wrapper">
+      <canvas id="seatingCanvas" width="900" height="300"></canvas>
+    </div>
+    <div style="text-align:center; margin-top:10px;">
+      <button id="nextBtn" style="background:linear-gradient(135deg,#60a5fa,#a78bfa);color:#0f172a;border:none;border-radius:8px;padding:10px 24px;font-size:1rem;font-weight:600;cursor:pointer;">Sledeći primer</button>
+    </div>
+    <p class="drag-hint">Pritisnite dugme da vidite različite rasporede parova.</p>
+  </div>
+
+  <!-- STEP BY STEP -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Identifikovanje parova susednih sedišta</h3>
+        <p>U redu od 12 sedišta, parovi susednih sedišta su:</p>
+        <div class="math-block">
+          \[(1,2),\; (2,3),\; (3,4),\; \ldots,\; (11,12)\]
+        </div>
+        <p>Ukupno ima <strong style="color:#60a5fa;">11 parova</strong> susednih sedišta.</p>
+        <p class="note">Označimo ih sa \(P_1, P_2, \ldots, P_{11}\), gde je \(P_i = (i, i+1)\).</p>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Uslov nepreklapanja</h3>
+        <p>Svaki bračni par zauzima jedan par susednih sedišta. Pošto ista osoba ne može sedeti na dva sedišta, izabrani parovi sedišta se <strong style="color:#f472b6;">ne smeju preklapati</strong>.</p>
+        <p>Parovi \(P_i\) i \(P_j\) dele sedište ako i samo ako je \(|i - j| = 1\). Na primer, \(P_3 = (3,4)\) i \(P_4 = (4,5)\) dele sedište 4.</p>
+        <div class="math-block">
+          \[P_i \text{ i } P_j \text{ su nepreklapajući} \iff |i - j| \geq 2\]
+        </div>
+        <p class="note">Problem se svodi na izbor 3 indeksa iz \(\{1, 2, \ldots, 11\}\) takvih da su parovi na razmaku bar 2.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Koliko parova susednih sedišta postoji u redu od \(n\) sedišta?</summary>
+      <p style="margin-top:8px;">Tačno \(n - 1\) parova. Za \(n = 12\), to je \(11\).</p>
+    </details>
+
+    <div class="step" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Prebrojavanje izbora tri nepreklapajuća para</h3>
+        <p>Treba izabrati 3 indeksa iz skupa \(\{1, 2, \ldots, 11\}\) tako da se nikoja dva ne razlikuju za manje od 2. To je ekvivalentno izboru 3 <em>ne-susedna</em> elementa iz niza dužine 11.</p>
+        <p>Koristimo standardnu formulu. Ako biramo \(k\) ne-susednih elemenata iz niza dužine \(n\), broj načina je:</p>
+        <div class="math-block">
+          \[\binom{n - k + 1}{k}\]
+        </div>
+        <p>Zamena za supstituciju: neka su izabrani indeksi \(a_1 < a_2 < a_3\) sa \(a_2 \geq a_1 + 2\) i \(a_3 \geq a_2 + 2\). Definišimo:</p>
+        <div class="math-block">
+          \[b_1 = a_1, \quad b_2 = a_2 - 1, \quad b_3 = a_3 - 2\]
+        </div>
+        <p>Tada je \(b_1 < b_2 < b_3\) proizvoljni izbor 3 elementa iz \(\{1, 2, \ldots, 9\}\).</p>
+        <div class="math-block">
+          \[\binom{9}{3} = \frac{9!}{3! \cdot 6!} = \frac{9 \cdot 8 \cdot 7}{3 \cdot 2 \cdot 1} = \frac{504}{6} = 84\]
+        </div>
+        <p>Dakle, postoji <strong style="color:#4ade80;">84 načina</strong> za izbor tri nepreklapajuća para susednih sedišta.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Koliko načina ima da se izaberu 2 ne-susedna elementa iz \(\{1,\ldots,11\}\)?</summary>
+      <p style="margin-top:8px;">\(\binom{11 - 2 + 1}{2} = \binom{10}{2} = 45\) načina.</p>
+    </details>
+
+    <div class="step" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Raspoređivanje parova na izabrana sedišta</h3>
+        <p>Imamo 3 bračna para (npr. par A, par B, par C) i 3 izabrana para sedišta. Treba dodeliti koji par seda na koji par sedišta.</p>
+        <div class="math-block">
+          \[3! = 6 \text{ načina}\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Raspored unutar svakog para</h3>
+        <p>Svaki bračni par zauzima dva susedna sedišta. Muž može biti levo ili desno od žene — to daje 2 mogućnosti po paru.</p>
+        <div class="math-block">
+          \[2^3 = 8 \text{ načina}\]
+        </div>
+        <p class="note">Tri para, svaki sa po 2 unutrašnja rasporeda, daju \(2 \times 2 \times 2 = 8\).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Koliki je ukupan faktor rasporeda (bez izbora sedišta)?</summary>
+      <p style="margin-top:8px;">\(3! \times 2^3 = 6 \times 8 = 48\). Svaki izbor sedišta se može popuniti na 48 načina.</p>
+    </details>
+
+    <div class="step" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Konačni rezultat</h3>
+        <p>Primenom pravila proizvoda, ukupan broj rasporeda je:</p>
+        <div class="math-block">
+          \[\text{Ukupno} = \underbrace{84}_{\text{izbor sedišta}} \times \underbrace{6}_{\text{dodela parova}} \times \underbrace{8}_{\text{unutrašnji raspored}} = 84 \times 48 = 4032\]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Zamenom promenljivih, problem izbora nepreklapajućih parova susednih sedišta svodi se na klasičan kombinatorni problem izbora ne-susednih elemenata.</p>
+    <div class="math-block" style="display:inline-block;margin-top:12px;">
+      \[\binom{9}{3} \times 3! \times 2^3 = 84 \times 48 = 4032\]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\(4032\)</div>
+    <div class="option-row">
+      <div class="option-card correct">
+        <div class="opt-label">(A)</div>
+        <div>\(4032\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div>\(4080\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(C)</div>
+        <div>\(4128\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div>\(3936\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(E)</div>
+        <div>\(3984\)</div>
+      </div>
+    </div>
+    <p class="verification">Provera: \(84 \times 48 = 84 \times 50 - 84 \times 2 = 4200 - 168 = 4032\). Rezultat je deljiv sa 48, što je očekivano jer svaki izbor sedišta daje tačno 48 rasporeda. Odgovor je (A).</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card pitfall-card">
+    <h2>Česte greške</h2>
+    <ul style="list-style: disc; padding-left: 20px; margin-top: 8px;">
+      <li style="margin-bottom: 10px;">
+        <strong>Zaboravljanje uslova nepreklapanja:</strong> Ako se ne vodi računa da izabrani parovi sedišta ne dele nijedno sedište, dobija se prevelik broj. Na primer, ako bismo birali 3 para od 11 bez ograničenja, imali bismo \(\binom{11}{3} = 165\), što je pogrešno.
+      </li>
+      <li>
+        <strong>Neračunanje unutrašnjeg rasporeda:</strong> Svaki bračni par ima dva člana koji mogu zameniti mesta na svom paru sedišta. Ako se ovaj faktor \(2^3 = 8\) izostavi, dobija se rezultat \(84 \times 6 = 504\), što ne odgovara nijednom ponuđenom odgovoru.
+      </li>
+    </ul>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Koliko bi rasporeda bilo da se traži da <strong>nijedan</strong> bračni par ne sedi na susednim sedištima (potpuno suprotan uslov), koristeći istih 6 sedišta?</p>
+    <details style="margin:15px 0;">
+      <summary style="color:#60a5fa;">Otkrij nagoveštaj</summary>
+      <p style="margin-top:8px;">Razmisli o principu uključenja-isključenja. Izračunaj ukupan broj rasporeda 6 osoba na 6 izabranih sedišta, pa oduzmi slučajeve gde bar jedan par sedi zajedno. Ovo je varijacija klasičnog problema „ménage".</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('seatingCanvas');
+  const ctx = canvas.getContext('2d');
+  const btn = document.getElementById('nextBtn');
+
+  const examples = [
+    [1, 3, 5],
+    [1, 3, 9],
+    [1, 5, 7],
+    [2, 6, 10],
+    [3, 7, 11],
+    [1, 7, 10],
+    [4, 8, 10],
+    [2, 4, 6],
+    [5, 9, 11],
+    [1, 4, 9]
+  ];
+
+  const coupleColors = [
+    { fill: 'rgba(96,165,250,0.35)', border: '#60a5fa', text: '#60a5fa', name: 'Par 1' },
+    { fill: 'rgba(167,139,250,0.35)', border: '#a78bfa', text: '#a78bfa', name: 'Par 2' },
+    { fill: 'rgba(244,114,182,0.35)', border: '#f472b6', text: '#f472b6', name: 'Par 3' }
+  ];
+
+  let currentExample = 0;
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const seatW = 56;
+    const seatH = 56;
+    const gap = 10;
+    const totalW = 12 * seatW + 11 * gap;
+    const startX = (W - totalW) / 2;
+    const seatY = 100;
+
+    const pairs = examples[currentExample];
+
+    // Draw legend
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    for (let c = 0; c < 3; c++) {
+      const lx = startX + c * 180;
+      const ly = 40;
+      ctx.fillStyle = coupleColors[c].fill;
+      ctx.strokeStyle = coupleColors[c].border;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(lx, ly - 14, 20, 20, 4);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = coupleColors[c].text;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(coupleColors[c].name, lx + 28, ly - 3);
+    }
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Primer ' + (currentExample + 1) + '/' + examples.length, W - startX, 40);
+
+    // Draw seats
+    for (let i = 0; i < 12; i++) {
+      const x = startX + i * (seatW + gap);
+
+      // Check if this seat is part of a couple pair
+      let coupleIdx = -1;
+      for (let c = 0; c < 3; c++) {
+        const pairStart = pairs[c];
+        if (i + 1 === pairStart || i + 1 === pairStart + 1) {
+          coupleIdx = c;
+          break;
+        }
+      }
+
+      // Seat background
+      if (coupleIdx >= 0) {
+        ctx.fillStyle = coupleColors[coupleIdx].fill;
+        ctx.strokeStyle = coupleColors[coupleIdx].border;
+        ctx.lineWidth = 2;
+      } else {
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 1;
+      }
+
+      ctx.beginPath();
+      ctx.roundRect(x, seatY, seatW, seatH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Seat number
+      ctx.fillStyle = coupleIdx >= 0 ? coupleColors[coupleIdx].text : '#64748b';
+      ctx.font = coupleIdx >= 0 ? 'bold 16px Segoe UI, system-ui, sans-serif' : '14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(i + 1), x + seatW / 2, seatY + seatH / 2);
+
+      // Draw bracket connecting adjacent seats of same couple
+      if (coupleIdx >= 0 && i + 1 === pairs[coupleIdx]) {
+        const x1 = x + seatW / 2;
+        const x2 = x + seatW + gap + seatW / 2;
+        const bracketY = seatY + seatH + 15;
+        ctx.strokeStyle = coupleColors[coupleIdx].border;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x1, seatY + seatH + 4);
+        ctx.lineTo(x1, bracketY);
+        ctx.lineTo(x2, bracketY);
+        ctx.lineTo(x2, seatY + seatH + 4);
+        ctx.stroke();
+
+        // Couple label
+        ctx.fillStyle = coupleColors[coupleIdx].text;
+        ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(coupleColors[coupleIdx].name, (x1 + x2) / 2, bracketY + 16);
+      }
+    }
+
+    // Info
+    const pairLabels = pairs.map((p, i) => 'P' + p + '=(' + p + ',' + (p+1) + ')');
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Izabrani parovi sedišta: ' + pairLabels.join(', '), W / 2, H - 30);
+  }
+
+  btn.addEventListener('click', function() {
+    currentExample = (currentExample + 1) % examples.length;
+    draw();
+  });
+
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Raspoređivanje bračnih parova na susedna sedišta u bioskopu",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "prebrojavanje", "susedna sedišta", "ne-susedni elementi", "binomni koeficijent", "pravilo proizvoda"]
+}
+BRAINSPARK_META-->

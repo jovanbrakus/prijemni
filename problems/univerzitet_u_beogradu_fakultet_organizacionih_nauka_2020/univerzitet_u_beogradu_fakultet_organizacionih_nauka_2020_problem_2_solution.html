@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje algebarskog izraza</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Simplify the expression for a != 0, b != 0, a != -b:
+  ( a^{-1}/b^{-1} + b^{-2}/a^{-2} )^{-1} * ( a/b + b/a - 1 ) + 1/b : (1/a + 1/b)
+
+STEP 1: Simplify inner fractions of the first factor.
+  a^{-1}/b^{-1} = (1/a)/(1/b) = b/a
+  b^{-2}/a^{-2} = (1/b^2)/(1/a^2) = a^2/b^2
+
+STEP 2: Sum inside first parenthesis.
+  b/a + a^2/b^2
+  Common denominator: ab^2
+  = b^3/(ab^2) + a^3/(ab^2) = (a^3 + b^3)/(ab^2)
+
+STEP 3: Take the inverse (power -1).
+  [(a^3 + b^3)/(ab^2)]^{-1} = ab^2/(a^3 + b^3)
+
+STEP 4: Simplify second factor.
+  a/b + b/a - 1
+  Common denominator: ab
+  = a^2/(ab) + b^2/(ab) - ab/(ab) = (a^2 + b^2 - ab)/(ab)
+  Note: a^2 - ab + b^2 is the same thing.
+
+STEP 5: Multiply first and second factors.
+  [ab^2/(a^3 + b^3)] * [(a^2 - ab + b^2)/(ab)]
+  Factor a^3 + b^3 = (a+b)(a^2 - ab + b^2)
+  = ab^2(a^2 - ab + b^2) / [(a+b)(a^2 - ab + b^2) * ab]
+  = b / (a + b)
+
+STEP 6: Simplify the division part.
+  1/b : (1/a + 1/b) = 1/b : [(a+b)/(ab)] = (1/b) * ab/(a+b) = a/(a+b)
+
+STEP 7: Add results.
+  b/(a+b) + a/(a+b) = (a+b)/(a+b) = 1
+
+ANSWER: A) 1
+
+VERIFICATION with a=1, b=2:
+  First bracket: (2/1 + 1/4)^{-1} = (9/4)^{-1} = 4/9
+  Second bracket: 1/2 + 2/1 - 1 = 3/2
+  Product: 4/9 * 3/2 = 12/18 = 2/3
+  Division: (1/2) : (1 + 1/2) = (1/2) : (3/2) = 1/3
+  Total: 2/3 + 1/3 = 1. Correct!
+
+VERIFICATION with a=3, b=1:
+  First bracket: (1/3 + 9/1)^{-1} = (1/3 + 9)^{-1} = (28/3)^{-1} = 3/28
+  Second bracket: 3/1 + 1/3 - 1 = 3 + 1/3 - 1 = 7/3
+  Product: 3/28 * 7/3 = 21/84 = 1/4
+  Division: (1/1) : (1/3 + 1/1) = 1 : (4/3) = 3/4
+  Total: 1/4 + 3/4 = 1. Correct!
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  background: rgba(96, 165, 250, 0.04);
+  border-left-color: #4ade80;
+}
+
+.step-container.active {
+  background: rgba(96, 165, 250, 0.06);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+  font-size: 0.97rem;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+details {
+  margin: 15px 0;
+  background: rgba(96, 165, 250, 0.06);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 0.97rem;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+details ul {
+  padding-left: 20px;
+  color: #cbd5e1;
+}
+
+details li {
+  margin-bottom: 8px;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-box h2 {
+  color: #34d399;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.final-answer-value {
+  font-size: 1.6rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.option-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  min-width: 80px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.option-card.correct {
+  border-color: #34d399;
+  background: rgba(52,211,153,0.12);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 14px;
+  color: #94a3b8;
+  font-size: 0.93rem;
+  text-align: left;
+}
+
+.pitfalls-card {
+  border-left: 3px solid #f472b6;
+}
+
+.pitfalls-card h2 {
+  color: #f472b6;
+}
+
+.pitfalls-card li {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.challenge-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.challenge-card h2 {
+  color: #a78bfa;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .step-container { padding: 10px; gap: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 8px 12px; }
+  .options-row { gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Pojednostavljivanje algebarskog izraza sa negativnim eksponentima</h1>
+  <p class="subtitle">Algebra &mdash; Negativni eksponenti, razlaganje zbira kubova, racionalni izrazi</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Za \( a \neq 0 \), \( b \neq 0 \) i \( a \neq -b \), izraz:</p>
+    <div class="math-block">
+      \[
+        \left(\frac{a^{-1}}{b^{-1}} + \frac{b^{-2}}{a^{-2}}\right)^{-1} \cdot \left(\frac{a}{b} + \frac{b}{a} - 1\right) + \frac{1}{b} \; : \; \left(\frac{1}{a} + \frac{1}{b}\right)
+      \]
+    </div>
+    <p>je identički jednak:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{b}{a+b}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{b-a}{a+b}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{a}{a+b}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Rastavićemo izraz na dva sabirka: proizvod prvih dveju zagrada i količnik nakon znaka deljenja. Svaki ćemo posebno pojednostaviti koristeći pravila za negativne eksponente i formulu za zbir kubova, a zatim ih sabrati.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Ključne formule i teoreme</summary>
+      <ul>
+        <li><strong>Negativan eksponent:</strong> \( x^{-n} = \dfrac{1}{x^n} \), pa je \( \dfrac{a^{-n}}{b^{-n}} = \dfrac{b^n}{a^n} \)</li>
+        <li><strong>Zbir kubova:</strong> \( a^3 + b^3 = (a + b)(a^2 - ab + b^2) \)</li>
+        <li><strong>Recipročna vrednost:</strong> \( \left(\dfrac{p}{q}\right)^{-1} = \dfrac{q}{p} \)</li>
+        <li><strong>Deljenje razlomaka:</strong> \( \dfrac{x}{y} : \dfrac{p}{q} = \dfrac{x}{y} \cdot \dfrac{q}{p} \)</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Prevedimo negativne eksponente u razlomke</h3>
+        <p>Koristimo pravilo \( x^{-n} = \frac{1}{x^n} \) da prevedemo razlomke u prvoj zagradi:</p>
+        <div class="math-block">
+          \[
+            \frac{a^{-1}}{b^{-1}} = \frac{\;\frac{1}{a}\;}{\;\frac{1}{b}\;} = \frac{1}{a} \cdot \frac{b}{1} = \frac{b}{a}
+          \]
+        </div>
+        <div class="math-block">
+          \[
+            \frac{b^{-2}}{a^{-2}} = \frac{\;\frac{1}{b^2}\;}{\;\frac{1}{a^2}\;} = \frac{1}{b^2} \cdot \frac{a^2}{1} = \frac{a^2}{b^2}
+          \]
+        </div>
+        <p class="note">Ključno zapažanje: deljenje recipročnih vrednosti „obrće" razlomak.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Saberimo članove u prvoj zagradi</h3>
+        <p>Sada prva zagrada glasi:</p>
+        <div class="math-block">
+          \[
+            \frac{b}{a} + \frac{a^2}{b^2}
+          \]
+        </div>
+        <p>Svedimo na zajednički imenilac \( ab^2 \):</p>
+        <div class="math-block">
+          \[
+            \frac{b}{a} = \frac{b \cdot b^2}{a \cdot b^2} = \frac{b^3}{ab^2}
+          \]
+        </div>
+        <div class="math-block">
+          \[
+            \frac{a^2}{b^2} = \frac{a^2 \cdot a}{b^2 \cdot a} = \frac{a^3}{ab^2}
+          \]
+        </div>
+        <div class="math-block">
+          \[
+            \frac{b^3}{ab^2} + \frac{a^3}{ab^2} = \frac{a^3 + b^3}{ab^2}
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Primenimo eksponent \(-1\)</h3>
+        <p>Recipročna vrednost razlomka iz prethodnog koraka:</p>
+        <div class="math-block">
+          \[
+            \left(\frac{a^3 + b^3}{ab^2}\right)^{-1} = \frac{ab^2}{a^3 + b^3}
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details>
+      <summary>&#9989; Proveri se: Koji je zbir \( \frac{b}{a} + \frac{a^2}{b^2} \) za \( a=1,\; b=2 \)?</summary>
+      <p>\( \frac{2}{1} + \frac{1}{4} = 2 + 0{,}25 = 2{,}25 = \frac{9}{4} \). Provera: \( \frac{a^3+b^3}{ab^2} = \frac{1+8}{1 \cdot 4} = \frac{9}{4} \). Tačno!</p>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Pojednostavimo drugu zagradu</h3>
+        <p>Svedimo \( \frac{a}{b} + \frac{b}{a} - 1 \) na zajednički imenilac \( ab \):</p>
+        <div class="math-block">
+          \[
+            \frac{a}{b} + \frac{b}{a} - 1 = \frac{a^2}{ab} + \frac{b^2}{ab} - \frac{ab}{ab} = \frac{a^2 + b^2 - ab}{ab}
+          \]
+        </div>
+        <p>Primetimo da je brojilac \( a^2 - ab + b^2 \) &mdash; isti izraz koji se javlja u formuli za zbir kubova!</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Pomnožimo prvi i drugi činilac</h3>
+        <p>Koristimo formulu za zbir kubova \( a^3 + b^3 = (a+b)(a^2 - ab + b^2) \):</p>
+        <div class="math-block">
+          \[
+            \frac{ab^2}{a^3 + b^3} \cdot \frac{a^2 - ab + b^2}{ab}
+          \]
+        </div>
+        <div class="math-block">
+          \[
+            = \frac{ab^2}{(a+b)\cancel{(a^2 - ab + b^2)}} \cdot \frac{\cancel{(a^2 - ab + b^2)}}{ab}
+          \]
+        </div>
+        <div class="math-block">
+          \[
+            = \frac{ab^2}{(a+b) \cdot ab} = \frac{b}{a+b}
+          \]
+        </div>
+        <p class="note">Skraćen je faktor \( (a^2 - ab + b^2) \) u imeniocu i brojiocu, kao i \( a \) iz \( ab^2 \) i \( ab \).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details>
+      <summary>&#9989; Proveri se: Za \( a=1,\; b=2 \), koliko je \( \frac{b}{a+b} \)?</summary>
+      <p>\( \frac{2}{1+2} = \frac{2}{3} \). Direktnim računom: \( \frac{4}{9} \cdot \frac{3}{2} = \frac{12}{18} = \frac{2}{3} \). Slaže se!</p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Pojednostavimo deo sa deljenjem</h3>
+        <p>Sada rešavamo drugi sabirak: \( \frac{1}{b} : \left(\frac{1}{a} + \frac{1}{b}\right) \).</p>
+        <p>Prvo saberimo razlomke u zagradi:</p>
+        <div class="math-block">
+          \[
+            \frac{1}{a} + \frac{1}{b} = \frac{b + a}{ab} = \frac{a+b}{ab}
+          \]
+        </div>
+        <p>Sada delimo &mdash; deljenje razlomkom je množenje recipročnom vrednošću:</p>
+        <div class="math-block">
+          \[
+            \frac{1}{b} : \frac{a+b}{ab} = \frac{1}{b} \cdot \frac{ab}{a+b} = \frac{a}{a+b}
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container" id="step7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Saberimo dva rezultata</h3>
+        <p>Konačno, sabiramo rezultate iz koraka 5 i 6:</p>
+        <div class="math-block">
+          \[
+            \frac{b}{a+b} + \frac{a}{a+b} = \frac{b + a}{a + b} = \frac{a + b}{a + b} = 1
+          \]
+        </div>
+        <p>Izrazi imaju isti imenilac, pa se brojioci prosto sabiraju, dajući \( 1 \).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details>
+      <summary>&#9989; Proveri se: Da li rezultat zavisi od vrednosti \( a \) i \( b \)?</summary>
+      <p>Ne! Izraz je <em>identički</em> jednak \( 1 \) za sve dozvoljene vrednosti \( a \) i \( b \). Probaj sa \( a=3, b=1 \): prvi deo daje \( \frac{1}{4} \), drugi \( \frac{3}{4} \), ukupno \( 1 \).</p>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključno zapažanje</h2>
+    <p>Oba sabirka se nakon pojednostavljivanja svedu na komplementarne razlomke sa istim imeniocem \( (a+b) \):</p>
+    <div class="math-block" style="background: transparent; border-color: rgba(167,139,250,0.3);">
+      \[
+        \underbrace{\frac{b}{a+b}}_{\text{prvi deo}} + \underbrace{\frac{a}{a+b}}_{\text{drugi deo}} = 1
+      \]
+    </div>
+    <p style="color:#a78bfa; margin-top: 8px;">Formula za zbir kubova je „skriveni ključ" koji omogućava elegantno skraćivanje u prvom delu.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\( 1 \)</div>
+
+    <div class="options-row">
+      <div class="option-card correct">(A) \(1\)</div>
+      <div class="option-card">(B) \(\frac{b}{a+b}\)</div>
+      <div class="option-card">(C) \(\frac{b-a}{a+b}\)</div>
+      <div class="option-card">(D) \(0\)</div>
+      <div class="option-card">(E) \(\frac{a}{a+b}\)</div>
+    </div>
+
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> Za \( a = 1,\; b = 2 \): prvi deo daje \( \frac{4}{9} \cdot \frac{3}{2} = \frac{2}{3} \), drugi deo daje \( \frac{1}{2} : \frac{3}{2} = \frac{1}{3} \). Ukupno: \( \frac{2}{3} + \frac{1}{3} = 1 \). Za \( a = 3,\; b = 1 \): \( \frac{1}{4} + \frac{3}{4} = 1 \). Rezultat je uvek \( 1 \), nezavisno od izbora \( a \) i \( b \).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls-card">
+    <h2>Najčešće greške</h2>
+    <ul style="padding-left: 20px;">
+      <li><strong>Pogrešno tumačenje negativnog eksponenta u razlomku:</strong> Učenici često pišu \( \frac{a^{-1}}{b^{-1}} = \frac{a}{b} \) umesto tačnog \( \frac{b}{a} \). Zapamtite: negativni eksponent „obrće" &mdash; pa se obrću i brojilac i imenilac.</li>
+      <li><strong>Zaboravljanje prioriteta operacija:</strong> Deljenje (dvotačka) se odnosi samo na \( \frac{1}{b} \) podeljeno sa zagradom, a ne na ceo prethodni izraz. Izraz treba čitati kao: <em>(proizvod) + (količnik)</em>, ne kao <em>(proizvod + razlomak) : zagrada</em>.</li>
+      <li><strong>Neprimena formule za zbir kubova:</strong> Bez prepoznavanja da je \( a^3 + b^3 = (a+b)(a^2 - ab + b^2) \), teško je doći do skraćivanja u koraku 5. Ovo je tipičan „skriveni" faktorizacioni trik na prijemnim ispitima.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Šta bi se desilo ako umesto zbira kubova u imeniocu dobijemo <em>razliku</em> kubova? Pojednostavi izraz:</p>
+    <div class="math-block">
+      \[
+        \left(\frac{a^{-1}}{b^{-1}} - \frac{b^{-2}}{a^{-2}}\right)^{-1} \cdot \left(\frac{a}{b} + \frac{b}{a} + 1\right) + \frac{1}{b} \; : \; \left(\frac{1}{a} + \frac{1}{b}\right)
+      \]
+    </div>
+    <details>
+      <summary>Prikaži nagoveštaj</summary>
+      <p>Koristite formulu \( a^3 - b^3 = (a-b)(a^2+ab+b^2) \). Zapazite da druga zagrada sada daje \( \frac{a^2+ab+b^2}{ab} \). Posle skraćivanja, prvi sabirak postaje \( \frac{b}{a-b} \), dok drugi ostaje \( \frac{a}{a+b} \). Rezultat više neće biti konstantan!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  document.querySelectorAll('.step-container').forEach(step => {
+    step.addEventListener('click', () => {
+      document.querySelectorAll('.step-container').forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje izraza sa negativnim eksponentima i zbirom kubova",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["negativni eksponenti", "racionalni izrazi", "zbir kubova", "faktorizacija", "algebarski identiteti"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ostatak pri deljenju polinoma visokog stepena</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Find the remainder when P(x) = x^2020 + 2x^2019 - 1 is divided by Q(x) = x^3 + x^2 + x + 1.
+
+Since deg(Q) = 3, the remainder R(x) has degree at most 2:
+  R(x) = ax^2 + bx + c
+
+By the division algorithm:
+  P(x) = Q(x) * D(x) + R(x)
+
+This means P(alpha) = R(alpha) for every root alpha of Q(x).
+
+FACTORING Q(x):
+  Q(x) = x^3 + x^2 + x + 1
+       = x^2(x + 1) + 1(x + 1)
+       = (x + 1)(x^2 + 1)
+
+Roots of Q(x):
+  x + 1 = 0  =>  x = -1
+  x^2 + 1 = 0  =>  x = i, x = -i
+
+STEP 1: Evaluate P(-1):
+  P(-1) = (-1)^2020 + 2(-1)^2019 - 1
+        = 1 + 2(-1) - 1
+        = 1 - 2 - 1
+        = -2
+
+  R(-1) = a(-1)^2 + b(-1) + c = a - b + c
+
+  Equation (1): a - b + c = -2
+
+STEP 2: Evaluate P(i):
+  i^4 = 1, so i^{4k} = 1
+  2020 = 4 * 505, so i^2020 = (i^4)^505 = 1
+  2019 = 4 * 504 + 3, so i^2019 = i^3 = -i
+
+  P(i) = i^2020 + 2 * i^2019 - 1
+       = 1 + 2(-i) - 1
+       = -2i
+
+  R(i) = a * i^2 + b * i + c
+       = a(-1) + bi + c
+       = (c - a) + bi
+
+  Equation from real parts: c - a = 0  =>  c = a    ... (2)
+  Equation from imaginary parts: b = -2              ... (3)
+
+STEP 3: Solve the system.
+  From (3): b = -2
+  From (2): c = a
+  Substitute into (1): a - (-2) + a = -2
+    => a + 2 + a = -2
+    => 2a = -4
+    => a = -2
+
+  Therefore: a = -2, b = -2, c = -2
+
+  R(x) = -2x^2 - 2x - 2
+
+VERIFICATION with P(-i):
+  (-i)^4 = 1
+  2020 = 4*505, so (-i)^2020 = 1
+  2019 = 4*504 + 3, so (-i)^2019 = (-i)^3 = -(-i)^3 ... let me compute more carefully:
+  (-i)^1 = -i
+  (-i)^2 = (-i)(-i) = i^2 = -1
+  (-i)^3 = (-i)^2 * (-i) = -1 * (-i) = i
+  (-i)^4 = (-i)^3 * (-i) = i * (-i) = -i^2 = 1
+
+  So (-i)^2019 = (-i)^(4*504 + 3) = (-i)^3 = i
+
+  P(-i) = 1 + 2i - 1 = 2i
+
+  R(-i) = -2(-i)^2 - 2(-i) - 2
+        = -2(-1) + 2i - 2
+        = 2 + 2i - 2
+        = 2i  ✓
+
+ANSWER: D) -2x^2 - 2x - 2
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.problem-statement {
+  border: 2px solid #a78bfa;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card .card-title {
+  color: #a78bfa;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  font-size: 1.05rem;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  padding: 12px 16px;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.checkpoint .checkpoint-answer {
+  padding: 0 16px 14px;
+  color: #e2e8f0;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.option-final {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 16px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.option-final.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.system-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+}
+
+.system-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  color: #60a5fa;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 700px) {
+  body { padding: 10px; }
+  .container { padding: 10px; }
+  .card, .problem-statement, .insight-box, .final-answer, .challenge-box { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Ostatak pri deljenju polinoma visokog stepena</h1>
+  <p class="subtitle">Deljenje polinoma, kompleksni koreni i teorema o ostatku</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Ostatak koji se dobija deljenjem polinoma \(P(x) = x^{2020} + 2x^{2019} - 1\) polinomom \(Q(x) = x^3 + x^2 + x + 1\) jednak je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(2x^2 - 2x - 2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2x^2 + 2x + 2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(x^2 + 2x + 1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-2x^2 - 2x - 2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-x^2 - 2x - 1\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan resavanja</div>
+    <p>Faktorizovacemo delilac \(Q(x)\), pronaci njegove korene (ukljucujuci kompleksne), pa koristiti cinjenicu da se ostatak \(R(x) = ax^2 + bx + c\) moze odrediti uvrstavanjem korena u jednakost \(P(\alpha) = R(\alpha)\). Time dobijamo sistem od tri jednacine sa tri nepoznate.</p>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Algoritam deljenja polinoma:</strong> Za polinome \(P(x)\) i \(Q(x)\) (\(Q \neq 0\)), postoje jedinstveni \(D(x)\) i \(R(x)\) takvi da:
+          \[P(x) = Q(x) \cdot D(x) + R(x), \quad \deg R < \deg Q\]</li>
+          <li><strong>Posledica za korene delioca:</strong> Ako je \(\alpha\) koren od \(Q(x)\), tada \(Q(\alpha) = 0\), pa:
+          \[P(\alpha) = R(\alpha)\]
+          Ovo nam daje jednacinu za koeficijente ostatka.</li>
+          <li><strong>Ciklicnost stepena imaginarne jedinice:</strong>
+          \[i^0 = 1,\; i^1 = i,\; i^2 = -1,\; i^3 = -i,\; i^4 = 1, \;\ldots\]
+          Dakle \(i^n\) zavisi samo od ostatka \(n \div 4\).</li>
+          <li><strong>Faktorizacija \(x^3 + x^2 + x + 1\):</strong>
+          \[x^3 + x^2 + x + 1 = x^2(x+1) + (x+1) = (x+1)(x^2+1)\]</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Vizuelni prikaz</div>
+    <p class="muted" style="margin-bottom:12px;">Dijagram prikazuje korene polinoma \(Q(x)\) u kompleksnoj ravni i strukturu postupka odredjivanja ostatka.</p>
+    <div class="canvas-wrap">
+      <canvas id="rootsCanvas" width="700" height="380"></canvas>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <div class="step-title">Faktorizacija delioca \(Q(x)\)</div>
+      </div>
+      <p>Grupisionemo clanove:</p>
+      <div class="math-block">
+        \[Q(x) = x^3 + x^2 + x + 1 = x^2(x + 1) + 1 \cdot (x + 1) = (x + 1)(x^2 + 1)\]
+      </div>
+      <p>Koreni od \(Q(x)\) su resenja jednacina \(x + 1 = 0\) i \(x^2 + 1 = 0\):</p>
+      <div class="math-block">
+        \[x_1 = -1, \qquad x_2 = i, \qquad x_3 = -i\]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <div class="step-title">Postavljanje sistema jednacina</div>
+      </div>
+      <p>Posto je \(\deg Q = 3\), ostatak \(R(x)\) je stepena najvise 2:</p>
+      <div class="math-block">
+        \[R(x) = ax^2 + bx + c\]
+      </div>
+      <p>Iz jednakosti \(P(x) = Q(x) \cdot D(x) + R(x)\) sledi da za svaki koren \(\alpha\) od \(Q(x)\) vazi:</p>
+      <div class="math-block">
+        \[P(\alpha) = R(\alpha)\]
+      </div>
+      <p>To nam daje tri jednacine (za \(\alpha = -1, \, i, \, -i\)) sa tri nepoznate \(a, b, c\).</p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <div class="step-title">Uvrstavamo \(x = -1\)</div>
+      </div>
+      <p>Racunamo \(P(-1)\). Koristimo cinjenicu da je \((-1)^{2020} = 1\) (paran eksponent) i \((-1)^{2019} = -1\) (neparan eksponent):</p>
+      <div class="math-block">
+        \[P(-1) = (-1)^{2020} + 2 \cdot (-1)^{2019} - 1 = 1 + 2 \cdot (-1) - 1 = 1 - 2 - 1 = -2\]
+      </div>
+      <p>S druge strane:</p>
+      <div class="math-block">
+        \[R(-1) = a \cdot (-1)^2 + b \cdot (-1) + c = a - b + c\]
+      </div>
+      <div class="system-box">
+        <div class="system-label">Jednacina (1)</div>
+        \[a - b + c = -2\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(i^{2020}\)?</summary>
+      <div class="checkpoint-answer">
+        <p>Posto je \(2020 = 4 \times 505\), vazi \(i^{2020} = (i^4)^{505} = 1^{505} = 1\).</p>
+      </div>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <div class="step-title">Uvrstavamo \(x = i\)</div>
+      </div>
+      <p>Odredimo \(i^{2020}\) i \(i^{2019}\) koristeci ciklicnost \(i^4 = 1\):</p>
+      <div class="math-block">
+        \[2020 = 4 \times 505 \;\Rightarrow\; i^{2020} = 1\]
+        \[2019 = 4 \times 504 + 3 \;\Rightarrow\; i^{2019} = i^3 = -i\]
+      </div>
+      <p>Dakle:</p>
+      <div class="math-block">
+        \[P(i) = 1 + 2 \cdot (-i) - 1 = -2i\]
+      </div>
+      <p>S druge strane, koristeci \(i^2 = -1\):</p>
+      <div class="math-block">
+        \[R(i) = a \cdot i^2 + b \cdot i + c = -a + bi + c = (c - a) + bi\]
+      </div>
+      <p>Izjednacavamo realne i imaginarne delove \(R(i) = P(i)\), tj. \((c - a) + bi = 0 + (-2)i\):</p>
+      <div class="system-box">
+        <div class="system-label">Jednacina (2) — realni deo</div>
+        \[c - a = 0 \quad \Rightarrow \quad c = a\]
+      </div>
+      <div class="system-box">
+        <div class="system-label">Jednacina (3) — imaginarni deo</div>
+        \[b = -2\]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">5</div>
+        <div class="step-title">Resavamo sistem</div>
+      </div>
+      <p>Iz jednacine (3) imamo \(b = -2\). Iz jednacine (2) imamo \(c = a\). Uvrstimo u jednacinu (1):</p>
+      <div class="math-block">
+        \[a - (-2) + a = -2\]
+        \[a + 2 + a = -2\]
+        \[2a = -4\]
+        \[a = -2\]
+      </div>
+      <p>Prema tome:</p>
+      <div class="math-block">
+        \[a = -2, \quad b = -2, \quad c = -2\]
+      </div>
+      <p>Ostatak je:</p>
+      <div class="math-block">
+        \[\boxed{R(x) = -2x^2 - 2x - 2}\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Da li \(R(-1) = P(-1)\)?</summary>
+      <div class="checkpoint-answer">
+        <p>\(R(-1) = -2 \cdot 1 - 2 \cdot (-1) - 2 = -2 + 2 - 2 = -2\). A \(P(-1) = -2\). Tacno!</p>
+      </div>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">6</div>
+        <div class="step-title">Verifikacija sa \(x = -i\)</div>
+      </div>
+      <p>Za potpunu sigurnost, proverimo i treci koren. Odredimo \((-i)^{2020}\) i \((-i)^{2019}\):</p>
+      <div class="math-block">
+        \[(-i)^1 = -i, \quad (-i)^2 = -1, \quad (-i)^3 = i, \quad (-i)^4 = 1\]
+      </div>
+      <p class="note">Ciklus duzine 4, isti kao za \(i\) ali pomeren.</p>
+      <div class="math-block">
+        \[(-i)^{2020} = ((-i)^4)^{505} = 1\]
+        \[(-i)^{2019} = (-i)^{4 \times 504 + 3} = (-i)^3 = i\]
+      </div>
+      <p>Dakle:</p>
+      <div class="math-block">
+        \[P(-i) = 1 + 2i - 1 = 2i\]
+      </div>
+      <p>Proveravamo \(R(-i)\):</p>
+      <div class="math-block">
+        \[R(-i) = -2(-i)^2 - 2(-i) - 2 = -2 \cdot (-1) + 2i - 2 = 2 + 2i - 2 = 2i \;\; \checkmark\]
+      </div>
+      <p class="highlight">Rezultat je potvrdjen za sva tri korena.</p>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Moze li se \(R(x) = -2x^2 - 2x - 2\) zapisati drugacije?</summary>
+      <div class="checkpoint-answer">
+        <p>Da! \(R(x) = -2(x^2 + x + 1)\). Primetimo da je \(x^2 + x + 1 = \frac{x^3 - 1}{x - 1}\) za \(x \neq 1\), sto je treci ciklotomicki polinom.</p>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Kljucni uvid</div>
+    <p>Direktno deljenje polinoma stepena 2020 polinomom stepena 3 bilo bi neprakticno. Medjutim, <span class="highlight-pink">ostatak je jedinstven polinom stepena \(\leq 2\)</span>, pa su nam potrebne samo tri jednacine da odredimo tri koeficijenta. Uvrstavanjem korena delioca te jednacine dobijamo odmah, bez dugog deljenja.</p>
+    <p style="margin-top: 10px;">Sustina trika: \(P(\alpha) = Q(\alpha) \cdot D(\alpha) + R(\alpha) = 0 + R(\alpha) = R(\alpha)\).</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konacan odgovor</div>
+    <div class="value">D) \(-2x^2 - 2x - 2\)</div>
+    <div class="options-final">
+      <div class="option-final">(A) \(2x^2 - 2x - 2\)</div>
+      <div class="option-final">(B) \(2x^2 + 2x + 2\)</div>
+      <div class="option-final">(C) \(x^2 + 2x + 1\)</div>
+      <div class="option-final correct">(D) \(-2x^2 - 2x - 2\)</div>
+      <div class="option-final">(E) \(-x^2 - 2x - 1\)</div>
+    </div>
+    <p class="muted" style="margin-top: 14px; font-size: 0.9rem;">Verifikacija: Ostatak zadovoljava \(R(-1) = -2 = P(-1)\), \(R(i) = -2i = P(i)\) i \(R(-i) = 2i = P(-i)\).</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall">
+      <strong>Greska u ciklusu stepena \(i\):</strong> Ucenici cesto pogresno izracunaju \(i^{2019}\). Kljuc je da nadjete ostatak pri deljenju eksponenta sa 4. Posto je \(2019 = 4 \times 504 + 3\), vazi \(i^{2019} = i^3 = -i\), a ne \(i\) ili \(-1\).
+    </div>
+    <div class="pitfall">
+      <strong>Zaboravljanje kompleksnih korena:</strong> Polinom \(Q(x) = x^3 + x^2 + x + 1\) ima samo jedan realan koren (\(x = -1\)), ali to daje samo jednu jednacinu. Potrebna su nam sva tri korena (ukljucujuci \(i\) i \(-i\)) da bismo formirali potpun sistem.
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Odredi ostatak pri deljenju polinoma \(x^{100} + x^{99} + x + 1\) polinomom \(x^2 - 1\).</p>
+    <details style="margin-top: 10px;">
+      <summary style="color: #34d399;">Savet</summary>
+      <p style="padding: 8px 0;">Koreni od \(x^2 - 1\) su \(x = 1\) i \(x = -1\). Ostatak je oblika \(ax + b\). Izracunaj \(P(1)\) i \(P(-1)\) i postavi sistem od dve jednacine.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('rootsCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const cx = W / 2;
+  const cy = H / 2;
+  const scale = 110;
+
+  function toCanvas(re, im) {
+    return { x: cx + re * scale, y: cy - im * scale };
+  }
+
+  // Clear
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  for (let r = -3; r <= 3; r++) {
+    const p = toCanvas(r, 0);
+    ctx.beginPath(); ctx.moveTo(p.x, 30); ctx.lineTo(p.x, H - 30); ctx.stroke();
+  }
+  for (let i = -2; i <= 2; i++) {
+    const p = toCanvas(0, i);
+    ctx.beginPath(); ctx.moveTo(60, p.y); ctx.lineTo(W - 60, p.y); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 1.5;
+  // Re axis
+  ctx.beginPath();
+  ctx.moveTo(60, cy);
+  ctx.lineTo(W - 60, cy);
+  ctx.stroke();
+  // Im axis
+  ctx.beginPath();
+  ctx.moveTo(cx, 30);
+  ctx.lineTo(cx, H - 30);
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '13px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Re', W - 45, cy - 8);
+  ctx.fillText('Im', cx + 15, 25);
+
+  // Tick labels
+  ctx.font = '11px Segoe UI, system-ui, sans-serif';
+  for (let r = -2; r <= 2; r++) {
+    if (r === 0) continue;
+    const p = toCanvas(r, 0);
+    ctx.fillText(r.toString(), p.x, cy + 18);
+  }
+  for (let i = -1; i <= 1; i++) {
+    if (i === 0) continue;
+    const p = toCanvas(0, i);
+    const lbl = i === 1 ? 'i' : '-i';
+    ctx.textAlign = 'right';
+    ctx.fillText(lbl, cx - 10, p.y + 4);
+  }
+  ctx.textAlign = 'center';
+  ctx.fillText('0', cx - 10, cy + 18);
+
+  // Unit circle (dashed)
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.arc(cx, cy, scale, 0, 2 * Math.PI);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw roots of Q(x)
+  const roots = [
+    { re: -1, im: 0, label: 'x = -1', color: '#60a5fa' },
+    { re: 0, im: 1, label: 'x = i', color: '#a78bfa' },
+    { re: 0, im: -1, label: 'x = -i', color: '#f472b6' }
+  ];
+
+  roots.forEach(root => {
+    const p = toCanvas(root.re, root.im);
+
+    // Glow
+    const grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, 18);
+    grad.addColorStop(0, root.color + '60');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 18, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Point
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = root.color;
+    ctx.fill();
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = root.color;
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const offsetY = root.im >= 0 ? -16 : 22;
+    const offsetX = root.re < 0 ? -10 : 0;
+    ctx.fillText(root.label, p.x + offsetX, p.y + offsetY);
+  });
+
+  // Title text
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Koreni delioca Q(x) = (x+1)(x\u00B2+1)', cx, H - 10);
+
+  // Draw arrows showing P(root) = R(root)
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+
+  // Right side annotations
+  const annotations = [
+    { y: 60, text: 'P(-1) = -2  \u21D2  a - b + c = -2', color: '#60a5fa' },
+    { y: 90, text: 'P(i) = -2i  \u21D2  c - a = 0, b = -2', color: '#a78bfa' },
+    { y: 120, text: 'P(-i) = 2i  \u21D2  verifikacija', color: '#f472b6' }
+  ];
+
+  annotations.forEach(ann => {
+    ctx.fillStyle = ann.color;
+    ctx.fillText(ann.text, cx + scale + 40, ann.y);
+  });
+
+  // Result box
+  ctx.fillStyle = 'rgba(74, 222, 128, 0.1)';
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 1.5;
+  const boxX = cx + scale + 30;
+  const boxY = 140;
+  const boxW = 200;
+  const boxH = 32;
+  ctx.beginPath();
+  ctx.roundRect(boxX, boxY, boxW, boxH, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('R(x) = -2x\u00B2 - 2x - 2', boxX + 10, boxY + 21);
+
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Ostatak pri deljenju polinoma visokog stepena","subject":"math","unit":"algebra","topic_tags":["deljenje polinoma","ostatak pri deljenju","kompleksni koreni","teorema o ostatku","ciklicnost stepena imaginarne jedinice"]}
+BRAINSPARK_META-->

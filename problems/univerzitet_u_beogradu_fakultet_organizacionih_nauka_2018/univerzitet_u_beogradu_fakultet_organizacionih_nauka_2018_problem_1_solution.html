@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uprošćavanje algebarskog izraza sa korenima</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Simplify the expression:
+  (2a + sqrt(a²-1)) / ((sqrt(a-1) + sqrt(a+1)) · ((a-1)^(3/2) - (a+1)^(3/2)))
+where a is real and a >= 1.
+
+STEP-BY-STEP LOGIC:
+
+1. Let p = sqrt(a-1), q = sqrt(a+1). Then p² = a-1, q² = a+1.
+
+2. Note that sqrt(a²-1) = sqrt((a-1)(a+1)) = pq.
+
+3. Numerator = 2a + pq
+
+4. Denominator = (p + q) · (p³ - q³)
+   because (a-1)^(3/2) = (sqrt(a-1))³ = p³ and (a+1)^(3/2) = q³.
+
+5. Apply difference of cubes: p³ - q³ = (p - q)(p² + pq + q²)
+   p² + pq + q² = (a-1) + pq + (a+1) = 2a + pq
+
+6. So denominator = (p + q)(p - q)(2a + pq)
+
+7. (p + q)(p - q) = p² - q² = (a-1) - (a+1) = -2
+
+8. Denominator = -2 · (2a + pq)
+
+9. Full expression = (2a + pq) / (-2(2a + pq)) = 1/(-2) = -1/2
+
+ANSWER: D) -1/2
+
+VERIFICATION with a = 1:
+  Numerator: 2·1 + sqrt(0) = 2
+  sqrt(0) + sqrt(2) = sqrt(2)
+  (0)^(3/2) - (2)^(3/2) = 0 - 2sqrt(2) = -2sqrt(2)
+  Denominator: sqrt(2) · (-2sqrt(2)) = -2·2 = -4
+  Result: 2/(-4) = -1/2 ✓
+
+VERIFICATION with a = 5:
+  Numerator: 10 + sqrt(24) = 10 + 2sqrt(6)
+  sqrt(4) + sqrt(6) = 2 + sqrt(6)
+  4^(3/2) - 6^(3/2) = 8 - 6sqrt(6)
+  Denominator: (2 + sqrt(6))(8 - 6sqrt(6))
+    = 16 - 12sqrt(6) + 8sqrt(6) - 36 = -20 - 4sqrt(6) = -2(10 + 2sqrt(6))
+  Result: (10 + 2sqrt(6)) / (-2(10 + 2sqrt(6))) = -1/2 ✓
+
+Correct answer: D) -1/2
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.subtitle {
+  color: #94a3b8;
+  text-align: center;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.12);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+  flex: 1;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #a78bfa;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.theory-card ul {
+  list-style: none;
+  padding: 12px 0;
+}
+
+.theory-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+.theory-card li:last-child {
+  border-bottom: none;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.step:hover {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 20px 0;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.checkpoint .answer {
+  padding-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(96,165,250,0.25);
+  text-align: center;
+  padding: 28px;
+}
+
+.insight-card .big-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+  color: #4ade80;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(74,222,128,0.04));
+  text-align: center;
+  padding: 28px;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+  justify-content: center;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 800;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  color: #4ade80;
+  box-shadow: 0 0 20px rgba(74,222,128,0.15);
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+  text-align: left;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #cbd5e1;
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-label {
+  color: #e09468;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-weight: 600;
+  user-select: none;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+  width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { padding: 12px; flex-direction: column; gap: 8px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .final-answer-value { font-size: 1.4rem; }
+  .options-row { gap: 8px; }
+  .option-card { padding: 8px 14px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Uprošćavanje algebarskog izraza sa korenima</h1>
+  <p class="subtitle">Algebra &mdash; razlika kubova, razlika kvadrata i racionalizacija izraza sa korenima</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Izraz
+    </p>
+    <div class="math-block">
+      \[ \frac{2a + (a^2 - 1)^{\frac{1}{2}}}{\left((a-1)^{\frac{1}{2}} + (a+1)^{\frac{1}{2}}\right) \cdot \left((a-1)^{\frac{3}{2}} - (a+1)^{\frac{3}{2}}\right)} \]
+    </div>
+    <p>gde je \(a\) realan broj i \(a \geq 1\), identički je jednak izrazu:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{1}{2a}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{2a}{2a - (a^2-1)^{\frac{1}{2}}}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{2a}{a + (a^2-1)^{\frac{1}{2}}}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-\dfrac{1}{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Uvešćemo smene \(p = \sqrt{a-1}\) i \(q = \sqrt{a+1}\) da bismo imenilac rastavili korišćenjem
+      formule za <span class="highlight-blue">razliku kubova</span> i <span class="highlight-pink">razliku kvadrata</span>.
+      Cilj je da se brojilac i imenilac skrate.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <ul>
+        <li>
+          <strong>Razlika kubova:</strong>
+          \[ p^3 - q^3 = (p - q)(p^2 + pq + q^2) \]
+        </li>
+        <li>
+          <strong>Razlika kvadrata:</strong>
+          \[ (p + q)(p - q) = p^2 - q^2 \]
+        </li>
+        <li>
+          <strong>Stepen racionalan eksponent:</strong>
+          \[ a^{\frac{3}{2}} = \left(\sqrt{a}\right)^3, \quad a^{\frac{1}{2}} = \sqrt{a} \]
+        </li>
+        <li>
+          <strong>Proizvod korenova:</strong>
+          \[ \sqrt{a-1} \cdot \sqrt{a+1} = \sqrt{(a-1)(a+1)} = \sqrt{a^2 - 1} \]
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color:#94a3b8; margin-bottom: 14px;">
+      Dijagram prikazuje strukturu izraza i tok uprošćavanja, korak po korak.
+    </p>
+    <canvas id="diagramCanvas" width="800" height="520"></canvas>
+    <p class="canvas-hint">Tok transformacije: od polaznog izraza do krajnjeg rezultata</p>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Uvođenje smena</h3>
+        <p>
+          Da bismo lakše radili sa izrazom, uvodimo smene:
+        </p>
+        <div class="math-block">
+          \[ p = \sqrt{a-1}, \quad q = \sqrt{a+1} \]
+        </div>
+        <p>
+          Odavde sledi:
+        </p>
+        <div class="math-block">
+          \[ p^2 = a-1, \quad q^2 = a+1 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Prepisivanje brojioca</h3>
+        <p>
+          Izraz \(\sqrt{a^2-1}\) možemo zapisati kao proizvod korena:
+        </p>
+        <div class="math-block">
+          \[ \sqrt{a^2-1} = \sqrt{(a-1)(a+1)} = \sqrt{a-1} \cdot \sqrt{a+1} = p \cdot q \]
+        </div>
+        <p>
+          Zato je brojilac:
+        </p>
+        <div class="math-block">
+          \[ 2a + \sqrt{a^2-1} = 2a + pq \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Prepisivanje imenioca &mdash; prepoznavanje kubova</h3>
+        <p>
+          Primetimo da važi:
+        </p>
+        <div class="math-block">
+          \[ (a-1)^{\frac{3}{2}} = \left(\sqrt{a-1}\right)^3 = p^3 \]
+        </div>
+        <div class="math-block">
+          \[ (a+1)^{\frac{3}{2}} = \left(\sqrt{a+1}\right)^3 = q^3 \]
+        </div>
+        <p>
+          Dakle, imenilac ima oblik:
+        </p>
+        <div class="math-block">
+          \[ (p + q) \cdot (p^3 - q^3) \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(p^2 + q^2\) izraženo preko \(a\)?</summary>
+      <div class="answer">
+        \(p^2 + q^2 = (a-1) + (a+1) = 2a\)
+      </div>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Primena formule za razliku kubova</h3>
+        <p>
+          Koristimo formulu \(p^3 - q^3 = (p - q)(p^2 + pq + q^2)\):
+        </p>
+        <div class="math-block">
+          \[ p^3 - q^3 = (p - q)\left(p^2 + pq + q^2\right) \]
+        </div>
+        <p>
+          Izračunajmo \(p^2 + pq + q^2\):
+        </p>
+        <div class="math-block">
+          \[ p^2 + pq + q^2 = (a-1) + pq + (a+1) = 2a + pq \]
+        </div>
+        <p>
+          Dakle:
+        </p>
+        <div class="math-block">
+          \[ p^3 - q^3 = (p - q)(2a + pq) \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Zapisivanje kompletnog imenioca</h3>
+        <p>
+          Zamenjujemo u imenilac:
+        </p>
+        <div class="math-block">
+          \[ (p + q) \cdot (p^3 - q^3) = (p + q)(p - q)(2a + pq) \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \((p+q)(p-q)\)?</summary>
+      <div class="answer">
+        Po formuli za razliku kvadrata: \((p+q)(p-q) = p^2 - q^2 = (a-1) - (a+1) = -2\)
+      </div>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Primena formule za razliku kvadrata</h3>
+        <p>
+          Proizvod \((p+q)(p-q)\) je razlika kvadrata:
+        </p>
+        <div class="math-block">
+          \[ (p + q)(p - q) = p^2 - q^2 = (a-1) - (a+1) = -2 \]
+        </div>
+        <p>
+          Kompletan imenilac postaje:
+        </p>
+        <div class="math-block">
+          \[ -2 \cdot (2a + pq) \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Skraćivanje razlomka</h3>
+        <p>
+          Sada sastavimo ceo izraz:
+        </p>
+        <div class="math-block">
+          \[ \frac{2a + pq}{-2 \cdot (2a + pq)} \]
+        </div>
+        <p>
+          Brojilac \((2a + pq)\) i isti faktor u imeniocu se skraćuju (jer je \(2a + pq > 0\) za \(a \geq 1\)):
+        </p>
+        <div class="math-block">
+          \[ \frac{\cancel{2a + pq}}{-2 \cdot \cancel{(2a + pq)}} = \frac{1}{-2} = -\frac{1}{2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Za \(a = 1\), kolika je vrednost polaznog izraza?</summary>
+      <div class="answer">
+        Brojilac: \(2 \cdot 1 + \sqrt{0} = 2\). Imenilac: \((\sqrt{0}+\sqrt{2})(0 - 2\sqrt{2}) = \sqrt{2} \cdot (-2\sqrt{2}) = -4\).
+        Rezultat: \(\frac{2}{-4} = -\frac{1}{2}\). Potvrđeno!
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2 style="justify-content: center;">Ključno zapažanje</h2>
+    <p>
+      Ključ ovog zadatka je prepoznavanje da se izraz \((a-1)^{3/2} - (a+1)^{3/2}\) može napisati kao
+      <span class="highlight-blue">razlika kubova</span> \(p^3 - q^3\), nakon čega se u imeniocu pojavljuje
+      faktor \((2a + pq)\) &mdash; isti kao brojilac! Zajedno sa <span class="highlight-pink">razlikom kvadrata</span>
+      \((p+q)(p-q) = -2\), sve se elegantno skraćuje.
+    </p>
+    <div class="big-formula">
+      \[ \frac{\cancel{2a + \sqrt{a^2-1}}}{\underbrace{(\sqrt{a-1}+\sqrt{a+1})(\sqrt{a-1}-\sqrt{a+1})}_{-2} \cdot \cancel{(2a + \sqrt{a^2-1})}} = -\frac{1}{2} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">
+      \( -\dfrac{1}{2} \)
+    </div>
+    <p style="color:#94a3b8; margin-bottom: 14px;">Tačan odgovor je <strong style="color:#4ade80;">D)</strong></p>
+    <div class="options-row">
+      <div class="option-card">(A) \(\frac{1}{2a}\)</div>
+      <div class="option-card">(B) \(\frac{2a}{2a - \sqrt{a^2-1}}\)</div>
+      <div class="option-card">(C) \(\frac{2a}{a + \sqrt{a^2-1}}\)</div>
+      <div class="option-card correct">(D) \(-\frac{1}{2}\) &#10003;</div>
+      <div class="option-card">(E) \(2\)</div>
+    </div>
+    <p class="verification-note">
+      <strong>Verifikacija:</strong>
+      Za \(a = 5\): brojilac je \(10 + 2\sqrt{6}\), imenilac je
+      \((2+\sqrt{6})(8-6\sqrt{6}) = -20 - 4\sqrt{6} = -2(10 + 2\sqrt{6})\).
+      Rezultat: \(\frac{10+2\sqrt{6}}{-2(10+2\sqrt{6})} = -\frac{1}{2}\).
+      Rezultat ne zavisi od \(a\), što potvrđuje da je izraz identički jednak konstanti \(-\frac{1}{2}\).
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li>
+        <span class="pitfall-label">Greška 1:</span>
+        Ne prepoznati da je \((a-1)^{3/2} = (\sqrt{a-1})^3\), tj. ne videti razliku kubova u imeniocu.
+        Bez ove veze, imenilac se ne može efikasno rastaviti.
+      </li>
+      <li>
+        <span class="pitfall-label">Greška 2:</span>
+        Pogrešan znak u razlici kvadrata. Česta greška je napisati \(p^2 - q^2 = (a+1)-(a-1) = 2\)
+        umesto ispravnog \((a-1)-(a+1) = -2\). Ovo menja znak krajnjeg rezultata.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Uprosti sličan izraz:
+      \[ \frac{3a + (a^2-1)^{\frac{1}{2}}}{\left((a-1)^{\frac{1}{2}} + (a+1)^{\frac{1}{2}}\right) \cdot \left((a-1)^{\frac{3}{2}} - (a+1)^{\frac{3}{2}}\right)} \]
+      Da li je rezultat ponovo konstanta?
+    </p>
+    <details>
+      <summary>Nagovještaj</summary>
+      <p style="padding-top: 10px; color: #cbd5e1;">
+        Primeni istu smenu \(p = \sqrt{a-1}\), \(q = \sqrt{a+1}\). Imenilac se rastavlja na isti način
+        i daje \(-2(2a + pq)\). Međutim, brojilac je sada \(3a + pq\), što se <em>ne</em> skraćuje sa
+        \(2a + pq\) u imeniocu. Dakle, rezultat više nije konstanta &mdash; zavisi od \(a\)!
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagramCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  function drawDiagram() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width;
+    const H = 520;
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    var s = Math.min(W / 800, 1);
+
+    // Helper: rounded rectangle
+    function roundedBox(x, y, w, h, rad, fillColor, strokeColor, lineW) {
+      ctx.beginPath();
+      ctx.moveTo(x + rad, y);
+      ctx.lineTo(x + w - rad, y);
+      ctx.arcTo(x + w, y, x + w, y + rad, rad);
+      ctx.lineTo(x + w, y + h - rad);
+      ctx.arcTo(x + w, y + h, x + w - rad, y + h, rad);
+      ctx.lineTo(x + rad, y + h);
+      ctx.arcTo(x, y + h, x, y + h - rad, rad);
+      ctx.lineTo(x, y + rad);
+      ctx.arcTo(x, y, x + rad, y, rad);
+      ctx.closePath();
+      if (fillColor) { ctx.fillStyle = fillColor; ctx.fill(); }
+      if (strokeColor) { ctx.strokeStyle = strokeColor; ctx.lineWidth = lineW || 1.5; ctx.stroke(); }
+    }
+
+    // Helper: arrow
+    function drawArrow(fromX, fromY, toX, toY, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2 * s;
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+      var angle = Math.atan2(toY - fromY, toX - fromX);
+      var headLen = 8 * s;
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(toX - headLen * Math.cos(angle - 0.4), toY - headLen * Math.sin(angle - 0.4));
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(toX - headLen * Math.cos(angle + 0.4), toY - headLen * Math.sin(angle + 0.4));
+      ctx.stroke();
+    }
+
+    var boxW = 180 * s;
+    var boxH = 56 * s;
+    var gap = 30 * s;
+
+    // --- Row 0: Title ---
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (12 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('STRUKTURA UPROŠĆAVANJA', W / 2, 18 * s);
+
+    // --- Row 1: Smena ---
+    var row1Y = 32 * s;
+    var smenaBoxW = 320 * s;
+    var smenaBoxX = (W - smenaBoxW) / 2;
+    roundedBox(smenaBoxX, row1Y, smenaBoxW, boxH, 8 * s, 'rgba(96,165,250,0.08)', 'rgba(96,165,250,0.3)');
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (11 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Smena: p = \u221A(a\u22121), q = \u221A(a+1)', W / 2, row1Y + 22 * s);
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold ' + (13 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('p\u00B2 = a\u22121, q\u00B2 = a+1, pq = \u221A(a\u00B2\u22121)', W / 2, row1Y + 42 * s);
+
+    // --- Row 2: Brojilac i Imenilac ---
+    var row2Y = row1Y + boxH + 36 * s;
+    var r2boxW = 200 * s;
+    var r2gap = 60 * s;
+    var r2totalW = 2 * r2boxW + r2gap;
+    var r2startX = (W - r2totalW) / 2;
+
+    // Arrow from smena to both
+    drawArrow(W / 2 - 40 * s, row1Y + boxH, r2startX + r2boxW / 2, row2Y, '#475569');
+    drawArrow(W / 2 + 40 * s, row1Y + boxH, r2startX + r2boxW + r2gap + r2boxW / 2, row2Y, '#475569');
+
+    // Brojilac box
+    var brX = r2startX;
+    roundedBox(brX, row2Y, r2boxW, boxH, 8 * s, 'rgba(52,211,153,0.08)', 'rgba(52,211,153,0.3)');
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (11 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BROJILAC', brX + r2boxW / 2, row2Y + 20 * s);
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold ' + (14 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('2a + pq', brX + r2boxW / 2, row2Y + 42 * s);
+
+    // Imenilac box
+    var imX = r2startX + r2boxW + r2gap;
+    roundedBox(imX, row2Y, r2boxW, boxH, 8 * s, 'rgba(244,114,182,0.08)', 'rgba(244,114,182,0.3)');
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (11 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('IMENILAC', imX + r2boxW / 2, row2Y + 20 * s);
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold ' + (14 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(p+q)(p\u00B3\u2212q\u00B3)', imX + r2boxW / 2, row2Y + 42 * s);
+
+    // --- Row 3: Razlika kubova ---
+    var row3Y = row2Y + boxH + 36 * s;
+    var r3boxW = 280 * s;
+    var r3boxX = imX + r2boxW / 2 - r3boxW / 2;
+
+    drawArrow(imX + r2boxW / 2, row2Y + boxH, r3boxX + r3boxW / 2, row3Y, '#475569');
+
+    roundedBox(r3boxX, row3Y, r3boxW, boxH, 8 * s, 'rgba(167,139,250,0.08)', 'rgba(167,139,250,0.3)');
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (11 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Razlika kubova: p\u00B3\u2212q\u00B3 = (p\u2212q)(p\u00B2+pq+q\u00B2)', r3boxX + r3boxW / 2, row3Y + 20 * s);
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold ' + (14 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= (p\u2212q)(2a + pq)', r3boxX + r3boxW / 2, row3Y + 42 * s);
+
+    // --- Row 4: Imenilac rastavljen ---
+    var row4Y = row3Y + boxH + 36 * s;
+    var r4boxW = 340 * s;
+    var r4boxX = (W - r4boxW) / 2;
+
+    drawArrow(r3boxX + r3boxW / 2, row3Y + boxH, r4boxX + r4boxW / 2, row4Y, '#475569');
+
+    roundedBox(r4boxX, row4Y, r4boxW, boxH + 8 * s, 8 * s, 'rgba(244,114,182,0.08)', 'rgba(244,114,182,0.3)');
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (11 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Imenilac = (p+q)(p\u2212q) \u00B7 (2a+pq)', r4boxX + r4boxW / 2, row4Y + 18 * s);
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold ' + (13 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(p+q)(p\u2212q) = p\u00B2\u2212q\u00B2 = (a\u22121)\u2212(a+1) = \u22122', r4boxX + r4boxW / 2, row4Y + 38 * s);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold ' + (14 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Imenilac = \u22122 \u00B7 (2a + pq)', r4boxX + r4boxW / 2, row4Y + 56 * s);
+
+    // --- Row 5: Skraćivanje i rezultat ---
+    var row5Y = row4Y + boxH + 8 * s + 36 * s;
+    var finalBoxW = 240 * s;
+    var finalBoxX = (W - finalBoxW) / 2;
+
+    // Arrows from brojilac and row4 to final
+    drawArrow(brX + r2boxW / 2, row2Y + boxH, finalBoxX + finalBoxW / 2 - 30 * s, row5Y, '#475569');
+    drawArrow(r4boxX + r4boxW / 2, row4Y + boxH + 8 * s, finalBoxX + finalBoxW / 2 + 30 * s, row5Y, '#475569');
+
+    roundedBox(finalBoxX, row5Y, finalBoxW, boxH + 6 * s, 8 * s, 'rgba(74,222,128,0.12)', 'rgba(74,222,128,0.5)', 2);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (11 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('(2a+pq) / (\u22122 \u00B7 (2a+pq))', finalBoxX + finalBoxW / 2, row5Y + 20 * s);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold ' + (20 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= \u22121/2', finalBoxX + finalBoxW / 2, row5Y + 48 * s);
+
+    // Equals label
+    ctx.fillStyle = '#64748b';
+    ctx.font = (11 * s) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('skraćivanje (2a + pq)', W / 2, row5Y - 8 * s);
+  }
+
+  drawDiagram();
+  window.addEventListener('resize', drawDiagram);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Uprošćavanje algebarskog izraza sa korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["razlika kubova", "razlika kvadrata", "racionalni eksponenti", "korenovanje", "uprošćavanje izraza"]
+}
+BRAINSPARK_META-->

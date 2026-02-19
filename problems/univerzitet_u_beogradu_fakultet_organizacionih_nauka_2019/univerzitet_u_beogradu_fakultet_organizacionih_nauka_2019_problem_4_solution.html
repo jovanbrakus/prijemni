@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uprošćavanje algebarskog izraza sa razlomcima</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Simplify the expression:
+  [(a+b)^3 - (a-b)^3] / [(a+b)^2 - (a-b)^2]  :  [2b(3a^2 + b^2)] / [(sqrt(a)+sqrt(b))^2 - (sqrt(a)-sqrt(b))^2]
+
+where a, b > 0. The ":" means division.
+
+Options: A) (3a^2+b^2)/(sqrt(a)+sqrt(b)), B) 1/(ab), C) 1/sqrt(ab), D) sqrt(ab), E) 2ab/(sqrt(a)+sqrt(b))^2
+Expected answer: C) 1/sqrt(ab)
+
+Step 1: Simplify the FIRST fraction numerator: (a+b)^3 - (a-b)^3
+  Using difference of cubes: x^3 - y^3 = (x-y)(x^2 + xy + y^2)
+  Let x = a+b, y = a-b
+  x - y = (a+b) - (a-b) = 2b
+  x^2 = (a+b)^2 = a^2 + 2ab + b^2
+  y^2 = (a-b)^2 = a^2 - 2ab + b^2
+  xy = (a+b)(a-b) = a^2 - b^2
+  x^2 + xy + y^2 = (a^2+2ab+b^2) + (a^2-b^2) + (a^2-2ab+b^2) = 3a^2 + b^2
+
+  So numerator = 2b(3a^2 + b^2)
+
+Step 2: Simplify the FIRST fraction denominator: (a+b)^2 - (a-b)^2
+  Using difference of squares: x^2 - y^2 = (x-y)(x+y)
+  x - y = 2b (same as above)
+  x + y = (a+b) + (a-b) = 2a
+  So denominator = 2b * 2a = 4ab
+
+Step 3: First fraction = 2b(3a^2 + b^2) / (4ab) = (3a^2 + b^2) / (2a)
+
+Step 4: Simplify the SECOND fraction denominator: (sqrt(a)+sqrt(b))^2 - (sqrt(a)-sqrt(b))^2
+  Using difference of squares again with u = sqrt(a)+sqrt(b), v = sqrt(a)-sqrt(b):
+  u^2 - v^2 = (u-v)(u+v)
+  u - v = (sqrt(a)+sqrt(b)) - (sqrt(a)-sqrt(b)) = 2*sqrt(b)
+  u + v = (sqrt(a)+sqrt(b)) + (sqrt(a)-sqrt(b)) = 2*sqrt(a)
+  So denominator = 2*sqrt(b) * 2*sqrt(a) = 4*sqrt(ab)
+
+Step 5: Second fraction = 2b(3a^2 + b^2) / (4*sqrt(ab))
+
+Step 6: Division A : B = A * (1/B) = A / B
+  Result = [first fraction] / [second fraction]
+         = [(3a^2 + b^2) / (2a)] / [2b(3a^2 + b^2) / (4*sqrt(ab))]
+         = [(3a^2 + b^2) / (2a)] * [4*sqrt(ab) / (2b(3a^2 + b^2))]
+         = [4*sqrt(ab)] / [2a * 2b]
+         = 4*sqrt(ab) / (4ab)
+         = sqrt(ab) / ab
+         = 1 / (ab / sqrt(ab))
+         = 1 / sqrt(ab)
+
+  Alternatively: sqrt(ab) / ab = sqrt(ab) / (sqrt(ab))^2 = 1 / sqrt(ab)
+
+Verification: answer is C) 1/sqrt(ab). CONFIRMED.
+
+Numerical check: let a = 4, b = 1.
+  First fraction numerator: (5)^3 - (3)^3 = 125 - 27 = 98
+  First fraction denominator: (5)^2 - (3)^2 = 25 - 9 = 16
+  First fraction = 98/16 = 49/8
+
+  Second fraction numerator: 2*1*(3*16+1) = 2*49 = 98
+  Second fraction denominator: (2+1)^2 - (2-1)^2 = 9 - 1 = 8
+  Second fraction = 98/8 = 49/4
+
+  Result = (49/8) / (49/4) = (49/8) * (4/49) = 4/8 = 1/2
+
+  Check 1/sqrt(ab) = 1/sqrt(4) = 1/2. CONFIRMED!
+</script>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.7;
+    padding: 20px;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .subtitle {
+    color: #94a3b8;
+    font-size: 1.05rem;
+    margin-bottom: 28px;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 22px;
+  }
+  .card-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-title .icon {
+    font-size: 1.3rem;
+  }
+  .problem-box {
+    background: #172033;
+    border-left: 4px solid #60a5fa;
+    padding: 18px 22px;
+    border-radius: 0 10px 10px 0;
+    font-size: 1.08rem;
+    margin-bottom: 10px;
+  }
+  .given-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .given-item {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 1rem;
+    text-align: center;
+  }
+  .given-item .label {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .given-item .value {
+    font-size: 1.05rem;
+    color: #e2e8f0;
+  }
+  .plan-list {
+    list-style: none;
+    counter-reset: plan;
+  }
+  .plan-list li {
+    counter-increment: plan;
+    padding: 6px 0 6px 36px;
+    position: relative;
+  }
+  .plan-list li::before {
+    content: counter(plan);
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 26px;
+    height: 26px;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  details {
+    background: #172033;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin: 15px 0;
+  }
+  details summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #a78bfa;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  details summary::before {
+    content: '>';
+    display: inline-block;
+    transition: transform 0.2s;
+    font-family: monospace;
+    font-size: 1.1rem;
+  }
+  details[open] summary::before {
+    transform: rotate(90deg);
+  }
+  details .inner {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #334155;
+  }
+  .step {
+    border-left: 3px solid #334155;
+    padding: 14px 0 14px 22px;
+    margin-left: 12px;
+    position: relative;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .step:hover, .step.active {
+    border-left-color: #4ade80;
+  }
+  .step::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 18px;
+    width: 12px;
+    height: 12px;
+    background: #60a5fa;
+    border-radius: 50%;
+    border: 2px solid #0f172a;
+  }
+  .step:last-child { border-left-color: transparent; }
+  .step:last-child:hover, .step:last-child.active { border-left-color: #4ade80; }
+  .step-label {
+    font-weight: 700;
+    color: #60a5fa;
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  .math-block {
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    overflow-x: auto;
+  }
+  .checkpoint {
+    background: rgba(167, 139, 250, 0.1);
+    border: 1px dashed #a78bfa;
+    border-radius: 10px;
+    padding: 12px 18px;
+    margin: 15px 0;
+    font-size: 0.95rem;
+    color: #a78bfa;
+  }
+  .checkpoint strong { color: #c4b5fd; }
+  .final-answer {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(74, 222, 128, 0.08));
+    border: 2px solid #34d399;
+    border-radius: 14px;
+    padding: 26px 30px;
+    text-align: center;
+  }
+  .final-answer .label {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #34d399;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .final-answer .value {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #4ade80;
+  }
+  .final-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .final-opt {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 1rem;
+  }
+  .final-opt.correct {
+    border-color: #34d399;
+    background: rgba(52, 211, 153, 0.1);
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.15);
+  }
+  .insight-box {
+    background: rgba(96, 165, 250, 0.08);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    border-radius: 12px;
+    padding: 18px 22px;
+  }
+  .insight-box .label {
+    font-weight: 700;
+    color: #60a5fa;
+    margin-bottom: 6px;
+    font-size: 1.05rem;
+  }
+  .pitfall {
+    background: rgba(244, 114, 182, 0.08);
+    border-left: 4px solid #f472b6;
+    border-radius: 0 10px 10px 0;
+    padding: 14px 20px;
+    margin-bottom: 10px;
+  }
+  .pitfall strong { color: #f472b6; }
+  .challenge-box {
+    background: rgba(167, 139, 250, 0.06);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-radius: 12px;
+    padding: 18px 22px;
+  }
+  .challenge-box .label {
+    font-weight: 700;
+    color: #a78bfa;
+    margin-bottom: 6px;
+  }
+  canvas {
+    display: block;
+    margin: 0 auto;
+    border-radius: 10px;
+    background: #0f172a;
+    max-width: 100%;
+    touch-action: none;
+  }
+  .muted { color: #94a3b8; }
+  .blue { color: #60a5fa; }
+  .green { color: #34d399; }
+  .purple { color: #a78bfa; }
+  .pink { color: #f472b6; }
+  @media (max-width: 700px) {
+    body { padding: 12px; }
+    h1 { font-size: 1.5rem; }
+    .card { padding: 18px 16px; }
+    .given-grid { grid-template-columns: 1fr 1fr; }
+    .final-options { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Uprošćavanje algebarskog razlomka</h1>
+<p class="subtitle">Algebra &mdash; Razlika kubova, razlika kvadrata, racionalizacija</p>
+
+<!-- Problem Statement -->
+<div class="card problem-statement">
+  <div class="card-title"><span class="icon">&#x1F4CB;</span> Zadatak</div>
+  <div class="problem-box">
+    Izraz \(\displaystyle \frac{(a+b)^3 - (a-b)^3}{(a+b)^2 - (a-b)^2} : \frac{2b(3a^2 + b^2)}{(\sqrt{a} + \sqrt{b})^2 - (\sqrt{a} - \sqrt{b})^2}\), gde su \(a\) i \(b\) pozitivni realni brojevi, identički je jednak izrazu:
+  </div>
+  <div class="given-grid">
+    <div class="given-item answer-option" data-option="A">
+      <div class="label">(A)</div>
+      <div class="value">\(\dfrac{3a^2 + b^2}{\sqrt{a} + \sqrt{b}}\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="B">
+      <div class="label">(B)</div>
+      <div class="value">\(\dfrac{1}{ab}\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="C">
+      <div class="label">(C)</div>
+      <div class="value">\(\dfrac{1}{\sqrt{ab}}\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="D">
+      <div class="label">(D)</div>
+      <div class="value">\(\sqrt{ab}\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="E">
+      <div class="label">(E)</div>
+      <div class="value">\(\dfrac{2ab}{(\sqrt{a}+\sqrt{b})^2}\)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Plan -->
+<div class="card">
+  <div class="card-title"><span class="icon">&#x1F5FA;&#xFE0F;</span> Plan rešavanja</div>
+  <ol class="plan-list">
+    <li>Uprosti prvi razlomak koristeći formule za razliku kubova i razliku kvadrata.</li>
+    <li>Uprosti imenilac drugog razlomka koristeći formulu za razliku kvadrata.</li>
+    <li>Izvrši deljenje (zameni sa množenjem recipročnom vrednošću) i skrati.</li>
+  </ol>
+</div>
+
+<!-- Theory Refresher -->
+<div class="card">
+  <div class="card-title"><span class="icon">&#x1F4D0;</span> Teorijska podloga</div>
+  <details>
+    <summary>Razlika kubova</summary>
+    <div class="inner">
+      <p>Za bilo koje \(x\) i \(y\) važi:</p>
+      \[x^3 - y^3 = (x - y)(x^2 + xy + y^2)\]
+      <p class="muted" style="margin-top:8px;">Koristimo ovu formulu za razlaganje brojioca prvog razlomka, gde je \(x = a+b\) i \(y = a-b\).</p>
+    </div>
+  </details>
+  <details>
+    <summary>Razlika kvadrata</summary>
+    <div class="inner">
+      <p>Za bilo koje \(x\) i \(y\) važi:</p>
+      \[x^2 - y^2 = (x - y)(x + y)\]
+      <p class="muted" style="margin-top:8px;">Koristimo ovu formulu dva puta: jednom za imenilac prvog razlomka, i jednom za imenilac drugog razlomka.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Deljenje razlomaka</summary>
+    <div class="inner">
+      <p>Deljenje jednog razlomka drugim svodi se na množenje prvog recipročnom vrednošću drugog:</p>
+      \[\frac{A}{B} : \frac{C}{D} = \frac{A}{B} \cdot \frac{D}{C}\]
+      <p class="muted" style="margin-top:8px;">U srpskoj matematičkoj notaciji, znak ":" označava deljenje.</p>
+    </div>
+  </details>
+</div>
+
+<!-- Visual Aid -->
+<div class="card">
+  <div class="card-title"><span class="icon">&#x1F4CA;</span> Vizuelni prikaz strukture izraza</div>
+  <p class="muted" style="margin-bottom:14px;">Dijagram pokazuje kako se složen izraz postepeno uprošćava primenom algebarskih formula. Svaki korak je obojen različitom bojom.</p>
+  <canvas id="canvas" width="700" height="400"></canvas>
+</div>
+
+<!-- Step-by-step Solution -->
+<div class="card">
+  <div class="card-title"><span class="icon">&#x270F;&#xFE0F;</span> Rešenje korak po korak</div>
+
+  <div class="step">
+    <div class="step-label">Korak 1: Razložimo brojilac prvog razlomka</div>
+    <p>Razmatramo izraz \((a+b)^3 - (a-b)^3\). Primenjujemo formulu za razliku kubova \(x^3 - y^3 = (x-y)(x^2+xy+y^2)\), gde je \(x = a+b\) i \(y = a-b\).</p>
+    <div class="math-block">
+      \[x - y = (a+b) - (a-b) = 2b\]
+    </div>
+    <p>Sada izračunavamo svaki član u drugom faktoru:</p>
+    <div class="math-block">
+      \[x^2 = (a+b)^2 = a^2 + 2ab + b^2\]
+    </div>
+    <div class="math-block">
+      \[xy = (a+b)(a-b) = a^2 - b^2\]
+    </div>
+    <div class="math-block">
+      \[y^2 = (a-b)^2 = a^2 - 2ab + b^2\]
+    </div>
+    <p>Sabiramo:</p>
+    <div class="math-block">
+      \[x^2 + xy + y^2 = (a^2 + 2ab + b^2) + (a^2 - b^2) + (a^2 - 2ab + b^2) = 3a^2 + b^2\]
+    </div>
+    <p>Prema tome:</p>
+    <div class="math-block">
+      \[(a+b)^3 - (a-b)^3 = 2b(3a^2 + b^2)\]
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Korak 2: Razložimo imenilac prvog razlomka</div>
+    <p>Razmatramo \((a+b)^2 - (a-b)^2\). Koristimo formulu za razliku kvadrata:</p>
+    <div class="math-block">
+      \[(a+b)^2 - (a-b)^2 = \bigl[(a+b)-(a-b)\bigr]\bigl[(a+b)+(a-b)\bigr]\]
+    </div>
+    <div class="math-block">
+      \[= 2b \cdot 2a = 4ab\]
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Korak 3: Zapišemo prvi razlomak</div>
+    <p>Uvrštavamo rezultate iz koraka 1 i 2:</p>
+    <div class="math-block">
+      \[\frac{(a+b)^3 - (a-b)^3}{(a+b)^2 - (a-b)^2} = \frac{2b(3a^2 + b^2)}{4ab}\]
+    </div>
+    <p>Skratimo \(2b\):</p>
+    <div class="math-block">
+      \[= \frac{3a^2 + b^2}{2a}\]
+    </div>
+
+    <details>
+      <summary><strong>Proveri se!</strong> Koliko je \(\dfrac{(a+b)^3 - (a-b)^3}{(a+b)^2 - (a-b)^2}\) za \(a = 2, \, b = 1\)?</summary>
+      <div class="inner">
+        <p>Brojilac: \(3^3 - 1^3 = 27 - 1 = 26\). Imenilac: \(3^2 - 1^2 = 9 - 1 = 8\).</p>
+        <p>Razlomak: \(\frac{26}{8} = \frac{13}{4}\).</p>
+        <p>Po formuli: \(\frac{3 \cdot 4 + 1}{2 \cdot 2} = \frac{13}{4}\). Tačno!</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Korak 4: Razložimo imenilac drugog razlomka</div>
+    <p>Razmatramo \((\sqrt{a}+\sqrt{b})^2 - (\sqrt{a}-\sqrt{b})^2\). Ponovo koristimo razliku kvadrata:</p>
+    <div class="math-block">
+      \[= \bigl[(\sqrt{a}+\sqrt{b})-(\sqrt{a}-\sqrt{b})\bigr]\bigl[(\sqrt{a}+\sqrt{b})+(\sqrt{a}-\sqrt{b})\bigr]\]
+    </div>
+    <div class="math-block">
+      \[= 2\sqrt{b} \cdot 2\sqrt{a} = 4\sqrt{ab}\]
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Korak 5: Zapišemo drugi razlomak</div>
+    <p>Uvrštavamo imenilac iz koraka 4:</p>
+    <div class="math-block">
+      \[\frac{2b(3a^2 + b^2)}{(\sqrt{a}+\sqrt{b})^2 - (\sqrt{a}-\sqrt{b})^2} = \frac{2b(3a^2 + b^2)}{4\sqrt{ab}}\]
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Korak 6: Izvršimo deljenje</div>
+    <p>Deljenje prvog razlomka drugim zamenimo množenjem recipročnom vrednošću:</p>
+    <div class="math-block">
+      \[\frac{3a^2 + b^2}{2a} : \frac{2b(3a^2+b^2)}{4\sqrt{ab}} = \frac{3a^2 + b^2}{2a} \cdot \frac{4\sqrt{ab}}{2b(3a^2+b^2)}\]
+    </div>
+    <p>Skraćujemo \((3a^2 + b^2)\) iz brojioca i imenioca:</p>
+    <div class="math-block">
+      \[= \frac{1}{2a} \cdot \frac{4\sqrt{ab}}{2b} = \frac{4\sqrt{ab}}{4ab}\]
+    </div>
+    <p>Skratimo \(4\):</p>
+    <div class="math-block">
+      \[= \frac{\sqrt{ab}}{ab}\]
+    </div>
+
+    <details>
+      <summary><strong>Proveri se!</strong> Kako se \(\dfrac{\sqrt{ab}}{ab}\) može zapisati drugačije?</summary>
+      <div class="inner">
+        <p>Zapazimo da je \(ab = (\sqrt{ab})^2\), pa:</p>
+        <p>\(\dfrac{\sqrt{ab}}{ab} = \dfrac{\sqrt{ab}}{(\sqrt{ab})^2} = \dfrac{1}{\sqrt{ab}}\).</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Korak 7: Konačno uprošćavanje</div>
+    <p>Pišemo \(ab = (\sqrt{ab})^2\) i skratimo:</p>
+    <div class="math-block">
+      \[\frac{\sqrt{ab}}{ab} = \frac{\sqrt{ab}}{(\sqrt{ab})^2} = \frac{1}{\sqrt{ab}}\]
+    </div>
+
+    <details>
+      <summary><strong>Proveri se!</strong> Numerička provera za \(a = 4, \, b = 1\).</summary>
+      <div class="inner">
+        <p>Prvi razlomak: \(\frac{5^3 - 3^3}{5^2 - 3^2} = \frac{125-27}{25-9} = \frac{98}{16} = \frac{49}{8}\).</p>
+        <p>Drugi razlomak: \(\frac{2 \cdot 1 \cdot (48+1)}{(2+1)^2-(2-1)^2} = \frac{98}{9-1} = \frac{98}{8} = \frac{49}{4}\).</p>
+        <p>Rezultat: \(\frac{49/8}{49/4} = \frac{49}{8} \cdot \frac{4}{49} = \frac{4}{8} = \frac{1}{2}\).</p>
+        <p>Provera: \(\frac{1}{\sqrt{4 \cdot 1}} = \frac{1}{2}\). Tačno!</p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- Key Insight -->
+<div class="card">
+  <div class="insight-box">
+    <div class="label">Ključni uvid</div>
+    <p>Ceo zadatak se zasniva na prepoznavanju obrazaca <strong>razlike kubova</strong> i <strong>razlike kvadrata</strong>. Kada pravilno razložimo oba razlomka, izraz \(3a^2 + b^2\) se pojavljuje u oba &mdash; jednom u brojiocu, jednom u imeniocu &mdash; pa se kompletno skrati. Rezultat je iznenađujuće jednostavan:</p>
+    <div style="text-align:center;margin-top:12px;font-size:1.4rem;">
+      \[\frac{(a+b)^3-(a-b)^3}{(a+b)^2-(a-b)^2} : \frac{2b(3a^2+b^2)}{(\sqrt{a}+\sqrt{b})^2-(\sqrt{a}-\sqrt{b})^2} = \frac{1}{\sqrt{ab}}\]
+    </div>
+  </div>
+</div>
+
+<!-- Final Answer -->
+<div class="card">
+  <div class="final-answer">
+    <div class="label">Konačan odgovor</div>
+    <div class="value">
+      C) \(\;\dfrac{1}{\sqrt{ab}}\)
+    </div>
+    <p style="margin-top:14px;color:#94a3b8;font-size:1rem;">
+      Verifikacija: za \(a = 4, \, b = 1\), izraz daje \(\frac{1}{2}\), a \(\frac{1}{\sqrt{4 \cdot 1}} = \frac{1}{2}\).
+    </p>
+  </div>
+  <div class="final-options">
+    <div class="final-opt" data-option="A">A) \(\dfrac{3a^2+b^2}{\sqrt{a}+\sqrt{b}}\)</div>
+    <div class="final-opt" data-option="B">B) \(\dfrac{1}{ab}\)</div>
+    <div class="final-opt correct" data-option="C">C) \(\dfrac{1}{\sqrt{ab}}\)</div>
+    <div class="final-opt" data-option="D">D) \(\sqrt{ab}\)</div>
+    <div class="final-opt" data-option="E">E) \(\dfrac{2ab}{(\sqrt{a}+\sqrt{b})^2}\)</div>
+  </div>
+</div>
+
+<!-- Common Pitfalls -->
+<div class="card">
+  <div class="card-title"><span class="icon">&#x26A0;&#xFE0F;</span> Najčešće greške</div>
+  <div class="pitfall">
+    <strong>Greška 1: Pogrešno razlaganje razlike kubova.</strong>
+    Drugi faktor u formuli \(x^3 - y^3 = (x-y)(x^2+xy+y^2)\) sadrži \(+xy\), ne \(-xy\). Mnogi učenici greškom koriste \(x^2-xy+y^2\) (to je faktor za <em>zbir</em> kubova). Ovde bi to dovelo do pogrešnog brojioca.
+  </div>
+  <div class="pitfall">
+    <strong>Greška 2: Zaboravljanje da se skrati \((3a^2+b^2)\).</strong>
+    Ako se ne primeti da se ovaj izraz javlja i u prvom i u drugom razlomku, dobiće se složen izraz koji ne odgovara nijednom ponuđenom odgovoru. Ključ je pažljivo zapisati oba razlomka pre deljenja.
+  </div>
+</div>
+
+<!-- Challenge -->
+<div class="card">
+  <div class="challenge-box">
+    <div class="label">Dodatni izazov</div>
+    <p>Šta ako umesto razlike kubova u brojiocu imamo <em>zbir</em> kubova, tj. \((a+b)^3 + (a-b)^3\)? Kako bi tada izgledao krajnji rezultat?</p>
+    <details>
+      <summary>Hint</summary>
+      <div class="inner">
+        <p>Koristite formulu za zbir kubova: \(x^3 + y^3 = (x+y)(x^2 - xy + y^2)\). Ovde je \(x+y = 2a\) i drugi faktor daje \(3b^2 + a^2\). Vidite da li se i ovaj izraz pojavljuje u drugom razlomku, ili je potrebna modifikacija.</p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Layout: show the simplification flow as a tree/flow diagram
+    const centerX = W / 2;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Struktura uprošćavanja izraza', centerX, 24);
+
+    // Row 1: Original expression split into two fractions
+    const row1Y = 60;
+    const boxW = 270;
+    const boxH = 44;
+    const gap = 40;
+
+    // First fraction box
+    const f1X = centerX - gap / 2 - boxW;
+    drawBox(ctx, f1X, row1Y, boxW, boxH, '#60a5fa', 'Prvi razlomak');
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('(a+b)\u00B3 - (a-b)\u00B3', f1X + boxW / 2, row1Y + boxH + 16);
+    ctx.fillText('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', f1X + boxW / 2, row1Y + boxH + 28);
+    ctx.fillText('(a+b)\u00B2 - (a-b)\u00B2', f1X + boxW / 2, row1Y + boxH + 40);
+
+    // Division sign
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u00F7', centerX, row1Y + boxH / 2 + 4);
+
+    // Second fraction box
+    const f2X = centerX + gap / 2;
+    drawBox(ctx, f2X, row1Y, boxW, boxH, '#a78bfa', 'Drugi razlomak');
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2b(3a\u00B2 + b\u00B2)', f2X + boxW / 2, row1Y + boxH + 16);
+    ctx.fillText('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', f2X + boxW / 2, row1Y + boxH + 28);
+    ctx.fillText('(\u221Aa+\u221Ab)\u00B2 - (\u221Aa-\u221Ab)\u00B2', f2X + boxW / 2, row1Y + boxH + 40);
+
+    // Row 2: After simplification
+    const row2Y = 170;
+
+    // Arrow down from first fraction
+    drawArrow(ctx, f1X + boxW / 2, row1Y + boxH + 46, f1X + boxW / 2, row2Y - 4, '#60a5fa');
+    // Arrow down from second fraction
+    drawArrow(ctx, f2X + boxW / 2, row1Y + boxH + 46, f2X + boxW / 2, row2Y - 4, '#a78bfa');
+
+    // Simplified first fraction
+    drawBox(ctx, f1X + 30, row2Y, boxW - 60, boxH, '#60a5fa', '');
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('(3a\u00B2+b\u00B2) / (2a)', f1X + boxW / 2, row2Y + boxH / 2 + 5);
+
+    // Label
+    ctx.fillStyle = '#475569';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('razl. kubova + razl. kvadrata', f1X + boxW / 2, row2Y - 8);
+
+    // Division sign
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u00F7', centerX, row2Y + boxH / 2 + 4);
+
+    // Simplified second fraction
+    drawBox(ctx, f2X + 20, row2Y, boxW - 40, boxH, '#a78bfa', '');
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2b(3a\u00B2+b\u00B2) / (4\u221A(ab))', f2X + boxW / 2, row2Y + boxH / 2 + 5);
+
+    // Label
+    ctx.fillStyle = '#475569';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('razl. kvadrata', f2X + boxW / 2, row2Y - 8);
+
+    // Row 3: After division (multiply by reciprocal)
+    const row3Y = 270;
+
+    // Arrow down to center
+    drawArrow(ctx, f1X + boxW / 2, row2Y + boxH + 4, centerX, row3Y - 4, '#34d399');
+    drawArrow(ctx, f2X + boxW / 2, row2Y + boxH + 4, centerX, row3Y - 4, '#34d399');
+
+    // Label
+    ctx.fillStyle = '#475569';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('skrati (3a\u00B2+b\u00B2), skrati konstante', centerX, row3Y - 8);
+
+    // Middle step
+    drawBox(ctx, centerX - 120, row3Y, 240, boxH, '#34d399', '');
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('4\u221A(ab) / (4ab) = \u221A(ab) / ab', centerX, row3Y + boxH / 2 + 5);
+
+    // Row 4: Final result
+    const row4Y = 350;
+    drawArrow(ctx, centerX, row3Y + boxH + 4, centerX, row4Y - 4, '#4ade80');
+
+    // Final result box with glow
+    ctx.shadowColor = 'rgba(74, 222, 128, 0.3)';
+    ctx.shadowBlur = 20;
+    drawBox(ctx, centerX - 90, row4Y, 180, boxH, '#4ade80', '');
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('1 / \u221A(ab)', centerX, row4Y + boxH / 2 + 6);
+  }
+
+  function drawBox(ctx, x, y, w, h, color, title) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const r = 8;
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.8)';
+    ctx.fill();
+    ctx.stroke();
+
+    if (title) {
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(title, x + w / 2, y + h / 2 + 5);
+    }
+  }
+
+  function drawArrow(ctx, x1, y1, x2, y2, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrowhead
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const headLen = 8;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Responsive canvas
+  function resizeCanvas() {
+    const container = canvas.parentElement;
+    const maxW = container.clientWidth - 56;
+    if (maxW < 700) {
+      canvas.style.width = maxW + 'px';
+      canvas.style.height = (maxW * 400 / 700) + 'px';
+    }
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  // Step click interaction
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+
+  draw();
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Uprošćavanje algebarskog razlomka sa razlikom kubova i kvadrata","subject":"math","unit":"algebra","topic_tags":["razlika kubova","razlika kvadrata","uprošćavanje razlomaka","algebarski identiteti","racionalni izrazi"]}
+BRAINSPARK_META-->

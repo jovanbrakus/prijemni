@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prebrojavanje neparnih šestocifrenih brojeva sa nulama</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Naci broj svih neparnih sestocifrenih brojeva koji sadrze najmanje jednu,
+a najvise tri cifre nula.
+
+Sesocifreni broj: d1 d2 d3 d4 d5 d6
+Ogranicenja:
+- d1 != 0 (jer je sestocifren, d1 in {1,...,9})
+- d6 je neparan: d6 in {1, 3, 5, 7, 9} => d6 != 0
+- Nule se mogu pojaviti SAMO na pozicijama d2, d3, d4, d5 (4 srednje pozicije)
+- Trazimo tacno 1, 2, ili 3 nule ukupno
+
+Slucaj 1: Tacno 1 nula
+- Biramo 1 od 4 srednje pozicije za nulu: C(4,1) = 4
+- d1: 9 izbora (1-9)
+- d6: 5 izbora (1,3,5,7,9)
+- Preostale 3 srednje pozicije: svaka 9 izbora (1-9, bez nule)
+- Ukupno: C(4,1) * 9 * 9^3 * 5 = 4 * 5 * 9^4 = 20 * 9^4
+
+Slucaj 2: Tacno 2 nule
+- Biramo 2 od 4: C(4,2) = 6
+- d1: 9, d6: 5
+- Preostale 2 srednje: 9^2
+- Ukupno: C(4,2) * 9 * 9^2 * 5 = 6 * 5 * 9^3 = 30 * 9^3
+
+Slucaj 3: Tacno 3 nule
+- Biramo 3 od 4: C(4,3) = 4
+- d1: 9, d6: 5
+- Preostala 1 srednja: 9
+- Ukupno: C(4,3) * 9 * 9 * 5 = 4 * 5 * 9^2 = 20 * 9^2
+
+Zbir = 20*9^4 + 30*9^3 + 20*9^2
+     = 9^2 * (20*9^2 + 30*9 + 20)
+     = 9^2 * (20*81 + 30*9 + 20)
+     = 9^2 * (1620 + 270 + 20)
+     = 9^2 * 1910
+     = 1910 * 9^2
+
+Provera: 1910 * 81 = 154710
+
+Proverimo sa odgovorima:
+A) 211680 -- 211680 != 154710
+B) 70 * 9^4 = 70 * 6561 = 459270 -- ne
+C) 14 * 5^5 = 14 * 3125 = 43750 -- ne
+D) 1910 * 9^2 = 1910 * 81 = 154710 -- DA!
+E) 2 * 5^6 = 2 * 15625 = 31250 -- ne
+
+Odgovor: D) 1910 * 9^2
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 28px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 14px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96,165,250,0.05);
+  border-left: 4px solid #4ade80;
+}
+
+.step-badge {
+  min-width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+.checkpoint {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #34d399;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box .insight-label {
+  color: #a78bfa;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.final-answer-box {
+  background: rgba(52,211,153,0.08);
+  border: 2px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-box h2 {
+  color: #4ade80;
+}
+
+.final-answer-text {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 14px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.option-card {
+  background: rgba(51,65,85,0.5);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 70px;
+}
+
+.option-card.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  box-shadow: 0 0 18px rgba(52,211,153,0.2);
+}
+
+.option-card .opt-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+
+.option-card .opt-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  background: rgba(96,165,250,0.07);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  text-align: left;
+}
+
+.verification h3 {
+  color: #60a5fa;
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.pitfall-box {
+  border-left: 4px solid #e09468;
+}
+
+.pitfall-box h2 {
+  color: #e09468;
+}
+
+.pitfall-box li {
+  margin-bottom: 8px;
+  padding-left: 4px;
+  color: #cbd5e1;
+}
+
+.pitfall-box ul {
+  padding-left: 20px;
+}
+
+.challenge-box {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-box h2 {
+  color: #f472b6;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 10px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .step-container { padding: 12px; gap: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Prebrojavanje neparnih šestocifrenih brojeva sa nulama</h1>
+  <p class="subtitle">Kombinatorika — prebrojavanje po uslovima, binomni koeficijenti i pravilo zbira</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Broj svih <span class="highlight-blue">neparnih šestocifrenih brojeva</span> koji sadrže <span class="highlight-pink">najmanje jednu, a najviše tri cifre nula</span>, jednak je:</p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Broj cifara</div>
+        <div class="value">6</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Parnost</div>
+        <div class="value">Neparan</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Br. nula</div>
+        <div class="value">1, 2 ili 3</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 20px;">Ponuđeni odgovori</h3>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(211680\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(70 \cdot 9^4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(14 \cdot 5^5\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(1910 \cdot 9^2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(2 \cdot 5^6\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Podelićemo problem na tri slučaja: <span class="highlight-blue">tačno 1 nula</span>, <span class="highlight-blue">tačno 2 nule</span> i <span class="highlight-blue">tačno 3 nule</span>. Za svaki slučaj ćemo odrediti na koje pozicije mogu ići nule (imajući u vidu da prva i poslednja cifra ne smeju biti nula), a zatim prebrojati mogućnosti pravilom proizvoda. Na kraju sabiramo sve tri vrednosti.</p>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i pojmovi</summary>
+      <ul style="padding-left: 20px; margin-top: 10px;">
+        <li style="margin-bottom: 10px;"><strong>Pravilo proizvoda:</strong> Ako se jedan izbor može napraviti na \(m\) načina, a drugi nezavisno od prvog na \(n\) načina, ukupan broj načina je \(m \cdot n\).</li>
+        <li style="margin-bottom: 10px;"><strong>Pravilo zbira:</strong> Ako se zadatak može obaviti na jedan od \(k\) međusobno isključivih načina, ukupan broj je zbir svih pojedinačnih brojeva.</li>
+        <li style="margin-bottom: 10px;"><strong>Binomni koeficijent:</strong> \(\displaystyle \binom{n}{k} = \frac{n!}{k!(n-k)!}\) — broj načina da izaberemo \(k\) elemenata od \(n\).</li>
+        <li style="margin-bottom: 10px;"><strong>Šestocifren broj:</strong> Broj oblika \(\overline{d_1 d_2 d_3 d_4 d_5 d_6}\), gde je \(d_1 \in \{1, \ldots, 9\}\) (prva cifra nije nula).</li>
+        <li style="margin-bottom: 10px;"><strong>Neparan broj:</strong> Poslednja cifra \(d_6 \in \{1, 3, 5, 7, 9\}\).</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- VISUAL AID — CANVAS DIAGRAM -->
+  <div class="card">
+    <h2>Vizuelni prikaz pozicija</h2>
+    <canvas id="positionsCanvas" width="760" height="340"></canvas>
+    <p class="canvas-hint">Dijagram prikazuje šest pozicija broja i ograničenja za svaku cifru</p>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Identifikujemo ograničenja za pozicije</h3>
+        <p>Šestocifren broj ima oblik \(\overline{d_1 d_2 d_3 d_4 d_5 d_6}\).</p>
+        <p>Pošto je broj šestocifren, važi \(d_1 \neq 0\), odnosno \(d_1 \in \{1, 2, \ldots, 9\}\).</p>
+        <p>Pošto je broj neparan, važi \(d_6 \in \{1, 3, 5, 7, 9\}\), pa je i \(d_6 \neq 0\).</p>
+        <div class="math-block">
+          \[d_1 \neq 0 \quad \text{i} \quad d_6 \neq 0\]
+        </div>
+        <p class="note">Nule se mogu pojaviti samo na pozicijama \(d_2, d_3, d_4, d_5\) — ukupno 4 srednje pozicije.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Odredimo broj izbora za fiksne pozicije</h3>
+        <p>Za prvu cifru \(d_1\) imamo <span class="highlight-green">9 izbora</span> (cifre 1 do 9).</p>
+        <p>Za poslednju cifru \(d_6\) imamo <span class="highlight-green">5 izbora</span> (cifre 1, 3, 5, 7, 9).</p>
+        <p>Za svaku srednju poziciju koja <em>nije</em> nula imamo <span class="highlight-green">9 izbora</span> (cifre 1 do 9).</p>
+        <div class="math-block">
+          \[|d_1| = 9, \quad |d_6| = 5, \quad |\text{srednja (bez nule)}| = 9\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko srednjih pozicija postoji?</summary>
+      <p style="margin-top: 8px;">Pozicije \(d_2, d_3, d_4, d_5\) — ukupno <span class="highlight-green">4 pozicije</span>. Samo na njima se mogu nalaziti nule.</p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Slučaj 1: Tačno 1 nula</h3>
+        <p>Biramo 1 od 4 srednje pozicije za nulu:</p>
+        <div class="math-block">
+          \[\binom{4}{1} = 4\]
+        </div>
+        <p>Preostale 3 srednje pozicije popunjavamo ciframa od 1 do 9 (svaka po 9 izbora).</p>
+        <p>Primenjujemo pravilo proizvoda:</p>
+        <div class="math-block">
+          \[N_1 = \binom{4}{1} \cdot 9 \cdot 9^3 \cdot 5 = 4 \cdot 9 \cdot 9^3 \cdot 5\]
+        </div>
+        <p>Sredimo:</p>
+        <div class="math-block">
+          \[N_1 = 4 \cdot 5 \cdot 9^4 = 20 \cdot 9^4\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Slučaj 2: Tačno 2 nule</h3>
+        <p>Biramo 2 od 4 srednje pozicije za nule:</p>
+        <div class="math-block">
+          \[\binom{4}{2} = 6\]
+        </div>
+        <p>Preostale 2 srednje pozicije: svaka po 9 izbora (cifre 1-9).</p>
+        <div class="math-block">
+          \[N_2 = \binom{4}{2} \cdot 9 \cdot 9^2 \cdot 5 = 6 \cdot 5 \cdot 9^3 = 30 \cdot 9^3\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Slučaj 3: Tačno 3 nule</h3>
+        <p>Biramo 3 od 4 srednje pozicije za nule:</p>
+        <div class="math-block">
+          \[\binom{4}{3} = 4\]
+        </div>
+        <p>Preostala 1 srednja pozicija: 9 izbora.</p>
+        <div class="math-block">
+          \[N_3 = \binom{4}{3} \cdot 9 \cdot 9 \cdot 5 = 4 \cdot 5 \cdot 9^2 = 20 \cdot 9^2\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto ne posmatramo slučaj sa 4 nule?</summary>
+      <p style="margin-top: 8px;">Zadatak traži <em>najviše tri</em> nule. Osim toga, čak i da je dozvoljeno, sa 4 nule na pozicijama \(d_2\) do \(d_5\) bi broj bio oblika \(d_1\,0\,0\,0\,0\,d_6\), što ne krši strukturna ograničenja, ali nas zadatak ograničava na <span class="highlight-pink">najviše 3 nule</span>.</p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Sabiramo sve slučajeve</h3>
+        <p>Po pravilu zbira (slučajevi su međusobno isključivi):</p>
+        <div class="math-block">
+          \[N = N_1 + N_2 + N_3 = 20 \cdot 9^4 + 30 \cdot 9^3 + 20 \cdot 9^2\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Izlučujemo zajednički faktor \(9^2\)</h3>
+        <p>Primetimo da je \(9^2\) zajednički faktor sva tri sabirka:</p>
+        <div class="math-block">
+          \[\begin{align}
+          N &= 9^2 \cdot \left(20 \cdot 9^2 + 30 \cdot 9 + 20\right)
+          \end{align}\]
+        </div>
+        <p>Izračunamo vrednost zagrade:</p>
+        <div class="math-block">
+          \[\begin{align}
+          20 \cdot 9^2 &= 20 \cdot 81 = 1620 \\
+          30 \cdot 9 &= 270 \\
+          20 &= 20 \\
+          \hline
+          \text{Zbir} &= 1620 + 270 + 20 = 1910
+          \end{align}\]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[N = 1910 \cdot 9^2\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko iznosi \(1910 \cdot 9^2\) numerički?</summary>
+      <p style="margin-top: 8px;">\(1910 \cdot 81 = 154710\). Ovo je razuman broj — manji od ukupnog broja šestocifrenih neparnih brojeva (\(9 \cdot 10^4 \cdot 5 = 450000\)).</p>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="insight-label">Ključni uvid</div>
+    <p style="margin-bottom: 12px;">Pošto prva i poslednja cifra <em>ne mogu</em> biti nula, nule se mogu naći samo na 4 srednje pozicije. To drastično pojednostavljuje prebrojavanje — trebalo je samo izabrati pozicije za nule, a ostatak popuniti nenultim ciframa.</p>
+    <div class="math-block" style="font-size: 1.2rem;">
+      \[N = \underbrace{\binom{4}{1} \cdot 5 \cdot 9^4}_{\text{1 nula}} + \underbrace{\binom{4}{2} \cdot 5 \cdot 9^3}_{\text{2 nule}} + \underbrace{\binom{4}{3} \cdot 5 \cdot 9^2}_{\text{3 nule}} = 1910 \cdot 9^2\]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-text">\(\text{D)} \quad 1910 \cdot 9^2\)</div>
+
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(211680\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(70 \cdot 9^4\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(14 \cdot 5^5\)</div>
+      </div>
+      <div class="option-card correct">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(1910 \cdot 9^2\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(2 \cdot 5^6\)</div>
+      </div>
+    </div>
+
+    <div class="verification">
+      <h3>Provera smislenosti</h3>
+      <p>Ukupan broj šestocifrenih neparnih brojeva je \(9 \cdot 10^4 \cdot 5 = 450\,000\). Naš rezultat \(154\,710\) čini oko 34% tog ukupnog broja, što je razumno — tražimo samo one koji imaju 1 do 3 nule, a ne sve.</p>
+      <p style="margin-top: 6px;">Takođe, \(1910 \cdot 81 = 154\,710\), što se ne poklapa ni sa jednim drugim ponuđenim odgovorom: A) \(211\,680\), B) \(459\,270\), C) \(43\,750\), E) \(31\,250\).</p>
+    </div>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card pitfall-box">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Zaboraviti da \(d_6\) ne može biti nula:</strong> Pošto je broj neparan, poslednja cifra mora biti iz skupa \(\{1, 3, 5, 7, 9\}\). Neke greške nastaju ako se pretpostavi da nule mogu ići na svih 5 pozicija (od \(d_2\) do \(d_6\)).</li>
+      <li><strong>Ne uzeti u obzir da srednje pozicije bez nule imaju 9 (a ne 10) izbora:</strong> Kada kažemo "cifra koja nije nula", to je \(\{1, \ldots, 9\}\) — 9 mogućnosti, ne 10.</li>
+      <li><strong>Greškom uključiti 0 nula ili 4 nule:</strong> Zadatak eksplicitno traži <em>najmanje jednu, a najviše tri</em> nule.</li>
+    </ul>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Koliko ima neparnih šestocifrenih brojeva koji sadrže <em>tačno</em> četiri nule?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <p style="margin-top: 8px;">Sve 4 srednje pozicije (\(d_2, d_3, d_4, d_5\)) moraju biti nula. Koliko izbora ostaje za \(d_1\) i \(d_6\)?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas diagram
+  const canvas = document.getElementById('positionsCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const boxW = 90;
+    const boxH = 70;
+    const gap = 18;
+    const totalW = 6 * boxW + 5 * gap;
+    const startX = (W - totalW) / 2;
+    const boxY = 60;
+
+    const positions = [
+      { label: 'd\u2081', constraint: '1\u20139', color: '#60a5fa', note: 'Prva cifra\n\u2260 0', canBeZero: false },
+      { label: 'd\u2082', constraint: '0\u20139', color: '#a78bfa', note: 'Srednja\npozicija', canBeZero: true },
+      { label: 'd\u2083', constraint: '0\u20139', color: '#a78bfa', note: 'Srednja\npozicija', canBeZero: true },
+      { label: 'd\u2084', constraint: '0\u20139', color: '#a78bfa', note: 'Srednja\npozicija', canBeZero: true },
+      { label: 'd\u2085', constraint: '0\u20139', color: '#a78bfa', note: 'Srednja\npozicija', canBeZero: true },
+      { label: 'd\u2086', constraint: '1,3,5,7,9', color: '#4ade80', note: 'Neparna\ncifra', canBeZero: false }
+    ];
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Struktura \u0161estocifrenog neparnog broja', W / 2, 30);
+
+    // Draw each position box
+    positions.forEach((pos, i) => {
+      const x = startX + i * (boxW + gap);
+
+      // Box shadow/glow
+      if (pos.canBeZero) {
+        ctx.shadowColor = 'rgba(167, 139, 250, 0.3)';
+        ctx.shadowBlur = 12;
+      } else {
+        ctx.shadowColor = pos.label === 'd\u2081' ? 'rgba(96, 165, 250, 0.3)' : 'rgba(74, 222, 128, 0.3)';
+        ctx.shadowBlur = 12;
+      }
+
+      // Box background
+      ctx.fillStyle = pos.canBeZero ? 'rgba(167, 139, 250, 0.12)' : (pos.label === 'd\u2081' ? 'rgba(96, 165, 250, 0.12)' : 'rgba(74, 222, 128, 0.12)');
+      ctx.beginPath();
+      ctx.roundRect(x, boxY, boxW, boxH, 10);
+      ctx.fill();
+
+      // Box border
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = pos.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, boxY, boxW, boxH, 10);
+      ctx.stroke();
+
+      // Position label
+      ctx.fillStyle = pos.color;
+      ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(pos.label, x + boxW / 2, boxY + 30);
+
+      // Constraint
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(pos.constraint, x + boxW / 2, boxY + 52);
+
+      // Note below
+      const noteLines = pos.note.split('\n');
+      ctx.fillStyle = pos.color;
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      noteLines.forEach((line, li) => {
+        ctx.fillText(line, x + boxW / 2, boxY + boxH + 22 + li * 16);
+      });
+
+      // Zero allowed indicator
+      if (pos.canBeZero) {
+        ctx.fillStyle = '#f472b6';
+        ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+        ctx.fillText('Može 0', x + boxW / 2, boxY + boxH + 56);
+      } else {
+        ctx.fillStyle = '#e09468';
+        ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+        ctx.fillText('\u2260 0', x + boxW / 2, boxY + boxH + 56);
+      }
+    });
+
+    // Bracket for middle positions
+    const bracketX1 = startX + (boxW + gap) + boxW / 2 - 10;
+    const bracketX2 = startX + 4 * (boxW + gap) + boxW / 2 + 10;
+    const bracketY = boxY + boxH + 75;
+
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+
+    // Bottom bracket
+    ctx.beginPath();
+    ctx.moveTo(bracketX1, bracketY - 10);
+    ctx.lineTo(bracketX1, bracketY);
+    ctx.lineTo(bracketX2, bracketY);
+    ctx.lineTo(bracketX2, bracketY - 10);
+    ctx.stroke();
+
+    // Bracket label
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('4 pozicije gde mogu biti nule', (bracketX1 + bracketX2) / 2, bracketY + 20);
+
+    // Summary row
+    const summaryY = bracketY + 50;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    const cases = [
+      { text: '1 nula: C(4,1) = 4 načina', color: '#60a5fa' },
+      { text: '2 nule: C(4,2) = 6 načina', color: '#a78bfa' },
+      { text: '3 nule: C(4,3) = 4 načina', color: '#f472b6' }
+    ];
+
+    const caseW = 200;
+    const caseGap = 20;
+    const caseTotalW = cases.length * caseW + (cases.length - 1) * caseGap;
+    const caseStartX = (W - caseTotalW) / 2;
+
+    cases.forEach((c, i) => {
+      const cx = caseStartX + i * (caseW + caseGap);
+
+      ctx.fillStyle = c.color + '1a';
+      ctx.beginPath();
+      ctx.roundRect(cx, summaryY, caseW, 32, 8);
+      ctx.fill();
+
+      ctx.strokeStyle = c.color + '55';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(cx, summaryY, caseW, 32, 8);
+      ctx.stroke();
+
+      ctx.fillStyle = c.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(c.text, cx + caseW / 2, summaryY + 21);
+    });
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Prebrojavanje neparnih šestocifrenih brojeva sa nulama",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "prebrojavanje", "binomni koeficijent", "pravilo proizvoda", "šestocifreni brojevi"]
+}
+BRAINSPARK_META-->

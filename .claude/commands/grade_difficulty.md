@@ -2,7 +2,7 @@
 
 Grade the difficulty of all solved problems in a solutions folder on a 1.0-10.0 scale.
 
-**Argument:** `$ARGUMENTS` — the solutions folder name inside `problems/` (e.g. `univerzitet_u_beogradu_elektrotehnicki_fakultet_2023`)
+**Argument:** `$ARGUMENTS` (optional) — the solutions folder name inside `problems/` (e.g. `univerzitet_u_beogradu_elektrotehnicki_fakultet_2023`). If omitted, automatically finds the first folder with ungraded problems.
 
 ## Instructions
 
@@ -10,13 +10,27 @@ Follow these steps exactly:
 
 ### Step 1: Validate input and gather problems
 
-Use Glob to find all HTML solution files matching `problems/$ARGUMENTS/*_problem_*_solution.html`.
+**If `$ARGUMENTS` is empty or not provided:**
+
+1. Read `database/problems.json`
+2. Find all documents that have at least one problem with `difficulty` equal to `null` or missing
+3. Sort these document filenames alphabetically (this naturally groups by faculty and orders by year)
+4. For each document (in sorted order), check if a matching solutions folder exists under `problems/` (folder name = document filename without `.pdf` extension) and contains HTML solution files
+5. Pick the **first** document that has both ungraded problems in the database AND solution files on disk
+6. Set `FOLDER` to that folder name and tell the user: `"No argument provided. Auto-selected: {FOLDER}"`
+7. If no ungraded folders are found, tell the user "All problems in the database are already graded." and stop
+
+**If `$ARGUMENTS` is provided**, use it directly as the folder name.
+
+---
+
+Use Glob to find all HTML solution files matching `problems/{FOLDER}/*_problem_*_solution.html`.
 
 If no files found, tell the user and stop.
 
 Set these variables:
-- `FOLDER` = `$ARGUMENTS`
-- `DOCUMENT` = `$ARGUMENTS` + `.pdf` (the corresponding document filename in problems.json)
+- `FOLDER` = the determined folder name
+- `DOCUMENT` = `FOLDER` + `.pdf` (the corresponding document filename in problems.json)
 - `SOLUTION_FILES` = the list of matched HTML files, sorted by problem number
 
 Extract the problem number N from each filename (the `_problem_{N}_solution.html` part).

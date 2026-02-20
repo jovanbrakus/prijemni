@@ -23,7 +23,7 @@ For each problem, verify the HTML solution file at `{solution_path}` exists usin
 ### Step 2: Grade each problem in parallel using agent swarm
 
 For EACH problem, launch a Task agent **in a single message** (all agents in parallel). Every agent MUST use these settings:
-- `model`: `"opus"` (Opus 4.6 — this is mandatory, do not use any other model)
+- `model`: `"sonnet"` (prefer Sonnet for cost efficiency; use Opus if Sonnet is unavailable)
 - `subagent_type`: `"general-purpose"`
 
 Each agent's prompt must include:

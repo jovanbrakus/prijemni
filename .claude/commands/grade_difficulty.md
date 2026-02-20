@@ -1,8 +1,8 @@
 # Grade Difficulty
 
-Grade the difficulty of all solved problems from a document on a 1.0-10.0 scale.
+Grade the difficulty of all solved problems in a solutions folder on a 1.0-10.0 scale.
 
-**Argument:** `$ARGUMENTS` — the PDF filename (e.g. `univerzitet_u_beogradu_elektrotehnicki_fakultet_2023.pdf`)
+**Argument:** `$ARGUMENTS` — the solutions folder name inside `problems/` (e.g. `univerzitet_u_beogradu_elektrotehnicki_fakultet_2023`)
 
 ## Instructions
 
@@ -10,15 +10,18 @@ Follow these steps exactly:
 
 ### Step 1: Validate input and gather problems
 
-Read `database/problems.json`. Filter entries where `document` equals `$ARGUMENTS`.
+Use Glob to find all HTML solution files matching `problems/$ARGUMENTS/*_problem_*_solution.html`.
 
-If no entries found, tell the user and stop.
+If no files found, tell the user and stop.
 
 Set these variables:
-- `FILENAME` = `$ARGUMENTS`
-- `PROBLEMS` = the filtered array of problem entries
+- `FOLDER` = `$ARGUMENTS`
+- `DOCUMENT` = `$ARGUMENTS` + `.pdf` (the corresponding document filename in problems.json)
+- `SOLUTION_FILES` = the list of matched HTML files, sorted by problem number
 
-For each problem, verify the HTML solution file at `{solution_path}` exists using the Read tool. Report any missing files but continue with those that exist.
+Extract the problem number N from each filename (the `_problem_{N}_solution.html` part).
+
+Read `database/problems.json` and find matching entries (by `document` equals `DOCUMENT`). If entries exist, they will be updated with difficulty scores. If no entries exist in the database for some solutions, report this but continue grading.
 
 ### Step 2: Grade each problem in parallel using agent swarm
 
@@ -100,7 +103,7 @@ Why 9.0: Combines 3D tangency geometry → algebraic constraint elimination → 
 
 ## Problem to Grade
 
-Problem {N} from "{FILENAME}":
+Problem {N} from "{FOLDER}":
 
 {FULL_HTML_SOLUTION_CONTENT}
 

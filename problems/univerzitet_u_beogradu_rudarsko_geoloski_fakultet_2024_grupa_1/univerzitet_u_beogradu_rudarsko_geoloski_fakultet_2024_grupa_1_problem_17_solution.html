@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Procentno povecanje i smanjenje cene</title>
+
+  <script type="text/info" id="logic-scratchpad">
+    Problem: Knjiga kosta 2000 dinara. Najpre poskupi 15%, zatim pojeftini 20%. Kolika je konacna cena?
+
+    Korak 1: Pocetna cena = 2000 din
+    Korak 2: Poskupljenje od 15%:
+      Nova cena = 2000 * (1 + 15/100) = 2000 * 1,15 = 2300 din
+    Korak 3: Pojeftinjenje od 20% (od NOVE cene 2300):
+      Konacna cena = 2300 * (1 - 20/100) = 2300 * 0,80 = 1840 din
+
+    Alternativno: 2000 * 1,15 * 0,80 = 2000 * 0,92 = 1840 din
+
+    Odgovor: 1840 din => opcija (A)
+
+    Verifikacija sa datim tacnim odgovorom: A) 1840 din. TACNO!
+
+    Cesta greska: Misliti da se poskupljenje i pojeftinjenje "poniste" (15% - 20% = -5%,
+    pa 2000 * 0,95 = 1900) - ali to je pogresno jer se procenti primenjuju na razlicite osnove.
+  </script>
+
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)'], ['$', '$']],
+        displayMath: [['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1.05rem;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    .card h2 {
+      color: #60a5fa;
+      font-size: 1.35rem;
+      margin-bottom: 16px;
+    }
+
+    .card h3 {
+      color: #e2e8f0;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .given-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .given-item {
+      background: rgba(56, 189, 248, 0.06);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 10px;
+      padding: 12px 18px;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .given-item .label {
+      color: #94a3b8;
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+    }
+
+    .given-item .value {
+      color: #e2e8f0;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .answer-option {
+      cursor: default;
+    }
+
+    .highlight {
+      color: #60a5fa;
+      font-weight: 600;
+    }
+
+    .highlight-pink {
+      color: #f472b6;
+      font-weight: 600;
+    }
+
+    /* Plan card */
+    .plan-card {
+      border-left: 3px solid #a78bfa;
+    }
+
+    .plan-card h2 {
+      color: #a78bfa;
+    }
+
+    /* Theory refresher */
+    details {
+      margin: 15px 0;
+    }
+
+    details summary {
+      cursor: pointer;
+      color: #60a5fa;
+      font-weight: 600;
+      font-size: 1.05rem;
+      padding: 6px 0;
+    }
+
+    details summary:hover {
+      color: #93c5fd;
+    }
+
+    .theory-content {
+      margin-top: 12px;
+      padding-left: 8px;
+    }
+
+    .theory-content li {
+      margin-bottom: 10px;
+      list-style: none;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .theory-content li::before {
+      content: '\25B8';
+      color: #a78bfa;
+      position: absolute;
+      left: 0;
+    }
+
+    /* Canvas card */
+    .canvas-card {
+      text-align: center;
+    }
+
+    .canvas-card canvas {
+      border-radius: 10px;
+      border: 1px solid #334155;
+      touch-action: none;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .canvas-hint {
+      color: #94a3b8;
+      font-size: 0.82rem;
+      margin-top: 8px;
+    }
+
+    /* Steps */
+    .step {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .step:hover, .step.active {
+      background: rgba(96, 165, 250, 0.05);
+      border-left: 3px solid #4ade80;
+      padding-left: 13px;
+    }
+
+    .step-badge {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-top: 2px;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .math-block {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      overflow-x: auto;
+    }
+
+    .note {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* Checkpoint */
+    .checkpoint {
+      margin: 15px 0;
+      background: rgba(167, 139, 250, 0.06);
+      border: 1px solid rgba(167, 139, 250, 0.2);
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+
+    .checkpoint summary {
+      color: #a78bfa;
+      font-size: 0.95rem;
+    }
+
+    .checkpoint .answer {
+      margin-top: 10px;
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    /* Key Insight */
+    .insight-card {
+      background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      text-align: center;
+    }
+
+    .insight-card h2 {
+      color: #a78bfa;
+    }
+
+    .insight-formula {
+      font-size: 1.3rem;
+      margin: 16px 0;
+    }
+
+    /* Final Answer */
+    .final-answer-card {
+      border: 2px solid #4ade80;
+      text-align: center;
+    }
+
+    .final-answer-card h2 {
+      color: #4ade80;
+    }
+
+    .final-answer-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #4ade80;
+      margin: 16px 0;
+    }
+
+    .answer-options-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 16px 0;
+    }
+
+    .answer-options-row .option-card {
+      background: rgba(56, 189, 248, 0.06);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px 20px;
+      min-width: 110px;
+      text-align: center;
+    }
+
+    .answer-options-row .option-card.correct {
+      border-color: #4ade80;
+      background: rgba(52, 211, 153, 0.12);
+    }
+
+    .answer-options-row .option-card .opt-label {
+      color: #94a3b8;
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+    }
+
+    .answer-options-row .option-card .opt-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .answer-options-row .option-card.correct .opt-value {
+      color: #4ade80;
+    }
+
+    .verification {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-top: 14px;
+      font-style: italic;
+    }
+
+    /* Pitfalls */
+    .pitfall-card {
+      border-left: 3px solid #e09468;
+    }
+
+    .pitfall-card h2 {
+      color: #e09468;
+    }
+
+    .pitfall-card li {
+      margin-bottom: 8px;
+      list-style: none;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .pitfall-card li::before {
+      content: '\26A0';
+      position: absolute;
+      left: 0;
+    }
+
+    /* Challenge */
+    .challenge-card {
+      border-left: 3px solid #f472b6;
+    }
+
+    .challenge-card h2 {
+      color: #f472b6;
+    }
+
+    @media (max-width: 700px) {
+      h1 { font-size: 1.5rem; }
+      .card { padding: 16px; }
+      .given-grid { gap: 8px; }
+      .given-item { min-width: 80px; padding: 10px 12px; }
+      .step { flex-direction: column; gap: 8px; }
+      .final-answer-value { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Title -->
+    <h1>Procentno poskupljenje i pojeftinjenje</h1>
+    <p class="subtitle">Uzastopne procentualne promene cene - aritmetika procenata</p>
+
+    <!-- Problem Statement -->
+    <div class="card problem-statement">
+      <h2>Postavka zadatka</h2>
+      <p>
+        Knjiga, čija je cena iznosila <span class="highlight">2000 dinara</span>, najpre
+        poskupi <span class="highlight-pink">15%</span>, a zatim pojeftini <span class="highlight-pink">20%</span>.
+        Kolika je konačna cena knjige?
+      </p>
+
+      <div class="given-grid">
+        <div class="given-item">
+          <div class="label">Početna cena</div>
+          <div class="value">\(2000\) din</div>
+        </div>
+        <div class="given-item">
+          <div class="label">Poskupljenje</div>
+          <div class="value">\(15\%\)</div>
+        </div>
+        <div class="given-item">
+          <div class="label">Pojeftinjenje</div>
+          <div class="value">\(20\%\)</div>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 20px;">Ponuđeni odgovori:</h3>
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">
+          <div class="label">(A)</div>
+          <div class="value">\(1840\) din</div>
+        </div>
+        <div class="given-item answer-option" data-option="B">
+          <div class="label">(B)</div>
+          <div class="value">\(1880\) din</div>
+        </div>
+        <div class="given-item answer-option" data-option="C">
+          <div class="label">(C)</div>
+          <div class="value">\(1860\) din</div>
+        </div>
+        <div class="given-item answer-option" data-option="D">
+          <div class="label">(D)</div>
+          <div class="value">\(1820\) din</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan -->
+    <div class="card plan-card">
+      <h2>Plan rešavanja</h2>
+      <p>
+        Primenićemo dva uzastopna procentualna izračunavanja: najpre ćemo izračunati novu cenu
+        nakon poskupljenja od 15%, a zatim na tu novu cenu primeniti pojeftinjenje od 20%.
+        Ključno je da se svaki procenat primenjuje na <em>trenutnu</em> cenu, ne na početnu.
+      </p>
+    </div>
+
+    <!-- Theory Refresher -->
+    <div class="card">
+      <details>
+        <summary>Ključne formule i pojmovi</summary>
+        <ul class="theory-content">
+          <li>
+            <strong>Procentualno povećanje:</strong> Ako cena \(C\) poraste za \(p\%\), nova cena je:
+            \[ C_{\text{nova}} = C \cdot \left(1 + \frac{p}{100}\right) \]
+          </li>
+          <li>
+            <strong>Procentualno smanjenje:</strong> Ako cena \(C\) opadne za \(p\%\), nova cena je:
+            \[ C_{\text{nova}} = C \cdot \left(1 - \frac{p}{100}\right) \]
+          </li>
+          <li>
+            <strong>Uzastopne procentualne promene:</strong> Kada se primene jedna za drugom, množimo faktorima:
+            \[ C_{\text{konačna}} = C_0 \cdot k_1 \cdot k_2 \]
+            gde su \(k_1\) i \(k_2\) odgovarajući množioci (npr. \(1{,}15\) za +15%, \(0{,}80\) za -20%).
+          </li>
+          <li>
+            <strong>Važno:</strong> Povećanje za \(p\%\) pa smanjenje za \(p\%\) <em>ne vraća</em> na početnu
+            vrednost, jer se procenti primenjuju na različite osnove!
+          </li>
+        </ul>
+      </details>
+    </div>
+
+    <!-- Visual Aid - Canvas -->
+    <div class="card canvas-card">
+      <h2>Vizuelni prikaz</h2>
+      <canvas id="priceCanvas" width="700" height="360"></canvas>
+      <p class="canvas-hint">Dijagram prikazuje promenu cene kroz dva koraka</p>
+    </div>
+
+    <!-- Step-by-Step Solution -->
+    <div class="card">
+      <h2>Rešenje korak po korak</h2>
+
+      <div class="step" id="step1">
+        <div class="step-badge">1</div>
+        <div class="step-content">
+          <h3>Polazna cena</h3>
+          <p>Početna cena knjige je poznata:</p>
+          <div class="math-block">
+            \[ C_0 = 2000 \text{ din} \]
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="step2">
+        <div class="step-badge">2</div>
+        <div class="step-content">
+          <h3>Izračunavanje poskupljenja od 15%</h3>
+          <p>
+            Knjiga najpre poskupi za 15%. To znači da na početnu cenu dodajemo 15% od te cene.
+            Množilac za povećanje od 15% je \(1 + 0{,}15 = 1{,}15\).
+          </p>
+          <div class="math-block">
+            \[ C_1 = C_0 \cdot 1{,}15 = 2000 \cdot 1{,}15 \]
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="step3">
+        <div class="step-badge">3</div>
+        <div class="step-content">
+          <h3>Izračunavanje nove cene nakon poskupljenja</h3>
+          <p>Pomnožimo:</p>
+          <div class="math-block">
+            \[ C_1 = 2000 \cdot 1{,}15 = 2300 \text{ din} \]
+          </div>
+          <p class="note">Cena knjige je sada 2300 dinara.</p>
+        </div>
+      </div>
+
+      <!-- Checkpoint 1 -->
+      <details class="checkpoint">
+        <summary>Proveri sebe: Koliko iznosi 15% od 2000?</summary>
+        <p class="answer">\(15\% \cdot 2000 = 0{,}15 \cdot 2000 = 300\) dinara. Dakle, nova cena je \(2000 + 300 = 2300\) din.</p>
+      </details>
+
+      <div class="step" id="step4">
+        <div class="step-badge">4</div>
+        <div class="step-content">
+          <h3>Izračunavanje pojeftinjenja od 20%</h3>
+          <p>
+            Sada cena od <strong>2300 dinara</strong> (ne početnih 2000!) pojeftini za 20%.
+            Množilac za smanjenje od 20% je \(1 - 0{,}20 = 0{,}80\).
+          </p>
+          <div class="math-block">
+            \[ C_2 = C_1 \cdot 0{,}80 = 2300 \cdot 0{,}80 \]
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="step5">
+        <div class="step-badge">5</div>
+        <div class="step-content">
+          <h3>Izračunavanje konačne cene</h3>
+          <p>Pomnožimo:</p>
+          <div class="math-block">
+            \[ C_2 = 2300 \cdot 0{,}80 = 1840 \text{ din} \]
+          </div>
+          <p class="note">Konačna cena knjige je 1840 dinara.</p>
+        </div>
+      </div>
+
+      <!-- Checkpoint 2 -->
+      <details class="checkpoint">
+        <summary>Proveri sebe: Koliko iznosi 20% od 2300?</summary>
+        <p class="answer">\(20\% \cdot 2300 = 0{,}20 \cdot 2300 = 460\) dinara. Dakle, konačna cena je \(2300 - 460 = 1840\) din.</p>
+      </details>
+
+      <div class="step" id="step6">
+        <div class="step-badge">6</div>
+        <div class="step-content">
+          <h3>Alternativni način - kombinirani množilac</h3>
+          <p>Možemo direktno pomnožiti oba množioca:</p>
+          <div class="math-block">
+            \[ C_{\text{konačna}} = 2000 \cdot 1{,}15 \cdot 0{,}80 = 2000 \cdot 0{,}92 = 1840 \text{ din} \]
+          </div>
+          <p class="note">
+            Kombinirani faktor je \(1{,}15 \cdot 0{,}80 = 0{,}92\), što znači ukupno smanjenje od 8% u odnosu na početnu cenu.
+          </p>
+        </div>
+      </div>
+
+      <!-- Checkpoint 3 -->
+      <details class="checkpoint">
+        <summary>Proveri sebe: Da li je konačna cena manja ili veća od početne?</summary>
+        <p class="answer">Manja! Cena je smanjena za 8% (sa 2000 na 1840 dinara), jer 20% pojeftinjenja "pojede" više nego što je 15% poskupljenja dodalo.</p>
+      </details>
+    </div>
+
+    <!-- Key Insight -->
+    <div class="card insight-card">
+      <h2>Ključni uvid</h2>
+      <p>Uzastopne procentualne promene se <strong>množe</strong>, a ne sabiraju!</p>
+      <div class="insight-formula">
+        \[ \underbrace{1{,}15}_{\text{+15\%}} \times \underbrace{0{,}80}_{\text{-20\%}} = 0{,}92 \neq 0{,}95 \]
+      </div>
+      <p>
+        Mnogi pogrešno misle da je +15% pa -20% isto što i -5%.
+        Razlika nastaje jer se 20% primenjuje na <em>veću</em> cenu (2300), ne na početnu (2000).
+      </p>
+    </div>
+
+    <!-- Final Answer -->
+    <div class="card final-answer-card">
+      <h2>Konačan odgovor</h2>
+      <div class="final-answer-value">1840 dinara</div>
+      <div class="answer-options-row">
+        <div class="option-card correct">
+          <div class="opt-label">(A)</div>
+          <div class="opt-value">1840 din</div>
+        </div>
+        <div class="option-card">
+          <div class="opt-label">(B)</div>
+          <div class="opt-value">1880 din</div>
+        </div>
+        <div class="option-card">
+          <div class="opt-label">(C)</div>
+          <div class="opt-value">1860 din</div>
+        </div>
+        <div class="option-card">
+          <div class="opt-label">(D)</div>
+          <div class="opt-value">1820 din</div>
+        </div>
+      </div>
+      <p class="verification">
+        Provera: \(2000 \cdot 1{,}15 = 2300\), zatim \(2300 \cdot 0{,}80 = 1840\). Takođe, \(2000 \times 0{,}92 = 1840\). Odgovor je logičan jer je ukupni efekat smanjenje za 8%.
+      </p>
+    </div>
+
+    <!-- Common Pitfalls -->
+    <div class="card pitfall-card">
+      <h2>Česte greške</h2>
+      <ul>
+        <li>
+          <strong>Sabiranje procenata:</strong> Pogrešno je zaključiti da +15% i -20% daje -5% i da je konačna cena 1900 din.
+          Procenti se <em>množe</em>, ne sabiraju. Razlika nastaje jer se svaki procenat primenjuje na različitu osnovu.
+        </li>
+        <li>
+          <strong>Pojeftinjenje od početne cene:</strong> Greška je primeniti 20% smanjenja na početnu cenu od 2000 din
+          (što bi dalo 1600, pa 1600 + 300 = 1900). Pojeftinjenje se uvek primenjuje na <em>trenutnu</em> cenu, tj. na 2300 din.
+        </li>
+      </ul>
+    </div>
+
+    <!-- Optional Challenge -->
+    <div class="card challenge-card">
+      <h2>Izazov za razmišljanje</h2>
+      <p>
+        Za koliko procenata bi trebalo da pojeftini knjiga (nakon poskupljenja od 15%) da bi se vratila
+        tačno na početnu cenu od 2000 dinara?
+      </p>
+      <details>
+        <summary>Pogledaj nagoveštaj</summary>
+        <p style="margin-top: 10px; color: #94a3b8;">
+          Posle poskupljenja cena je 2300 din. Traži se procenat \(p\) tako da \(2300 \cdot (1 - p/100) = 2000\).
+          Reši po \(p\): \(p = \frac{300}{2300} \cdot 100 \approx 13{,}04\%\).
+          Dakle, potrebno je pojeftinjenje od oko 13,04%, ne 15%!
+        </p>
+      </details>
+    </div>
+
+  </div>
+
+  <script>
+    (() => {
+      // Step click interactivity
+      const steps = document.querySelectorAll('.step');
+      steps.forEach(step => {
+        step.addEventListener('click', () => {
+          steps.forEach(s => s.classList.remove('active'));
+          step.classList.toggle('active');
+        });
+      });
+
+      // Canvas visualization
+      const canvas = document.getElementById('priceCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      const W = canvas.width;
+      const H = canvas.height;
+
+      const prices = [
+        { label: 'Pocetna cena', value: 2000, color: '#60a5fa' },
+        { label: 'Posle +15%', value: 2300, color: '#a78bfa' },
+        { label: 'Posle -20%', value: 1840, color: '#4ade80' }
+      ];
+
+      const maxPrice = 2500;
+      const barAreaLeft = 140;
+      const barAreaRight = W - 60;
+      const barAreaWidth = barAreaRight - barAreaLeft;
+      const barHeight = 50;
+      const barGap = 30;
+      const startY = 60;
+
+      function draw() {
+        // Background
+        ctx.fillStyle = '#0c1222';
+        ctx.fillRect(0, 0, W, H);
+
+        // Title
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Promena cene knjige', W / 2, 30);
+
+        prices.forEach((item, i) => {
+          const y = startY + i * (barHeight + barGap);
+          const barW = (item.value / maxPrice) * barAreaWidth;
+
+          // Label
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '14px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(item.label, barAreaLeft - 14, y + barHeight / 2 + 5);
+
+          // Bar background
+          ctx.fillStyle = 'rgba(255,255,255,0.03)';
+          ctx.beginPath();
+          ctx.roundRect(barAreaLeft, y, barAreaWidth, barHeight, 8);
+          ctx.fill();
+
+          // Bar
+          const grad = ctx.createLinearGradient(barAreaLeft, y, barAreaLeft + barW, y);
+          grad.addColorStop(0, item.color + '88');
+          grad.addColorStop(1, item.color);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.roundRect(barAreaLeft, y, barW, barHeight, 8);
+          ctx.fill();
+
+          // Glow
+          ctx.shadowColor = item.color;
+          ctx.shadowBlur = 15;
+          ctx.fillStyle = item.color + '22';
+          ctx.beginPath();
+          ctx.roundRect(barAreaLeft, y, barW, barHeight, 8);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Value text
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(item.value + ' din', barAreaLeft + barW + 12, y + barHeight / 2 + 6);
+        });
+
+        // Arrows and percentage labels
+        const arrowX = barAreaLeft - 2;
+
+        // Arrow 1: +15%
+        const y1mid = startY + barHeight;
+        const y2start = startY + barHeight + barGap;
+        drawArrow(ctx, arrowX - 100, y1mid + 2, arrowX - 100, y2start - 2, '#f472b6');
+        ctx.fillStyle = '#f472b6';
+        ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('+15%', arrowX - 120, y1mid + barGap / 2 + 4);
+
+        // Arrow 2: -20%
+        const y3mid = startY + barHeight + barGap + barHeight;
+        const y4start = startY + 2 * (barHeight + barGap);
+        drawArrow(ctx, arrowX - 100, y3mid + 2, arrowX - 100, y4start - 2, '#f472b6');
+        ctx.fillStyle = '#f472b6';
+        ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('-20%', arrowX - 120, y3mid + barGap / 2 + 4);
+
+        // Bottom summary
+        const summaryY = startY + 3 * (barHeight + barGap) - 10;
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '14px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Ukupna promena: 2000 \u00D7 1,15 \u00D7 0,80 = 2000 \u00D7 0,92 = 1840 din', W / 2, summaryY);
+
+        // Difference highlight
+        ctx.fillStyle = '#4ade80';
+        ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+        ctx.fillText('Razlika: -160 din (-8%)', W / 2, summaryY + 24);
+      }
+
+      function drawArrow(ctx, x1, y1, x2, y2, color) {
+        const headLen = 8;
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      draw();
+    })();
+  </script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Procentno poskupljenje i pojeftinjenje cene knjige",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["procenti", "procentualne promene", "aritmetika", "cena"]
+}
+BRAINSPARK_META-->

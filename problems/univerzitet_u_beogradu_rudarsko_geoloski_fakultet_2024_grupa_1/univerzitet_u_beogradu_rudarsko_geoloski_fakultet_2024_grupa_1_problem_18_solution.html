@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir prvih deset članova aritmetičke progresije</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Given arithmetic progression where a₅ + a₈ = 61 and a₁ + a₁₀ = 51, find S₁₀.
+
+General term of arithmetic progression: aₙ = a₁ + (n-1)d
+
+Express a₅ and a₈:
+  a₅ = a₁ + 4d
+  a₈ = a₁ + 7d
+  a₅ + a₈ = 2a₁ + 11d = 61  ... (1)
+
+Express a₁ and a₁₀:
+  a₁ = a₁
+  a₁₀ = a₁ + 9d
+  a₁ + a₁₀ = 2a₁ + 9d = 51  ... (2)
+
+Subtract (2) from (1):
+  (2a₁ + 11d) - (2a₁ + 9d) = 61 - 51
+  2d = 10
+  d = 5
+
+Substitute d = 5 into (2):
+  2a₁ + 9(5) = 51
+  2a₁ + 45 = 51
+  2a₁ = 6
+  a₁ = 3
+
+Sum formula: S₁₀ = (10/2)(2a₁ + 9d) = 5(2·3 + 9·5) = 5(6 + 45) = 5·51 = 255
+
+Verification with answer key: B) 255 ✓
+
+Double-check: list first 10 terms:
+  a₁=3, a₂=8, a₃=13, a₄=18, a₅=23, a₆=28, a₇=33, a₈=38, a₉=43, a₁₀=48
+  a₅+a₈ = 23+38 = 61 ✓
+  a₁+a₁₀ = 3+48 = 51 ✓
+  S₁₀ = 3+8+13+18+23+28+33+38+43+48 = 255 ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  min-width: 80px;
+  cursor: default;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 14px;
+  background: rgba(96, 165, 250, 0.08);
+  border-radius: 8px;
+  list-style: none;
+  user-select: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '▸ ';
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  content: '▾ ';
+}
+
+details .details-content {
+  padding: 14px 16px;
+  margin-top: 8px;
+  background: rgba(56, 189, 248, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.1);
+}
+
+details .details-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .details-content li {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  color: #e2e8f0;
+}
+
+details .details-content li:last-child {
+  border-bottom: none;
+}
+
+.checkpoint {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 14px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  background: rgba(167, 139, 250, 0.12);
+  color: #a78bfa;
+}
+
+.checkpoint .details-content {
+  background: rgba(167, 139, 250, 0.06);
+  border-color: rgba(167, 139, 250, 0.15);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-formula {
+  font-size: 1.4rem;
+  color: #4ade80;
+  margin: 12px 0;
+}
+
+.final-answer {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.1));
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer h2 {
+  color: #4ade80;
+  margin-bottom: 14px;
+}
+
+.final-answer .answer-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 12px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.option-card {
+  background: rgba(30, 41, 59, 0.8);
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 12px 22px;
+  text-align: center;
+  min-width: 90px;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(52, 211, 153, 0.12);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
+}
+
+.option-card .opt-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+
+.option-card .opt-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfall {
+  background: rgba(224, 148, 104, 0.08);
+  border: 1px solid rgba(224, 148, 104, 0.2);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.pitfall-title {
+  color: #e09468;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.pitfall p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.canvas-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  text-align: center;
+}
+
+.canvas-card h2 {
+  color: #60a5fa;
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+canvas {
+  border-radius: 10px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+.challenge-card {
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+.challenge-card h2 {
+  color: #a78bfa;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .step-container { padding: 12px; }
+  .option-card { min-width: 70px; padding: 10px 14px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Zbir članova aritmetičke progresije</h1>
+  <p class="subtitle">Aritmetički nizovi — određivanje prvog člana, razlike i zbira prvih \(n\) članova</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Ako je zbir petog i osmog člana aritmetičke progresije
+      <span class="highlight-pink">\(a_5 + a_8 = 61\)</span>,
+      a zbir prvog i desetog je
+      <span class="highlight-pink">\(a_1 + a_{10} = 51\)</span>,
+      onda je zbir prvih deset članova progresije \(S_{10}\) jednak:
+    </p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Uslov 1</div>
+        <div class="value">\(a_5 + a_8 = 61\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Uslov 2</div>
+        <div class="value">\(a_1 + a_{10} = 51\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Traži se</div>
+        <div class="value">\(S_{10}\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top: 18px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(250\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(255\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(245\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(240\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Izrazićemo \(a_5\), \(a_8\), \(a_1\) i \(a_{10}\) pomoću prvog člana \(a_1\) i razlike \(d\).
+      Dobijamo sistem od dve jednačine sa dve nepoznate, iz koga nalazimo \(a_1\) i \(d\), a zatim primenjujemo formulu za zbir.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="details-content">
+        <ul>
+          <li><strong>Opšti član aritmetičke progresije:</strong> \(a_n = a_1 + (n-1)d\), gde je \(a_1\) prvi član, a \(d\) razlika progresije.</li>
+          <li><strong>Zbir prvih \(n\) članova:</strong> \(S_n = \dfrac{n}{2}(2a_1 + (n-1)d)\)</li>
+          <li><strong>Alternativna formula za zbir:</strong> \(S_n = \dfrac{n}{2}(a_1 + a_n)\)</li>
+          <li><strong>Korisno svojstvo:</strong> U aritmetičkoj progresiji, za indekse \(i\) i \(j\) važi: \(a_i + a_j = 2a_1 + (i + j - 2)d\)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="canvas-card">
+    <h2>Vizuelni prikaz aritmetičke progresije</h2>
+    <canvas id="apCanvas" width="800" height="380"></canvas>
+    <p class="drag-hint">Prevucite klizač ispod da promenite razliku \(d\) i vidite kako se progresija menja</p>
+    <div style="margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 12px;">
+      <span style="color: #94a3b8; font-size: 0.9rem;">Razlika \(d\):</span>
+      <input type="range" id="dSlider" min="1" max="10" value="5" step="1"
+        style="width: 200px; accent-color: #60a5fa;">
+      <span id="dValue" style="color: #60a5fa; font-weight: 700; min-width: 24px;">5</span>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapišimo opšti član</h3>
+        <p>Svaki član aritmetičke progresije izražavamo pomoću prvog člana \(a_1\) i razlike \(d\):</p>
+        <div class="math-block">
+          \[a_n = a_1 + (n-1)d\]
+        </div>
+        <p>Konkretno, članovi koji nam trebaju su:</p>
+        <div class="math-block">
+          \[\begin{align}
+            a_5 &= a_1 + 4d \\
+            a_8 &= a_1 + 7d \\
+            a_{10} &= a_1 + 9d
+          \end{align}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Formiramo prvu jednačinu</h3>
+        <p>Iz uslova \(a_5 + a_8 = 61\) zamenjujemo izraze:</p>
+        <div class="math-block">
+          \[(a_1 + 4d) + (a_1 + 7d) = 61\]
+        </div>
+        <p>Sređujemo:</p>
+        <div class="math-block">
+          \[2a_1 + 11d = 61 \quad \ldots (1)\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Formiramo drugu jednačinu</h3>
+        <p>Iz uslova \(a_1 + a_{10} = 51\) zamenjujemo izraz za \(a_{10}\):</p>
+        <div class="math-block">
+          \[a_1 + (a_1 + 9d) = 51\]
+        </div>
+        <p>Sređujemo:</p>
+        <div class="math-block">
+          \[2a_1 + 9d = 51 \quad \ldots (2)\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koji sistem jednačina smo dobili?</summary>
+      <div class="details-content">
+        \(2a_1 + 11d = 61\) i \(2a_1 + 9d = 51\). Obe jednačine imaju član \(2a_1\), pa se lako eliminiše oduzimanjem.
+      </div>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Oduzimamo jednačine da nađemo \(d\)</h3>
+        <p>Oduzimamo jednačinu (2) od jednačine (1):</p>
+        <div class="math-block">
+          \[(2a_1 + 11d) - (2a_1 + 9d) = 61 - 51\]
+        </div>
+        <p>Članovi \(2a_1\) se poništavaju:</p>
+        <div class="math-block">
+          \[2d = 10\]
+        </div>
+        <div class="math-block">
+          \[\boxed{d = 5}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Nalazimo \(a_1\)</h3>
+        <p>Vraćamo \(d = 5\) u jednačinu (2):</p>
+        <div class="math-block">
+          \[2a_1 + 9 \cdot 5 = 51\]
+        </div>
+        <div class="math-block">
+          \[2a_1 + 45 = 51\]
+        </div>
+        <div class="math-block">
+          \[2a_1 = 6\]
+        </div>
+        <div class="math-block">
+          \[\boxed{a_1 = 3}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(a_5 + a_8\) za \(a_1 = 3\) i \(d = 5\)?</summary>
+      <div class="details-content">
+        \(a_5 = 3 + 4 \cdot 5 = 23\), \(a_8 = 3 + 7 \cdot 5 = 38\). Zbir: \(23 + 38 = 61\) — tačno!
+      </div>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Izračunavamo \(S_{10}\)</h3>
+        <p>Primenjujemo formulu za zbir prvih \(n\) članova:</p>
+        <div class="math-block">
+          \[S_n = \frac{n}{2}\bigl(2a_1 + (n-1)d\bigr)\]
+        </div>
+        <p>Za \(n = 10\), \(a_1 = 3\), \(d = 5\):</p>
+        <div class="math-block">
+          \[S_{10} = \frac{10}{2}\bigl(2 \cdot 3 + 9 \cdot 5\bigr)\]
+        </div>
+        <div class="math-block">
+          \[S_{10} = 5 \cdot (6 + 45)\]
+        </div>
+        <div class="math-block">
+          \[S_{10} = 5 \cdot 51\]
+        </div>
+        <div class="math-block">
+          \[\boxed{S_{10} = 255}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Da li se može izračunati i pomoću alternativne formule?</summary>
+      <div class="details-content">
+        Da! \(S_{10} = \dfrac{10}{2}(a_1 + a_{10}) = 5 \cdot (3 + 48) = 5 \cdot 51 = 255\). Isti rezultat.
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p style="color: #94a3b8; margin-bottom: 12px;">
+      Primetimo da je \(a_1 + a_{10} = 51\), pa direktno po alternativnoj formuli:
+    </p>
+    <div class="insight-formula">
+      \[S_{10} = \frac{10}{2}(a_1 + a_{10}) = 5 \cdot 51 = 255\]
+    </div>
+    <p style="color: #94a3b8; margin-top: 10px;">
+      Zbir prvog i poslednjeg člana odmah daje zbir čitave progresije — bez potrebe da se nađu \(a_1\) i \(d\) pojedinačno!
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\(S_{10} = 255\)</div>
+
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(250\)</div>
+      </div>
+      <div class="option-card correct">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(255\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(245\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(240\)</div>
+      </div>
+    </div>
+
+    <div class="verification">
+      <strong style="color: #4ade80;">Provera:</strong>
+      Prvih deset članova niza su: 3, 8, 13, 18, 23, 28, 33, 38, 43, 48.
+      Direktan zbir: \(3 + 8 + 13 + 18 + 23 + 28 + 33 + 38 + 43 + 48 = 255\).
+      Takođe, \(a_5 + a_8 = 23 + 38 = 61\) i \(a_1 + a_{10} = 3 + 48 = 51\) — oba uslova su zadovoljena.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <div class="pitfall">
+      <div class="pitfall-title">Pogrešno indeksiranje</div>
+      <p>Pažljivo sa indeksima: \(a_5 = a_1 + 4d\) (ne \(5d\)!). Opšti član je \(a_n = a_1 + (n-1)d\), gde je koeficijent uz \(d\) uvek \(n-1\), a ne \(n\).</p>
+    </div>
+    <div class="pitfall">
+      <div class="pitfall-title">Preskakanje provere uslova</div>
+      <p>Kada dobijete \(a_1\) i \(d\), uvek proverite oba polazna uslova. Ako ste pogrešili u jednom koraku, provera će to otkriti pre nego što izračunate konačan zbir.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Ako je u istoj aritmetičkoj progresiji zbir prvih 20 članova \(S_{20}\), koliki je on?</p>
+    <details>
+      <summary>Nagovještaj</summary>
+      <div class="details-content">
+        Koristite istu formulu: \(S_{20} = \dfrac{20}{2}(2a_1 + 19d)\). Već znate da je \(a_1 = 3\) i \(d = 5\). Probajte sami!
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Interactive canvas: arithmetic progression visualization
+  const canvas = document.getElementById('apCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('dSlider');
+  const dValueLabel = document.getElementById('dValue');
+
+  function draw(d) {
+    const a1 = 3;
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const n = 10;
+    const terms = [];
+    for (let i = 0; i < n; i++) {
+      terms.push(a1 + i * d);
+    }
+    const maxVal = Math.max(...terms, 1);
+
+    const marginLeft = 55;
+    const marginRight = 30;
+    const marginTop = 50;
+    const marginBottom = 70;
+    const plotW = W - marginLeft - marginRight;
+    const plotH = H - marginTop - marginBottom;
+
+    const barWidth = plotW / n * 0.65;
+    const barGap = plotW / n;
+
+    // Grid lines
+    const gridLines = 5;
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+
+    for (let i = 0; i <= gridLines; i++) {
+      const val = Math.round((maxVal / gridLines) * i);
+      const y = marginTop + plotH - (plotH * (val / maxVal));
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, y);
+      ctx.lineTo(W - marginRight, y);
+      ctx.stroke();
+      ctx.fillText(val.toString(), marginLeft - 8, y + 4);
+    }
+
+    // Bars
+    const colors = [
+      '#60a5fa', '#60a5fa', '#60a5fa', '#60a5fa',
+      '#f472b6', // a5
+      '#60a5fa', '#60a5fa',
+      '#f472b6', // a8
+      '#60a5fa',
+      '#60a5fa'
+    ];
+
+    for (let i = 0; i < n; i++) {
+      const x = marginLeft + i * barGap + (barGap - barWidth) / 2;
+      const barH = (terms[i] / maxVal) * plotH;
+      const y = marginTop + plotH - barH;
+
+      // Bar glow
+      const grad = ctx.createLinearGradient(x, y, x, marginTop + plotH);
+      const baseColor = colors[i];
+      grad.addColorStop(0, baseColor);
+      grad.addColorStop(1, baseColor + '44');
+      ctx.fillStyle = grad;
+
+      // Rounded top bar
+      const r = 4;
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + barWidth - r, y);
+      ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + r);
+      ctx.lineTo(x + barWidth, marginTop + plotH);
+      ctx.lineTo(x, marginTop + plotH);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.fill();
+
+      // Value on top
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(terms[i].toString(), x + barWidth / 2, y - 8);
+
+      // Index below
+      ctx.fillStyle = (i === 4 || i === 7) ? '#f472b6' : '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('a' + (i + 1), x + barWidth / 2, marginTop + plotH + 18);
+    }
+
+    // Axis lines
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, marginTop);
+    ctx.lineTo(marginLeft, marginTop + plotH);
+    ctx.lineTo(W - marginRight, marginTop + plotH);
+    ctx.stroke();
+
+    // Title label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Članovi aritmetičke progresije (a\u2081 = ' + a1 + ', d = ' + d + ')', W / 2, marginTop + plotH + 45);
+
+    // Highlight sum info
+    const s10 = (n / 2) * (2 * a1 + (n - 1) * d);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('S\u2081\u2080 = ' + s10, W - marginRight, marginTop - 10);
+
+    // Legend for highlighted bars
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillRect(marginLeft + 5, marginTop - 22, 10, 10);
+    ctx.fillText('a\u2085 i a\u2088 (iz uslova)', marginLeft + 20, marginTop - 13);
+
+    // Draw connecting line for d
+    if (n >= 2) {
+      ctx.strokeStyle = '#a78bfa';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      const x0 = marginLeft + 0 * barGap + barGap / 2;
+      const x1 = marginLeft + 1 * barGap + barGap / 2;
+      const barH0 = (terms[0] / maxVal) * plotH;
+      const barH1 = (terms[1] / maxVal) * plotH;
+      const y0 = marginTop + plotH - barH0;
+      const y1 = marginTop + plotH - barH1;
+      ctx.beginPath();
+      ctx.moveTo(x0, y0 - 14);
+      ctx.lineTo(x1, y1 - 14);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // d label
+      ctx.fillStyle = '#a78bfa';
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('+' + d, (x0 + x1) / 2, Math.min(y0, y1) - 20);
+    }
+  }
+
+  draw(5);
+
+  slider.addEventListener('input', function() {
+    const d = parseInt(this.value);
+    dValueLabel.textContent = d;
+    draw(d);
+  });
+
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir prvih deset članova aritmetičke progresije",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["aritmetička progresija", "zbir članova niza", "sistem jednačina", "aritmetički niz"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kvadrat i kruznica</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: A square ABCD has side 8 cm. A circle passes through vertices A and D
+  and is tangent to side BC. Find the radius of the circle.
+
+  Setup: Place the square in a coordinate system.
+    Let A = (0, 0), B = (8, 0), C = (8, 8), D = (0, 8).
+    Side BC goes from B(8, 0) to C(8, 8), which is the vertical line x = 8.
+
+  The circle passes through A(0,0) and D(0,8).
+
+  Since A and D are symmetric about the line y = 4 (horizontal midline of the square),
+  the center of the circle must lie on this line y = 4.
+
+  Let the center be O = (h, 4) for some unknown h.
+
+  The circle passes through A(0,0):
+    r^2 = h^2 + 16
+
+  The circle is tangent to line x = 8 (side BC).
+  Since the circle must be tangent to BC from the left side (center is inside or to the left),
+  the distance from center to the line x = 8 equals r:
+    |8 - h| = r
+  Since the center must be to the left of BC (the circle passes through A which is at x=0),
+  we need h < 8, so:
+    8 - h = r
+
+  Now we have two equations:
+    r^2 = h^2 + 16     ... (1)
+    r = 8 - h           ... (2)
+
+  Substitute (2) into (1):
+    (8 - h)^2 = h^2 + 16
+    64 - 16h + h^2 = h^2 + 16
+    64 - 16h = 16
+    48 = 16h
+    h = 3
+
+  Therefore:
+    r = 8 - 3 = 5
+
+  Verification:
+    Center O = (3, 4)
+    Distance from O to A(0,0) = sqrt(9 + 16) = sqrt(25) = 5. Correct!
+    Distance from O to D(0,8) = sqrt(9 + 16) = sqrt(25) = 5. Correct!
+    Distance from O to line x=8: |8-3| = 5 = r. Tangent! Correct!
+
+  The tangent point on BC: The closest point on line x=8 to (3,4) is (8,4).
+  So the circle touches BC at its midpoint (8,4).
+
+  Answer: A) 5 cm. CONFIRMED.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+  padding-left: 20px;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+.theory-content {
+  padding: 12px 0;
+  color: #cbd5e1;
+}
+
+.theory-content li {
+  margin-bottom: 10px;
+  margin-left: 20px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer h2 {
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-big {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.answer-opt {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.answer-opt.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.15);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  text-align: left;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pitfall {
+  border-left: 3px solid #e09468;
+  padding-left: 16px;
+}
+
+.pitfall li {
+  margin-bottom: 8px;
+  margin-left: 16px;
+  color: #cbd5e1;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Kvadrat i kruznica kroz temena</h1>
+  <p class="subtitle">Geometrija -- kruznica opisana oko tacaka kvadrata sa uslovom tangentnosti</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Dat je kvadrat \(ABCD\) stranice <span style="color:#60a5fa;">8 cm</span> i kruznica koja sadrzi temena \(A\) i \(D\) i dodiruje stranicu \(BC\). Poluprecnik te kruznice je:</p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Stranica kvadrata</div>
+        <div class="value">\(a = 8\) cm</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Kruznica prolazi kroz</div>
+        <div class="value">\(A\) i \(D\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Kruznica dodiruje</div>
+        <div class="value">stranicu \(BC\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top: 16px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(5\) cm</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(6\) cm</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(4\sqrt{2}\) cm</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(5\sqrt{2}\) cm</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Postavicemo koordinatni sistem i iskoristiti cinjenicu da kruznica prolazi kroz \(A\) i \(D\) (sto odredjuje horizontalnu poziciju centra) i da dodiruje pravu \(BC\) (sto daje uslov tangentnosti). Iz ova dva uslova dobicemo poluprecnik.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Rastojanje tacke od prave:</strong> Ako je kruznica tangentna na pravu, rastojanje od centra do te prave jednako je poluprecniku: \(d = r\).</li>
+          <li><strong>Jednacina kruznice:</strong> Kruznica sa centrom \(O(h, k)\) i poluprecnikom \(r\) zadovoljava \((x - h)^2 + (y - k)^2 = r^2\).</li>
+          <li><strong>Simetrija:</strong> Ako kruznica prolazi kroz dve tacke simetricne u odnosu na neku pravu, centar kruznice lezi na toj pravoj (simetrali duzi).</li>
+          <li><strong>Pitagorina teorema:</strong> \(a^2 + b^2 = c^2\) za pravougli trougao sa katetama \(a, b\) i hipotenuzom \(c\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Diagram -->
+  <div class="card canvas-card">
+    <h2>Dijagram</h2>
+    <canvas id="mainCanvas" width="700" height="600"></canvas>
+    <p class="drag-hint">Interaktivni dijagram: kvadrat ABCD, kruznica kroz A i D tangentna na BC</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Postavljamo koordinatni sistem</h3>
+        <p>Neka je kvadrat \(ABCD\) postavljen tako da:</p>
+        <div class="math-block">
+          \[ A = (0,\, 0),\quad B = (8,\, 0),\quad C = (8,\, 8),\quad D = (0,\, 8) \]
+        </div>
+        <p>Stranica \(BC\) je vertikalna duz od \(B(8, 0)\) do \(C(8, 8)\), tj. deo prave \(x = 8\).</p>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Odredjujemo polozaj centra kruznice</h3>
+        <p>Kruznica prolazi kroz tacke \(A(0, 0)\) i \(D(0, 8)\). Ove dve tacke su simetricne u odnosu na pravu \(y = 4\) (sredina duzi \(AD\)).</p>
+        <p>Centar kruznice mora lezati na simetrali duzi \(AD\), dakle na pravoj \(y = 4\).</p>
+        <div class="math-block">
+          \[ O = (h,\, 4) \quad \text{za neko nepoznato } h \]
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri se: Zasto centar mora biti na pravoj y = 4?</summary>
+        <p>Zato sto je centar kruznice jednako udaljen od svih tacaka na kruznici. Posto prolazi kroz \(A(0,0)\) i \(D(0,8)\), mora vaziti \(|OA| = |OD|\), a to znaci da \(O\) lezi na simetrali duzi \(AD\), sto je prava \(y = 4\).</p>
+      </details>
+    </div>
+
+    <div class="step" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Uslov prolaska kroz tacku A</h3>
+        <p>Rastojanje od centra \(O(h, 4)\) do tacke \(A(0, 0)\) jednako je poluprecniku:</p>
+        <div class="math-block">
+          \[ r^2 = h^2 + 4^2 = h^2 + 16 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Uslov tangentnosti na stranicu BC</h3>
+        <p>Stranica \(BC\) lezi na pravoj \(x = 8\). Kruznica dodiruje ovu pravu, sto znaci da je rastojanje od centra do prave jednako poluprecniku:</p>
+        <div class="math-block">
+          \[ |8 - h| = r \]
+        </div>
+        <p>Posto centar mora biti levo od prave \(x = 8\) (kruznica prolazi i kroz \(A\) na \(x = 0\)), vazi \(h < 8\), pa:</p>
+        <div class="math-block">
+          \[ r = 8 - h \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Resavamo sistem jednacina</h3>
+        <p>Imamo dve jednacine:</p>
+        <div class="math-block">
+          \[ \begin{align}
+            r^2 &= h^2 + 16 \quad &(1) \\
+            r &= 8 - h \quad &(2)
+          \end{align} \]
+        </div>
+        <p>Zamenom (2) u (1):</p>
+        <div class="math-block">
+          \[ (8 - h)^2 = h^2 + 16 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step6">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Razvijamo i pojednostavljujemo</h3>
+        <div class="math-block">
+          \[ 64 - 16h + h^2 = h^2 + 16 \]
+        </div>
+        <p>Skracujemo \(h^2\) sa obe strane:</p>
+        <div class="math-block">
+          \[ 64 - 16h = 16 \]
+        </div>
+        <p>Resavamo po \(h\):</p>
+        <div class="math-block">
+          \[ 16h = 48 \quad \Rightarrow \quad h = 3 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri se: Koliki je poluprecnik?</summary>
+        <p>Iz jednacine \(r = 8 - h = 8 - 3 = 5\). Poluprecnik je \(r = 5\) cm.</p>
+      </details>
+    </div>
+
+    <div class="step" id="step7">
+      <div class="step-number">7</div>
+      <div class="step-content">
+        <h3>Izracunavamo poluprecnik</h3>
+        <p>Uvrstavamo \(h = 3\) u izraz za poluprecnik:</p>
+        <div class="math-block">
+          \[ r = 8 - 3 = 5 \text{ cm} \]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>Dva uslova -- prolazak kroz simetricne tacke \(A\) i \(D\) i tangentnost na \(BC\) -- daju sistem od koga se \(h^2\) skrati, ostavljajuci prostu linearnu jednacinu!</p>
+    <div class="math-block" style="display: inline-block;">
+      \[ O = (3,\, 4), \quad r = 5 \]
+    </div>
+    <p style="margin-top: 10px; color: #94a3b8;">Centar kruznice je na rastojanju 3 od stranice \(AD\) i 5 od stranice \(BC\), a tacka dodira je srediste stranice \(BC\).</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konacan odgovor</h2>
+    <div class="answer-big">\(r = 5\) cm</div>
+    <div class="answer-options-final">
+      <div class="answer-opt correct">A) 5 cm</div>
+      <div class="answer-opt">B) 6 cm</div>
+      <div class="answer-opt">C) \(4\sqrt{2}\) cm</div>
+      <div class="answer-opt">D) \(5\sqrt{2}\) cm</div>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong>
+      <ul style="margin-top: 8px; margin-left: 20px;">
+        <li>\(|OA| = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5\) cm</li>
+        <li>\(|OD| = \sqrt{3^2 + 4^2} = \sqrt{9 + 16} = \sqrt{25} = 5\) cm</li>
+        <li>Rastojanje od \(O(3, 4)\) do prave \(x = 8\): \(|8 - 3| = 5 = r\)</li>
+        <li>Trougao \(OAM\) (gde je \(M\) srediste \(AD\)) je pravougli sa stranicama 3, 4, 5 -- Pitagorina trojka!</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Pitfalls -->
+  <div class="card pitfall">
+    <h2>Ceste greske</h2>
+    <ul>
+      <li><strong>Pogresan izbor koordinata:</strong> Ako se kvadrat postavi tako da su temena u drugacijem redosledu, uslovi se mogu pomesati. Uvek proverite koji par temena je na kruznici i koja stranica je tangenta.</li>
+      <li><strong>Zaboravljen uslov simetrije:</strong> Bez koriscenja cinjenice da je centar na pravoj \(y = 4\), problem postaje komplikovaniji sa dve nepoznate. Simetrija drasticno pojednostavljuje racun.</li>
+    </ul>
+  </div>
+
+  <!-- Challenge -->
+  <div class="card">
+    <details>
+      <summary>Bonus izazov</summary>
+      <p>Sta ako kruznica prolazi kroz temena \(A\) i \(B\) (umesto \(A\) i \(D\)) i dodiruje stranicu \(CD\)? Koliki je tada poluprecnik?</p>
+      <details style="margin-top: 10px;">
+        <summary>Nagovestaj</summary>
+        <p>Problem je potpuno analogan! Tacke \(A(0,0)\) i \(B(8,0)\) su simetricne u odnosu na pravu \(x = 4\), pa centar lezi na \(x = 4\). Stranica \(CD\) je na pravoj \(y = 8\). Postavite iste uslove i resavajte -- rezultat je isti: \(r = 5\) cm.</p>
+      </details>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Coordinate transformation: mathematical coords -> canvas coords
+  // We'll place the square centered in the canvas with some padding
+  const padding = 80;
+  const squareSide = 8;
+  const scale = (Math.min(W, H) - 2 * padding) / 10; // a bit more room
+  const originX = padding + scale * 1; // shift right a bit
+  const originY = H - padding - scale * 1; // shift up a bit
+
+  function toCanvas(x, y) {
+    return { x: originX + x * scale, y: originY - y * scale };
+  }
+
+  function drawAll() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 0.5;
+    for (let i = -1; i <= 10; i++) {
+      const p1 = toCanvas(i, -1);
+      const p2 = toCanvas(i, 10);
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+
+      const p3 = toCanvas(-1, i);
+      const p4 = toCanvas(10, i);
+      ctx.beginPath();
+      ctx.moveTo(p3.x, p3.y);
+      ctx.lineTo(p4.x, p4.y);
+      ctx.stroke();
+    }
+
+    // Square vertices
+    const A = toCanvas(0, 0);
+    const B = toCanvas(8, 0);
+    const C = toCanvas(8, 8);
+    const D = toCanvas(0, 8);
+
+    // Draw the square
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(A.x, A.y);
+    ctx.lineTo(B.x, B.y);
+    ctx.lineTo(C.x, C.y);
+    ctx.lineTo(D.x, D.y);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Fill square with subtle color
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.05)';
+    ctx.fill();
+
+    // Circle: center O = (3, 4), radius = 5
+    const O = toCanvas(3, 4);
+    const rCanvas = 5 * scale;
+
+    // Circle glow
+    const glow = ctx.createRadialGradient(O.x, O.y, rCanvas * 0.95, O.x, O.y, rCanvas * 1.05);
+    glow.addColorStop(0, 'rgba(244, 114, 182, 0.15)');
+    glow.addColorStop(1, 'rgba(244, 114, 182, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(O.x, O.y, rCanvas * 1.05, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Circle
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(O.x, O.y, rCanvas, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Radius lines (dashed)
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 1.5;
+
+    // Radius to A
+    ctx.beginPath();
+    ctx.moveTo(O.x, O.y);
+    ctx.lineTo(A.x, A.y);
+    ctx.stroke();
+
+    // Radius to D
+    ctx.beginPath();
+    ctx.moveTo(O.x, O.y);
+    ctx.lineTo(D.x, D.y);
+    ctx.stroke();
+
+    // Radius to tangent point T(8, 4)
+    const T = toCanvas(8, 4);
+    ctx.strokeStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.moveTo(O.x, O.y);
+    ctx.lineTo(T.x, T.y);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // Right angle at T (tangent point)
+    const raSize = 10;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    // Right angle square at T between BC (vertical) and OT (horizontal)
+    ctx.moveTo(T.x - raSize, T.y);
+    ctx.lineTo(T.x - raSize, T.y - raSize);
+    ctx.lineTo(T.x, T.y - raSize);
+    ctx.stroke();
+
+    // Mark midline y=4 (dashed, thin)
+    ctx.setLineDash([3, 5]);
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+    ctx.lineWidth = 1;
+    const ml1 = toCanvas(-0.5, 4);
+    const ml2 = toCanvas(8.5, 4);
+    ctx.beginPath();
+    ctx.moveTo(ml1.x, ml1.y);
+    ctx.lineTo(ml2.x, ml2.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw points
+    function drawPoint(canvasCoord, color, label, offsetX, offsetY) {
+      // Point dot
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(canvasCoord.x, canvasCoord.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // White border
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = color;
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, canvasCoord.x + offsetX, canvasCoord.y + offsetY);
+    }
+
+    drawPoint(A, '#60a5fa', 'A', -18, 18);
+    drawPoint(B, '#60a5fa', 'B', 18, 18);
+    drawPoint(C, '#60a5fa', 'C', 18, -12);
+    drawPoint(D, '#60a5fa', 'D', -18, -12);
+    drawPoint(O, '#f472b6', 'O(3, 4)', 0, -14);
+    drawPoint(T, '#4ade80', 'T(8, 4)', 24, -14);
+
+    // Label radius along OA
+    const midOA = { x: (O.x + A.x) / 2, y: (O.y + A.y) / 2 };
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('r = 5', midOA.x - 16, midOA.y - 6);
+
+    // Label radius along OD
+    const midOD = { x: (O.x + D.x) / 2, y: (O.y + D.y) / 2 };
+    ctx.fillText('r = 5', midOD.x - 16, midOD.y + 16);
+
+    // Label radius along OT
+    const midOT = { x: (O.x + T.x) / 2, y: (O.y + T.y) / 2 };
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('r = 5', midOT.x, midOT.y - 10);
+
+    // Label side lengths
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    // Bottom side AB
+    const midAB = toCanvas(4, 0);
+    ctx.fillText('8', midAB.x, midAB.y + 20);
+    // Left side AD
+    const midAD = toCanvas(0, 4);
+    ctx.fillText('8', midAD.x - 18, midAD.y);
+    // Right side BC
+    const midBC = toCanvas(8, 4);
+    ctx.fillText('8', midBC.x + 18, midBC.y + 30);
+    // Top side DC
+    const midDC = toCanvas(4, 8);
+    ctx.fillText('8', midDC.x, midDC.y - 12);
+
+    // Dimension marks for h = 3 (from center to AD)
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.5)';
+    ctx.lineWidth = 1;
+    const hLine1 = toCanvas(0, 4);
+    const hLine2 = toCanvas(3, 4);
+    ctx.beginPath();
+    ctx.moveTo(hLine1.x, hLine1.y);
+    ctx.lineTo(hLine2.x, hLine2.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    const midH = toCanvas(1.5, 4);
+    ctx.fillText('h = 3', midH.x, midH.y + 18);
+
+    // Legend
+    const legendX = W - 170;
+    const legendY = 30;
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    ctx.fillRect(legendX - 10, legendY - 5, 170, 100);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(legendX - 10, legendY - 5, 170, 100);
+
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    // Legend: square
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(legendX, legendY + 8, 20, 3);
+    ctx.fillText('Kvadrat ABCD', legendX + 28, legendY + 14);
+
+    // Legend: circle
+    ctx.fillStyle = '#f472b6';
+    ctx.fillRect(legendX, legendY + 30, 20, 3);
+    ctx.fillText('Kruznica (r = 5)', legendX + 28, legendY + 36);
+
+    // Legend: radius
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillRect(legendX, legendY + 52, 20, 3);
+    ctx.fillText('Poluprecnici', legendX + 28, legendY + 58);
+
+    // Legend: tangent
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(legendX, legendY + 74, 20, 3);
+    ctx.fillText('Tacka dodira T', legendX + 28, legendY + 80);
+  }
+
+  drawAll();
+
+  // Step interactivity
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Poluprecnik kruznice kroz temena kvadrata sa uslovom tangentnosti",
+  "subject": "math",
+  "unit": "geometry",
+  "topic_tags": ["kvadrat", "kruznica", "tangenta", "poluprecnik", "koordinatna geometrija", "Pitagorina trojka"]
+}
+BRAINSPARK_META-->

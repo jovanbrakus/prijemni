@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir članova geometrijskog niza</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Drugi član rastućeg geometrijskog niza je 6, a četvrti član je 54. Naći zbir prvih pet članova.
+
+Geometrijski niz: a_n = a_1 * q^(n-1)
+
+Poznato:
+  a_2 = a_1 * q = 6
+  a_4 = a_1 * q^3 = 54
+
+Delimo a_4 / a_2:
+  (a_1 * q^3) / (a_1 * q) = 54 / 6
+  q^2 = 9
+  q = 3 ili q = -3
+
+Niz je rastući, pa q > 0 i q > 1, dakle q = 3.
+
+(Provera: ako bi q = -3, niz bi bio naizmenično pozitivan i negativan, npr. -2, 6, -18, 54, -162,
+što nije rastući niz.)
+
+Iz a_2 = a_1 * q = 6:
+  a_1 = 6 / 3 = 2
+
+Članovi niza: 2, 6, 18, 54, 162
+
+Zbir prvih 5 članova:
+  S_5 = a_1 * (q^5 - 1) / (q - 1) = 2 * (243 - 1) / (3 - 1) = 2 * 242 / 2 = 242
+
+Ili direktno: 2 + 6 + 18 + 54 + 162 = 242
+
+Odgovor: C) 242 ✓ (poklapа se sa ključem)
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1.15rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+  transition: none;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #a78bfa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.theory-card summary:hover {
+  color: #c4b5fd;
+}
+
+.theory-card ul {
+  list-style: none;
+  padding: 12px 0;
+}
+
+.theory-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+.theory-card li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: border-left 0.2s, background 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step-container:hover, .step-container.active {
+  border-left: 3px solid #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  min-width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+details.checkpoint {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+details.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-formula {
+  font-size: 1.3rem;
+  color: #4ade80;
+  margin: 12px 0;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  text-align: center;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+}
+
+.final-answer-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.option-final {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.05rem;
+  color: #94a3b8;
+}
+
+.option-final.correct {
+  background: rgba(74,222,128,0.15);
+  border: 2px solid #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(74,222,128,0.06);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfalls-card {
+  border-left: 4px solid #e09468;
+}
+
+.pitfalls-card h2 {
+  color: #e09468;
+}
+
+.pitfalls-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfalls-card li {
+  padding: 8px 0;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(51,65,85,0.4);
+}
+
+.pitfalls-card li:last-child {
+  border-bottom: none;
+}
+
+.pitfalls-card li::before {
+  content: '⚠ ';
+  color: #e09468;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-weight: 600;
+  user-select: none;
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 10px;
+  width: 100%;
+  max-width: 700px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .step-container { padding: 12px; gap: 10px; }
+  .final-answer-value { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Zbir članova geometrijskog niza</h1>
+  <p class="subtitle">Geometrijski nizovi — određivanje parametara i zbir prvih članova</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Drugi član <span class="highlight-blue">rastućeg</span> geometrijskog niza je
+      <span class="highlight-pink">6</span>, a četvrti član je <span class="highlight-pink">54</span>.
+      Zbir prvih pet članova je:
+    </p>
+    <div class="given-grid" style="margin-bottom: 18px;">
+      <div class="given-item">
+        <div class="label">\(a_2\)</div>
+        <div class="value">\(6\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">\(a_4\)</div>
+        <div class="value">\(54\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Traži se</div>
+        <div class="value">\(S_5 = ?\)</div>
+      </div>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(268\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(324\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(242\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(280\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Iz poznata dva člana niza postavićemo sistem jednačina da odredimo prvi član \(a_1\)
+      i količnik \(q\). Zatim ćemo primeniti formulu za zbir prvih \(n\) članova geometrijskog niza.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Ključne formule i definicije</summary>
+      <ul>
+        <li>
+          <strong>Opšti član geometrijskog niza:</strong>
+          \[ a_n = a_1 \cdot q^{\,n-1} \]
+          gde je \(a_1\) prvi član, a \(q\) količnik niza.
+        </li>
+        <li>
+          <strong>Količnik niza:</strong>
+          \[ q = \frac{a_{n+1}}{a_n} \]
+          Odnos bilo koja dva uzastopna člana je konstantan.
+        </li>
+        <li>
+          <strong>Zbir prvih \(n\) članova</strong> (za \(q \neq 1\)):
+          \[ S_n = a_1 \cdot \frac{q^n - 1}{q - 1} \]
+        </li>
+        <li>
+          <strong>Rastući niz:</strong> Niz je rastući ako je svaki naredni član veći od prethodnog, tj. \(a_{n+1} > a_n\) za svako \(n\). Za geometrijski niz sa pozitivnim članovima, to znači \(q > 1\).
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz niza</h2>
+    <canvas id="seqCanvas" width="700" height="380"></canvas>
+    <p class="canvas-hint">Prikaz prvih 5 članova geometrijskog niza i njihovog zbira</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapišemo poznate podatke pomoću formule za opšti član</h3>
+        <p>
+          U geometrijskom nizu \(n\)-ti član je \(a_n = a_1 \cdot q^{n-1}\).
+          Zapišimo uslove koje znamo:
+        </p>
+        <div class="math-block">
+          \[ a_2 = a_1 \cdot q = 6 \]
+          \[ a_4 = a_1 \cdot q^3 = 54 \]
+        </div>
+        <p class="note">Imamo dve jednačine sa dve nepoznate: \(a_1\) i \(q\).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Odredimo količnik \(q\) deljenjem jednačina</h3>
+        <p>
+          Podelimo drugu jednačinu prvom da eliminišemo \(a_1\):
+        </p>
+        <div class="math-block">
+          \[ \frac{a_4}{a_2} = \frac{a_1 \cdot q^3}{a_1 \cdot q} = q^2 \]
+        </div>
+        <p>Uvrštavamo poznate vrednosti:</p>
+        <div class="math-block">
+          \[ q^2 = \frac{54}{6} = 9 \]
+        </div>
+        <p>Odavde dobijamo:</p>
+        <div class="math-block">
+          \[ q = 3 \quad \text{ili} \quad q = -3 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koja vrednost \(q\) je ispravna?</summary>
+      <div class="answer">
+        Pošto je niz <em>rastući</em>, količnik mora biti pozitivan i veći od 1. Dakle, \(q = 3\).
+        <br>
+        Za \(q = -3\) članovi bi naizmenično menjali znak (\(-2, 6, -18, 54, -162\)), pa niz ne bi bio rastući.
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Biramo \(q = 3\) jer je niz rastući</h3>
+        <p>
+          Niz je rastući, što znači da svaki sledeći član mora biti veći od prethodnog.
+          Ako bi \(q = -3\), članovi bi bili naizmenično negativni i pozitivni — niz
+          ne bi bio rastući.
+        </p>
+        <div class="math-block">
+          \[ q = 3 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Odredimo prvi član \(a_1\)</h3>
+        <p>Iz jednačine \(a_2 = a_1 \cdot q = 6\) izrazimo \(a_1\):</p>
+        <div class="math-block">
+          \[ a_1 = \frac{6}{q} = \frac{6}{3} = 2 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koji su prvih 5 članova niza?</summary>
+      <div class="answer">
+        \(a_1 = 2\), \(a_2 = 6\), \(a_3 = 18\), \(a_4 = 54\), \(a_5 = 162\).
+        <br>
+        Svaki naredni je 3 puta veći od prethodnog — niz zaista raste!
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Izračunamo zbir prvih pet članova</h3>
+        <p>Primenimo formulu za zbir geometrijskog niza:</p>
+        <div class="math-block">
+          \[ S_5 = a_1 \cdot \frac{q^5 - 1}{q - 1} \]
+        </div>
+        <p>Uvrštavamo \(a_1 = 2\) i \(q = 3\):</p>
+        <div class="math-block">
+          \[ S_5 = 2 \cdot \frac{3^5 - 1}{3 - 1} = 2 \cdot \frac{243 - 1}{2} = 2 \cdot \frac{242}{2} = 2 \cdot 121 = 242 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Provera direktnim sabiranjem</h3>
+        <p>Saberimo sve članove da potvrdimo rezultat:</p>
+        <div class="math-block">
+          \[ S_5 = 2 + 6 + 18 + 54 + 162 = 242 \]
+        </div>
+        <p class="note">Rezultat se poklapa sa formulom — sve je tačno!</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko iznosi \(3^5\)?</summary>
+      <div class="answer">
+        \(3^5 = 3 \cdot 3 \cdot 3 \cdot 3 \cdot 3 = 243\). Ovo je bitno za tačan zbir!
+      </div>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Deljenjem dva poznata člana geometrijskog niza eliminišemo \(a_1\) i direktno dobijamo \(q^2\).</p>
+    <div class="insight-formula">
+      \[ \frac{a_4}{a_2} = q^2 \implies q = 3 \implies S_5 = 242 \]
+    </div>
+    <p style="color: #94a3b8;">Uslov da je niz rastući je ključan za izbor pozitivnog \(q\).</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\(S_5 = 242\)</div>
+    <div class="options-final">
+      <div class="option-final">(A) 268</div>
+      <div class="option-final">(B) 324</div>
+      <div class="option-final correct">(C) 242</div>
+      <div class="option-final">(D) 280</div>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Zbir 2 + 6 + 18 + 54 + 162 = 242, što se poklapa sa primenom
+      formule za zbir geometrijskog niza. Takođe, svi članovi su pozitivni i svaki naredni je
+      3 puta veći od prethodnog, pa je niz zaista rastući.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls-card">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>
+        <strong>Zaboraviti uslov rastućeg niza:</strong> Jednačina \(q^2 = 9\) daje dva rešenja:
+        \(q = 3\) i \(q = -3\). Za \(q = -3\) prvi član bi bio \(a_1 = -2\), a niz bi bio
+        \(-2, 6, -18, 54, -162\) sa zbirom \(-120\), što nije među ponuđenim odgovorima. Uslov
+        „rastući" eliminiše \(q = -3\).
+      </li>
+      <li>
+        <strong>Pogrešno izračunati \(3^5\):</strong> Česta greška je da se dobije \(3^5 = 81\)
+        (zamena sa \(3^4\)) umesto \(3^5 = 243\). To bi dovelo do pogrešnog zbira.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      U istom geometrijskom nizu (\(a_1 = 2\), \(q = 3\)), koliko prvih članova treba sabrati
+      da bi zbir premašio 10 000?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="margin-top: 10px; color: #e2e8f0;">
+        Treba rešiti nejednačinu \(S_n > 10\,000\), tj.
+        \(2 \cdot \frac{3^n - 1}{2} > 10\,000\), odnosno \(3^n > 10\,001\).
+        Iskoristite logaritme ili probajte stepene trojke: \(3^8 = 6561\), \(3^9 = 19683\)...
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Canvas visualization
+  const canvas = document.getElementById('seqCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const terms = [2, 6, 18, 54, 162];
+  const sum = 242;
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Settings
+    const leftPad = 70;
+    const rightPad = 40;
+    const topPad = 50;
+    const bottomPad = 60;
+    const chartW = W - leftPad - rightPad;
+    const chartH = H - topPad - bottomPad;
+
+    const maxVal = 162;
+    const barCount = terms.length;
+    const barGap = 20;
+    const barWidth = (chartW - (barCount + 1) * barGap) / barCount;
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    const gridSteps = [0, 20, 40, 60, 80, 100, 120, 140, 162];
+    gridSteps.forEach(val => {
+      const y = topPad + chartH - (val / maxVal) * chartH;
+      ctx.beginPath();
+      ctx.moveTo(leftPad, y);
+      ctx.lineTo(W - rightPad, y);
+      ctx.stroke();
+    });
+
+    // Y-axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    [0, 40, 80, 120, 162].forEach(val => {
+      const y = topPad + chartH - (val / maxVal) * chartH;
+      ctx.fillText(val.toString(), leftPad - 10, y);
+    });
+
+    // Bars with gradient
+    const colors = ['#60a5fa', '#818cf8', '#a78bfa', '#c084fc', '#e879f9'];
+
+    terms.forEach((val, i) => {
+      const x = leftPad + barGap + i * (barWidth + barGap);
+      const barH = (val / maxVal) * chartH;
+      const y = topPad + chartH - barH;
+
+      // Bar gradient
+      const grad = ctx.createLinearGradient(x, y, x, topPad + chartH);
+      grad.addColorStop(0, colors[i]);
+      grad.addColorStop(1, colors[i] + '44');
+      ctx.fillStyle = grad;
+
+      // Rounded top bar
+      const radius = 6;
+      ctx.beginPath();
+      ctx.moveTo(x, topPad + chartH);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.lineTo(x + barWidth - radius, y);
+      ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + radius);
+      ctx.lineTo(x + barWidth, topPad + chartH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Value on top
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(val.toString(), x + barWidth / 2, y - 6);
+
+      // Label below
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.fillText('a' + (i + 1), x + barWidth / 2, topPad + chartH + 8);
+    });
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(leftPad, topPad);
+    ctx.lineTo(leftPad, topPad + chartH);
+    ctx.lineTo(W - rightPad, topPad + chartH);
+    ctx.stroke();
+
+    // Multiplication arrows between bars
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (let i = 0; i < terms.length - 1; i++) {
+      const x1 = leftPad + barGap + i * (barWidth + barGap) + barWidth;
+      const x2 = leftPad + barGap + (i + 1) * (barWidth + barGap);
+      const midX = (x1 + x2) / 2;
+      const midY = topPad + chartH + 35;
+
+      ctx.fillText('\u00d73', midX, midY);
+
+      // Small arrows
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x1 + 4, midY);
+      ctx.lineTo(x2 - 4, midY);
+      ctx.stroke();
+      // Arrow head
+      ctx.beginPath();
+      ctx.moveTo(x2 - 4, midY);
+      ctx.lineTo(x2 - 10, midY - 4);
+      ctx.moveTo(x2 - 4, midY);
+      ctx.lineTo(x2 - 10, midY + 4);
+      ctx.stroke();
+    }
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Geometrijski niz: a\u2081 = 2, q = 3', W / 2, 10);
+
+    // Sum label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillText('S\u2085 = 2 + 6 + 18 + 54 + 162 = 242', W - rightPad, 10);
+  }
+
+  draw();
+
+  // Step click interaction
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', function() {
+      steps.forEach(s => s.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir prvih pet članova rastućeg geometrijskog niza",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["geometrijski niz", "zbir niza", "količnik", "nizovi"]
+}
+BRAINSPARK_META-->

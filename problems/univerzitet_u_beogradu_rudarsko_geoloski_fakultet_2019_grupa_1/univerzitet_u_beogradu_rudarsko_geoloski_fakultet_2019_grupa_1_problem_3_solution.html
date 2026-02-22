@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uproscavanje razlomackog izraza</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Simplify (a^2 - b^2)/(a - b) - (a^3 - b^3)/(a^2 - b^2), where |a| != |b|.
+
+  Key factorizations:
+    a^2 - b^2 = (a - b)(a + b)
+    a^3 - b^3 = (a - b)(a^2 + ab + b^2)
+
+  Step 1: Simplify the first fraction
+    (a^2 - b^2) / (a - b) = (a - b)(a + b) / (a - b) = a + b
+
+  Step 2: Simplify the second fraction
+    (a^3 - b^3) / (a^2 - b^2) = (a - b)(a^2 + ab + b^2) / ((a - b)(a + b))
+                                = (a^2 + ab + b^2) / (a + b)
+
+  Step 3: Subtract
+    (a + b) - (a^2 + ab + b^2) / (a + b)
+    = ((a + b)^2 - (a^2 + ab + b^2)) / (a + b)
+
+  Step 4: Expand numerator
+    (a + b)^2 = a^2 + 2ab + b^2
+    a^2 + 2ab + b^2 - a^2 - ab - b^2 = ab
+
+  Step 5: Result
+    ab / (a + b)
+
+  Answer: B) ab/(a+b)
+
+  Verification with a=3, b=1:
+    First fraction: (9-1)/(3-1) = 8/2 = 4
+    Second fraction: (27-1)/(9-1) = 26/8 = 13/4
+    Difference: 4 - 13/4 = 16/4 - 13/4 = 3/4
+    Check: ab/(a+b) = 3*1/(3+1) = 3/4 ✓
+
+  Verification with a=2, b=-1:
+    First fraction: (4-1)/(2-(-1)) = 3/3 = 1
+    Second fraction: (8-(-1))/(4-1) = 9/3 = 3
+    Difference: 1 - 3 = -2
+    Check: ab/(a+b) = 2*(-1)/(2+(-1)) = -2/1 = -2 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-option {
+  color: #34d399;
+  font-size: 1.2rem;
+  margin-top: 8px;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .options-grid {
+    flex-direction: column;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Uproscavanje razlomackog izraza</h1>
+  <p class="subtitle">Formule skracenog mnozenja — faktorizacija i oduzimanje razlomaka</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <div class="problem-statement">
+      <p>Uproscavanjem izraza \( \dfrac{a^2 - b^2}{a - b} - \dfrac{a^3 - b^3}{a^2 - b^2} \), gde \( |a| \neq |b| \), dobija se:</p>
+      <div class="options-grid">
+        <div class="option" data-option="A">A) \( 2a - 2b \)</div>
+        <div class="option correct" data-option="B">B) \( \dfrac{ab}{a+b} \)</div>
+        <div class="option" data-option="C">C) \( \dfrac{ab}{a-b} \)</div>
+        <div class="option" data-option="D">D) \( 2ab \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan resavanja</div>
+    <p class="plan-text">
+      Koristicemo formule skracenog mnozenja da faktorisemo brojioce i imenioce oba razlomka: \( a^2 - b^2 = (a-b)(a+b) \) i \( a^3 - b^3 = (a-b)(a^2+ab+b^2) \). Posle skracivanja, svodimo na zajednicki imenilac i oduzimamo.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Formule skracenog mnozenja (klikni da otvoris)</summary>
+      <div class="detail-content">
+        <p>Kljucne formule za ovaj zadatak:</p>
+        <div class="step-math">
+          \[ a^2 - b^2 = (a - b)(a + b) \]
+        </div>
+        <div class="step-math">
+          \[ a^3 - b^3 = (a - b)(a^2 + ab + b^2) \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Razlika kvadrata</strong> se faktorise na proizvod zbira i razlike. <strong>Razlika kubova</strong> se faktorise na proizvod razlike i nepotpunog kvadrata zbira.</p>
+        <p style="margin-top: 8px;">Takodje, korisno je znati kvadrat zbira:</p>
+        <div class="step-math">
+          \[ (a+b)^2 = a^2 + 2ab + b^2 \]
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Vizuelni prikaz</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="720" height="420"></canvas>
+    </div>
+    <p class="canvas-caption">Tok uproscavanja: faktorizacija, skracivanje, oduzimanje razlomaka</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Faktorisemo brojioce i imenioce</div>
+        <p>Pre svega, primenimo formule skracenog mnozenja na sve delove izraza:</p>
+        <div class="step-math">
+          \[ a^2 - b^2 = (a-b)(a+b) \]
+        </div>
+        <div class="step-math">
+          \[ a^3 - b^3 = (a-b)(a^2 + ab + b^2) \]
+        </div>
+        <p>Sada nas izraz izgleda ovako:</p>
+        <div class="step-math">
+          \[ \frac{(a-b)(a+b)}{a-b} - \frac{(a-b)(a^2+ab+b^2)}{(a-b)(a+b)} \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zasto smemo da skracujemo sa \( (a-b) \)?</summary>
+            <div class="detail-content">
+              Uslov \( |a| \neq |b| \) garantuje da je \( a \neq b \) (i \( a \neq -b \)), pa je \( a - b \neq 0 \). Deljenje nulom nije moguce, sto znaci da smemo slobodno da skracujemo.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Skracujemo zajednicke faktore</div>
+        <p>U prvom razlomku skracujemo \( (a-b) \) iz brojioca i imenioca:</p>
+        <div class="step-math">
+          \[ \frac{\cancel{(a-b)}(a+b)}{\cancel{(a-b)}} = a + b \]
+        </div>
+        <p>U drugom razlomku skracujemo \( (a-b) \) iz brojioca i imenioca:</p>
+        <div class="step-math">
+          \[ \frac{\cancel{(a-b)}(a^2+ab+b^2)}{\cancel{(a-b)}(a+b)} = \frac{a^2+ab+b^2}{a+b} \]
+        </div>
+        <p>Nas izraz se sada svodi na:</p>
+        <div class="step-math">
+          \[ (a+b) - \frac{a^2+ab+b^2}{a+b} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Svedemo na zajednicki imenilac</div>
+        <p>Prvi clan zapisujemo kao razlomak sa imeniocem \( (a+b) \):</p>
+        <div class="step-math">
+          \[ \frac{(a+b)^2}{a+b} - \frac{a^2+ab+b^2}{a+b} = \frac{(a+b)^2 - (a^2+ab+b^2)}{a+b} \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zasto smemo koristiti imenilac \( (a+b) \)?</summary>
+            <div class="detail-content">
+              Uslov \( |a| \neq |b| \) takodje znaci \( a \neq -b \), pa je \( a + b \neq 0 \). Imenilac nikada nije nula.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Razvijemo \( (a+b)^2 \) i uprostimo brojilac</div>
+        <p>Primenimo formulu za kvadrat zbira:</p>
+        <div class="step-math">
+          \[ (a+b)^2 = a^2 + 2ab + b^2 \]
+        </div>
+        <p>Uvrstimo u brojilac i oduzimamo:</p>
+        <div class="step-math">
+          \[ (a^2 + 2ab + b^2) - (a^2 + ab + b^2) \]
+        </div>
+        <p>Sklanamo zagrade pazeci na predznake:</p>
+        <div class="step-math">
+          \[ a^2 + 2ab + b^2 - a^2 - ab - b^2 = ab \]
+        </div>
+        <p>Clanovi \( a^2 \) i \( b^2 \) se poniste, a od \( 2ab - ab \) ostaje \( ab \).</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Detaljno ponistavanje clanova</summary>
+            <div class="detail-content">
+              <p>Pogledajmo clan po clan:</p>
+              <p>\( a^2 - a^2 = 0 \) ✓</p>
+              <p>\( 2ab - ab = ab \) ✓</p>
+              <p>\( b^2 - b^2 = 0 \) ✓</p>
+              <p>Ostaje samo \( ab \) u brojiocu.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Zapisemo konacan rezultat</div>
+        <p>Brojilac je \( ab \), imenilac je \( a+b \), dakle:</p>
+        <div class="step-math">
+          \[ \frac{a^2-b^2}{a-b} - \frac{a^3-b^3}{a^2-b^2} = \frac{ab}{a+b} \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Numerička verifikacija sa \( a=3,\; b=1 \)</summary>
+            <div class="detail-content">
+              <p>Prvi razlomak: \( \dfrac{9-1}{3-1} = \dfrac{8}{2} = 4 \)</p>
+              <p style="margin-top: 6px;">Drugi razlomak: \( \dfrac{27-1}{9-1} = \dfrac{26}{8} = \dfrac{13}{4} \)</p>
+              <p style="margin-top: 6px;">Razlika: \( 4 - \dfrac{13}{4} = \dfrac{16}{4} - \dfrac{13}{4} = \dfrac{3}{4} \)</p>
+              <p style="margin-top: 6px;">Formula: \( \dfrac{ab}{a+b} = \dfrac{3 \cdot 1}{3+1} = \dfrac{3}{4} \) ✓</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Kljucni uvid</div>
+    <p>Ceo zadatak se svodi na poznavanje <strong>dve formule skracenog mnozenja</strong> — razlike kvadrata i razlike kubova. Posle faktorizacije, oba razlomka se dramaticno pojednostavljuju skracivanjem zajednickog faktora \( (a-b) \). Zatim, oduzimanje razlomaka sa zajednickim imeniocem \( (a+b) \) daje elegantan rezultat \( \frac{ab}{a+b} \). Kada god vidite razlike stepena u razlomcima, <strong>prvo faktorisajte</strong> — nikada nemojte odmah da razvijate stepene!</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( \dfrac{ab}{a+b} \)</div>
+    <div class="answer-option">Tacan odgovor je B) \( \dfrac{ab}{a+b} \)</div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Ceste greske</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Zaboravljanje formule za razliku kubova:</strong> Mnogi ucenici znaju \( a^2 - b^2 = (a-b)(a+b) \), ali zaborave \( a^3 - b^3 = (a-b)(a^2+ab+b^2) \). Obe formule su neophodne za ovaj zadatak.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Mesanje sa zbirom kubova:</strong> Formula za razliku kubova koristi \( a^2 + ab + b^2 \) (sa plusom ispred \( ab \)), dok zbir kubova \( a^3 + b^3 = (a+b)(a^2 - ab + b^2) \) koristi minus. Zamena znaka daje pogresan rezultat.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Greska pri oduzimanju u brojiocu:</strong> Kod koraka \( (a^2+2ab+b^2) - (a^2+ab+b^2) \), cesta greska je zaboraviti da minus deluje na svaki clan u zagradi. Posebno \( -ab \) umesto \( +ab \) vodi na pogresan rezultat \( \frac{3ab}{a+b} \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Biranje odgovora C umesto B:</strong> Odgovor \( \frac{ab}{a-b} \) je zamka — slicno izgleda, ali ima imenilac \( a-b \) umesto \( a+b \). Pazljivo pratite koji se faktori skracuju!</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Uprostite izraz \( \dfrac{a^3 + b^3}{a^2 - b^2} + \dfrac{a^2 - ab + b^2}{a + b} \), gde \( |a| \neq |b| \).</p>
+    <details>
+      <summary>Pogledaj odgovor</summary>
+      <div class="detail-content">
+        <p>Faktorisemo: \( a^3 + b^3 = (a+b)(a^2 - ab + b^2) \) i \( a^2 - b^2 = (a-b)(a+b) \).</p>
+        <p style="margin-top: 8px;">Prvi razlomak: \( \dfrac{(a+b)(a^2-ab+b^2)}{(a-b)(a+b)} = \dfrac{a^2-ab+b^2}{a-b} \).</p>
+        <p style="margin-top: 8px;">Dodajemo drugi razlomak (imenilac \( a+b \)), zajednicki imenilac je \( (a-b)(a+b) \):</p>
+        <p style="margin-top: 8px;">\( \dfrac{(a^2-ab+b^2)(a+b) + (a^2-ab+b^2)(a-b)}{(a-b)(a+b)} = \dfrac{(a^2-ab+b^2) \cdot 2a}{a^2-b^2} = \dfrac{2a(a^2-ab+b^2)}{a^2-b^2} \).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const centerX = W / 2;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tok uproscavanja izraza', centerX, 25);
+
+    // --- Row 1: Original expression ---
+    const y1 = 60;
+    drawBox(ctx, centerX - 280, y1, 560, 48, '#60a5fa', 'rgba(96,165,250,0.08)');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('(a\u00B2 \u2212 b\u00B2) / (a \u2212 b)  \u2212  (a\u00B3 \u2212 b\u00B3) / (a\u00B2 \u2212 b\u00B2)', centerX, y1 + 30);
+
+    // Arrow down
+    drawArrow(ctx, centerX, y1 + 48, centerX, y1 + 78, '#94a3b8');
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('faktorisemo', centerX + 70, y1 + 68);
+
+    // --- Row 2: Factored form ---
+    const y2 = y1 + 82;
+    drawBox(ctx, centerX - 310, y2, 620, 48, '#a78bfa', 'rgba(167,139,250,0.08)');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(a\u2212b)(a+b) / (a\u2212b)  \u2212  (a\u2212b)(a\u00B2+ab+b\u00B2) / [(a\u2212b)(a+b)]', centerX, y2 + 30);
+
+    // Arrow down
+    drawArrow(ctx, centerX, y2 + 48, centerX, y2 + 78, '#94a3b8');
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('skracujemo (a\u2212b)', centerX + 90, y2 + 68);
+
+    // --- Row 3: Simplified fractions ---
+    const y3 = y2 + 82;
+    // Left box
+    drawBox(ctx, centerX - 240, y3, 170, 44, '#60a5fa', 'rgba(96,165,250,0.06)');
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(a + b)', centerX - 155, y3 + 28);
+
+    // Minus
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2212', centerX - 45, y3 + 30);
+
+    // Right box
+    drawBox(ctx, centerX - 20, y3, 260, 44, '#a78bfa', 'rgba(167,139,250,0.06)');
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(a\u00B2+ab+b\u00B2) / (a+b)', centerX + 110, y3 + 28);
+
+    // Arrow down
+    drawArrow(ctx, centerX, y3 + 44, centerX, y3 + 74, '#94a3b8');
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('zajednicki imenilac (a+b)', centerX + 110, y3 + 64);
+
+    // --- Row 4: Combined fraction ---
+    const y4 = y3 + 78;
+    drawBox(ctx, centerX - 240, y4, 480, 48, '#f472b6', 'rgba(244,114,182,0.08)');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('[(a+b)\u00B2 \u2212 (a\u00B2+ab+b\u00B2)] / (a+b)', centerX, y4 + 30);
+
+    // Arrow down
+    drawArrow(ctx, centerX, y4 + 48, centerX, y4 + 78, '#94a3b8');
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('razvijemo (a+b)\u00B2 = a\u00B2+2ab+b\u00B2', centerX + 130, y4 + 68);
+
+    // --- Row 5: Final result ---
+    const y5 = y4 + 82;
+    drawBox(ctx, centerX - 100, y5, 200, 52, '#34d399', 'rgba(52,211,153,0.12)');
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('ab / (a+b)', centerX, y5 + 33);
+
+    // Annotation for the numerator simplification
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('a\u00B2+2ab+b\u00B2 \u2212 a\u00B2 \u2212 ab \u2212 b\u00B2 = ab', centerX + 110, y5 + 20);
+    ctx.textAlign = 'center';
+  }
+
+  function drawBox(ctx, x, y, w, h, borderColor, fillColor) {
+    ctx.fillStyle = fillColor;
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 2;
+    const r = 10;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function drawArrow(ctx, x1, y1, x2, y2, color) {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    // Arrowhead
+    const headLen = 8;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  draw();
+
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Uproscavanje razlomackog izraza sa razlikom kvadrata i kubova",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["razlika kvadrata", "razlika kubova", "formule skracenog mnozenja", "algebarski razlomci", "uproscavanje izraza"]
+}
+BRAINSPARK_META-->

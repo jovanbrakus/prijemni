@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resavanje racionalne nejednacine</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem:
+Skup svih resenja nejednacine (x+1)/(x-1) >= 1/2 je:
+A) (-inf, -3] u (1, +inf)
+B) [-3, +inf)
+C) (1, 3]
+D) (-inf, 1)
+
+Step 1: Subtract 1/2 from both sides
+  (x+1)/(x-1) - 1/2 >= 0
+
+Step 2: Combine into a single fraction (common denominator = 2(x-1))
+  [2(x+1) - (x-1)] / [2(x-1)] >= 0
+  [2x + 2 - x + 1] / [2(x-1)] >= 0
+  (x + 3) / [2(x - 1)] >= 0
+
+Step 3: Find critical points
+  Numerator = 0: x + 3 = 0 => x = -3
+  Denominator = 0: x - 1 = 0 => x = 1 (excluded from domain)
+
+Step 4: Sign analysis on intervals (-inf, -3), (-3, 1), (1, +inf)
+  Test x = -4: (-4+3)/[2(-4-1)] = (-1)/(-10) = 1/10 > 0  SATISFIES
+  Test x = 0:  (0+3)/[2(0-1)]  = 3/(-2) = -3/2 < 0       DOES NOT SATISFY
+  Test x = 2:  (2+3)/[2(2-1)]  = 5/2 > 0                  SATISFIES
+
+Step 5: Check boundary points
+  x = -3: (x+3)/[2(x-1)] = 0/[2(-4)] = 0 >= 0  INCLUDED (>= allows equality)
+  x = 1: denominator = 0, EXCLUDED (undefined)
+
+Step 6: Solution set
+  (-inf, -3] u (1, +inf)
+
+Answer: A) (-inf, -3] u (1, +inf)
+
+Verification:
+  x = -3: ((-3)+1)/((-3)-1) = -2/(-4) = 1/2 >= 1/2  YES
+  x = -4: ((-4)+1)/((-4)-1) = -3/(-5) = 3/5 = 0,6 >= 0,5  YES
+  x = 0: (0+1)/(0-1) = -1 >= 0,5  NO (correctly excluded)
+  x = 2: (2+1)/(2-1) = 3 >= 0,5  YES
+  x = 1: undefined (correctly excluded)
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Resavanje racionalne nejednacine</h1>
+  <p class="subtitle">Odredjivanje skupa resenja nejednacine sa racionalnim izrazom</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Postavka zadatka</div>
+    <div class="problem-text">
+      Skup svih resenja nejednacine:
+      <div class="math-box">
+        \[ \frac{x+1}{x-1} \geq \frac{1}{2} \]
+      </div>
+      je:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\((-\infty, -3] \cup (1, +\infty)\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\([-3, +\infty)\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\((1, 3]\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\((-\infty, 1)\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      Prenesemo \(\frac{1}{2}\) na levu stranu, svedemo na zajednicki razlomak i dobijemo nejednacinu oblika \(\frac{P(x)}{Q(x)} \geq 0\). Zatim odredimo kriticne tacke (nule brojioca i imenioca), ispitamo znak izraza na svakom intervalu i na kraju sastavimo skup resenja postujuci uslove: imenilac ne sme biti nula, a jednakost je dozvoljena (\(\geq\)).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Kljucne formule i pravila</summary>
+      <ul style="margin-top: 12px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;"><strong>Racionalna nejednacina:</strong> Ne smemo mnoziti obe strane izrazom koji sadrzi \(x\), jer ne znamo znak tog izraza. Umesto toga, prenosimo sve na jednu stranu i svodimo na jedan razlomak.
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Znak razlomka:</strong>
+          <div class="math-box">\[ \frac{f(x)}{g(x)} \geq 0 \iff f(x) \text{ i } g(x) \text{ imaju isti znak (ili je } f(x) = 0\text{)} \]</div>
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Metoda intervala:</strong> Odredimo nule brojioca i imenioca (kriticne tacke), rasporedimo ih na brojnoj pravoj, i ispitamo znak izraza u svakom od nastalih intervala.
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Granicne tacke:</strong> Nule imenioca su <em>uvek iskljucene</em> (izraz nije definisan). Nule brojioca su ukljucene ako nejednacina dopusta jednakost (\(\geq\) ili \(\leq\)).
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz: Brojna prava i znak izraza</div>
+    <canvas id="solutionCanvas" width="900" height="400"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-title"><span class="step-badge">1</span> Prenosimo na jednu stranu</div>
+      <p class="step-explanation">
+        Oduzimamo \(\frac{1}{2}\) od obe strane nejednacine:
+      </p>
+      <div class="math-box">
+        \[ \frac{x+1}{x-1} - \frac{1}{2} \geq 0 \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-title"><span class="step-badge">2</span> Svodimo na zajednicki imenilac</div>
+      <p class="step-explanation">
+        Zajednicki imenilac je \(2(x-1)\). Prosirujemo prvi razlomak sa \(2\), a drugi sa \((x-1)\):
+      </p>
+      <div class="math-box">
+        \[ \frac{2(x+1) - 1 \cdot (x-1)}{2(x-1)} \geq 0 \]
+      </div>
+      <p class="step-explanation">
+        Sredimo brojilac:
+      </p>
+      <div class="math-box">
+        \[ 2(x+1) - (x-1) = 2x + 2 - x + 1 = x + 3 \]
+      </div>
+      <p class="step-explanation">
+        Nejednacina postaje:
+      </p>
+      <div class="math-box">
+        \[ \frac{x+3}{2(x-1)} \geq 0 \]
+      </div>
+      <details>
+        <summary>Proveri se: Da li smo ispravno razvili brojilac?</summary>
+        <p>\(2(x+1) = 2x + 2\). Zatim \(-(x-1) = -x + 1\). Zbir: \(2x + 2 - x + 1 = x + 3\). Tacno.</p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-title"><span class="step-badge">3</span> Odredjujemo kriticne tacke</div>
+      <p class="step-explanation">
+        Kriticne tacke su vrednosti \(x\) gde je brojilac ili imenilac jednak nuli:
+      </p>
+      <div class="math-box">
+        \[ \text{Brojilac: } x + 3 = 0 \implies x = -3 \]
+        \[ \text{Imenilac: } 2(x - 1) = 0 \implies x = 1 \]
+      </div>
+      <p class="step-explanation">
+        Tacka \(x = 1\) je <span class="highlight">iskljucena</span> jer je imenilac nula (izraz nije definisan).
+        Tacka \(x = -3\) je <span style="color: #34d399; font-weight: 600;">ukljucena</span> jer nejednacina dopusta jednakost (\(\geq 0\)), a u toj tacki je brojilac nula, pa je ceo razlomak jednak nuli.
+      </p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-title"><span class="step-badge">4</span> Analiza znaka na intervalima</div>
+      <p class="step-explanation">
+        Kriticne tacke \(x = -3\) i \(x = 1\) dele brojnu pravu na tri intervala. Biramo test-vrednost iz svakog intervala i odredjujemo znak razlomka \(\frac{x+3}{2(x-1)}\):
+      </p>
+      <div class="math-box">
+        \[ \begin{array}{c|c|c|c}
+        \text{Interval} & x+3 & 2(x-1) & \frac{x+3}{2(x-1)} \\
+        \hline
+        (-\infty,\,-3) & - & - & \boldsymbol{+} \\
+        (-3,\,1) & + & - & \boldsymbol{-} \\
+        (1,\,+\infty) & + & + & \boldsymbol{+}
+        \end{array} \]
+      </div>
+      <p class="step-explanation">
+        Proveravamo sa konkretnim vrednostima:
+      </p>
+      <div class="math-box">
+        \[ x = -4{:}\quad \frac{-4+3}{2(-4-1)} = \frac{-1}{-10} = \frac{1}{10} > 0 \quad \checkmark \]
+        \[ x = 0{:}\quad \frac{0+3}{2(0-1)} = \frac{3}{-2} = -\frac{3}{2} < 0 \quad \times \]
+        \[ x = 2{:}\quad \frac{2+3}{2(2-1)} = \frac{5}{2} > 0 \quad \checkmark \]
+      </div>
+      <details>
+        <summary>Proveri se: Zasto je na \((-\infty, -3)\) znak pozitivan?</summary>
+        <p>Za \(x < -3\): brojilac \(x + 3 < 0\) (negativan), imenilac \(2(x-1) < 0\) (jer je \(x < -3 < 1\), pa je \(x - 1 < 0\), dakle negativan). Kolicnik dva negativna broja je pozitivan.</p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" data-step="5">
+      <div class="step-title"><span class="step-badge">5</span> Formiramo skup resenja</div>
+      <p class="step-explanation">
+        Nejednacina \(\frac{x+3}{2(x-1)} \geq 0\) je zadovoljena na intervalima gde je izraz pozitivan ili nula:
+      </p>
+      <div class="math-box">
+        \[ (-\infty,\, -3] \cup (1,\, +\infty) \]
+      </div>
+      <p class="step-explanation">
+        Objasnjenje granicnih tacaka:
+      </p>
+      <ul style="padding-left: 20px; color: #cbd5e1; margin-bottom: 12px;">
+        <li style="margin-bottom: 6px;">\(x = -3\): razlomak je \(\frac{0}{2(-4)} = 0 \geq 0\) &mdash; <strong style="color: #34d399;">ukljucena</strong> (uglasta zagrada \(]\))</li>
+        <li style="margin-bottom: 6px;">\(x = 1\): razlomak nije definisan &mdash; <strong style="color: #f472b6;">iskljucena</strong> (okrugla zagrada \()\))</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Kljucni uvid</div>
+    <p>
+      Kod racionalnih nejednacina, <strong>nikada</strong> ne mnozimo obe strane imeniocem &mdash; jer je njegov znak nepoznat i zavisi od \(x\). Umesto toga, prenosimo sve na jednu stranu, svodimo na jedan razlomak, i primenjujemo metodu intervala. Posebno obratite paznju na tip zagrade: nule imenioca su uvek iskljucene, dok su nule brojioca ukljucene samo ako nejednacina dopusta jednakost.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konacan odgovor</div>
+    <div class="answer">\((-\infty, -3] \cup (1, +\infty)\)</div>
+    <div class="final-options">
+      <div class="final-option correct" data-option="A">(A) \((-\infty, -3] \cup (1, +\infty)\)</div>
+      <div class="final-option" data-option="B">(B) \([-3, +\infty)\)</div>
+      <div class="final-option" data-option="C">(C) \((1, 3]\)</div>
+      <div class="final-option" data-option="D">(D) \((-\infty, 1)\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(x = -3{:}\ \frac{-3+1}{-3-1} = \frac{-2}{-4} = \frac{1}{2} \geq \frac{1}{2}\) &#10004; &nbsp;
+      \(x = 2{:}\ \frac{2+1}{2-1} = 3 \geq \frac{1}{2}\) &#10004; &nbsp;
+      \(x = 0{:}\ \frac{0+1}{0-1} = -1 \not\geq \frac{1}{2}\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Mnozenje obe strane sa \((x-1)\) bez razmatranja znaka</div>
+      <p>Ako pomnozimo obe strane sa \((x-1)\), moramo razmatrati dva slucaja: \(x-1 > 0\) i \(x-1 < 0\), jer se znak nejednacine menja pri mnozenju negativnim brojem. Mnogi ucenici zaborave drugi slucaj i dobiju nepotpuno resenje (npr. samo \((1, +\infty)\) ili samo \([{-3}, 1)\)).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboravljanje da je \(x = 1\) iskljuceno iz domena</div>
+      <p>Originalni izraz \(\frac{x+1}{x-1}\) nije definisan za \(x = 1\). Odgovor (B) \([-3, +\infty)\) ukljucuje \(x = 1\), sto je pogresno. Uvek proverite da li kriticne tacke imenioca pripadaju domenu.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogresna interpretacija zagrade: \([\) vs \((\)</div>
+      <p>Za \(x = -3\) vazi jednakost \(\frac{x+3}{2(x-1)} = 0\), a posto nejednacina glasi \(\geq 0\), tacka \(x = -3\) zadovoljava uslov i mora biti <em>ukljucena</em>. Odgovor sa okruglom zagradom \((-\infty, -3)\) bi bio pogresan.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Resiti nejednacinu koristeci istu metodu:
+    </p>
+    <div class="math-box">
+      \[ \frac{2x - 1}{x + 2} \leq 3 \]
+    </div>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p>Prenesemo \(3\) na levu stranu: \(\frac{2x-1}{x+2} - 3 \leq 0\). Svedemo na zajednicki imenilac: \(\frac{2x - 1 - 3(x+2)}{x+2} = \frac{-x - 7}{x + 2} \leq 0\). Pomnozimo brojilac i imenilac sa \(-1\) (i obrnemo znak): \(\frac{x+7}{x+2} \geq 0\). Kriticne tacke: \(x = -7\) i \(x = -2\). Resenje: \((-\infty, -7] \cup (-2, +\infty)\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('solutionCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 400 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 400;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    /* Title */
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Analiza znaka: (x + 3) / [2(x \u2212 1)] \u2265 0', W / 2, 28);
+
+    /* Number line parameters */
+    var lineY = 130;
+    var leftX = W * 0.08;
+    var rightX = W * 0.92;
+    var lineLen = rightX - leftX;
+
+    /* Map x-values to canvas positions: show range [-6, 4] */
+    var xMin = -6, xMax = 4;
+    function mapX(val) {
+      return leftX + (val - xMin) / (xMax - xMin) * lineLen;
+    }
+
+    var x_neg3 = mapX(-3);
+    var x_1 = mapX(1);
+
+    /* Draw number line */
+    ctx.beginPath();
+    ctx.moveTo(leftX, lineY);
+    ctx.lineTo(rightX, lineY);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    /* Arrowheads */
+    drawTriangle(leftX - 2, lineY, 8, 'left', '#475569');
+    drawTriangle(rightX + 2, lineY, 8, 'right', '#475569');
+
+    /* Tick marks and labels */
+    for (var i = -5; i <= 3; i++) {
+      var tx = mapX(i);
+      ctx.beginPath();
+      ctx.moveTo(tx, lineY - 5);
+      ctx.lineTo(tx, lineY + 5);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      if (i !== -3 && i !== 1) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(i), tx, lineY + 20);
+      }
+    }
+
+    /* Critical point: x = -3 (filled circle - included) */
+    ctx.beginPath();
+    ctx.arc(x_neg3, lineY, 7, 0, 2 * Math.PI);
+    ctx.fillStyle = '#34d399';
+    ctx.fill();
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u22123', x_neg3, lineY + 28);
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('x + 3 = 0', x_neg3, lineY - 20);
+    ctx.fillText('ukljucena', x_neg3, lineY - 36);
+
+    /* Critical point: x = 1 (open circle - excluded) */
+    ctx.beginPath();
+    ctx.arc(x_1, lineY, 7, 0, 2 * Math.PI);
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('1', x_1, lineY + 28);
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('x \u2212 1 = 0', x_1, lineY - 20);
+    ctx.fillText('iskljucena', x_1, lineY - 36);
+
+    /* Sign regions */
+    var regions = [
+      { left: leftX, right: x_neg3, sign: '+', color: '#34d399', satisfies: true },
+      { left: x_neg3, right: x_1, sign: '\u2212', color: '#f472b6', satisfies: false },
+      { left: x_1, right: rightX, sign: '+', color: '#34d399', satisfies: true }
+    ];
+
+    for (var r = 0; r < regions.length; r++) {
+      var reg = regions[r];
+      var midX = (reg.left + reg.right) / 2;
+
+      /* Background highlight */
+      ctx.fillStyle = reg.satisfies ? 'rgba(52, 211, 153, 0.08)' : 'rgba(244, 114, 182, 0.06)';
+      ctx.fillRect(reg.left, lineY - 60, reg.right - reg.left, 120);
+
+      /* Sign label */
+      ctx.fillStyle = reg.color;
+      ctx.font = 'bold 28px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(reg.sign, midX, lineY + 60);
+    }
+
+    /* Solution set visualization */
+    var solY = 220;
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Skup resenja:', W / 2, solY);
+
+    var solLineY = solY + 40;
+
+    /* Draw solution number line */
+    ctx.beginPath();
+    ctx.moveTo(leftX, solLineY);
+    ctx.lineTo(rightX, solLineY);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    /* Solution highlighting: (-inf, -3] */
+    ctx.beginPath();
+    ctx.moveTo(leftX, solLineY);
+    ctx.lineTo(x_neg3, solLineY);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    /* Solution highlighting: (1, +inf) */
+    ctx.beginPath();
+    ctx.moveTo(x_1, solLineY);
+    ctx.lineTo(rightX, solLineY);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    /* Non-solution: (-3, 1) */
+    ctx.beginPath();
+    ctx.moveTo(x_neg3, solLineY);
+    ctx.lineTo(x_1, solLineY);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([5, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Filled dot at x = -3 */
+    ctx.beginPath();
+    ctx.arc(x_neg3, solLineY, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#4ade80';
+    ctx.fill();
+
+    /* Open dot at x = 1 */
+    ctx.beginPath();
+    ctx.arc(x_1, solLineY, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    /* Arrow tips on solution */
+    drawTriangle(leftX - 2, solLineY, 7, 'left', '#4ade80');
+    drawTriangle(rightX + 2, solLineY, 7, 'right', '#4ade80');
+
+    /* Labels on solution line */
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u22123', x_neg3, solLineY + 22);
+    ctx.fillText('1', x_1, solLineY + 22);
+
+    /* Interval notation below */
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('(\u2212\u221E, \u22123]', (leftX + x_neg3) / 2, solLineY + 42);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('ne pripada', (x_neg3 + x_1) / 2, solLineY + 42);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('(1, +\u221E)', (x_1 + rightX) / 2, solLineY + 42);
+
+    /* Sign table below */
+    var tableY = solLineY + 80;
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tabela znakova:', W / 2, tableY);
+
+    var tY = tableY + 22;
+    var colW = Math.min(160, W * 0.2);
+    var cols = [W * 0.15, W * 0.38, W * 0.62, W * 0.85];
+    var rowH = 24;
+
+    /* Header */
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    var headers = ['', 'x < \u22123', '\u22123 < x < 1', 'x > 1'];
+    for (var c = 0; c < 4; c++) {
+      ctx.fillText(headers[c], cols[c], tY);
+    }
+
+    /* Row: x + 3 */
+    tY += rowH;
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('x + 3', cols[0], tY);
+    var signs1 = ['\u2212', '+', '+'];
+    var colors1 = ['#f472b6', '#34d399', '#34d399'];
+    for (var c = 0; c < 3; c++) {
+      ctx.fillStyle = colors1[c];
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(signs1[c], cols[c + 1], tY);
+    }
+
+    /* Row: 2(x - 1) */
+    tY += rowH;
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('2(x \u2212 1)', cols[0], tY);
+    var signs2 = ['\u2212', '\u2212', '+'];
+    var colors2 = ['#f472b6', '#f472b6', '#34d399'];
+    for (var c = 0; c < 3; c++) {
+      ctx.fillStyle = colors2[c];
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(signs2[c], cols[c + 1], tY);
+    }
+
+    /* Divider line */
+    tY += 10;
+    ctx.beginPath();
+    ctx.moveTo(cols[1] - colW / 2, tY);
+    ctx.lineTo(cols[3] + colW / 2, tY);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    /* Row: result */
+    tY += rowH - 4;
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Razlomak', cols[0], tY);
+    var signs3 = ['+', '\u2212', '+'];
+    var colors3 = ['#4ade80', '#f472b6', '#4ade80'];
+    for (var c = 0; c < 3; c++) {
+      ctx.fillStyle = colors3[c];
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(signs3[c], cols[c + 1], tY);
+    }
+
+    /* Check/cross marks */
+    tY += rowH;
+    var marks = ['\u2713', '\u2717', '\u2713'];
+    var markColors = ['#4ade80', '#f472b6', '#4ade80'];
+    for (var c = 0; c < 3; c++) {
+      ctx.fillStyle = markColors[c];
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(marks[c], cols[c + 1], tY);
+    }
+  }
+
+  function drawTriangle(x, y, size, dir, color) {
+    ctx.beginPath();
+    if (dir === 'left') {
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + size, y - size / 2);
+      ctx.lineTo(x + size, y + size / 2);
+    } else {
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - size, y - size / 2);
+      ctx.lineTo(x - size, y + size / 2);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(container) {
+    container.addEventListener('click', function() {
+      stepContainers.forEach(function(c) { c.classList.remove('active'); });
+      container.classList.add('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Resavanje racionalne nejednacine (x+1)/(x-1) >= 1/2",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["racionalne nejednacine", "metoda intervala", "analiza znaka", "kriticne tacke", "nejednacine sa razlomcima"]
+}
+BRAINSPARK_META-->

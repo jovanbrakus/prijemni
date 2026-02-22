@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uproscavanje algebarskog izraza sa korenima</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem:
+Uprostiti izraz:
+  ( (sqrt(a) - sqrt(b)) / sqrt(a) )^(-1) - ( (sqrt(a) + sqrt(b)) / sqrt(b) )^(-1),  a > b > 0
+
+Step 1: Reciprocals
+  First term: ( (sqrt(a) - sqrt(b)) / sqrt(a) )^(-1) = sqrt(a) / (sqrt(a) - sqrt(b))
+  Second term: ( (sqrt(a) + sqrt(b)) / sqrt(b) )^(-1) = sqrt(b) / (sqrt(a) + sqrt(b))
+
+Step 2: Expression becomes
+  sqrt(a) / (sqrt(a) - sqrt(b))  -  sqrt(b) / (sqrt(a) + sqrt(b))
+
+Step 3: Common denominator
+  (sqrt(a) - sqrt(b))(sqrt(a) + sqrt(b)) = a - b   (difference of squares)
+
+Step 4: Numerator
+  sqrt(a) * (sqrt(a) + sqrt(b)) - sqrt(b) * (sqrt(a) - sqrt(b))
+  = a + sqrt(a)*sqrt(b) - sqrt(a)*sqrt(b) + b
+  = a + sqrt(ab) - sqrt(ab) + b
+  = a + b
+
+Step 5: Result
+  (a + b) / (a - b)
+
+Verification with a = 4, b = 1:
+  First term: ( (2 - 1)/2 )^(-1) = (1/2)^(-1) = 2
+  Second term: ( (2 + 1)/1 )^(-1) = 3^(-1) = 1/3
+  Expression: 2 - 1/3 = 5/3
+
+  Check option C: (4 + 1)/(4 - 1) = 5/3   CORRECT!
+
+  Check other options:
+  A) (4+1)/(2-1) = 5      != 5/3
+  B) sqrt(5)/3 = 2.236.../3 = 0.745...  != 5/3
+  D) 4/1 = 4              != 5/3
+
+Answer: C) (a + b) / (a - b)
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Uproscavanje izraza sa korenima</h1>
+  <p class="subtitle">Racionalizacija i razlika kvadrata pri radu sa algebarskim razlomcima</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Postavka zadatka</div>
+    <div class="problem-text">
+      Uproscavanjem izraza:
+      <div class="math-box">
+        \[ \left(\frac{\sqrt{a} - \sqrt{b}}{\sqrt{a}}\right)^{-1} - \left(\frac{\sqrt{a} + \sqrt{b}}{\sqrt{b}}\right)^{-1} \qquad (a > b > 0) \]
+      </div>
+      dobija se:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{a+b}{\sqrt{a}-\sqrt{b}}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{\sqrt{a+b}}{a-b}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{a+b}{a-b}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{a}{b}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      1. Primenimo pravilo za negativan eksponent: \(\left(\frac{p}{q}\right)^{-1} = \frac{q}{p}\), cime pretvaramo obe zagrade u obicne razlomke.<br>
+      2. Svedemo dva razlomka na zajednicki imenilac koristeci formulu razlike kvadrata.<br>
+      3. Sredimo brojilac i dobijemo konacni rezultat.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Kljucne formule i pravila</summary>
+      <ul style="margin-top: 12px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;"><strong>Negativan eksponent (reciprocna vrednost):</strong>
+          <div class="math-box">\[ \left(\frac{p}{q}\right)^{-1} = \frac{q}{p} \]</div>
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Razlika kvadrata:</strong>
+          <div class="math-box">\[ (\sqrt{a} - \sqrt{b})(\sqrt{a} + \sqrt{b}) = a - b \]</div>
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Sabiranje/oduzimanje razlomaka:</strong>
+          <div class="math-box">\[ \frac{p}{m} - \frac{q}{n} = \frac{p \cdot n - q \cdot m}{m \cdot n} \]</div>
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Mnozenje korena:</strong>
+          <div class="math-box">\[ \sqrt{a} \cdot \sqrt{b} = \sqrt{ab}, \qquad \sqrt{a} \cdot \sqrt{a} = a \]</div>
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz transformacije</div>
+    <canvas id="solutionCanvas" width="900" height="520"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-title"><span class="step-badge">1</span> Pretvorimo u reciprocne vrednosti</div>
+      <p class="step-explanation">
+        Eksponent \(-1\) znaci da uzimamo reciprocnu vrednost razlomka: zamenjujemo brojilac i imenilac.
+      </p>
+      <div class="math-box">
+        \[ \left(\frac{\sqrt{a}-\sqrt{b}}{\sqrt{a}}\right)^{-1} = \frac{\sqrt{a}}{\sqrt{a}-\sqrt{b}} \]
+      </div>
+      <div class="math-box">
+        \[ \left(\frac{\sqrt{a}+\sqrt{b}}{\sqrt{b}}\right)^{-1} = \frac{\sqrt{b}}{\sqrt{a}+\sqrt{b}} \]
+      </div>
+      <p class="step-explanation">
+        Dakle, polazni izraz postaje:
+      </p>
+      <div class="math-box">
+        \[ \frac{\sqrt{a}}{\sqrt{a}-\sqrt{b}} - \frac{\sqrt{b}}{\sqrt{a}+\sqrt{b}} \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-title"><span class="step-badge">2</span> Odredimo zajednicki imenilac</div>
+      <p class="step-explanation">
+        Imenioci su \(\sqrt{a}-\sqrt{b}\) i \(\sqrt{a}+\sqrt{b}\). Njihov proizvod daje razliku kvadrata:
+      </p>
+      <div class="math-box">
+        \[ (\sqrt{a}-\sqrt{b})(\sqrt{a}+\sqrt{b}) = (\sqrt{a})^2 - (\sqrt{b})^2 = a - b \]
+      </div>
+      <p class="step-explanation">
+        Ovo je zajednicki imenilac, i to u veoma jednostavnom obliku!
+      </p>
+      <details>
+        <summary>Proveri se: Zasto je \((\sqrt{a})^2 = a\)?</summary>
+        <p>Po definiciji, \(\sqrt{a}\) je broj ciji je kvadrat jednak \(a\), pa je \((\sqrt{a})^2 = a\). Na primer, \((\sqrt{4})^2 = 2^2 = 4\).</p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-title"><span class="step-badge">3</span> Svedemo na zajednicki imenilac</div>
+      <p class="step-explanation">
+        Prosirujemo prvi razlomak sa \((\sqrt{a}+\sqrt{b})\), a drugi sa \((\sqrt{a}-\sqrt{b})\):
+      </p>
+      <div class="math-box">
+        \[ \frac{\sqrt{a} \cdot (\sqrt{a}+\sqrt{b})}{(\sqrt{a}-\sqrt{b})(\sqrt{a}+\sqrt{b})} - \frac{\sqrt{b} \cdot (\sqrt{a}-\sqrt{b})}{(\sqrt{a}+\sqrt{b})(\sqrt{a}-\sqrt{b})} \]
+      </div>
+      <p class="step-explanation">
+        Oba razlomka sada imaju isti imenilac \(a - b\):
+      </p>
+      <div class="math-box">
+        \[ \frac{\sqrt{a}(\sqrt{a}+\sqrt{b}) - \sqrt{b}(\sqrt{a}-\sqrt{b})}{a - b} \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-title"><span class="step-badge">4</span> Sredimo brojilac</div>
+      <p class="step-explanation">
+        Raspisemo oba proizvoda u brojiocu:
+      </p>
+      <div class="math-box">
+        \[ \sqrt{a} \cdot (\sqrt{a}+\sqrt{b}) = \sqrt{a}\cdot\sqrt{a} + \sqrt{a}\cdot\sqrt{b} = a + \sqrt{ab} \]
+      </div>
+      <div class="math-box">
+        \[ \sqrt{b} \cdot (\sqrt{a}-\sqrt{b}) = \sqrt{b}\cdot\sqrt{a} - \sqrt{b}\cdot\sqrt{b} = \sqrt{ab} - b \]
+      </div>
+      <p class="step-explanation">
+        Oduzimamo drugi izraz od prvog:
+      </p>
+      <div class="math-box">
+        \[ (a + \sqrt{ab}) - (\sqrt{ab} - b) = a + \sqrt{ab} - \sqrt{ab} + b = a + b \]
+      </div>
+      <p class="step-explanation">
+        Clanovi sa \(\sqrt{ab}\) se <span class="highlight">medjusobno poniste</span>, i ostaje samo \(a + b\).
+      </p>
+      <details>
+        <summary>Proveri se: Zasto se \(\sqrt{ab}\) ponisti?</summary>
+        <p>Imamo \(+\sqrt{ab}\) iz prvog proizvoda i \(-\sqrt{ab}\) iz drugog. Kada ih oduzmemo: \(+\sqrt{ab} - \sqrt{ab} = 0\). Ovo nije slucajnost &mdash; upravo ovu strukturu imaju mnogi zadaci sa razlikom kvadrata u imeniocu.</p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" data-step="5">
+      <div class="step-title"><span class="step-badge">5</span> Zapisemo konacni rezultat</div>
+      <p class="step-explanation">
+        Spajajuci brojilac i imenilac, dobijamo:
+      </p>
+      <div class="math-box">
+        \[ \frac{a + b}{a - b} \]
+      </div>
+      <p class="step-explanation">
+        Ovo je konacni, uprosceni oblik izraza &mdash; odgovor <strong>(C)</strong>.
+      </p>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Kljucni uvid</div>
+    <p>
+      Imenilac \((\sqrt{a}-\sqrt{b})(\sqrt{a}+\sqrt{b}) = a - b\) eliminise korene iz imenioca, a u brojiocu se clanovi sa \(\sqrt{ab}\) poniste. Ovaj zadatak koristi klasicnu tehniku "razlike kvadrata" &mdash; kada vidite izraze oblika \(\sqrt{a} \pm \sqrt{b}\), uvek razmislite o njihovom proizvodu koji daje \(a - b\).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konacan odgovor</div>
+    <div class="answer">\(\dfrac{a+b}{a-b}\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(\dfrac{a+b}{\sqrt{a}-\sqrt{b}}\)</div>
+      <div class="final-option" data-option="B">(B) \(\dfrac{\sqrt{a+b}}{a-b}\)</div>
+      <div class="final-option correct" data-option="C">(C) \(\dfrac{a+b}{a-b}\)</div>
+      <div class="final-option" data-option="D">(D) \(\dfrac{a}{b}\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija: za \(a = 4,\; b = 1\): izraz \(= 2 - \frac{1}{3} = \frac{5}{3}\), i \(\frac{4+1}{4-1} = \frac{5}{3}\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogresan reciprocni razlomak</div>
+      <p>Kod \(\left(\frac{p}{q}\right)^{-1}\) se zamenjuju brojilac i imenilac, a ne menja se predznak u njima. Dakle, \(\left(\frac{\sqrt{a}-\sqrt{b}}{\sqrt{a}}\right)^{-1} = \frac{\sqrt{a}}{\sqrt{a}-\sqrt{b}}\), a NE \(\frac{\sqrt{a}}{\sqrt{a}+\sqrt{b}}\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Greska pri oduzimanju brojioca</div>
+      <p>U koraku \((a + \sqrt{ab}) - (\sqrt{ab} - b)\) lako se previdi da minus ispred zagrade menja predznak drugog clana. Rezultat je \(a + \sqrt{ab} - \sqrt{ab} + b\), a ne \(a + \sqrt{ab} - \sqrt{ab} - b = a - b\). Ovo bi dovelo do pogresnog odgovora \(\frac{a-b}{a-b} = 1\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Razlika kvadrata &mdash; ne zaboraviti</div>
+      <p>Ukoliko se imenilac ne prepozna kao \(a - b\), moze se dobiti izraz sa korenima u imeniocu (poput opcije A), sto sugeriSe da uproscavanje nije dovrseno.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Uprostite slican izraz:
+    </p>
+    <div class="math-box">
+      \[ \left(\frac{\sqrt{a} - \sqrt{b}}{\sqrt{b}}\right)^{-1} + \left(\frac{\sqrt{a} + \sqrt{b}}{\sqrt{a}}\right)^{-1} \]
+    </div>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p>Primenite isti postupak: reciprocne vrednosti daju \(\frac{\sqrt{b}}{\sqrt{a}-\sqrt{b}} + \frac{\sqrt{a}}{\sqrt{a}+\sqrt{b}}\). Zajednicki imenilac je opet \(a - b\). Raspisite brojioc: \(\sqrt{b}(\sqrt{a}+\sqrt{b}) + \sqrt{a}(\sqrt{a}-\sqrt{b})\).</p>
+    </details>
+    <details>
+      <summary>Resenje</summary>
+      <p>Brojilac: \(\sqrt{ab} + b + a - \sqrt{ab} = a + b\). Rezultat: \(\frac{a+b}{a-b}\) &mdash; isti kao u polaznom zadatku!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('solutionCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 520;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tok uproscavanja izraza', W / 2, 28);
+
+    var boxW = Math.min(280, W * 0.34);
+    var boxH = 54;
+
+    /* Row 1: Original expression parts */
+    var y1 = 76;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Prvi clan', W * 0.28, y1 - 14);
+    ctx.fillText('Drugi clan', W * 0.72, y1 - 14);
+
+    drawBox(W * 0.28, y1, boxW, boxH, '( (\u221Aa \u2212 \u221Ab) / \u221Aa )\u207B\u00B9', 'polazni oblik', '#a78bfa');
+    drawBox(W * 0.72, y1, boxW, boxH, '( (\u221Aa + \u221Ab) / \u221Ab )\u207B\u00B9', 'polazni oblik', '#a78bfa');
+
+    /* Row 2: After reciprocal */
+    var y2 = 160;
+    drawArrow(W * 0.28, y1 + boxH / 2 + 2, W * 0.28, y2 - boxH / 2);
+    drawArrow(W * 0.72, y1 + boxH / 2 + 2, W * 0.72, y2 - boxH / 2);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('reciprocna vr.', W * 0.07, (y1 + y2) / 2);
+    ctx.fillText('reciprocna vr.', W * 0.93, (y1 + y2) / 2);
+
+    drawBox(W * 0.28, y2, boxW, boxH, '\u221Aa / (\u221Aa \u2212 \u221Ab)', 'reciprocno', '#60a5fa');
+    drawBox(W * 0.72, y2, boxW, boxH, '\u221Ab / (\u221Aa + \u221Ab)', 'reciprocno', '#60a5fa');
+
+    /* Row 3: Merge - common denominator */
+    var y3 = 258;
+    drawArrow(W * 0.28, y2 + boxH / 2 + 2, W * 0.5, y3 - boxH / 2);
+    drawArrow(W * 0.72, y2 + boxH / 2 + 2, W * 0.5, y3 - boxH / 2);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('zajednicki imenilac', W * 0.5, (y2 + y3) / 2 - 5);
+
+    var mergeW = Math.min(420, W * 0.65);
+    drawBox(W * 0.5, y3, mergeW, boxH + 4, '[\u221Aa(\u221Aa+\u221Ab) \u2212 \u221Ab(\u221Aa\u2212\u221Ab)] / (a\u2212b)', 'spajanje', '#f472b6');
+
+    /* Row 4: Numerator expansion */
+    var y4 = 348;
+    drawArrow(W * 0.5, y3 + boxH / 2 + 4, W * 0.5, y4 - boxH / 2);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('raspisemo brojilac', W * 0.5, (y3 + y4) / 2 + 2);
+
+    drawBox(W * 0.5, y4, mergeW, boxH + 4, '(a + \u221A(ab) \u2212 \u221A(ab) + b) / (a\u2212b)', '\u221A(ab) se ponisti', '#a78bfa');
+
+    /* Row 5: Final result */
+    var y5 = 438;
+    drawArrow(W * 0.5, y4 + boxH / 2 + 4, W * 0.5, y5 - boxH / 2);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('uprostimo', W * 0.5, (y4 + y5) / 2 + 2);
+
+    var finalW = Math.min(200, W * 0.28);
+    drawBox(W * 0.5, y5, finalW, boxH, '(a + b) / (a \u2212 b)', 'rezultat', '#34d399');
+
+    /* Final highlight */
+    var y6 = 500;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Odgovor: (C)', W / 2, y6);
+  }
+
+  function drawBox(x, y, w, h, title, sub, color) {
+    var r = 10;
+    ctx.beginPath();
+    ctx.roundRect(x - w / 2, y - h / 2, w, h, r);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(title, x, y - 4);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(sub, x, y + 17);
+  }
+
+  function drawArrow(x1, y1, x2, y2) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    var size = 7;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - size * Math.cos(angle - 0.4), y2 - size * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - size * Math.cos(angle + 0.4), y2 - size * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fillStyle = '#475569';
+    ctx.fill();
+  }
+
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(container) {
+    container.addEventListener('click', function() {
+      stepContainers.forEach(function(c) { c.classList.remove('active'); });
+      container.classList.add('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Uproscavanje algebarskog izraza sa korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["koreni", "razlika kvadrata", "reciprocna vrednost", "algebarski razlomci", "racionalizacija"]
+}
+BRAINSPARK_META-->

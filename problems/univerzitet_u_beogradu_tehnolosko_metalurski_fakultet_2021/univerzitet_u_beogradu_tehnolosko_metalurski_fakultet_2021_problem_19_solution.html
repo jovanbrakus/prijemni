@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rekurzivno definisan niz funkcija</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Dato je f₁(x) = x, f₂(x) = 1-x, f_{n+2}(x) = f_{n+1}(f_n(x)).
+Naći f_{2021}(2021).
+
+Korak 1: Izračunajmo prvih nekoliko članova niza.
+  f₁(x) = x
+  f₂(x) = 1 - x
+
+Korak 2: f₃(x) = f₂(f₁(x))   [jer n=1: f_{1+2} = f_{1+1}(f_1(x)) = f₂(f₁(x))]
+  f₃(x) = f₂(f₁(x)) = f₂(x) = 1 - x
+
+Korak 3: f₄(x) = f₃(f₂(x))   [jer n=2: f_{2+2} = f_{2+1}(f_2(x)) = f₃(f₂(x))]
+  f₄(x) = f₃(f₂(x)) = f₃(1-x) = 1 - (1-x) = x
+
+Korak 4: f₅(x) = f₄(f₃(x))   [jer n=3: f_{3+2} = f_{3+1}(f_3(x)) = f₄(f₃(x))]
+  f₅(x) = f₄(f₃(x)) = f₄(1-x) = 1-x   [jer f₄(t) = t, pa f₄(1-x) = 1-x]
+
+Korak 5: f₆(x) = f₅(f₄(x))   [jer n=4: f_{4+2} = f_{4+1}(f_4(x)) = f₅(f₄(x))]
+  f₆(x) = f₅(f₄(x)) = f₅(x) = 1-x   [jer f₄(x) = x, pa f₅(f₄(x)) = f₅(x) = 1-x]
+
+Korak 6: f₇(x) = f₆(f₅(x))
+  f₇(x) = f₆(f₅(x)) = f₆(1-x) = 1-(1-x) = x   [jer f₆(t) = 1-t]
+
+Dakle imamo niz:
+  f₁(x) = x
+  f₂(x) = 1-x
+  f₃(x) = 1-x
+  f₄(x) = x
+  f₅(x) = 1-x
+  f₆(x) = 1-x
+  f₇(x) = x
+  f₈(x) = 1-x
+  f₉(x) = 1-x
+  ...
+
+Obrazac se ponavlja sa periodom 3 počevši od n=1:
+  n mod 3:
+    n ≡ 1 (mod 3): f_n(x) = x      (n = 1, 4, 7, 10, ...)
+    n ≡ 2 (mod 3): f_n(x) = 1-x    (n = 2, 5, 8, 11, ...)
+    n ≡ 0 (mod 3): f_n(x) = 1-x    (n = 3, 6, 9, 12, ...)
+
+Korak 7: Odredimo 2021 mod 3.
+  2021 = 3 × 673 + 2
+  2021 mod 3 = 2
+  Dakle, f_{2021}(x) = 1 - x
+
+Korak 8: f_{2021}(2021) = 1 - 2021 = -2020
+
+Odgovor: E) -2020
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(56,189,248,0.05);
+  border-radius: 10px;
+}
+
+details .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .theory-content li {
+  margin-bottom: 12px;
+  padding-left: 16px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+details .theory-content li::before {
+  content: '>';
+  color: #60a5fa;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+canvas {
+  border-radius: 10px;
+  width: 100%;
+  max-width: 700px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(56,189,248,0.05);
+  border-left: 3px solid #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+  padding: 14px;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .big-formula {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+}
+
+.final-answer {
+  font-size: 1.8rem;
+  color: #4ade80;
+  text-align: center;
+  margin: 20px 0;
+  font-weight: bold;
+}
+
+.options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-final {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.option-final.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(52,211,153,0.2);
+}
+
+.option-final .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.option-final .opt-value {
+  font-size: 1.15rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.option-final.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  background: rgba(52,211,153,0.08);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.verification strong {
+  color: #34d399;
+}
+
+.pitfall {
+  border-left: 3px solid #e09468;
+}
+
+.pitfall h2 {
+  color: #e09468 !important;
+}
+
+.pitfall ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall li {
+  margin-bottom: 10px;
+  padding-left: 20px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfall li::before {
+  content: '!';
+  color: #e09468;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.challenge-card details {
+  margin: 0;
+}
+
+.challenge-card summary {
+  color: #f472b6;
+}
+
+.sequence-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.sequence-table th, .sequence-table td {
+  padding: 8px 12px;
+  text-align: center;
+  border: 1px solid #334155;
+}
+
+.sequence-table th {
+  background: rgba(96,165,250,0.15);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.sequence-table td {
+  color: #e2e8f0;
+}
+
+.sequence-table .highlight-x {
+  background: rgba(96,165,250,0.1);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.sequence-table .highlight-1mx {
+  background: rgba(167,139,250,0.1);
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .final-answer { font-size: 1.4rem; }
+  .sequence-table th, .sequence-table td { padding: 5px 6px; font-size: 0.85rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Rekurzivno definisan niz funkcija</h1>
+  <p class="subtitle">Rekurzija, kompozicija funkcija i periodičnost niza</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako je \(f_1(x) = x\), \(f_2(x) = 1 - x\), \(f_{n+2}(x) = f_{n+1}(f_n(x))\), onda je \(f_{2021}(2021)\) jednako:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(2020\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(-2021\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(2021\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(2002\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-2020\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Izračunaćemo prvih nekoliko članova rekurzivnog niza funkcija da bismo otkrili obrazac ponavljanja (period). Kada utvrdimo period, pomoću ostatka pri deljenju broja 2021 periodom odredićemo \(f_{2021}(x)\), a zatim uvrstiti \(x = 2021\).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i pojmovi</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Kompozicija funkcija:</strong> \(f \circ g(x) = f(g(x))\) — prvo se primeni unutrašnja funkcija \(g\), pa se rezultat uvrsti u spoljašnju funkciju \(f\).</li>
+          <li><strong>Rekurzivna definicija:</strong> \(f_{n+2}(x) = f_{n+1}(f_n(x))\) znači da se svaki sledeći član niza dobija kompozicijom prethodna dva člana.</li>
+          <li><strong>Periodičnost niza:</strong> Ako se vrednosti u nizu ponavljaju nakon svakih \(p\) koraka, kažemo da je niz periodičan sa periodom \(p\). Tada za bilo koji \(n\) važi: \(a_n = a_{n \bmod p}\) (uz odgovarajuće prilagođavanje indeksiranja).</li>
+          <li><strong>Modularna aritmetika:</strong> Ostatak pri deljenju \(a \div b\) se zapisuje kao \(a \bmod b\). Na primer, \(2021 \bmod 3 = 2\) jer je \(2021 = 3 \cdot 673 + 2\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz niza funkcija</h2>
+    <canvas id="seqCanvas" width="700" height="380"></canvas>
+    <p class="canvas-hint">Obrazac se ponavlja sa periodom 3: x, 1-x, 1-x, x, 1-x, 1-x, ...</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Početne funkcije</h3>
+        <p>Dato nam je:</p>
+        <div class="math-block">
+          \[f_1(x) = x, \quad f_2(x) = 1 - x\]
+        </div>
+        <p>Ovo su naša dva početna člana niza. Svaki sledeći član se računa kao:</p>
+        <div class="math-block">
+          \[f_{n+2}(x) = f_{n+1}\big(f_n(x)\big)\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Računamo \(f_3(x)\)</h3>
+        <p>Za \(n = 1\): \(f_3(x) = f_2(f_1(x))\).</p>
+        <p>Pošto je \(f_1(x) = x\), unutrašnja funkcija daje prosto \(x\):</p>
+        <div class="math-block">
+          \[f_3(x) = f_2\big(f_1(x)\big) = f_2(x) = 1 - x\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Računamo \(f_4(x)\)</h3>
+        <p>Za \(n = 2\): \(f_4(x) = f_3(f_2(x))\).</p>
+        <p>Pošto je \(f_2(x) = 1 - x\), uvrštavamo u \(f_3\):</p>
+        <div class="math-block">
+          \[f_4(x) = f_3\big(f_2(x)\big) = f_3(1 - x)\]
+        </div>
+        <p>Znamo da je \(f_3(t) = 1 - t\), pa za \(t = 1 - x\):</p>
+        <div class="math-block">
+          \[f_4(x) = 1 - (1 - x) = x\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko iznosi \(f_4(5)\)?</summary>
+      <div class="answer">
+        Pošto je \(f_4(x) = x\), sledi \(f_4(5) = 5\).
+      </div>
+    </details>
+
+    <div class="step" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Računamo \(f_5(x)\) i \(f_6(x)\)</h3>
+        <p>Za \(n = 3\): \(f_5(x) = f_4(f_3(x)) = f_4(1 - x)\).</p>
+        <p>Pošto je \(f_4(t) = t\):</p>
+        <div class="math-block">
+          \[f_5(x) = f_4(1 - x) = 1 - x\]
+        </div>
+        <p>Za \(n = 4\): \(f_6(x) = f_5(f_4(x)) = f_5(x)\).</p>
+        <p>Pošto je \(f_4(x) = x\):</p>
+        <div class="math-block">
+          \[f_6(x) = f_5(x) = 1 - x\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Računamo \(f_7(x)\) — potvrda perioda</h3>
+        <p>Za \(n = 5\): \(f_7(x) = f_6(f_5(x)) = f_6(1 - x)\).</p>
+        <p>Pošto je \(f_6(t) = 1 - t\):</p>
+        <div class="math-block">
+          \[f_7(x) = 1 - (1 - x) = x\]
+        </div>
+        <p class="note">Vidimo da je \(f_7(x) = x = f_4(x) = f_1(x)\). Obrazac se ponavlja!</p>
+      </div>
+    </div>
+
+    <div class="step" id="step6">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Uočavamo obrazac</h3>
+        <p>Zapišimo niz kompaktno:</p>
+        <table class="sequence-table">
+          <tr>
+            <th>\(n\)</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+          </tr>
+          <tr>
+            <th>\(f_n(x)\)</th>
+            <td class="highlight-x">\(x\)</td>
+            <td class="highlight-1mx">\(1\!-\!x\)</td>
+            <td class="highlight-1mx">\(1\!-\!x\)</td>
+            <td class="highlight-x">\(x\)</td>
+            <td class="highlight-1mx">\(1\!-\!x\)</td>
+            <td class="highlight-1mx">\(1\!-\!x\)</td>
+            <td class="highlight-x">\(x\)</td>
+            <td class="highlight-1mx">\(1\!-\!x\)</td>
+            <td class="highlight-1mx">\(1\!-\!x\)</td>
+          </tr>
+          <tr>
+            <th>\(n \bmod 3\)</th>
+            <td>1</td><td>2</td><td>0</td><td>1</td><td>2</td><td>0</td><td>1</td><td>2</td><td>0</td>
+          </tr>
+        </table>
+        <p>Niz funkcija je <strong>periodičan sa periodom 3</strong>:</p>
+        <div class="math-block">
+          \[f_n(x) = \begin{cases} x & \text{ako } n \equiv 1 \pmod{3} \\ 1 - x & \text{ako } n \equiv 2 \pmod{3} \\ 1 - x & \text{ako } n \equiv 0 \pmod{3} \end{cases}\]
+        </div>
+        <p class="note">Drugim rečima: \(f_n(x) = x\) samo kada \(n\) daje ostatak 1 pri deljenju sa 3.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko iznosi \(f_{10}(x)\)?</summary>
+      <div class="answer">
+        \(10 \bmod 3 = 1\), dakle \(f_{10}(x) = x\).
+      </div>
+    </details>
+
+    <div class="step" id="step7">
+      <div class="step-number">7</div>
+      <div class="step-content">
+        <h3>Određujemo \(f_{2021}(x)\)</h3>
+        <p>Potrebno je da nađemo ostatak pri deljenju 2021 sa 3:</p>
+        <div class="math-block">
+          \[2021 = 3 \cdot 673 + 2\]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[2021 \bmod 3 = 2\]
+        </div>
+        <p>Pošto je ostatak 2, prema obrascu:</p>
+        <div class="math-block">
+          \[f_{2021}(x) = 1 - x\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step8">
+      <div class="step-number">8</div>
+      <div class="step-content">
+        <h3>Uvrštavamo \(x = 2021\)</h3>
+        <p>Konačno, tražena vrednost je:</p>
+        <div class="math-block">
+          \[f_{2021}(2021) = 1 - 2021 = -2020\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Da li je \(-2020\) među ponuđenim odgovorima?</summary>
+      <div class="answer">
+        Da! Odgovor \(-2020\) odgovara opciji (E).
+      </div>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Svaka funkcija u nizu je ili \(x\) (identitet) ili \(1 - x\) (komplementarna funkcija). Kompozicija ove dve funkcije proizvodi period dužine 3, što nam omogućava da za bilo koji \(n\) odredimo \(f_n\) samo pomoću ostatka \(n \bmod 3\).</p>
+    <div class="big-formula">
+      \[f_{2021}(2021) = 1 - 2021 = -2020\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer">
+      \(f_{2021}(2021) = -2020\)
+    </div>
+    <div class="options-final">
+      <div class="option-final">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(2020\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(-2021\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(2021\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(2002\)</div>
+      </div>
+      <div class="option-final correct">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(-2020\)</div>
+      </div>
+    </div>
+    <div class="verification">
+      <strong>Provera:</strong> Zbir cifara broja 2021: \(2+0+2+1 = 5\). Pošto \(5 \bmod 3 = 2\), potvrđujemo da \(2021 \bmod 3 = 2\). Za \(n \equiv 2 \pmod{3}\) važi \(f_n(x) = 1 - x\), pa je \(f_{2021}(2021) = 1 - 2021 = -2020\). Tačan odgovor je <strong>(E) \(-2020\)</strong>.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Pogrešna rekurzija:</strong> Pažljivo čitajte indekse! Formula \(f_{n+2}(x) = f_{n+1}(f_n(x))\) znači da je spoljašnja funkcija \(f_{n+1}\), a unutrašnja \(f_n\). Obrnuti redosled kompozicije može dati drugačiji niz.</li>
+      <li><strong>Greškom izabrati \(f_{2021}(x) = x\):</strong> Ako pogrešno izračunate \(2021 \bmod 3 = 1\) (umesto 2), dobili biste \(f_{2021}(2021) = 2021\), što je opcija (C) — pogrešan odgovor.</li>
+      <li><strong>Zamena \(1 - 2021\) sa \(2021 - 1\):</strong> Ovo daje \(2020\) (opcija A) umesto \(-2020\) (opcija E). Vodite računa o znaku!</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Ako je \(g_1(x) = x\), \(g_2(x) = \dfrac{1}{1-x}\) i \(g_{n+2}(x) = g_{n+1}(g_n(x))\), odredite \(g_{2021}(3)\).</p>
+    <details>
+      <summary>Prikaži pomoć</summary>
+      <div class="theory-content">
+        <p>Pristupite na isti način: izračunajte \(g_3, g_4, g_5, \ldots\) redom i potražite period. Korisna činjenica: funkcije \(x\), \(\frac{1}{1-x}\) i \(\frac{x-1}{x}\) formiraju grupu kompozicija, pa očekujte period 3 ili njegov delilac. Zatim odredite \(2021 \bmod \text{period}\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas: Sequence visualization
+  const canvas = document.getElementById('seqCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const centerX = W / 2;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Obrazac niza funkcija (period = 3)', centerX, 28);
+
+    // Draw sequence boxes
+    const boxW = 62;
+    const boxH = 50;
+    const gap = 10;
+    const startX = 28;
+    const row1Y = 60;
+    const row2Y = 170;
+
+    const sequence = [
+      { n: 1, fn: 'x', type: 'x' },
+      { n: 2, fn: '1-x', type: '1mx' },
+      { n: 3, fn: '1-x', type: '1mx' },
+      { n: 4, fn: 'x', type: 'x' },
+      { n: 5, fn: '1-x', type: '1mx' },
+      { n: 6, fn: '1-x', type: '1mx' },
+      { n: 7, fn: 'x', type: 'x' },
+      { n: 8, fn: '1-x', type: '1mx' },
+      { n: 9, fn: '1-x', type: '1mx' },
+    ];
+
+    // Row 1: n = 1..9
+    sequence.forEach((item, i) => {
+      const x = startX + i * (boxW + gap);
+      const y = row1Y;
+
+      // Box color based on type
+      if (item.type === 'x') {
+        ctx.fillStyle = 'rgba(96,165,250,0.15)';
+        ctx.strokeStyle = '#60a5fa';
+      } else {
+        ctx.fillStyle = 'rgba(167,139,250,0.15)';
+        ctx.strokeStyle = '#a78bfa';
+      }
+
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, boxW, boxH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // n label
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('n=' + item.n, x + boxW / 2, y - 6);
+
+      // Function value
+      ctx.fillStyle = item.type === 'x' ? '#60a5fa' : '#a78bfa';
+      ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(item.fn, x + boxW / 2, y + boxH / 2 + 5);
+    });
+
+    // Period brackets
+    for (let g = 0; g < 3; g++) {
+      const x1 = startX + g * 3 * (boxW + gap);
+      const x2 = x1 + 3 * (boxW + gap) - gap;
+      const bracketY = row1Y + boxH + 12;
+
+      ctx.strokeStyle = g === 0 ? '#4ade80' : '#334155';
+      ctx.lineWidth = g === 0 ? 2 : 1;
+      ctx.setLineDash(g === 0 ? [] : [4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x1, bracketY);
+      ctx.lineTo(x1, bracketY + 10);
+      ctx.lineTo(x2, bracketY + 10);
+      ctx.lineTo(x2, bracketY);
+      ctx.stroke();
+
+      if (g === 0) {
+        ctx.fillStyle = '#4ade80';
+        ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Period = 3', (x1 + x2) / 2, bracketY + 25);
+      }
+    }
+
+    ctx.setLineDash([]);
+
+    // Row 2: Application to 2021
+    const applyY = row2Y + 20;
+
+    // Division illustration
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2021 \u00F7 3 = 673 ostatak 2', centerX, applyY);
+
+    // Arrow
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(centerX, applyY + 12);
+    ctx.lineTo(centerX, applyY + 35);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(centerX - 6, applyY + 29);
+    ctx.lineTo(centerX, applyY + 38);
+    ctx.lineTo(centerX + 6, applyY + 29);
+    ctx.fill();
+
+    // Conclusion box
+    const concBoxW = 360;
+    const concBoxH = 50;
+    const concX = centerX - concBoxW / 2;
+    const concY = applyY + 45;
+
+    ctx.fillStyle = 'rgba(167,139,250,0.15)';
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(concX, concY, concBoxW, concBoxH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('ostatak 2  \u27F9  f\u2082\u2080\u2082\u2081(x) = 1 - x', centerX, concY + concBoxH / 2 + 5);
+
+    // Final result
+    const resY = concY + concBoxH + 35;
+
+    ctx.fillStyle = 'rgba(52,211,153,0.15)';
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    const resBoxW = 380;
+    const resBoxH = 46;
+    const resX = centerX - resBoxW / 2;
+    ctx.beginPath();
+    ctx.roundRect(resX, resY, resBoxW, resBoxH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('f\u2082\u2080\u2082\u2081(2021) = 1 - 2021 = -2020', centerX, resY + resBoxH / 2 + 6);
+
+    // Glow on final result
+    ctx.shadowColor = '#4ade80';
+    ctx.shadowBlur = 12;
+    ctx.fillText('f\u2082\u2080\u2082\u2081(2021) = 1 - 2021 = -2020', centerX, resY + resBoxH / 2 + 6);
+    ctx.shadowBlur = 0;
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Rekurzivno definisan niz funkcija - periodičnost i kompozicija",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["rekurzija", "kompozicija funkcija", "periodičnost", "modularna aritmetika", "niz funkcija"]
+}
+BRAINSPARK_META-->

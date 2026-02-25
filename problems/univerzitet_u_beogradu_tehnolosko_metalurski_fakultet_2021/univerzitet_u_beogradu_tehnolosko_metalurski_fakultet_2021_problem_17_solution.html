@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broj pravih kroz tačke u opštem položaju</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Dato je 13 tačaka od kojih nikoje tri nisu kolinearne. Koliko pravih je određeno tim tačkama?
+
+Ključno zapažanje:
+- Svaka prava je jednoznačno određena sa dve tačke.
+- Pošto nikoje tri tačke nisu kolinearne, svake dve tačke određuju različitu pravu.
+- Dakle, broj pravih = broj načina da se izaberu 2 tačke od 13.
+
+Formula: C(13, 2) = 13! / (2! · 11!) = (13 · 12) / (2 · 1) = 156 / 2 = 78
+
+Odgovor: C) 78
+
+Verifikacija:
+- C(13,2) = 13·12/2 = 78 ✓
+- Ovo je kombinacija, ne permutacija, jer redosled tačaka ne menja pravu (prava AB = prava BA).
+- Uslov da nikoje tri nisu kolinearne garantuje da nema dve „iste" prave
+  (inače, tri kolinearne tačke bi dale 3 para ali samo 1 pravu, pa bismo imali manje od C(n,2)).
+
+Provera ponuđenih odgovora:
+A) 87 — ne odgovara nijednoj standardnoj kombinatornoj formuli
+B) 118 — ne odgovara
+C) 78 — tačno, C(13,2) = 78
+D) 140 — ne odgovara
+E) 120 — ovo bi bilo C(10,3)=120 ili P(5,3)... ne odgovara
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(56,189,248,0.05);
+  border-radius: 10px;
+}
+
+details .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .theory-content li {
+  margin-bottom: 12px;
+  padding-left: 16px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+details .theory-content li::before {
+  content: '>';
+  color: #60a5fa;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+canvas {
+  border-radius: 10px;
+  width: 100%;
+  max-width: 600px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(56,189,248,0.05);
+  border-left: 3px solid #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+  padding: 14px;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .big-formula {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+}
+
+.final-answer {
+  font-size: 1.8rem;
+  color: #4ade80;
+  text-align: center;
+  margin: 20px 0;
+  font-weight: bold;
+}
+
+.options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-final {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.option-final.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(52,211,153,0.2);
+}
+
+.option-final .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.option-final .opt-value {
+  font-size: 1.15rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.option-final.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  background: rgba(52,211,153,0.08);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.verification strong {
+  color: #34d399;
+}
+
+.pitfall {
+  border-left: 3px solid #e09468;
+}
+
+.pitfall h2 {
+  color: #e09468 !important;
+}
+
+.pitfall ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall li {
+  margin-bottom: 10px;
+  padding-left: 20px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfall li::before {
+  content: '!';
+  color: #e09468;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.challenge-card details {
+  margin: 0;
+}
+
+.challenge-card summary {
+  color: #f472b6;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .final-answer { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Broj pravih kroz tačke u opštem položaju</h1>
+  <p class="subtitle">Kombinatorika &mdash; prebrojavanje pravih određenih skupom tačaka</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Broj pravih određenih sa <span style="color:#60a5fa; font-weight:600;">13 tačaka</span>, od kojih nikoje tri nisu kolinearne, jednak je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(87\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(118\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(78\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(140\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(120\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Svaka prava je jednoznačno određena sa dve tačke, a uslov da nikoje tri nisu kolinearne garantuje da svaki par daje različitu pravu. Primenićemo formulu za kombinacije bez ponavljanja \(\binom{n}{2}\) da prebrojimo sve parove.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i pojmovi</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Aksioma prave:</strong> Kroz svake dve različite tačke prolazi tačno jedna prava.</li>
+          <li><strong>Kolinearnost:</strong> Tri ili više tačaka su kolinearne ako leže na istoj pravoj. Ako nikoje tri nisu kolinearne, svake dve tačke daju <em>jedinstvenu</em> pravu.</li>
+          <li><strong>Kombinacija bez ponavljanja:</strong> Broj načina da se od \(n\) elemenata izabere \(k\) bez obzira na redosled je \[\binom{n}{k} = \frac{n!}{k!(n-k)!}\]</li>
+          <li><strong>Specijalan slučaj \(k=2\):</strong> \[\binom{n}{2} = \frac{n(n-1)}{2}\]</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="pointsCanvas" width="600" height="500"></canvas>
+    <p class="canvas-hint">Prevlačite tačke da vidite kako se prave formiraju &mdash; svaki par tačaka daje jednu pravu</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Razumemo problem</h3>
+        <p>Imamo \(n = 13\) tačaka u ravni, od kojih nikoje tri nisu kolinearne (to znači da ne postoje tri tačke koje leže na istoj pravoj).</p>
+        <p>Potrebno je prebrojati koliko različitih pravih je određeno ovim tačkama.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Ključno zapažanje</h3>
+        <p>Svaka prava u ravni je jednoznačno određena sa <strong>dve različite tačke</strong>.</p>
+        <p>Uslov da nikoje tri tačke nisu kolinearne znači da svaki par tačaka daje <em>novu, jedinstvenu</em> pravu &mdash; nema situacije da dva različita para tačaka leže na istoj pravoj.</p>
+        <p class="note">Kada bi tri tačke bile kolinearne, tri para tačaka bi davala samo jednu pravu umesto tri, pa bismo dobili manji broj.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko pravih određuju 4 tačke od kojih nikoje tri nisu kolinearne?</summary>
+      <div class="answer">
+        \(\binom{4}{2} = \frac{4 \cdot 3}{2} = 6\) pravih. Nacrtajte i proverite!
+      </div>
+    </details>
+
+    <div class="step" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Postavljamo formulu</h3>
+        <p>Broj pravih = broj načina da izaberemo 2 tačke od 13, bez obzira na redosled (jer prava AB i prava BA su ista prava).</p>
+        <p>To je kombinacija bez ponavljanja:</p>
+        <div class="math-block">
+          \[\text{Broj pravih} = \binom{13}{2} = \frac{13!}{2! \cdot 11!}\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Računamo \(\binom{13}{2}\)</h3>
+        <p>Koristimo uprošćenu formulu za kombinacije sa \(k = 2\):</p>
+        <div class="math-block">
+          \[\binom{13}{2} = \frac{13 \cdot 12}{2 \cdot 1}\]
+        </div>
+        <p>Računamo brojilac:</p>
+        <div class="math-block">
+          \[13 \cdot 12 = 156\]
+        </div>
+        <p>Delimo sa \(2\):</p>
+        <div class="math-block">
+          \[\frac{156}{2} = 78\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Zašto delimo sa 2?</summary>
+      <div class="answer">
+        Zato što redosled tačaka nije bitan. Par tačaka \((A, B)\) i par \((B, A)\) određuju istu pravu. Bez deljenja bismo svaku pravu prebrojali dva puta.
+      </div>
+    </details>
+
+    <div class="step" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Zaključak</h3>
+        <p>Sa 13 tačaka u opštem položaju (nikoje tri kolinearne) određeno je tačno:</p>
+        <div class="math-block">
+          \[\binom{13}{2} = 78 \text{ pravih}\]
+        </div>
+        <p>Odgovor je <strong>(C) 78</strong>.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko bi bilo pravih da imamo 10 tačaka u opštem položaju?</summary>
+      <div class="answer">
+        \(\binom{10}{2} = \frac{10 \cdot 9}{2} = 45\) pravih.
+      </div>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Kada nikoje tri tačke nisu kolinearne, postoji bijekcija (jedno-jednoznačno preslikavanje) između parova tačaka i pravih. Prebrojavanje pravih svodi se na prebrojavanje parova.</p>
+    <div class="big-formula">
+      \[\binom{13}{2} = \frac{13 \cdot 12}{2} = 78\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer">
+      \(\binom{13}{2} = 78\)
+    </div>
+    <div class="options-final">
+      <div class="option-final">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(87\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(118\)</div>
+      </div>
+      <div class="option-final correct">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(78\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(140\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(120\)</div>
+      </div>
+    </div>
+    <div class="verification">
+      <strong>Provera:</strong> Formula \(\binom{n}{2} = \frac{n(n-1)}{2}\) za \(n = 13\) daje \(\frac{13 \cdot 12}{2} = \frac{156}{2} = 78\). Možemo i ovako: prva tačka se može spariti sa 12 preostalih, druga sa 11, itd. Ukupno veza: \(12 + 11 + 10 + \ldots + 1 = \frac{12 \cdot 13}{2} = 78\). <strong>Tačan odgovor je (C) 78</strong>.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Mešanje permutacija i kombinacija:</strong> Ako bismo koristili permutacije \(P(13, 2) = 13 \cdot 12 = 156\), prebrojali bismo svaku pravu dva puta (AB i BA). Pravu određuje <em>skup</em> od dve tačke, ne uređeni par, pa koristimo kombinacije.</li>
+      <li><strong>Zaboravljanje uslova kolinearnosti:</strong> Bez uslova da nikoje tri tačke nisu kolinearne, odgovor bi mogao biti manji od \(\binom{13}{2}\). Na primer, 5 tačaka na istoj pravoj daju samo 1 pravu umesto \(\binom{5}{2} = 10\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Koliko trouglova je određeno sa 13 tačaka od kojih nikoje tri nisu kolinearne?</p>
+    <details>
+      <summary>Prikaži pomoć</summary>
+      <div class="theory-content">
+        <p>Trougao je određen sa tri tačke. Koliko načina ima da od 13 tačaka izaberemo 3? Primeni istu logiku: \(\binom{13}{3} = \frac{13 \cdot 12 \cdot 11}{3 \cdot 2 \cdot 1}\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas: Interactive points and lines visualization
+  const canvas = document.getElementById('pointsCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Generate 8 points in general position (for visual clarity, fewer than 13)
+  const numPoints = 8;
+  const points = [];
+  const radius = 8;
+
+  // Seed positions in a nice spread
+  const seedPositions = [
+    { x: 120, y: 80 },
+    { x: 480, y: 60 },
+    { x: 300, y: 130 },
+    { x: 80, y: 280 },
+    { x: 520, y: 250 },
+    { x: 200, y: 380 },
+    { x: 420, y: 400 },
+    { x: 350, y: 300 }
+  ];
+
+  for (let i = 0; i < numPoints; i++) {
+    points.push({
+      x: seedPositions[i].x,
+      y: seedPositions[i].y,
+      label: String.fromCharCode(65 + i)
+    });
+  }
+
+  let dragIndex = -1;
+  let showAllLines = true;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Svaki par tačaka određuje jednu pravu', W / 2, 25);
+
+    // Draw lines between all pairs
+    const lineCount = numPoints * (numPoints - 1) / 2;
+    let lineIdx = 0;
+    const colors = ['#60a5fa', '#a78bfa', '#34d399', '#f472b6', '#94a3b8'];
+
+    for (let i = 0; i < numPoints; i++) {
+      for (let j = i + 1; j < numPoints; j++) {
+        const colorIdx = lineIdx % colors.length;
+        ctx.strokeStyle = colors[colorIdx] + '30';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+
+        // Extend line slightly beyond the points
+        const dx = points[j].x - points[i].x;
+        const dy = points[j].y - points[i].y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const ext = 15;
+        const ux = dx / len;
+        const uy = dy / len;
+
+        ctx.moveTo(points[i].x - ux * ext, points[i].y - uy * ext);
+        ctx.lineTo(points[j].x + ux * ext, points[j].y + uy * ext);
+        ctx.stroke();
+        lineIdx++;
+      }
+    }
+
+    // Draw points
+    for (let i = 0; i < numPoints; i++) {
+      const p = points[i];
+
+      // Glow
+      const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 20);
+      grd.addColorStop(0, 'rgba(96, 165, 250, 0.3)');
+      grd.addColorStop(1, 'rgba(96, 165, 250, 0)');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = '#60a5fa';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Border
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(p.label, p.x, p.y - 14);
+    }
+
+    // Info box
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    const boxW = 260;
+    const boxH = 65;
+    const boxX = W - boxW - 15;
+    const boxY = H - boxH - 15;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 8);
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Tačaka: ' + numPoints, boxX + 12, boxY + 20);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Pravih: C(' + numPoints + ',2) = ' + lineCount, boxX + 12, boxY + 44);
+
+    // Formula reminder
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('Za n=13: C(13,2) = 13·12/2 = 78', W / 2, H - 10);
+  }
+
+  draw();
+
+  // Drag interaction
+  function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function getTouchPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const touch = e.touches[0];
+    return {
+      x: (touch.clientX - rect.left) * scaleX,
+      y: (touch.clientY - rect.top) * scaleY
+    };
+  }
+
+  function findPoint(pos) {
+    for (let i = 0; i < points.length; i++) {
+      const dx = pos.x - points[i].x;
+      const dy = pos.y - points[i].y;
+      if (dx * dx + dy * dy < 400) return i;
+    }
+    return -1;
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    const pos = getMousePos(e);
+    dragIndex = findPoint(pos);
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (dragIndex >= 0) {
+      const pos = getMousePos(e);
+      points[dragIndex].x = Math.max(radius, Math.min(W - radius, pos.x));
+      points[dragIndex].y = Math.max(40, Math.min(H - 30, pos.y));
+      draw();
+    }
+    // Cursor
+    const pos = getMousePos(e);
+    canvas.style.cursor = findPoint(pos) >= 0 ? 'grab' : 'default';
+    if (dragIndex >= 0) canvas.style.cursor = 'grabbing';
+  });
+
+  canvas.addEventListener('mouseup', () => { dragIndex = -1; });
+  canvas.addEventListener('mouseleave', () => { dragIndex = -1; });
+
+  // Touch support
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const pos = getTouchPos(e);
+    dragIndex = findPoint(pos);
+  });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (dragIndex >= 0) {
+      const pos = getTouchPos(e);
+      points[dragIndex].x = Math.max(radius, Math.min(W - radius, pos.x));
+      points[dragIndex].y = Math.max(40, Math.min(H - 30, pos.y));
+      draw();
+    }
+  });
+
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    dragIndex = -1;
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Broj pravih kroz tačke u opštem položaju",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorike", "kombinacije", "prebrojavanje", "prave", "binomni koeficijent"]
+}
+BRAINSPARK_META-->

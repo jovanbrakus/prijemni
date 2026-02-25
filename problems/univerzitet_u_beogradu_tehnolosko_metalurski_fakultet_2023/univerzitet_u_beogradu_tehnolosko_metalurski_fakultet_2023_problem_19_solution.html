@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspoređivanje topova na šahovskoj tabli</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Two distinguishable rooks (black and white) on 8x8 chess board.
+  They must NOT be in the same row or column (so they can't attack each other).
+
+  Approach: Sequential counting with distinguishable pieces.
+
+  Step 1: Place the white rook.
+    There are 64 squares on the board.
+    White rook can go on any of 64 squares.
+
+  Step 2: Place the black rook.
+    The black rook cannot share the same row or column as the white rook.
+    The white rook occupies 1 square, attacks 7 other squares in its row, and 7 other in its column.
+    Total squares forbidden for the black rook: 1 + 7 + 7 = 15
+    (The white rook's own square is in both the row and column, but we count it once.)
+    Available squares: 64 - 15 = 49
+
+  Step 3: Total placements.
+    Since the rooks are distinguishable (black and white), order matters.
+    Total = 64 × 49 = 3136
+
+  Verification (alternative method):
+    Choose a row for white rook: 8 choices, choose a column: 8 choices => 64 placements.
+    For black rook: choose from remaining 7 rows × remaining 7 columns = 49 placements.
+    Total = 64 × 49 = 3136 ✓
+
+  Another verification:
+    If rooks were identical: 64 × 49 / 2 = 1568
+    Since they're distinguishable: 64 × 49 = 3136
+
+  Answer: A) 3136
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-text {
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s, border-left 0.2s;
+}
+
+.step-container:hover, .step-container.active {
+  border-left: 4px solid #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.step-body {
+  margin-left: 40px;
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+.step-body p {
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 10px 0;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details .detail-content {
+  padding: 14px 18px;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.checkpoint {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(167, 139, 250, 0.15));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.insight-formula {
+  font-size: 1.4rem;
+  color: #4ade80;
+  margin: 12px 0;
+}
+
+.final-answer {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(74, 222, 128, 0.12));
+  border: 2px solid rgba(52, 211, 153, 0.4);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer h2 {
+  color: #34d399;
+  margin-bottom: 16px;
+  font-size: 1.4rem;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.2);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  text-align: center;
+  font-style: italic;
+}
+
+.pitfall-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: #e09468;
+}
+
+.pitfall-icon {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-body { margin-left: 10px; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 8px 14px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Raspoređivanje topova na šahovskoj tabli</h1>
+  <p class="subtitle">Kombinatorika — prebrojavanje rasporeda figura</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title"><span class="icon">&#9820;</span> Postavka zadatka</h2>
+    <div class="problem-text">
+      <p>Broj načina na koji se mogu postaviti dva topa (crni i beli) na šahovskoj tabli tako da ne mogu „pojesti" jedan drugog jednak je:</p>
+      <p class="note">Šahovska tabla ima dimenzije \(8 \times 8\). Topovi napadaju sve figure u istom redu i istoj koloni. Dva topa su različita (crni i beli), pa je redosled bitan.</p>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(3136\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2388\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(2122\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(4424\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(3088\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2 class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</h2>
+    <p>Koristićemo princip sekvencijalnog brojanja: prvo postavimo belog topa na bilo koje polje, a zatim prebrojimo koliko polja ostaje dostupno za crnog topa (izbacujući ceo red i celu kolonu belog topa).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Ključne formule i principi</summary>
+      <div class="detail-content">
+        <ul style="list-style: disc; margin-left: 20px; color: #cbd5e1;">
+          <li style="margin-bottom: 10px;"><strong>Princip množenja (pravilo proizvoda):</strong> Ako se prvi izbor može napraviti na \(m\) načina, a drugi na \(n\) načina, ukupan broj kombinacija je \(m \cdot n\).</li>
+          <li style="margin-bottom: 10px;"><strong>Napadačko polje topa:</strong> Top napada sva polja u svom redu i svojoj koloni. Na tabli \(8 \times 8\), top sa polja \((r, c)\) napada \(7\) polja u redu i \(7\) polja u koloni (ukupno \(14\) polja plus samo polje na kom stoji).</li>
+          <li style="margin-bottom: 10px;"><strong>Princip isključivanja:</strong> Kada računamo zabranjeno polje, pazimo da polje topa ne brojimo dvaput (jednom kao deo reda, jednom kao deo kolone).</li>
+          <li style="margin-bottom: 10px;"><strong>Razlikovni topovi:</strong> Kada su figure razlikovne (npr. crni i beli), redosled postavljanja je bitan — ne delimo sa \(2!\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid - Interactive Chess Board -->
+  <div class="card canvas-card">
+    <h2 class="card-title"><span class="icon">&#127922;</span> Interaktivni dijagram</h2>
+    <canvas id="chessCanvas" width="520" height="520" style="width:100%; max-width:520px;"></canvas>
+    <p class="drag-hint">Kliknite na tablu da postavite belog topa i vidite dostupna polja za crnog.</p>
+  </div>
+
+  <!-- Steps -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">&#128221;</span> Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <h3 class="step-title">Dimenzije šahovske table</h3>
+      </div>
+      <div class="step-body">
+        <p>Standardna šahovska tabla ima \(8\) redova i \(8\) kolona.</p>
+        <div class="math-block">
+          \[ \text{Ukupan broj polja} = 8 \times 8 = 64 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <h3 class="step-title">Postavljanje belog topa</h3>
+      </div>
+      <div class="step-body">
+        <p>Beli top može biti postavljen na <strong>bilo koje</strong> od 64 polja table.</p>
+        <div class="math-block">
+          \[ \text{Izbor za belog topa} = 64 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <h3 class="step-title">Zabranjena polja za crnog topa</h3>
+      </div>
+      <div class="step-body">
+        <p>Crni top ne sme biti u istom redu ni u istoj koloni kao beli top. Prebrojimo zabranjena polja:</p>
+        <div class="math-block">
+          \[ \text{Isti red:} \quad 8 \text{ polja} \]
+        </div>
+        <div class="math-block">
+          \[ \text{Ista kolona:} \quad 8 \text{ polja} \]
+        </div>
+        <p>Ali polje na kojem stoji beli top je izbrojano i u redu i u koloni, pa ga oduzimamo jednom:</p>
+        <div class="math-block">
+          \[ \text{Zabranjena polja} = 8 + 8 - 1 = 15 \]
+        </div>
+        <p class="note">Od 8 polja u redu i 8 u koloni, presek je upravo jedno polje — ono na kome je beli top.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>&#9989; Proveri se: Koliko polja je dostupno za crnog topa?</summary>
+      <div class="detail-content">
+        <p>Dostupno polja = Ukupno - Zabranjeno = \(64 - 15 = 49\).</p>
+      </div>
+    </details>
+
+    <div class="step-container" id="step4">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <h3 class="step-title">Dostupna polja za crnog topa</h3>
+      </div>
+      <div class="step-body">
+        <p>Od ukupno 64 polja, crnom topu preostaje:</p>
+        <div class="math-block">
+          \[ \text{Dostupna polja} = 64 - 15 = 49 \]
+        </div>
+        <p>Ovo je logično: crni top može birati bilo koji od preostalih \(7\) redova i bilo koju od preostalih \(7\) kolona, pa je:</p>
+        <div class="math-block">
+          \[ 7 \times 7 = 49 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-header">
+        <div class="step-badge">5</div>
+        <h3 class="step-title">Primena principa množenja</h3>
+      </div>
+      <div class="step-body">
+        <p>Pošto su topovi <strong>razlikovni</strong> (crni i beli), svako postavljanje je uređen par. Primenjujemo princip množenja:</p>
+        <div class="math-block">
+          \[ \text{Ukupan broj načina} = 64 \times 49 = 3136 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>&#9989; Proveri se: Zašto ne delimo sa 2?</summary>
+      <div class="detail-content">
+        <p>Zato što su topovi razlikovni — crni top na polju A1 i beli na polju B2 je <strong>drugačiji</strong> raspored od belog na A1 i crnog na B2. Da su topovi identični, delili bismo sa \(2! = 2\) i dobili \(1568\).</p>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p style="color:#cbd5e1; margin-bottom: 12px;">Za svaki položaj belog topa, crni top bira jedno od \(7 \times 7 = 49\) „bezbednih" polja — ona koja nisu ni u istom redu ni u istoj koloni.</p>
+    <div class="insight-formula">
+      \[ 64 \times 49 = \boxed{3136} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\( 3136 \)</div>
+    <div class="final-options">
+      <div class="final-option correct">(A) 3136</div>
+      <div class="final-option">(B) 2388</div>
+      <div class="final-option">(C) 2122</div>
+      <div class="final-option">(D) 4424</div>
+      <div class="final-option">(E) 3088</div>
+    </div>
+    <p class="verification-note">Provera: \(64 \times 49 = 64 \times 50 - 64 = 3200 - 64 = 3136\). Alternativno, \(8 \times 8 \times 7 \times 7 = 56 \times 56 = 3136\) &#10003;</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">&#9888;</span> Česte greške</h2>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">&#9679;</span>
+      <p><strong>Deljenje sa 2 kada ne treba:</strong> Pošto su topovi razlikovni (crni i beli), ne delimo sa 2. Ako bismo pogrešno podelili, dobili bismo 1568, što nije među ponuđenim odgovorima.</p>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">&#9679;</span>
+      <p><strong>Pogrešno računanje zabranjenih polja:</strong> Česta greška je reći da top napada 14 polja (7 u redu + 7 u koloni) i zaboraviti da i samo polje na kom stoji treba izbaciti. Zabranjeno je 15 polja (8 + 8 - 1), ne 14.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">&#127775;</span> Dodatni izazov</h2>
+    <p style="color:#cbd5e1;">Na koliko načina se mogu postaviti <strong>tri</strong> razlikovana topa na šahovskoj tabli tako da se nijedan par ne napada?</p>
+    <details>
+      <summary>&#128161; Nagovještaj</summary>
+      <div class="detail-content">
+        <p>Primeni isti princip sekvencijalno: prvi top ima 64 izbora, drugi \(7 \times 7 = 49\) izbora, a treći top mora izbeći redove i kolone oba prethodna topa. Koliko redova i kolona mu preostaje?</p>
+        <p class="note">Odgovor: \(64 \times 49 \times 36 = 64 \times 49 \times 36\). Izračunaj!</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('chessCanvas');
+  const ctx = canvas.getContext('2d');
+  const size = 520;
+  const margin = 30;
+  const cellSize = (size - 2 * margin) / 8;
+
+  let whiteRookRow = 3;
+  let whiteRookCol = 2;
+
+  function drawBoard() {
+    ctx.clearRect(0, 0, size, size);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, size, size);
+
+    // Draw cells
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const x = margin + c * cellSize;
+        const y = margin + r * cellSize;
+
+        const isWhiteRookCell = (r === whiteRookRow && c === whiteRookCol);
+        const isSameRow = (r === whiteRookRow);
+        const isSameCol = (c === whiteRookCol);
+        const isForbidden = isSameRow || isSameCol;
+
+        if (isWhiteRookCell) {
+          ctx.fillStyle = 'rgba(96, 165, 250, 0.5)';
+        } else if (isForbidden) {
+          ctx.fillStyle = 'rgba(244, 114, 182, 0.2)';
+        } else {
+          // Available - green tint
+          ctx.fillStyle = (r + c) % 2 === 0 ? 'rgba(52, 211, 153, 0.15)' : 'rgba(52, 211, 153, 0.08)';
+        }
+        ctx.fillRect(x, y, cellSize, cellSize);
+
+        // Cell border
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(x, y, cellSize, cellSize);
+      }
+    }
+
+    // Draw forbidden lines (row and column)
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+
+    // Row line
+    const rowY = margin + whiteRookRow * cellSize + cellSize / 2;
+    ctx.beginPath();
+    ctx.moveTo(margin, rowY);
+    ctx.lineTo(margin + 8 * cellSize, rowY);
+    ctx.stroke();
+
+    // Column line
+    const colX = margin + whiteRookCol * cellSize + cellSize / 2;
+    ctx.beginPath();
+    ctx.moveTo(colX, margin);
+    ctx.lineTo(colX, margin + 8 * cellSize);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // Draw white rook symbol
+    const wrX = margin + whiteRookCol * cellSize + cellSize / 2;
+    const wrY = margin + whiteRookRow * cellSize + cellSize / 2;
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold ' + (cellSize * 0.6) + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('\u2656', wrX, wrY);
+
+    // Draw row/column labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const colLetters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    for (let c = 0; c < 8; c++) {
+      const x = margin + c * cellSize + cellSize / 2;
+      ctx.fillText(colLetters[c], x, margin + 8 * cellSize + 15);
+    }
+    for (let r = 0; r < 8; r++) {
+      const y = margin + r * cellSize + cellSize / 2;
+      ctx.fillText(String(8 - r), margin - 15, y);
+    }
+
+    // Legend
+    ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    // White rook
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(margin, size - 18, 12, 12);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Beli top', margin + 18, size - 8);
+
+    // Forbidden
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.3)';
+    ctx.fillRect(margin + 120, size - 18, 12, 12);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Zabranjeno (15)', margin + 138, size - 8);
+
+    // Available
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.2)';
+    ctx.fillRect(margin + 290, size - 18, 12, 12);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Dostupno (49)', margin + 308, size - 8);
+  }
+
+  function handleClick(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+
+    const col = Math.floor((mx - margin) / cellSize);
+    const row = Math.floor((my - margin) / cellSize);
+
+    if (col >= 0 && col < 8 && row >= 0 && row < 8) {
+      whiteRookRow = row;
+      whiteRookCol = col;
+      drawBoard();
+    }
+  }
+
+  function handleTouch(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (touch.clientX - rect.left) * scaleX;
+    const my = (touch.clientY - rect.top) * scaleY;
+
+    const col = Math.floor((mx - margin) / cellSize);
+    const row = Math.floor((my - margin) / cellSize);
+
+    if (col >= 0 && col < 8 && row >= 0 && row < 8) {
+      whiteRookRow = row;
+      whiteRookCol = col;
+      drawBoard();
+    }
+  }
+
+  canvas.addEventListener('click', handleClick);
+  canvas.addEventListener('touchstart', handleTouch);
+
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  drawBoard();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Raspoređivanje dva razlikovana topa na šahovskoj tabli",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "prebrojavanje", "princip množenja", "šah", "raspoređivanje"]
+}
+BRAINSPARK_META-->

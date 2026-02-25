@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir koordinata tačke na pravoj sa minimalnim zbirom kvadrata rastojanja</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Naći tačku M(x,y) na pravoj y = 2x + 1 takvu da je zbir kvadrata njenih rastojanja
+od tačaka A(-3,0) i B(-1,3) najmanji. Zatim naći x + y.
+
+Korak 1: Pošto M leži na pravoj y = 2x + 1, zamenimo y = 2x + 1.
+
+Korak 2: Zbir kvadrata rastojanja:
+  f(x) = d(M,A)² + d(M,B)²
+       = (x - (-3))² + (y - 0)² + (x - (-1))² + (y - 3)²
+       = (x + 3)² + y² + (x + 1)² + (y - 3)²
+
+Korak 3: Zamena y = 2x + 1:
+  f(x) = (x + 3)² + (2x + 1)² + (x + 1)² + (2x + 1 - 3)²
+       = (x + 3)² + (2x + 1)² + (x + 1)² + (2x - 2)²
+
+Korak 4: Razvijamo:
+  (x + 3)² = x² + 6x + 9
+  (2x + 1)² = 4x² + 4x + 1
+  (x + 1)² = x² + 2x + 1
+  (2x - 2)² = 4x² - 8x + 4
+
+Korak 5: Sabiramo:
+  f(x) = x² + 6x + 9 + 4x² + 4x + 1 + x² + 2x + 1 + 4x² - 8x + 4
+       = (1 + 4 + 1 + 4)x² + (6 + 4 + 2 - 8)x + (9 + 1 + 1 + 4)
+       = 10x² + 4x + 15
+
+Korak 6: Minimum kvadratne funkcije f(x) = 10x² + 4x + 15:
+  f'(x) = 20x + 4 = 0
+  x = -4/20 = -1/5
+
+  Alternativno, minimum parabole ax² + bx + c je u x = -b/(2a) = -4/(2·10) = -4/20 = -1/5.
+
+Korak 7: y = 2·(-1/5) + 1 = -2/5 + 5/5 = 3/5
+
+Korak 8: x + y = -1/5 + 3/5 = 2/5
+
+Provera: f(-1/5) = 10·(1/25) + 4·(-1/5) + 15 = 10/25 - 4/5 + 15 = 2/5 - 4/5 + 15 = -2/5 + 15 = 73/5
+
+Tačan odgovor: E) 2/5
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(56,189,248,0.05);
+  border-radius: 10px;
+}
+
+details .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .theory-content li {
+  margin-bottom: 12px;
+  padding-left: 16px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+details .theory-content li::before {
+  content: '>';
+  color: #60a5fa;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+canvas {
+  border-radius: 10px;
+  width: 100%;
+  max-width: 600px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(56,189,248,0.05);
+  border-left: 3px solid #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+  padding: 14px;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .big-formula {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+}
+
+.final-answer {
+  font-size: 1.8rem;
+  color: #4ade80;
+  text-align: center;
+  margin: 20px 0;
+  font-weight: bold;
+}
+
+.options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-final {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.option-final.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(52,211,153,0.2);
+}
+
+.option-final .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.option-final .opt-value {
+  font-size: 1.15rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.option-final.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  background: rgba(52,211,153,0.08);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.verification strong {
+  color: #34d399;
+}
+
+.pitfall {
+  border-left: 3px solid #e09468;
+}
+
+.pitfall h2 {
+  color: #e09468 !important;
+}
+
+.pitfall ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall li {
+  margin-bottom: 10px;
+  padding-left: 20px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfall li::before {
+  content: '!';
+  color: #e09468;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.challenge-card details {
+  margin: 0;
+}
+
+.challenge-card summary {
+  color: #f472b6;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .final-answer { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Zbir koordinata tačke na pravoj sa minimalnim zbirom kvadrata rastojanja</h1>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Zbir koordinata tačke \(M(x,y)\) na pravoj \(y = 2x + 1\), takve da je zbir kvadrata njenih rastojanja od tačaka \(A(-3,0)\) i \(B(-1,3)\) najmanji, jednak je:</p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Prava</div>
+        <div class="value">\(y = 2x + 1\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Tačka A</div>
+        <div class="value">\((-3, 0)\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Tačka B</div>
+        <div class="value">\((-1, 3)\)</div>
+      </div>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-\dfrac{2}{5}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{2}{5}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Pošto tačka \(M\) leži na pravoj \(y = 2x + 1\), izrazićemo zbir kvadrata rastojanja kao funkciju jedne promenljive \(x\). Zatim ćemo naći minimum te kvadratne funkcije, odrediti koordinate tačke \(M\), i izračunati \(x + y\).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i pojmovi</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Rastojanje između dve tačke:</strong> \(d(P_1, P_2) = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}\)</li>
+          <li><strong>Kvadrat rastojanja:</strong> \(d^2(P_1, P_2) = (x_2 - x_1)^2 + (y_2 - y_1)^2\) &mdash; eliminišemo koren jer tražimo minimum zbira kvadrata.</li>
+          <li><strong>Minimum kvadratne funkcije:</strong> Za \(f(x) = ax^2 + bx + c\) sa \(a > 0\), minimum se dostiže u \(x = -\dfrac{b}{2a}\).</li>
+          <li><strong>Parametrizacija prave:</strong> Ako je \(M\) na pravoj \(y = 2x + 1\), sve koordinate se izražavaju preko jedne promenljive \(x\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="geometryCanvas" width="600" height="500"></canvas>
+    <p class="canvas-hint">Prava y = 2x + 1 sa tačkama A, B i optimalnom tačkom M</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Formiramo izraz za zbir kvadrata rastojanja</h3>
+        <p>Zbir kvadrata rastojanja tačke \(M(x, y)\) od tačaka \(A(-3, 0)\) i \(B(-1, 3)\) je:</p>
+        <div class="math-block">
+          \[f = d^2(M, A) + d^2(M, B) = (x + 3)^2 + y^2 + (x + 1)^2 + (y - 3)^2\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Zamenjujemo \(y = 2x + 1\)</h3>
+        <p>Pošto \(M\) leži na pravoj \(y = 2x + 1\), zamenjujemo:</p>
+        <div class="math-block">
+          \[f(x) = (x + 3)^2 + (2x + 1)^2 + (x + 1)^2 + (2x + 1 - 3)^2\]
+        </div>
+        <p>Pojednostavljujemo poslednji član:</p>
+        <div class="math-block">
+          \[2x + 1 - 3 = 2x - 2\]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[f(x) = (x + 3)^2 + (2x + 1)^2 + (x + 1)^2 + (2x - 2)^2\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko članova treba razviti?</summary>
+      <div class="answer">
+        Četiri kvadrata binoma: \((x+3)^2\), \((2x+1)^2\), \((x+1)^2\) i \((2x-2)^2\).
+      </div>
+    </details>
+
+    <div class="step" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Razvijamo svaki kvadrat</h3>
+        <div class="math-block">
+          \[(x + 3)^2 = x^2 + 6x + 9\]
+        </div>
+        <div class="math-block">
+          \[(2x + 1)^2 = 4x^2 + 4x + 1\]
+        </div>
+        <div class="math-block">
+          \[(x + 1)^2 = x^2 + 2x + 1\]
+        </div>
+        <div class="math-block">
+          \[(2x - 2)^2 = 4x^2 - 8x + 4\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Sabiramo sve članove</h3>
+        <p>Grupisano po stepenima \(x\):</p>
+        <div class="math-block">
+          \[x^2: \quad 1 + 4 + 1 + 4 = 10\]
+        </div>
+        <div class="math-block">
+          \[x: \quad 6 + 4 + 2 + (-8) = 4\]
+        </div>
+        <div class="math-block">
+          \[\text{konst.}: \quad 9 + 1 + 1 + 4 = 15\]
+        </div>
+        <p>Konačno:</p>
+        <div class="math-block">
+          \[f(x) = 10x^2 + 4x + 15\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Da li je koeficijent uz \(x^2\) pozitivan?</summary>
+      <div class="answer">
+        Da, \(a = 10 > 0\), pa parabola ima minimum (otvorena naviše). To znači da minimum zaista postoji.
+      </div>
+    </details>
+
+    <div class="step" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Nalazimo minimum</h3>
+        <p>Minimum kvadratne funkcije \(f(x) = 10x^2 + 4x + 15\) se dostiže u:</p>
+        <div class="math-block">
+          \[x = -\frac{b}{2a} = -\frac{4}{2 \cdot 10} = -\frac{4}{20} = -\frac{1}{5}\]
+        </div>
+        <p class="note">Alternativno: \(f'(x) = 20x + 4 = 0 \Rightarrow x = -\dfrac{1}{5}\).</p>
+      </div>
+    </div>
+
+    <div class="step" id="step6">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Nalazimo \(y\) koordinatu</h3>
+        <p>Zamenjujemo \(x = -\dfrac{1}{5}\) u jednačinu prave:</p>
+        <div class="math-block">
+          \[y = 2 \cdot \left(-\frac{1}{5}\right) + 1 = -\frac{2}{5} + \frac{5}{5} = \frac{3}{5}\]
+        </div>
+        <p>Dakle, \(M\!\left(-\dfrac{1}{5},\, \dfrac{3}{5}\right)\).</p>
+      </div>
+    </div>
+
+    <div class="step" id="step7">
+      <div class="step-number">7</div>
+      <div class="step-content">
+        <h3>Računamo zbir koordinata</h3>
+        <p>Traženi zbir koordinata je:</p>
+        <div class="math-block">
+          \[x + y = -\frac{1}{5} + \frac{3}{5} = \frac{-1 + 3}{5} = \frac{2}{5}\]
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Zamenom \(y = 2x + 1\), problem se svodi na traženje minimuma jedne kvadratne funkcije po \(x\). Minimum parabole \(f(x) = 10x^2 + 4x + 15\) se nalazi u temenu, bez potrebe za izvodima.</p>
+    <div class="big-formula">
+      \[x + y = -\frac{1}{5} + \frac{3}{5} = \frac{2}{5}\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer">
+      \(x + y = \dfrac{2}{5}\)
+    </div>
+    <div class="options-final">
+      <div class="option-final">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(-1\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(1\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(3\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(-\dfrac{2}{5}\)</div>
+      </div>
+      <div class="option-final correct">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(\dfrac{2}{5}\)</div>
+      </div>
+    </div>
+    <div class="verification">
+      <strong>Provera:</strong> Za \(M\!\left(-\dfrac{1}{5},\, \dfrac{3}{5}\right)\): leži na pravoj jer \(2 \cdot \left(-\dfrac{1}{5}\right) + 1 = \dfrac{3}{5}\) &check;.
+      Zbir kvadrata rastojanja: \(f\!\left(-\dfrac{1}{5}\right) = 10 \cdot \dfrac{1}{25} + 4 \cdot \left(-\dfrac{1}{5}\right) + 15 = \dfrac{2}{5} - \dfrac{4}{5} + 15 = \dfrac{73}{5} = 14{,}6\).
+      Za bilo koje drugo \(x\), npr. \(x = 0\): \(f(0) = 15\), tj. \(\dfrac{75}{5} > \dfrac{73}{5}\) &check;. Tačan odgovor je <strong>(E) \(\dfrac{2}{5}\)</strong>.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Zaboraviti zamenu \(y\):</strong> Funkcija rastojanja mora biti izražena samo preko \(x\), jer tačka mora ležati na datoj pravoj. Ako minimizirate po obe koordinate nezavisno, nećete dobiti tačku na pravoj.</li>
+      <li><strong>Greška u razvijanju \((2x - 2)^2\):</strong> Česta greška je pisanje \(4x^2 + 4\) umesto \(4x^2 - 8x + 4\). Dupli proizvod je \(2 \cdot 2x \cdot (-2) = -8x\).</li>
+      <li><strong>Zbir koordinata nije isto što i minimum funkcije:</strong> Pitanje traži \(x + y\), ne vrednost minimalnog zbira kvadrata rastojanja. Ne zaboravite poslednji korak!</li>
+      <li><strong>Zamena znaka:</strong> Odgovor \(-\dfrac{2}{5}\) (opcija D) je česta zamka &mdash; to je zapravo vrednost \(x - y\), ne \(x + y\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Neka je tačka \(M(x, y)\) na kružnici \(x^2 + y^2 = 1\). Naći minimum zbira kvadrata rastojanja od tačaka \(A(3, 0)\) i \(B(0, 4)\). Pokušajte parametrizaciju sa \(x = \cos t\), \(y = \sin t\).</p>
+    <details>
+      <summary>Prikaži pomoć</summary>
+      <div class="theory-content">
+        <p>Zbir kvadrata rastojanja je \((\cos t - 3)^2 + \sin^2 t + \cos^2 t + (\sin t - 4)^2\). Koristeći \(\cos^2 t + \sin^2 t = 1\), dobijamo \(27 - 6\cos t - 8\sin t\). Minimum izraza \(-6\cos t - 8\sin t\) se nalazi primenom formule \(a\cos t + b\sin t = \sqrt{a^2 + b^2}\cos(t - \varphi)\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas: Geometric visualization
+  const canvas = document.getElementById('geometryCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Coordinate system mapping
+    // World bounds: x in [-4.5, 2.5], y in [-2, 6]
+    const xMin = -4.5, xMax = 2.5;
+    const yMin = -2, yMax = 6;
+    const marginL = 50, marginR = 30, marginT = 30, marginB = 40;
+    const plotW = W - marginL - marginR;
+    const plotH = H - marginT - marginB;
+
+    function toScreenX(wx) { return marginL + (wx - xMin) / (xMax - xMin) * plotW; }
+    function toScreenY(wy) { return marginT + (yMax - wy) / (yMax - yMin) * plotH; }
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      ctx.beginPath();
+      ctx.moveTo(toScreenX(gx), marginT);
+      ctx.lineTo(toScreenX(gx), H - marginB);
+      ctx.stroke();
+    }
+    for (let gy = Math.ceil(yMin); gy <= Math.floor(yMax); gy++) {
+      ctx.beginPath();
+      ctx.moveTo(marginL, toScreenY(gy));
+      ctx.lineTo(W - marginR, toScreenY(gy));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    // x-axis
+    if (yMin <= 0 && yMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(marginL, toScreenY(0));
+      ctx.lineTo(W - marginR, toScreenY(0));
+      ctx.stroke();
+    }
+    // y-axis
+    if (xMin <= 0 && xMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(toScreenX(0), marginT);
+      ctx.lineTo(toScreenX(0), H - marginB);
+      ctx.stroke();
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      if (gx === 0) continue;
+      ctx.fillText(gx.toString(), toScreenX(gx), toScreenY(0) + 16);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = Math.ceil(yMin); gy <= Math.floor(yMax); gy++) {
+      if (gy === 0) continue;
+      ctx.fillText(gy.toString(), toScreenX(0) - 8, toScreenY(gy) + 4);
+    }
+
+    // Line y = 2x + 1
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    var lx1 = xMin, ly1 = 2 * xMin + 1;
+    var lx2 = xMax, ly2 = 2 * xMax + 1;
+    // Clip to visible area
+    if (ly1 < yMin) { lx1 = (yMin - 1) / 2; ly1 = yMin; }
+    if (ly1 > yMax) { lx1 = (yMax - 1) / 2; ly1 = yMax; }
+    if (ly2 < yMin) { lx2 = (yMin - 1) / 2; ly2 = yMin; }
+    if (ly2 > yMax) { lx2 = (yMax - 1) / 2; ly2 = yMax; }
+    ctx.moveTo(toScreenX(lx1), toScreenY(ly1));
+    ctx.lineTo(toScreenX(lx2), toScreenY(ly2));
+    ctx.stroke();
+
+    // Label for line
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('y = 2x + 1', toScreenX(1.3), toScreenY(2 * 1.3 + 1) - 10);
+
+    // Points
+    var points = [
+      { x: -3, y: 0, label: 'A(-3, 0)', color: '#f472b6' },
+      { x: -1, y: 3, label: 'B(-1, 3)', color: '#fbbf24' },
+      { x: -1/5, y: 3/5, label: 'M(-1/5, 3/5)', color: '#4ade80' }
+    ];
+
+    points.forEach(function(pt) {
+      var sx = toScreenX(pt.x);
+      var sy = toScreenY(pt.y);
+
+      // Glow
+      ctx.shadowColor = pt.color;
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 7, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Border
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 7, 0, 2 * Math.PI);
+      ctx.stroke();
+    });
+
+    // Dashed lines from M to A and M to B
+    var mx = toScreenX(-1/5), my = toScreenY(3/5);
+    var ax = toScreenX(-3), ay = toScreenY(0);
+    var bx = toScreenX(-1), by = toScreenY(3);
+
+    ctx.setLineDash([6, 4]);
+    ctx.lineWidth = 1.5;
+
+    // M to A
+    ctx.strokeStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(ax, ay);
+    ctx.stroke();
+
+    // M to B
+    ctx.strokeStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // Labels for points
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('A(-3, 0)', toScreenX(-3) + 12, toScreenY(0) - 10);
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillText('B(-1, 3)', toScreenX(-1) + 12, toScreenY(3) - 10);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('M(-1/5, 3/5)', toScreenX(-1/5) + 12, toScreenY(3/5) + 20);
+
+    // Distance labels
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#f472b6';
+    var dMAx = (toScreenX(-3) + mx) / 2;
+    var dMAy = (toScreenY(0) + my) / 2;
+    ctx.fillText('d(M,A)', dMAx - 30, dMAy - 5);
+
+    ctx.fillStyle = '#fbbf24';
+    var dMBx = (toScreenX(-1) + mx) / 2;
+    var dMBy = (toScreenY(3) + my) / 2;
+    ctx.fillText('d(M,B)', dMBx + 8, dMBy);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tačka M minimizira d\u00B2(M,A) + d\u00B2(M,B)', W / 2, 20);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir koordinata tačke na pravoj sa minimalnim zbirom kvadrata rastojanja",
+  "subject": "math",
+  "unit": "analitička geometrija",
+  "topic_tags": ["analitička geometrija", "rastojanje tačaka", "minimum funkcije", "kvadratna funkcija", "prava"]
+}
+BRAINSPARK_META-->

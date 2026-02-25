@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morzeova azbuka — broj reči</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Slova Morzeove azbuke su nizovi tačaka i crtica. Broj reči koje imaju najviše 7 simbola.
+
+Analiza:
+- Svaka pozicija u reči može biti tačka (.) ili crtica (-) — dakle 2 izbora po poziciji.
+- Reč dužine k ima 2^k mogućih kombinacija.
+- Tražimo ukupan broj reči dužine 1, 2, 3, ..., 7.
+
+Zbir:
+2^1 + 2^2 + 2^3 + 2^4 + 2^5 + 2^6 + 2^7
+= 2 + 4 + 8 + 16 + 32 + 64 + 128
+= 254
+
+Alternativno, koristeći formulu za sumu geometrijskog niza:
+S = a * (r^n - 1) / (r - 1), gde je a = 2, r = 2, n = 7
+S = 2 * (2^7 - 1) / (2 - 1) = 2 * 127 / 1 = 254
+
+Provera: 2 + 4 = 6; 6 + 8 = 14; 14 + 16 = 30; 30 + 32 = 62; 62 + 64 = 126; 126 + 128 = 254. ✓
+
+Odgovor: A) 254
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.answer-option {
+  cursor: default;
+  transition: none;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+details {
+  background: rgba(96,165,250,0.06);
+  border: 1px solid rgba(96,165,250,0.12);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #60a5fa;
+  font-size: 1.05rem;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+details ul {
+  list-style: disc;
+  padding-left: 24px;
+}
+
+details ul li {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.canvas-wrapper {
+  background: #0c1222;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+canvas {
+  width: 100%;
+  max-width: 700px;
+  touch-action: none;
+  border-radius: 8px;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  padding-left: 16px;
+  border-left: 3px solid #334155;
+}
+
+.step-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+
+.step-title {
+  font-weight: 700;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-box h2 {
+  color: #34d399;
+  margin-bottom: 16px;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.option-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.option-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.05rem;
+  color: #94a3b8;
+}
+
+.option-item.correct {
+  background: rgba(52,211,153,0.15);
+  border: 2px solid #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.15);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.pitfall-card {
+  border-left: 4px solid #e09468;
+}
+
+.pitfall-card h2 {
+  color: #e09468;
+}
+
+.pitfall-card ul {
+  list-style: disc;
+  padding-left: 24px;
+}
+
+.pitfall-card ul li {
+  margin-bottom: 8px;
+}
+
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .final-answer-value { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Naslov -->
+  <h1>Morzeova azbuka — broj reči</h1>
+
+  <!-- Zadatak -->
+  <div class="card problem-statement">
+    <h2>Zadatak</h2>
+    <p>
+      Slova Morzeove azbuke su nizovi tačaka i crtica.
+      Broj reči koje imaju <span class="highlight">najviše 7 simbola</span> jednak je:
+    </p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Simboli</div>
+        <div class="value">. ili &mdash;</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Izbora po poziciji</div>
+        <div class="value">2</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Maks. dužina</div>
+        <div class="value">7</div>
+      </div>
+    </div>
+    <div class="given-grid" style="margin-top: 16px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">254</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">508</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">128</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">127</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">248</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Svaka pozicija u Morzeovoj reči može biti tačka ili crtica — dakle 2 izbora.
+      Za reč dužine \(k\) postoji \(2^k\) mogućih kombinacija.
+      Sabraćemo sve kombinacije za dužine od 1 do 7, koristeći formulu za sumu geometrijskog niza.
+    </p>
+  </div>
+
+  <!-- Teorija -->
+  <details>
+    <summary>Ključne formule i teoreme</summary>
+    <ul>
+      <li><strong>Princip množenja:</strong> Ako na svakoj od \(k\) pozicija imamo \(n\) izbora, ukupan broj nizova je \(n^k\).</li>
+      <li><strong>Geometrijski niz:</strong> Niz čiji je količnik \(r\) konstantan: \(a, ar, ar^2, \ldots, ar^{n-1}\)</li>
+      <li><strong>Suma prvih \(n\) članova geometrijskog niza:</strong>
+        \[S_n = a \cdot \frac{r^n - 1}{r - 1}\]
+        gde je \(a\) prvi član, a \(r\) količnik.
+      </li>
+      <li>Poseban slučaj za \(a = r\):
+        \[r + r^2 + \cdots + r^n = r \cdot \frac{r^n - 1}{r - 1} = \frac{r^{n+1} - r}{r - 1}\]
+      </li>
+    </ul>
+  </details>
+
+  <!-- Vizuelni prikaz -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="700" height="400"></canvas>
+    </div>
+    <div class="legend">
+      <div class="legend-item">
+        <span class="legend-color" style="background: #60a5fa;"></span> Broj reči za svaku dužinu \(2^k\)
+      </div>
+      <div class="legend-item">
+        <span class="legend-color" style="background: #4ade80;"></span> Kumulativni zbir
+      </div>
+    </div>
+  </div>
+
+  <!-- Korak po korak -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 1</div>
+      <div class="step-title">Prebrojavanje reči fiksirane dužine</div>
+      <p>Svaka pozicija u Morzeovoj reči može biti tačka (<code>.</code>) ili crtica (<code>&mdash;</code>), dakle imamo <strong>2 izbora</strong> po poziciji.</p>
+      <p>Po principu množenja, reč dužine \(k\) se može formirati na:</p>
+      <div class="math-box">
+        \[\underbrace{2 \times 2 \times \cdots \times 2}_{k \text{ puta}} = 2^k \text{ načina}\]
+      </div>
+    </div>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 2</div>
+      <div class="step-title">Spisak po dužinama</div>
+      <p>Sastavimo tabelu broja reči za svaku dužinu:</p>
+      <div class="math-box">
+        \[\begin{array}{c|c}
+        \text{Dužina } k & \text{Broj reči } 2^k \\
+        \hline
+        1 & 2 \\
+        2 & 4 \\
+        3 & 8 \\
+        4 & 16 \\
+        5 & 32 \\
+        6 & 64 \\
+        7 & 128
+        \end{array}\]
+      </div>
+    </div>
+
+    <details style="margin: 16px 0;">
+      <summary>Proveri se: Zašto reč mora imati bar 1 simbol?</summary>
+      <p style="padding-top: 8px;">
+        Prazan niz (dužine 0) ne prenosi informaciju — to nije validna Morzeova reč.
+        Zadatak traži reči dužine <em>najviše</em> 7 simbola, što znači dužine 1, 2, 3, 4, 5, 6 ili 7.
+      </p>
+    </details>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 3</div>
+      <div class="step-title">Sabiranje — direktno</div>
+      <p>Ukupan broj reči dužine od 1 do 7:</p>
+      <div class="math-box">
+        \[S = 2^1 + 2^2 + 2^3 + 2^4 + 2^5 + 2^6 + 2^7\]
+        \[S = 2 + 4 + 8 + 16 + 32 + 64 + 128\]
+        \[S = 254\]
+      </div>
+    </div>
+
+    <details style="margin: 16px 0;">
+      <summary>Proveri se: Parcijalni zbirovi</summary>
+      <p style="padding-top: 8px;">
+        Sabiramo postepeno:
+        \(2 + 4 = 6\),&nbsp;
+        \(6 + 8 = 14\),&nbsp;
+        \(14 + 16 = 30\),&nbsp;
+        \(30 + 32 = 62\),&nbsp;
+        \(62 + 64 = 126\),&nbsp;
+        \(126 + 128 = 254\). Tačno!
+      </p>
+    </details>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 4</div>
+      <div class="step-title">Sabiranje — formulom za geometrijski niz</div>
+      <p>Ovo je suma geometrijskog niza sa prvim članom \(a = 2\), količnikom \(r = 2\) i \(n = 7\) članova:</p>
+      <div class="math-box">
+        \[S = a \cdot \frac{r^n - 1}{r - 1} = 2 \cdot \frac{2^7 - 1}{2 - 1} = 2 \cdot \frac{128 - 1}{1} = 2 \cdot 127 = 254\]
+      </div>
+    </div>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 5</div>
+      <div class="step-title">Alternativni trik sa stepenima dvojke</div>
+      <p>Poznata identičnost:</p>
+      <div class="math-box">
+        \[2^1 + 2^2 + \cdots + 2^n = 2^{n+1} - 2\]
+      </div>
+      <p>Za \(n = 7\):</p>
+      <div class="math-box">
+        \[S = 2^8 - 2 = 256 - 2 = 254\]
+      </div>
+    </div>
+  </div>
+
+  <!-- Ključni uvid -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>
+      Svaka pozicija u Morzeovoj reči nosi binarni izbor (tačka ili crtica).
+      Prebrojavanje svih mogućih reči svodi se na sabiranje stepena dvojke —
+      što je upravo suma geometrijskog niza.
+      Elegantan prečica: \(2^1 + 2^2 + \cdots + 2^7 = 2^8 - 2 = 254\).
+    </p>
+  </div>
+
+  <!-- Konačan odgovor -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\(2^1 + 2^2 + \cdots + 2^7 = 254\)</div>
+    <div class="option-list">
+      <div class="option-item correct">(A) 254</div>
+      <div class="option-item">(B) 508</div>
+      <div class="option-item">(C) 128</div>
+      <div class="option-item">(D) 127</div>
+      <div class="option-item">(E) 248</div>
+    </div>
+    <p style="color: #34d399; font-weight: 600; margin-top: 12px;">Tačan odgovor je (A).</p>
+    <div class="verification">
+      <strong>Provera:</strong> Suma geometrijskog niza: \(2 \cdot \frac{2^7 - 1}{2 - 1} = 2 \cdot 127 = 254\).
+      Alternativno: \(2^8 - 2 = 256 - 2 = 254\). Direktnim sabiranjem: \(2 + 4 + 8 + 16 + 32 + 64 + 128 = 254\). Sve tri metode daju isti rezultat.
+    </div>
+  </div>
+
+  <!-- Česte greške -->
+  <div class="card pitfall-card">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>
+        <strong>Uključivanje prazne reči:</strong> Ako uračunamo i \(2^0 = 1\) (praznu reč),
+        dobili bismo \(254 + 1 = 255 = 2^8 - 1\). Ali prazan niz nije validna Morzeova reč.
+      </li>
+      <li>
+        <strong>Samo reči dužine 7:</strong> Odgovor \(128 = 2^7\) odgovara broju reči
+        tačno dužine 7, a ne <em>najviše</em> 7. Obratite pažnju na reč „najviše" u zadatku.
+      </li>
+      <li>
+        <strong>Brkanje sa \(2^7 - 1 = 127\):</strong> Ovo bi bila suma \(2^0 + 2^1 + \cdots + 2^6\)
+        ili ekvivalentno \(1 + 2 + 4 + \cdots + 64\), što ne odgovara našem zadatku.
+      </li>
+      <li>
+        <strong>Dupliranje rezultata:</strong> Odgovor 508 = 2 &times; 254 nastaje ako se pogrešno
+        pomnoži zbir sa 2, misleći da redosled tačaka i crtica ne računa (a računa se!).
+      </li>
+    </ul>
+  </div>
+
+  <!-- Izazov -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Koliko različitih Morzeovih reči možemo formirati ako koristimo tri simbola
+      (tačku, kratku crticu i dugačku crticu), a reč ima najviše 5 simbola?
+    </p>
+    <details style="margin-top: 12px;">
+      <summary>Nagoveštaj</summary>
+      <p style="padding-top: 8px;">
+        Sada je baza 3 umesto 2. Tražimo: \(3^1 + 3^2 + 3^3 + 3^4 + 3^5\).
+        Koristeći formulu: \(3 \cdot \frac{3^5 - 1}{3 - 1} = 3 \cdot \frac{242}{2} = 3 \cdot 121 = 363\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 700 * dpr;
+    canvas.height = 400 * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const W = 700;
+    const H = 400;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const values = [2, 4, 8, 16, 32, 64, 128];
+    const cumulative = [];
+    let sum = 0;
+    for (let i = 0; i < values.length; i++) {
+      sum += values[i];
+      cumulative.push(sum);
+    }
+
+    const leftPad = 70;
+    const rightPad = 40;
+    const topPad = 40;
+    const bottomPad = 60;
+    const chartW = W - leftPad - rightPad;
+    const chartH = H - topPad - bottomPad;
+
+    const maxVal = 260;
+    const barW = chartW / values.length * 0.6;
+    const gap = chartW / values.length;
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+    ctx.lineWidth = 1;
+    const gridSteps = [0, 50, 100, 150, 200, 250];
+    for (const v of gridSteps) {
+      const y = topPad + chartH - (v / maxVal) * chartH;
+      ctx.beginPath();
+      ctx.moveTo(leftPad, y);
+      ctx.lineTo(W - rightPad, y);
+      ctx.stroke();
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(v.toString(), leftPad - 10, y + 4);
+    }
+
+    // Bars for 2^k
+    for (let i = 0; i < values.length; i++) {
+      const x = leftPad + gap * i + (gap - barW) / 2;
+      const barH = (values[i] / maxVal) * chartH;
+      const y = topPad + chartH - barH;
+
+      const grad = ctx.createLinearGradient(x, y, x, y + barH);
+      grad.addColorStop(0, '#60a5fa');
+      grad.addColorStop(1, '#3b82f6');
+      ctx.fillStyle = grad;
+
+      ctx.beginPath();
+      ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+      ctx.fill();
+
+      // Value on top of bar
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(values[i].toString(), x + barW / 2, y - 8);
+
+      // Label below
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('k=' + (i + 1), leftPad + gap * i + gap / 2, topPad + chartH + 20);
+
+      // 2^k notation
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('2' + String.fromCharCode(8304 + (i + 1 > 3 ? 0 : i + 1)), leftPad + gap * i + gap / 2, topPad + chartH + 38);
+    }
+    // Fix superscript labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const supLabels = ['\u00B9', '\u00B2', '\u00B3', '\u2074', '\u2075', '\u2076', '\u2077'];
+    for (let i = 0; i < values.length; i++) {
+      const cx = leftPad + gap * i + gap / 2;
+      ctx.clearRect(cx - 20, topPad + chartH + 28, 40, 16);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(cx - 20, topPad + chartH + 28, 40, 16);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('2' + supLabels[i], cx, topPad + chartH + 40);
+    }
+
+    // Cumulative line
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    for (let i = 0; i < cumulative.length; i++) {
+      const x = leftPad + gap * i + gap / 2;
+      const y = topPad + chartH - (cumulative[i] / maxVal) * chartH;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Dots on cumulative line
+    for (let i = 0; i < cumulative.length; i++) {
+      const x = leftPad + gap * i + gap / 2;
+      const y = topPad + chartH - (cumulative[i] / maxVal) * chartH;
+
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cumulative value label
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(cumulative[i].toString(), x + 8, y - 4);
+    }
+
+    // Final value highlight
+    const lastX = leftPad + gap * 6 + gap / 2;
+    const lastY = topPad + chartH - (254 / maxVal) * chartH;
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Dužina reči (k)', W / 2, H - 5);
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(leftPad, topPad);
+    ctx.lineTo(leftPad, topPad + chartH);
+    ctx.lineTo(W - rightPad, topPad + chartH);
+    ctx.stroke();
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Morzeova azbuka — broj reči sa najviše 7 simbola",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "geometrijski niz", "stepeni dvojke", "princip množenja", "Morzeova azbuka"]
+}
+BRAINSPARK_META-->

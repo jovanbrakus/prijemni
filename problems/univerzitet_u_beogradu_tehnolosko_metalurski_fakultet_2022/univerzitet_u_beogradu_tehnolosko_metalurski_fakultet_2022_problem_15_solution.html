@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir stepena imaginarne jedinice</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Zbir 1 + i + i^2 + ... + i^2022, gde je i^2 = -1.
+
+Stepeni imaginarne jedinice se ponavljaju sa periodom 4:
+  i^0 = 1
+  i^1 = i
+  i^2 = -1
+  i^3 = -i
+
+Zbir jednog punog ciklusa:
+  i^0 + i^1 + i^2 + i^3 = 1 + i + (-1) + (-i) = 0
+
+Zbir ima članove od i^0 do i^2022, što je ukupno 2023 člana.
+
+Delimo 2023 sa 4:
+  2023 = 4 * 505 + 3
+
+Dakle imamo 505 punih ciklusa (čiji je zbir 0) i 3 preostala člana:
+  i^2020 + i^2021 + i^2022
+
+Pošto je 2020 = 4 * 505, imamo:
+  i^2020 = i^0 = 1
+  i^2021 = i^1 = i
+  i^2022 = i^2 = -1
+
+Zbir preostalih: 1 + i + (-1) = i
+
+Odgovor: A) i
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.answer-option {
+  cursor: default;
+  transition: none;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+details {
+  background: rgba(96,165,250,0.06);
+  border: 1px solid rgba(96,165,250,0.12);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #60a5fa;
+  font-size: 1.05rem;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+details ul {
+  list-style: disc;
+  padding-left: 24px;
+}
+
+details ul li {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.canvas-wrapper {
+  background: #0c1222;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+canvas {
+  width: 100%;
+  max-width: 700px;
+  touch-action: none;
+  border-radius: 8px;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  padding-left: 16px;
+  border-left: 3px solid #334155;
+}
+
+.step-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+
+.step-title {
+  font-weight: 700;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-box h2 {
+  color: #34d399;
+  margin-bottom: 16px;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.option-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.option-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.05rem;
+  color: #94a3b8;
+}
+
+.option-item.correct {
+  background: rgba(52,211,153,0.15);
+  border: 2px solid #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.15);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.pitfall-card {
+  border-left: 4px solid #e09468;
+}
+
+.pitfall-card h2 {
+  color: #e09468;
+}
+
+.pitfall-card ul {
+  list-style: disc;
+  padding-left: 24px;
+}
+
+.pitfall-card ul li {
+  margin-bottom: 8px;
+}
+
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.cycle-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.cycle-table th, .cycle-table td {
+  padding: 10px 14px;
+  text-align: center;
+  border: 1px solid #334155;
+}
+
+.cycle-table th {
+  background: rgba(96,165,250,0.15);
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.cycle-table td {
+  background: rgba(56,189,248,0.04);
+}
+
+.cycle-table .highlight-cell {
+  background: rgba(244,114,182,0.12);
+  color: #f472b6;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .final-answer-value { font-size: 1.4rem; }
+  .cycle-table th, .cycle-table td { padding: 6px 8px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Naslov -->
+  <h1>Zbir stepena imaginarne jedinice</h1>
+  <p class="subtitle">Kompleksni brojevi — ciklična svojstva stepena broja \(i\)</p>
+
+  <!-- Zadatak -->
+  <div class="card problem-statement">
+    <h2>Zadatak</h2>
+    <p>
+      Zbir \(1 + i + i^2 + \ldots + i^{2022}\), gde je <span class="highlight">\(i^2 = -1\)</span>, jednak je:
+    </p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Zbir od</div>
+        <div class="value">\(i^0\) do \(i^{2022}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Broj članova</div>
+        <div class="value">2023</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Osobina</div>
+        <div class="value">\(i^2 = -1\)</div>
+      </div>
+    </div>
+    <div class="given-grid" style="margin-top: 16px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(-i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Iskoristićemo činjenicu da se stepeni broja \(i\) ponavljaju sa periodom 4. Zbir jednog
+      punog ciklusa od 4 uzastopna stepena je 0. Podelićemo ukupan broj članova sa 4 da
+      odredimo koliko ima punih ciklusa i koliko preostalih članova, pa saberemo samo ostatak.
+    </p>
+  </div>
+
+  <!-- Teorija -->
+  <details>
+    <summary>Ključne formule i teoreme</summary>
+    <ul>
+      <li>Imaginarna jedinica: \(i = \sqrt{-1}\), pa \(i^2 = -1\)</li>
+      <li>Ciklus stepena: \(i^0 = 1,\; i^1 = i,\; i^2 = -1,\; i^3 = -i\), zatim se ponavlja</li>
+      <li>Opšte pravilo: \(i^n = i^{n \bmod 4}\), tj. ostatak pri deljenju eksponenta sa 4 određuje vrednost</li>
+      <li>Zbir jednog ciklusa: \(1 + i + (-1) + (-i) = 0\)</li>
+      <li>Geometrijski zbir: \(\displaystyle\sum_{k=0}^{n} q^k = \frac{q^{n+1} - 1}{q - 1}\) za \(q \neq 1\)</li>
+    </ul>
+  </details>
+
+  <!-- Vizuelni prikaz -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="700" height="420"></canvas>
+    </div>
+    <div class="legend">
+      <div class="legend-item">
+        <span class="legend-color" style="background: #4ade80;"></span> \(i^0 = 1\)
+      </div>
+      <div class="legend-item">
+        <span class="legend-color" style="background: #60a5fa;"></span> \(i^1 = i\)
+      </div>
+      <div class="legend-item">
+        <span class="legend-color" style="background: #f472b6;"></span> \(i^2 = -1\)
+      </div>
+      <div class="legend-item">
+        <span class="legend-color" style="background: #fbbf24;"></span> \(i^3 = -i\)
+      </div>
+    </div>
+  </div>
+
+  <!-- Korak po korak -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 1</div>
+      <div class="step-title">Ciklus stepena broja \(i\)</div>
+      <p>Izračunajmo prvih nekoliko stepena imaginarne jedinice:</p>
+      <table class="cycle-table">
+        <thead>
+          <tr>
+            <th>Stepen</th>
+            <th>\(i^0\)</th>
+            <th>\(i^1\)</th>
+            <th>\(i^2\)</th>
+            <th>\(i^3\)</th>
+            <th>\(i^4\)</th>
+            <th>\(i^5\)</th>
+            <th>\(i^6\)</th>
+            <th>\(i^7\)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Vrednost</strong></td>
+            <td class="highlight-cell">\(1\)</td>
+            <td class="highlight-cell">\(i\)</td>
+            <td class="highlight-cell">\(-1\)</td>
+            <td class="highlight-cell">\(-i\)</td>
+            <td>\(1\)</td>
+            <td>\(i\)</td>
+            <td>\(-1\)</td>
+            <td>\(-i\)</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Ciklus se ponavlja na svaka 4 člana: \(1, i, -1, -i, 1, i, -1, -i, \ldots\)</p>
+    </div>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 2</div>
+      <div class="step-title">Zbir jednog punog ciklusa</div>
+      <p>Saberemo četiri uzastopna člana ciklusa:</p>
+      <div class="math-box">
+        \[i^0 + i^1 + i^2 + i^3 = 1 + i + (-1) + (-i) = 0\]
+      </div>
+      <p>Realni delovi se poništavaju (\(1 + (-1) = 0\)), kao i imaginarni (\(i + (-i) = 0\)).</p>
+    </div>
+
+    <details style="margin: 16px 0;">
+      <summary>Proveri se: Zašto je zbir ciklusa baš 0?</summary>
+      <p style="padding-top: 8px;">
+        Na kompleksnoj ravni, tačke \(1, i, -1, -i\) su temena kvadrata upisanog u jedinični krug. Njihov
+        zbir kao vektora od koordinatnog početka je nula jer su simetrično raspoređeni — svaki vektor ima
+        par koji ga poništava.
+      </p>
+    </details>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 3</div>
+      <div class="step-title">Prebrojavanje članova</div>
+      <p>Zbir ide od \(i^0\) do \(i^{2022}\), pa imamo ukupno:</p>
+      <div class="math-box">
+        \[2022 - 0 + 1 = 2023 \text{ člana}\]
+      </div>
+    </div>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 4</div>
+      <div class="step-title">Deljenje na cikluse i ostatak</div>
+      <p>Podelimo 2023 sa 4:</p>
+      <div class="math-box">
+        \[2023 = 4 \cdot 505 + 3\]
+      </div>
+      <p>Dakle, imamo <span class="highlight">505 punih ciklusa</span> (po 4 člana) i <span class="highlight">3 preostala člana</span>.</p>
+    </div>
+
+    <details style="margin: 16px 0;">
+      <summary>Proveri se: Koliko članova pokrivaju puni ciklusi?</summary>
+      <p style="padding-top: 8px;">
+        505 ciklusa \(\times\) 4 člana = 2020 članova (od \(i^0\) do \(i^{2019}\)).
+        Preostala 3 člana su \(i^{2020}, i^{2021}, i^{2022}\). Ukupno: \(2020 + 3 = 2023\). Tačno!
+      </p>
+    </details>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 5</div>
+      <div class="step-title">Zbir punih ciklusa</div>
+      <p>Svaki pun ciklus daje zbir 0, pa:</p>
+      <div class="math-box">
+        \[505 \times 0 = 0\]
+      </div>
+    </div>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 6</div>
+      <div class="step-title">Zbir preostalih članova</div>
+      <p>Preostala 3 člana počinju od \(i^{2020}\). Pošto je \(2020 = 4 \cdot 505\), važi \(i^{2020} = i^0 = 1\):</p>
+      <div class="math-box">
+        \[i^{2020} + i^{2021} + i^{2022} = 1 + i + (-1) = i\]
+      </div>
+    </div>
+
+    <div class="step-container">
+      <div class="step-badge">Korak 7</div>
+      <div class="step-title">Konačan zbir</div>
+      <div class="math-box">
+        \[1 + i + i^2 + \ldots + i^{2022} = 0 + i = i\]
+      </div>
+    </div>
+  </div>
+
+  <!-- Ključni uvid -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>
+      Stepeni broja \(i\) se ciklično ponavljaju sa periodom 4, a zbir svakog punog ciklusa je 0.
+      Zato je zbir uzastopnih stepena \(i\) određen isključivo brojem „viška" članova nakon poslednjeg
+      punog ciklusa. Ovde je ostatak \(2023 \bmod 4 = 3\), pa sabiramo samo prva 3 člana ciklusa:
+      \(1 + i + (-1) = i\).
+    </p>
+  </div>
+
+  <!-- Konačan odgovor -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\(1 + i + i^2 + \ldots + i^{2022} = i\)</div>
+    <div class="option-list">
+      <div class="option-item correct">(A) \(i\)</div>
+      <div class="option-item">(B) \(-i\)</div>
+      <div class="option-item">(C) \(1\)</div>
+      <div class="option-item">(D) \(-1\)</div>
+      <div class="option-item">(E) \(2\)</div>
+    </div>
+    <p style="color: #34d399; font-weight: 600; margin-top: 12px;">Tačan odgovor je (A).</p>
+    <div class="verification">
+      <strong>Provera formulom geometrijskog zbira:</strong>
+      \(\displaystyle S = \frac{i^{2023} - 1}{i - 1}\).
+      Pošto je \(2023 = 4 \cdot 505 + 3\), važi \(i^{2023} = i^3 = -i\).
+      Dakle \(S = \frac{-i - 1}{i - 1} = \frac{-(1+i)}{i-1} \cdot \frac{-i-1}{-i-1} = \frac{(1+i)(i+1)}{(1-i)(1+i)} = \frac{(1+i)^2}{2} = \frac{1 + 2i - 1}{2} = \frac{2i}{2} = i\). Potvrđeno!
+    </div>
+  </div>
+
+  <!-- Česte greške -->
+  <div class="card pitfall-card">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>
+        <strong>Pogrešno prebrojavanje članova:</strong> Zbir od \(i^0\) do \(i^{2022}\) ima 2023 člana
+        (ne 2022). Često se greši tako što se uzme eksponent za broj članova umesto da se doda 1.
+      </li>
+      <li>
+        <strong>Pogrešan ostatak pri deljenju:</strong> Treba deliti <em>broj članova</em> (2023) sa 4.
+        Ako se greškom deli eksponent poslednjeg člana (2022) sa 4, dobija se \(2022 = 4 \cdot 505 + 2\),
+        što vodi na pogrešan zaključak.
+      </li>
+      <li>
+        <strong>Zaboravljanje da je \(i^0 = 1\):</strong> Prvi član zbira je \(1\), ne \(i\).
+        Nulti stepen svakog broja (osim 0) je 1.
+      </li>
+      <li>
+        <strong>Mešanje \(i^2\) i \(i^3\):</strong> \(i^2 = -1\), a \(i^3 = i^2 \cdot i = -i\).
+        Ne treba ih mešati jer to menja konačan rezultat.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Izazov -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Izračunaj zbir \(1 + i + i^2 + \ldots + i^{100}\).
+    </p>
+    <details style="margin-top: 12px;">
+      <summary>Nagoveštaj</summary>
+      <p style="padding-top: 8px;">
+        Imamo 101 član. \(101 = 4 \cdot 25 + 1\). Dakle 25 punih ciklusa (zbir 0) i 1 preostali
+        član: \(i^{100} = i^0 = 1\). Odgovor: \(1\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 700 * dpr;
+    canvas.height = 420 * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const W = 700;
+    const H = 420;
+    ctx.clearRect(0, 0, W, H);
+
+    const cx = 210;
+    const cy = 210;
+    const r = 140;
+
+    // Krug — jedinični krug na kompleksnoj ravni
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // Ose
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    // Realna osa
+    ctx.beginPath();
+    ctx.moveTo(cx - r - 30, cy);
+    ctx.lineTo(cx + r + 30, cy);
+    ctx.stroke();
+    // Imaginarna osa
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r - 30);
+    ctx.lineTo(cx, cy + r + 30);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Oznake osa
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', cx + r + 25, cy + 16);
+    ctx.fillText('Im', cx + 16, cy - r - 18);
+
+    // Tačke na krugu — stepeni i
+    const points = [
+      { angle: 0, label: '1', sublabel: 'i\u2070', color: '#4ade80', lx: 18, ly: -12 },
+      { angle: Math.PI / 2, label: 'i', sublabel: 'i\u00B9', color: '#60a5fa', lx: 12, ly: -14 },
+      { angle: Math.PI, label: '-1', sublabel: 'i\u00B2', color: '#f472b6', lx: -24, ly: -12 },
+      { angle: 3 * Math.PI / 2, label: '-i', sublabel: 'i\u00B3', color: '#fbbf24', lx: 14, ly: 20 }
+    ];
+
+    // Strelice između tačaka (rotacija)
+    ctx.lineWidth = 2;
+    for (let idx = 0; idx < 4; idx++) {
+      const a1 = -points[idx].angle;
+      const a2 = -points[(idx + 1) % 4].angle;
+      const startAngle = a1 - 0.15;
+      const endAngle = (idx < 3 ? a2 + 0.15 : a2 + 2 * Math.PI + 0.15);
+      ctx.strokeStyle = points[(idx + 1) % 4].color;
+      ctx.globalAlpha = 0.4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 16, startAngle, endAngle, true);
+      ctx.stroke();
+      ctx.globalAlpha = 1.0;
+    }
+
+    // Tačke
+    points.forEach(p => {
+      const x = cx + r * Math.cos(-p.angle);
+      const y = cy + r * Math.sin(-p.angle);
+
+      // Tačka
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(x, y, 8, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Labela
+      ctx.fillStyle = p.color;
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(p.label, x + p.lx, y + p.ly);
+
+      // Sublabel
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(p.sublabel, x + p.lx, y + p.ly + 14);
+    });
+
+    // Koordinatni početak
+    ctx.fillStyle = '#e2e8f0';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('0', cx - 12, cy + 14);
+
+    // Desna strana — objašnjenje ciklusa
+    const rx = 440;
+    let ry = 40;
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Ciklus stepena:', rx, ry);
+
+    ry += 30;
+    const cycleData = [
+      { text: 'i\u2070 = 1', color: '#4ade80' },
+      { text: 'i\u00B9 = i', color: '#60a5fa' },
+      { text: 'i\u00B2 = -1', color: '#f472b6' },
+      { text: 'i\u00B3 = -i', color: '#fbbf24' }
+    ];
+
+    cycleData.forEach((item, idx) => {
+      ctx.fillStyle = item.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(item.text, rx + 10, ry + idx * 28);
+    });
+
+    ry += 4 * 28 + 10;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Zbir ciklusa: 1+i+(-1)+(-i) = 0', rx, ry);
+
+    ry += 35;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Razlaganje zbira:', rx, ry);
+
+    ry += 28;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('2023 clanova = 505 \u00D7 4 + 3', rx, ry);
+
+    ry += 24;
+    ctx.fillText('505 ciklusa \u2192 zbir = 0', rx, ry);
+
+    ry += 24;
+    ctx.fillText('Preostalo 3 clana:', rx, ry);
+
+    ry += 28;
+    const remainData = [
+      { text: 'i\u00B2\u2070\u00B2\u2070 = 1', color: '#4ade80' },
+      { text: 'i\u00B2\u2070\u00B2\u00B9 = i', color: '#60a5fa' },
+      { text: 'i\u00B2\u2070\u00B2\u00B2 = -1', color: '#f472b6' }
+    ];
+
+    remainData.forEach((item, idx) => {
+      ctx.fillStyle = item.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(item.text, rx + 10, ry + idx * 24);
+    });
+
+    ry += 3 * 24 + 10;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Zbir = 1 + i + (-1) = i', rx, ry);
+
+    // Konačan odgovor sa okvirom
+    ry += 10;
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(rx - 10, ry - 22, 240, 34, 8);
+    ctx.stroke();
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Odgovor: (A) i', rx + 10, ry + 2);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir stepena imaginarne jedinice",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "imaginarna jedinica", "stepeni", "ciklicnost", "geometrijski zbir"]
+}
+BRAINSPARK_META-->

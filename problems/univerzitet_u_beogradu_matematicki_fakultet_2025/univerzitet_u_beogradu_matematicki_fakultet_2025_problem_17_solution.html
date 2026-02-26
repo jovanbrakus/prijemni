@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nule polinoma sa kompleksnim koeficijentima</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Given p(x) = x^4 - 6x^3 + ax^2 + bx + 10 with a,b real, and 1+i is a zero. Find b.
+
+Method 1: Complex conjugate root theorem + polynomial factorization
+- Since a, b are real and 1+i is a root, by the complex conjugate root theorem, 1-i is also a root.
+- Factor out (x - (1+i))(x - (1-i)) = (x-1)^2 - i^2 = (x-1)^2 + 1 = x^2 - 2x + 2
+- So p(x) = (x^2 - 2x + 2)(x^2 + cx + d) for some real c, d
+- Expanding the product:
+  x^4 + cx^3 + dx^2
+      - 2x^3 - 2cx^2 - 2dx
+             + 2x^2 + 2cx + 2d
+  = x^4 + (c-2)x^3 + (d-2c+2)x^2 + (-2d+2c)x + 2d
+
+Matching with x^4 - 6x^3 + ax^2 + bx + 10:
+  x^3: c - 2 = -6  =>  c = -4
+  const: 2d = 10  =>  d = 5
+  x^2: a = d - 2c + 2 = 5 + 8 + 2 = 15
+  x^1: b = -2d + 2c = -10 - 8 = -18
+
+So the other factor is x^2 - 4x + 5, with roots (4 ± sqrt(16-20))/2 = (4 ± 2i)/2 = 2 ± i.
+All four roots: 1+i, 1-i, 2+i, 2-i.
+
+Method 2: Direct substitution (per hint)
+p(1+i) = 0
+(1+i)^2 = 2i
+(1+i)^3 = (1+i)(2i) = 2i + 2i^2 = -2 + 2i
+(1+i)^4 = (1+i)(-2+2i) = -2 + 2i - 2i + 2i^2 = -4
+
+p(1+i) = -4 - 6(-2+2i) + a(2i) + b(1+i) + 10
+        = -4 + 12 - 12i + 2ai + b + bi + 10
+        = (18 + b) + (2a + b - 12)i
+
+For this to equal 0, both real and imaginary parts must be 0:
+  Real: 18 + b = 0 => b = -18
+  Imaginary: 2a + b - 12 = 0 => 2a - 18 - 12 = 0 => a = 15
+
+Verification: p(x) = x^4 - 6x^3 + 15x^2 - 18x + 10
+= (x^2 - 2x + 2)(x^2 - 4x + 5)
+Roots: 1±i, 2±i. Correct.
+
+Answer: b = -18, option (A).
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.card h3 {
+  color: #a78bfa;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+.highlight-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  text-align: center;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+  flex: 1;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.answer-option {
+  cursor: default;
+  transition: border-color 0.2s;
+}
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+details {
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 4px 0;
+}
+details summary:hover {
+  color: #c4b5fd;
+}
+details[open] summary {
+  margin-bottom: 12px;
+}
+.step-container {
+  position: relative;
+  padding-left: 50px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  border-radius: 8px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-right: 8px;
+}
+.step-container:hover, .step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+.step-badge {
+  position: absolute;
+  left: 8px;
+  top: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.step-title {
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+.step-text {
+  color: #e2e8f0;
+  margin-bottom: 8px;
+}
+.final-answer-card {
+  border: 2px solid #4ade80;
+  text-align: center;
+}
+.final-answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 16px 0;
+}
+.answer-options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+.answer-chip {
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border: 2px solid #334155;
+  background: rgba(30,41,59,0.8);
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+.answer-chip.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.12);
+  color: #4ade80;
+}
+.pitfall-card {
+  border-left: 3px solid #e09468;
+}
+.pitfall-card h2 {
+  color: #e09468;
+}
+.challenge-card {
+  border-left: 3px solid #f472b6;
+}
+.challenge-card h2 {
+  color: #f472b6;
+}
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 10px;
+}
+canvas {
+  width: 100%;
+  border-radius: 10px;
+  display: block;
+  margin: 0 auto;
+  touch-action: none;
+}
+.insight-card {
+  border-left: 3px solid #60a5fa;
+}
+.micro-check details {
+  background: rgba(52,211,153,0.06);
+  border-color: rgba(52,211,153,0.2);
+}
+.micro-check details summary {
+  color: #34d399;
+}
+.note-text {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { padding-left: 42px; }
+  .given-grid { flex-direction: column; }
+  .answer-options-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Nule polinoma i kompleksni brojevi</h1>
+  <p class="subtitle">Odredjivanje realnih koeficijenata polinoma cetvrtog stepena na osnovu poznate kompleksne nule</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Neka su \( a, b \) realni brojevi, a \( 1 + i \) nula polinoma \( p(x) = x^4 - 6x^3 + ax^2 + bx + 10 \), gde je \( i^2 = -1 \). Onda je \( b \) jednako:</p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Polinom</div>
+        <div class="value">\( x^4 - 6x^3 + ax^2 + bx + 10 \)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Poznata nula</div>
+        <div class="value">\( 1 + i \)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Uslovi</div>
+        <div class="value">\( a, b \in \mathbb{R} \)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Trazi se</div>
+        <div class="value">\( b = \,? \)</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 20px;">Ponudjeni odgovori</h3>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( -18 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( -15 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( 0 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( 15 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( 18 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Koristicemo teoremu o konjugovanim korenima: posto su koeficijenti polinoma realni, uz nulu \( 1 + i \) mora ici i konjugovana nula \( 1 - i \). Njihov proizvod daje kvadratni faktor \( x^2 - 2x + 2 \). Deljenjem polaznog polinoma ovim faktorom dobicemo preostali kvadratni faktor i odrediti \( a \) i \( b \) poredjenjem koeficijenata.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <div style="margin-top: 10px;">
+        <ul style="margin-left: 20px; margin-top: 8px; color: #e2e8f0;">
+          <li style="margin-bottom: 12px;"><strong>Teorema o konjugovanim korenima:</strong> Ako polinom sa realnim koeficijentima ima kompleksnu nulu \( \alpha + \beta i \), onda je i \( \alpha - \beta i \) njegova nula.</li>
+          <li style="margin-bottom: 12px;"><strong>Faktorizacija konjugovanih korena:</strong>
+            \[ (x - (\alpha + \beta i))(x - (\alpha - \beta i)) = (x - \alpha)^2 + \beta^2 \]
+          </li>
+          <li style="margin-bottom: 12px;"><strong>Veza izmedju korena i koeficijenata (Vietove formule):</strong> Za polinom \( x^4 + c_3 x^3 + c_2 x^2 + c_1 x + c_0 \) sa nulama \( x_1, x_2, x_3, x_4 \):
+            \[ x_1 + x_2 + x_3 + x_4 = -c_3, \qquad x_1 \cdot x_2 \cdot x_3 \cdot x_4 = c_0 \]
+          </li>
+          <li><strong>Stepenovanje kompleksnog broja \( 1 + i \):</strong>
+            \[ (1+i)^2 = 2i, \quad (1+i)^3 = -2 + 2i, \quad (1+i)^4 = -4 \]
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Canvas Visual -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color: #94a3b8; margin-bottom: 12px;">Nule polinoma u kompleksnoj ravni. Konjugovani parovi su simetricni u odnosu na realnu osu.</p>
+    <canvas id="rootsCanvas" height="500"></canvas>
+    <p style="color: #64748b; font-size: 0.85rem; text-align: center; margin-top: 8px;">Prevucite nule da vidite kako se konjugovani parovi krecu simetricno</p>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-title">Primenimo teoremu o konjugovanim korenima</div>
+      <div class="step-text">
+        <p>Posto su \( a \) i \( b \) realni brojevi, svi koeficijenti polinoma \( p(x) \) su realni. Prema teoremi o konjugovanim korenima, ako je \( 1 + i \) nula polinoma sa realnim koeficijentima, onda je i konjugovani broj \( 1 - i \) takodje nula.</p>
+        <div class="highlight-box">
+          \[ 1 + i \text{ je nula} \implies 1 - i \text{ je takodje nula} \]
+        </div>
+        <p class="note-text">Ovo je kljucna osobina polinoma sa realnim koeficijentima: kompleksne nule uvek dolaze u konjugovanim parovima.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-title">Formiramo kvadratni faktor od konjugovanih nula</div>
+      <div class="step-text">
+        <p>Pomnozimo faktore koji odgovaraju nulama \( 1 + i \) i \( 1 - i \):</p>
+        <div class="highlight-box">
+          \[ \begin{align} (x - (1+i))(x - (1-i)) &= ((x-1) - i)((x-1) + i) \\ &= (x-1)^2 - i^2 \\ &= (x-1)^2 + 1 \\ &= x^2 - 2x + 2 \end{align} \]
+        </div>
+        <p class="note-text">Koristimo formulu za razliku kvadrata: \( (A-B)(A+B) = A^2 - B^2 \), gde je \( A = x - 1 \), \( B = i \).</p>
+      </div>
+    </div>
+
+    <div class="micro-check">
+      <details>
+        <summary>Proveri se: Koliko je \( (1+i)^2 \)?</summary>
+        <p style="margin-top: 8px;">\( (1+i)^2 = 1 + 2i + i^2 = 1 + 2i - 1 = 2i \). Proverimo da li je \( 1+i \) nula od \( x^2 - 2x + 2 \): \( (1+i)^2 - 2(1+i) + 2 = 2i - 2 - 2i + 2 = 0 \;\checkmark \)</p>
+      </details>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-title">Zapisemo polinom kao proizvod dva kvadratna faktora</div>
+      <div class="step-text">
+        <p>Posto je \( p(x) \) polinom cetvrtog stepena, a \( x^2 - 2x + 2 \) ga deli, postoji drugi kvadratni faktor \( x^2 + cx + d \) takav da:</p>
+        <div class="highlight-box">
+          \[ p(x) = (x^2 - 2x + 2)(x^2 + cx + d) \]
+        </div>
+        <p>gde su \( c \) i \( d \) realni brojevi koje treba odrediti.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-title">Razmnozimo desnu stranu</div>
+      <div class="step-text">
+        <p>Pomnozimo \( (x^2 - 2x + 2)(x^2 + cx + d) \) clan po clan:</p>
+        <div class="highlight-box">
+          \[ \begin{align} &= x^4 + cx^3 + dx^2 \\ &\quad - 2x^3 - 2cx^2 - 2dx \\ &\quad + 2x^2 + 2cx + 2d \end{align} \]
+        </div>
+        <p>Grupisemo po stepenima \( x \):</p>
+        <div class="highlight-box">
+          \[ = x^4 + (c-2)x^3 + (d - 2c + 2)x^2 + (-2d + 2c)x + 2d \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-title">Izjednacimo koeficijente</div>
+      <div class="step-text">
+        <p>Uporedimo koeficijente sa \( p(x) = x^4 - 6x^3 + ax^2 + bx + 10 \):</p>
+        <div class="highlight-box" style="text-align: left; padding-left: 30px;">
+          \[ \begin{align} x^3: \quad &c - 2 = -6 \\ x^0: \quad &2d = 10 \end{align} \]
+        </div>
+        <p>Iz ove dve jednacine odmah dobijamo:</p>
+        <div class="highlight-box">
+          \[ c = -4, \qquad d = 5 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="micro-check">
+      <details>
+        <summary>Proveri se: Da li su \( c = -4 \) i \( d = 5 \) konzistentni?</summary>
+        <p style="margin-top: 8px;">Vodeci koeficijent: \( 1 \cdot 1 = 1 \;\checkmark \). Koeficijent uz \( x^3 \): \( c - 2 = -4 - 2 = -6 \;\checkmark \). Slobodan clan: \( 2d = 2 \cdot 5 = 10 \;\checkmark \). Sve se poklapa!</p>
+      </details>
+    </div>
+
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-title">Odredimo \( a \) i \( b \)</div>
+      <div class="step-text">
+        <p>Sada iz preostalih koeficijenata racunamo \( a \) i \( b \):</p>
+        <div class="highlight-box">
+          \[ \begin{align} x^2: \quad a &= d - 2c + 2 \\ &= 5 - 2 \cdot (-4) + 2 \\ &= 5 + 8 + 2 = 15 \end{align} \]
+        </div>
+        <div class="highlight-box">
+          \[ \begin{align} x^1: \quad b &= -2d + 2c \\ &= -2 \cdot 5 + 2 \cdot (-4) \\ &= -10 - 8 = -18 \end{align} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step7">
+      <div class="step-badge">7</div>
+      <div class="step-title">Verifikacija: direktno uvrstavanje \( x = 1 + i \)</div>
+      <div class="step-text">
+        <p>Proverimo rezultat racunajuci stepene broja \( 1 + i \):</p>
+        <div class="highlight-box">
+          \[ \begin{align} (1+i)^2 &= 2i \\ (1+i)^3 &= (1+i) \cdot 2i = -2 + 2i \\ (1+i)^4 &= (1+i)(-2+2i) = -4 \end{align} \]
+        </div>
+        <p>Uvrstimo u \( p(1+i) \) sa \( a = 15 \), \( b = -18 \):</p>
+        <div class="highlight-box">
+          \[ \begin{align} p(1+i) &= -4 - 6(-2+2i) + 15(2i) + (-18)(1+i) + 10 \\ &= -4 + 12 - 12i + 30i - 18 - 18i + 10 \\ &= (-4 + 12 - 18 + 10) + (-12 + 30 - 18)i \\ &= 0 + 0i = 0 \;\; \checkmark \end{align} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="micro-check">
+      <details>
+        <summary>Proveri se: Koje su sve cetiri nule polinoma?</summary>
+        <p style="margin-top: 8px;">Polinom je \( (x^2 - 2x + 2)(x^2 - 4x + 5) \). Nule prvog faktora su \( 1 \pm i \), a nule drugog: \( x = \frac{4 \pm \sqrt{16-20}}{2} = \frac{4 \pm 2i}{2} = 2 \pm i \). Dakle, svih cetiri nule su: \( 1+i,\; 1-i,\; 2+i,\; 2-i \). Primetimo da je zbir nula \( 1+1+2+2 = 6 \), sto je \( -(-6) = 6 \;\checkmark \)</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2>Kljucni uvid</h2>
+    <p>Teorema o konjugovanim korenima je mocno sredstvo koje od jedne kompleksne nule odmah daje i drugu. Time se polinom cetvrtog stepena svodi na proizvod dva kvadratna faktora sa realnim koeficijentima, a zadatak postaje prosto izjednacavanje koeficijenata.</p>
+    <div class="highlight-box" style="font-size: 1.15rem;">
+      \[ p(x) = \underbrace{(x^2 - 2x + 2)}_{\text{nule: } 1 \pm i} \cdot \underbrace{(x^2 - 4x + 5)}_{\text{nule: } 2 \pm i} \]
+    </div>
+    <p style="margin-top: 10px;">Sve cetiri nule ovog polinoma su kompleksne: \( 1 + i \), \( 1 - i \), \( 2 + i \), \( 2 - i \). Polinom nema realnih nula!</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2 style="color: #4ade80;">Konacan odgovor</h2>
+    <div class="final-answer-value">\( b = -18 \)</div>
+
+    <div class="answer-options-row">
+      <div class="answer-chip correct">(A) \( -18 \)</div>
+      <div class="answer-chip">(B) \( -15 \)</div>
+      <div class="answer-chip">(C) \( 0 \)</div>
+      <div class="answer-chip">(D) \( 15 \)</div>
+      <div class="answer-chip">(E) \( 18 \)</div>
+    </div>
+
+    <p class="verification">Verifikacija: \( p(x) = (x^2 - 2x + 2)(x^2 - 4x + 5) = x^4 - 6x^3 + 15x^2 - 18x + 10 \). Dakle \( a = 15 \), \( b = -18 \;\checkmark \)</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2>Ceste greske</h2>
+    <ul style="margin-left: 20px; margin-top: 8px;">
+      <li style="margin-bottom: 10px;"><strong>Zaboravljanje konjugovane nule:</strong> Ako ne prepoznamo da je \( 1 - i \) takodje nula, ne mozemo da formiramo kvadratni faktor i ceo pristup propada. Ovo je kljucan korak!</li>
+      <li style="margin-bottom: 10px;"><strong>Greska pri mnozenju kompleksnih brojeva:</strong> Racunanje stepena \( (1+i)^3 \) i \( (1+i)^4 \) zahteva paznju. Cesta greska je pogresno izracunavanje \( (1+i)^4 = 4 \) umesto \( -4 \) (zaboravlja se da je \( i^2 = -1 \)).</li>
+      <li style="margin-bottom: 10px;"><strong>Mesanje \( a \) i \( b \):</strong> Iz sistema izlazi \( a = 15 \) i \( b = -18 \). Odgovor (D) je \( 15 \) sto je vrednost za \( a \), ne za \( b \) -- zamka za nepazljive.</li>
+      <li><strong>Pogresno razmnozavanje:</strong> Pri razmnozavanju dva kvadratna faktora, lako je pogresno izracunati mesovite clanove. Sistematican pristup (clan po clan) sprecava ovu gresku.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Ako je \( 2 - 3i \) nula polinoma \( q(x) = x^4 - 8x^3 + cx^2 + dx + 65 \) sa realnim koeficijentima \( c, d \), odredite \( c + d \).</p>
+    <details>
+      <summary>Hint</summary>
+      <p style="margin-top: 8px;">Postupite isto: \( 2 + 3i \) je takodje nula, pa je \( (x-2)^2 + 9 = x^2 - 4x + 13 \) faktor. Podelite \( q(x) \) sa \( x^2 - 4x + 13 \) i izjednacite koeficijente koristeci cinjenicu da je slobodan clan 65 (tj. \( 13d_2 = 65 \Rightarrow d_2 = 5 \)).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interaction
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+
+  // Canvas: Complex roots in the complex plane
+  const canvas = document.getElementById('rootsCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // The four roots
+  const roots = [
+    { re: 1, im: 1, label: '1 + i', pair: 1 },
+    { re: 1, im: -1, label: '1 - i', pair: 1 },
+    { re: 2, im: 1, label: '2 + i', pair: 2 },
+    { re: 2, im: -1, label: '2 - i', pair: 2 }
+  ];
+
+  // Draggable state - only roots at index 0 and 2 are draggable (top ones)
+  let dragIndex = -1;
+  let W, H;
+
+  // Coordinate system
+  const xMin = -1.5, xMax = 4, yMin = -3, yMax = 3;
+  let plotLeft, plotRight, plotTop, plotBottom, scaleX, scaleY;
+
+  function toPixelX(x) { return plotLeft + (x - xMin) * scaleX; }
+  function toPixelY(y) { return plotBottom - (y - yMin) * scaleY; }
+  function fromPixelX(px) { return (px - plotLeft) / scaleX + xMin; }
+  function fromPixelY(py) { return -(py - plotBottom) / scaleY + yMin; }
+
+  function resizeCanvas() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    W = rect.width - 48;
+    H = 500;
+    canvas.width = W * 2;
+    canvas.height = H * 2;
+    canvas.style.height = H + 'px';
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+
+    plotLeft = 60;
+    plotRight = W - 30;
+    plotTop = 30;
+    plotBottom = H - 40;
+    scaleX = (plotRight - plotLeft) / (xMax - xMin);
+    scaleY = (plotBottom - plotTop) / (yMax - yMin);
+
+    draw();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, W, H, 10);
+    ctx.fill();
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+      const px = toPixelX(i);
+      ctx.beginPath();
+      ctx.moveTo(px, plotTop);
+      ctx.lineTo(px, plotBottom);
+      ctx.stroke();
+    }
+    for (let i = Math.ceil(yMin); i <= Math.floor(yMax); i++) {
+      const py = toPixelY(i);
+      ctx.beginPath();
+      ctx.moveTo(plotLeft, py);
+      ctx.lineTo(plotRight, py);
+      ctx.stroke();
+    }
+
+    // Axes
+    const axisX = toPixelY(0);
+    const axisY = toPixelX(0);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+
+    // Real axis (horizontal)
+    if (axisX >= plotTop && axisX <= plotBottom) {
+      ctx.beginPath();
+      ctx.moveTo(plotLeft, axisX);
+      ctx.lineTo(plotRight, axisX);
+      ctx.stroke();
+    }
+    // Imaginary axis (vertical)
+    if (axisY >= plotLeft && axisY <= plotRight) {
+      ctx.beginPath();
+      ctx.moveTo(axisY, plotTop);
+      ctx.lineTo(axisY, plotBottom);
+      ctx.stroke();
+    }
+
+    // Axis labels and tick marks
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+      const px = toPixelX(i);
+      if (axisX >= plotTop && axisX <= plotBottom) {
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(px, axisX - 3);
+        ctx.lineTo(px, axisX + 3);
+        ctx.stroke();
+      }
+      if (i !== 0) ctx.fillText(String(i), px, axisX + 16);
+    }
+    ctx.textAlign = 'right';
+    for (let i = Math.ceil(yMin); i <= Math.floor(yMax); i++) {
+      const py = toPixelY(i);
+      if (axisY >= plotLeft && axisY <= plotRight) {
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(axisY - 3, py);
+        ctx.lineTo(axisY + 3, py);
+        ctx.stroke();
+      }
+      if (i !== 0) {
+        const lbl = i > 0 ? i + 'i' : '\u2212' + Math.abs(i) + 'i';
+        ctx.fillText(lbl, axisY - 8, py + 4);
+      }
+    }
+
+    // Axis arrow labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', plotRight - 4, axisX - 10);
+    ctx.textAlign = 'right';
+    ctx.fillText('Im', axisY + 18, plotTop + 14);
+
+    // Origin label
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.fillText('0', axisY - 8, axisX + 16);
+
+    // Symmetry line (real axis) highlight
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(plotLeft, axisX);
+    ctx.lineTo(plotRight, axisX);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw conjugate pair connections (dashed vertical lines)
+    const pairColors = ['rgba(244, 114, 182, 0.4)', 'rgba(96, 165, 250, 0.4)'];
+    for (let p = 0; p < 2; p++) {
+      const top = roots[p * 2];
+      const bot = roots[p * 2 + 1];
+      const topPx = { x: toPixelX(top.re), y: toPixelY(top.im) };
+      const botPx = { x: toPixelX(bot.re), y: toPixelY(bot.im) };
+
+      ctx.strokeStyle = pairColors[p];
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(topPx.x, topPx.y);
+      ctx.lineTo(botPx.x, botPx.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Draw the quadratic factor regions (subtle shading)
+    // Pair 1: 1±i
+    const p1cx = toPixelX(1);
+    const p1top = toPixelY(1);
+    const p1bot = toPixelY(-1);
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.05)';
+    ctx.beginPath();
+    ctx.ellipse(p1cx, (p1top + p1bot) / 2, 30, Math.abs(p1top - p1bot) / 2 + 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pair 2: 2±i
+    const p2cx = toPixelX(2);
+    const p2top = toPixelY(1);
+    const p2bot = toPixelY(-1);
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.05)';
+    ctx.beginPath();
+    ctx.ellipse(p2cx, (p2top + p2bot) / 2, 30, Math.abs(p2top - p2bot) / 2 + 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Factor labels
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.6)';
+    ctx.fillText('x\u00B2 \u2212 2x + 2', p1cx, toPixelY(1) - 28);
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.6)';
+    ctx.fillText('x\u00B2 \u2212 4x + 5', p2cx, toPixelY(1) - 28);
+
+    // Draw roots
+    const rootColors = ['#f472b6', '#f472b6', '#60a5fa', '#60a5fa'];
+    const labelOffsets = [
+      { dx: 14, dy: -14 },
+      { dx: 14, dy: 20 },
+      { dx: 14, dy: -14 },
+      { dx: 14, dy: 20 }
+    ];
+
+    roots.forEach((root, idx) => {
+      const px = toPixelX(root.re);
+      const py = toPixelY(root.im);
+      const color = rootColors[idx];
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(px, py, 16, 0, Math.PI * 2);
+      const grad = ctx.createRadialGradient(px, py, 0, px, py, 16);
+      grad.addColorStop(0, color.replace(')', ', 0.3)').replace('rgb', 'rgba'));
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Point
+      ctx.beginPath();
+      ctx.arc(px, py, 7, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Drag indicator (for draggable roots)
+      if (idx === 0 || idx === 2) {
+        ctx.beginPath();
+        ctx.arc(px, py, 12, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Label
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(root.label, px + labelOffsets[idx].dx, py + labelOffsets[idx].dy);
+    });
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Nule polinoma p(x) u kompleksnoj ravni', W / 2, H - 10);
+
+    // Legend
+    const legY = plotTop + 14;
+    const legX = plotRight - 180;
+
+    ctx.beginPath();
+    ctx.arc(legX, legY, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#f472b6';
+    ctx.fill();
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Par 1: 1 \u00B1 i', legX + 10, legY + 4);
+
+    ctx.beginPath();
+    ctx.arc(legX, legY + 20, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fill();
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Par 2: 2 \u00B1 i', legX + 10, legY + 24);
+  }
+
+  // Drag interaction
+  function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleFactorX = W / rect.width;
+    const scaleFactorY = H / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleFactorX,
+      y: (e.clientY - rect.top) * scaleFactorY
+    };
+  }
+
+  function getTouchPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleFactorX = W / rect.width;
+    const scaleFactorY = H / rect.height;
+    const touch = e.touches[0];
+    return {
+      x: (touch.clientX - rect.left) * scaleFactorX,
+      y: (touch.clientY - rect.top) * scaleFactorY
+    };
+  }
+
+  function findNearestDraggable(pos) {
+    const draggableIndices = [0, 2]; // Only the top roots of each pair
+    let best = -1;
+    let bestDist = 25;
+    draggableIndices.forEach(idx => {
+      const px = toPixelX(roots[idx].re);
+      const py = toPixelY(roots[idx].im);
+      const dist = Math.sqrt((pos.x - px) ** 2 + (pos.y - py) ** 2);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = idx;
+      }
+    });
+    return best;
+  }
+
+  function handleDragStart(pos) {
+    dragIndex = findNearestDraggable(pos);
+  }
+
+  function handleDragMove(pos) {
+    if (dragIndex < 0) return;
+    let newRe = fromPixelX(pos.x);
+    let newIm = fromPixelY(pos.y);
+
+    // Clamp to visible area and ensure imaginary part > 0 (top half)
+    newRe = Math.max(xMin + 0.3, Math.min(xMax - 0.3, newRe));
+    newIm = Math.max(0.2, Math.min(yMax - 0.3, newIm));
+
+    // Snap to nice values
+    newRe = Math.round(newRe * 4) / 4;
+    newIm = Math.round(newIm * 4) / 4;
+
+    // Update the dragged root
+    roots[dragIndex].re = newRe;
+    roots[dragIndex].im = newIm;
+
+    // Update the conjugate
+    const conjIdx = dragIndex + 1;
+    roots[conjIdx].re = newRe;
+    roots[conjIdx].im = -newIm;
+
+    // Update labels
+    const reStr = Number.isInteger(newRe) ? String(newRe) : newRe.toFixed(2).replace('.', ',');
+    const imStr = Number.isInteger(newIm) ? String(newIm) : newIm.toFixed(2).replace('.', ',');
+    roots[dragIndex].label = reStr + ' + ' + imStr + 'i';
+    roots[conjIdx].label = reStr + ' \u2212 ' + imStr + 'i';
+
+    draw();
+  }
+
+  function handleDragEnd() {
+    if (dragIndex >= 0) {
+      // Reset to original positions
+      roots[0].re = 1; roots[0].im = 1; roots[0].label = '1 + i';
+      roots[1].re = 1; roots[1].im = -1; roots[1].label = '1 - i';
+      roots[2].re = 2; roots[2].im = 1; roots[2].label = '2 + i';
+      roots[3].re = 2; roots[3].im = -1; roots[3].label = '2 - i';
+      dragIndex = -1;
+      draw();
+    }
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    handleDragStart(getMousePos(e));
+  });
+  canvas.addEventListener('mousemove', (e) => {
+    handleDragMove(getMousePos(e));
+  });
+  canvas.addEventListener('mouseup', () => {
+    handleDragEnd();
+  });
+  canvas.addEventListener('mouseleave', () => {
+    handleDragEnd();
+  });
+
+  // Touch events
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    handleDragStart(getTouchPos(e));
+  });
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    handleDragMove(getTouchPos(e));
+  });
+  canvas.addEventListener('touchend', () => {
+    handleDragEnd();
+  });
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Nule polinoma i kompleksni brojevi",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "polinomi", "konjugovani koreni", "faktorizacija", "nule polinoma"]
+}
+BRAINSPARK_META-->

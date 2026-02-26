@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kombinatorika - Izbor učenika</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: U razredu ima 10 devojčica i 10 dečaka. Na koliko načina se može
+izabrati 5 učenika, tako da se među njima nalaze bar 2 devojčice i bar 2 dečaka?
+
+ANALYSIS:
+- Total students: 10 girls + 10 boys = 20
+- Choose 5 students
+- Constraint: at least 2 girls AND at least 2 boys
+
+POSSIBLE DISTRIBUTIONS (girls, boys) that satisfy constraints:
+- (2 girls, 3 boys): at least 2 girls ✓, at least 2 boys ✓
+- (3 girls, 2 boys): at least 2 girls ✓, at least 2 boys ✓
+
+Note: (4 girls, 1 boy) fails because only 1 boy < 2
+      (5 girls, 0 boys) fails because 0 boys < 2
+      (1 girl, 4 boys) fails because only 1 girl < 2
+      (0 girls, 5 boys) fails because 0 girls < 2
+
+CALCULATION:
+Case 1: 2 girls + 3 boys
+C(10,2) * C(10,3) = 45 * 120 = 5400
+
+Case 2: 3 girls + 2 boys
+C(10,3) * C(10,2) = 120 * 45 = 5400
+
+Total = 5400 + 5400 = 10800
+
+VERIFICATION:
+C(10,2) = 10!/(2!*8!) = (10*9)/2 = 45 ✓
+C(10,3) = 10!/(3!*7!) = (10*9*8)/(3*2*1) = 720/6 = 120 ✓
+
+By symmetry, both cases give the same result:
+Total = 2 * 45 * 120 = 2 * 5400 = 10800
+
+Answer: (D) 10800 ✓
+
+ALTERNATIVE VERIFICATION (complement method):
+Total ways to choose 5 from 20: C(20,5) = 15504
+Subtract invalid cases:
+- (0 girls, 5 boys): C(10,0)*C(10,5) = 1*252 = 252
+- (1 girl, 4 boys): C(10,1)*C(10,4) = 10*210 = 2100
+- (4 girls, 1 boy): C(10,4)*C(10,1) = 210*10 = 2100
+- (5 girls, 0 boys): C(10,5)*C(10,0) = 252*1 = 252
+Total invalid = 252 + 2100 + 2100 + 252 = 4704
+Valid = 15504 - 4704 = 10800 ✓✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  font-size: 1.15rem;
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.answer-option {
+  transition: none;
+  cursor: default;
+}
+
+.plan-card {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.08), rgba(167, 139, 250, 0.08));
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #a78bfa;
+  padding: 8px 0;
+  list-style: none;
+}
+
+.theory-card summary::-webkit-details-marker { display: none; }
+.theory-card summary::before {
+  content: '▸ ';
+  transition: transform 0.2s;
+}
+.theory-card details[open] summary::before {
+  content: '▾ ';
+}
+
+.theory-content {
+  padding: 16px 0 8px 0;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0 8px 20px;
+  position: relative;
+  color: #e2e8f0;
+  line-height: 1.8;
+}
+
+.theory-content li::before {
+  content: '•';
+  color: #60a5fa;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.checkpoint {
+  margin: 20px 0;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+}
+
+.checkpoint summary::-webkit-details-marker { display: none; }
+.checkpoint summary::before {
+  content: '✎ ';
+}
+
+.checkpoint .answer {
+  padding-top: 12px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  text-align: center;
+  padding: 30px 24px;
+}
+
+.insight-card .insight-formula {
+  font-size: 1.3rem;
+  margin: 16px 0;
+  color: #4ade80;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.1));
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  text-align: center;
+  padding: 30px 24px;
+}
+
+.final-answer-card .big-answer {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.final-option {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(51, 65, 85, 0.5);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: rgba(52, 211, 153, 0.06);
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfall-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-card li {
+  padding: 10px 0 10px 24px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfall-card li::before {
+  content: '⚠';
+  position: absolute;
+  left: 0;
+  color: #e09468;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #f472b6;
+  list-style: none;
+}
+
+.challenge-card summary::-webkit-details-marker { display: none; }
+.challenge-card summary::before {
+  content: '▸ ';
+}
+.challenge-card details[open] summary::before {
+  content: '▾ ';
+}
+
+canvas {
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { padding: 12px; gap: 12px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .final-answer-card .big-answer { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ==================== TITLE ==================== -->
+<h1>Kombinatorika: Izbor učenika iz razreda</h1>
+<p class="subtitle">Kombinacije sa ograničenjima - primena pravila zbira i binomnih koeficijenata</p>
+
+<!-- ==================== PROBLEM STATEMENT ==================== -->
+<div class="card problem-statement">
+  <h2>Tekst zadatka</h2>
+  <p>U razredu ima <span class="highlight-pink">10 devojčica</span> i <span class="highlight-blue">10 dečaka</span>. Na koliko načina se može izabrati <span class="highlight-green">5 učenika</span>, tako da se među njima nalaze <strong>bar 2 devojčice</strong> i <strong>bar 2 dečaka</strong>?</p>
+
+  <div class="given-grid">
+    <div class="given-item">
+      <div class="label">Devojčice</div>
+      <div class="value">10</div>
+    </div>
+    <div class="given-item">
+      <div class="label">Dečaci</div>
+      <div class="value">10</div>
+    </div>
+    <div class="given-item">
+      <div class="label">Biramo</div>
+      <div class="value">5</div>
+    </div>
+    <div class="given-item">
+      <div class="label">Uslov</div>
+      <div class="value">\(\geq 2\) oba pola</div>
+    </div>
+  </div>
+
+  <div class="given-grid" style="margin-top: 16px;">
+    <div class="given-item answer-option" data-option="A">
+      <div class="label">(A)</div>
+      <div class="value">\(252\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="B">
+      <div class="label">(B)</div>
+      <div class="value">\(2025\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="C">
+      <div class="label">(C)</div>
+      <div class="value">\(5400\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="D">
+      <div class="label">(D)</div>
+      <div class="value">\(10800\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="E">
+      <div class="label">(E)</div>
+      <div class="value">\(15504\)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PLAN ==================== -->
+<div class="card plan-card">
+  <h2>Plan rešavanja</h2>
+  <p>Razbićemo problem na dva slučaja prema raspodeli polova (2+3 ili 3+2), izračunati broj kombinacija za svaki slučaj pomoću binomnih koeficijenata, a zatim ih sabrati.</p>
+</div>
+
+<!-- ==================== THEORY ==================== -->
+<div class="card theory-card">
+  <details>
+    <summary>Ključne formule i teoreme</summary>
+    <div class="theory-content">
+      <ul>
+        <li><strong>Kombinacije bez ponavljanja:</strong> Broj načina da se izabere \(k\) elemenata iz skupa od \(n\) elemenata (bez obzira na redosled):
+        \[\binom{n}{k} = \frac{n!}{k!(n-k)!}\]</li>
+        <li><strong>Pravilo proizvoda:</strong> Ako prvi izbor može da se izvrši na \(m\) načina, a drugi nezavisno na \(n\) načina, onda se oba izbora zajedno mogu izvršiti na \(m \cdot n\) načina.</li>
+        <li><strong>Pravilo zbira:</strong> Ako se dva slučaja međusobno isključuju, onda je ukupan broj načina jednak zbiru brojeva načina za svaki slučaj.</li>
+        <li><strong>Korisne vrednosti:</strong> \(\binom{10}{2} = 45\), \(\quad \binom{10}{3} = 120\), \(\quad \binom{10}{5} = 252\)</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- ==================== VISUAL AID ==================== -->
+<div class="card">
+  <h2>Vizuelni prikaz</h2>
+  <canvas id="mainCanvas" width="800" height="520"></canvas>
+  <p class="canvas-hint">Koristite dugmad ispod za prikaz različitih slučajeva</p>
+  <div style="display: flex; justify-content: center; gap: 12px; margin-top: 14px; flex-wrap: wrap;">
+    <button id="btnAll" style="padding: 8px 18px; border-radius: 8px; border: 1px solid #60a5fa; background: rgba(96,165,250,0.15); color: #60a5fa; font-weight: 600; cursor: pointer; font-size: 0.95rem;">Svi slučajevi</button>
+    <button id="btnCase1" style="padding: 8px 18px; border-radius: 8px; border: 1px solid #f472b6; background: rgba(244,114,182,0.1); color: #f472b6; font-weight: 600; cursor: pointer; font-size: 0.95rem;">Slučaj 1: 2D + 3M</button>
+    <button id="btnCase2" style="padding: 8px 18px; border-radius: 8px; border: 1px solid #a78bfa; background: rgba(167,139,250,0.1); color: #a78bfa; font-weight: 600; cursor: pointer; font-size: 0.95rem;">Slučaj 2: 3D + 2M</button>
+  </div>
+</div>
+
+<!-- ==================== STEP-BY-STEP ==================== -->
+<div class="card">
+  <h2>Rešenje korak po korak</h2>
+
+  <!-- Step 1 -->
+  <div class="step-container" data-step="1">
+    <div class="step-badge">1</div>
+    <div class="step-content">
+      <h3>Odredimo moguće raspodele</h3>
+      <p>Biramo 5 učenika, a uslov je bar 2 devojčice i bar 2 dečaka. Označimo sa \((d, m)\) broj devojčica i dečaka u grupi. Moramo imati \(d + m = 5\), \(d \geq 2\) i \(m \geq 2\).</p>
+      <p>Jedine mogućnosti su:</p>
+      <div class="math-block">
+        \[\begin{align}
+        &\text{Slučaj 1:} \quad d = 2, \; m = 3 \\[6pt]
+        &\text{Slučaj 2:} \quad d = 3, \; m = 2
+        \end{align}\]
+      </div>
+      <p class="note">Raspodele kao \((1,4)\), \((0,5)\), \((4,1)\), \((5,0)\) ne zadovoljavaju uslov jer nema dovoljno učenika oba pola.</p>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step-container" data-step="2">
+    <div class="step-badge">2</div>
+    <div class="step-content">
+      <h3>Slučaj 1: 2 devojčice i 3 dečaka</h3>
+      <p>Biramo 2 devojčice od 10 i, nezavisno od toga, 3 dečaka od 10. Po <strong>pravilu proizvoda</strong>:</p>
+      <div class="math-block">
+        \[\binom{10}{2} \cdot \binom{10}{3}\]
+      </div>
+      <p>Izračunajmo svaki koeficijent posebno:</p>
+      <div class="math-block">
+        \[\binom{10}{2} = \frac{10!}{2! \cdot 8!} = \frac{10 \cdot 9}{2 \cdot 1} = 45\]
+      </div>
+      <div class="math-block">
+        \[\binom{10}{3} = \frac{10!}{3! \cdot 7!} = \frac{10 \cdot 9 \cdot 8}{3 \cdot 2 \cdot 1} = \frac{720}{6} = 120\]
+      </div>
+      <div class="math-block">
+        \[\text{Slučaj 1} = 45 \cdot 120 = 5400\]
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkpoint 1 -->
+  <details class="checkpoint">
+    <summary>Proveri sebe: Koliko iznosi \(\binom{10}{3}\)?</summary>
+    <div class="answer">\(\binom{10}{3} = 120\). Pamti: \(\frac{10 \cdot 9 \cdot 8}{3!} = \frac{720}{6} = 120\).</div>
+  </details>
+
+  <!-- Step 3 -->
+  <div class="step-container" data-step="3">
+    <div class="step-badge">3</div>
+    <div class="step-content">
+      <h3>Slučaj 2: 3 devojčice i 2 dečaka</h3>
+      <p>Sada biramo 3 devojčice od 10 i 2 dečaka od 10:</p>
+      <div class="math-block">
+        \[\binom{10}{3} \cdot \binom{10}{2} = 120 \cdot 45 = 5400\]
+      </div>
+      <p class="note">Primetimo simetriju: oba slučaja daju isti rezultat jer imamo jednak broj devojčica i dečaka (po 10), a uloge "biramo 2 od 10" i "biramo 3 od 10" se samo zamene.</p>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="step-container" data-step="4">
+    <div class="step-badge">4</div>
+    <div class="step-content">
+      <h3>Ukupan broj načina</h3>
+      <p>Slučajevi se <strong>međusobno isključuju</strong> (grupa ne može istovremeno imati 2 i 3 devojčice), pa po <strong>pravilu zbira</strong>:</p>
+      <div class="math-block">
+        \[\text{Ukupno} = 5400 + 5400 = 10800\]
+      </div>
+      <p>Ili kompaktnije:</p>
+      <div class="math-block">
+        \[2 \cdot \binom{10}{2} \cdot \binom{10}{3} = 2 \cdot 45 \cdot 120 = \boxed{10800}\]
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkpoint 2 -->
+  <details class="checkpoint">
+    <summary>Proveri sebe: Zašto ne možemo da koristimo \(\binom{20}{5}\) kao odgovor?</summary>
+    <div class="answer">\(\binom{20}{5} = 15504\) broji <em>sve</em> načine izbora 5 od 20 učenika, uključujući i grupe koje ne zadovoljavaju uslov (npr. 5 dečaka ili samo 1 devojčica). To je odgovor (E), ali on ne uzima u obzir ograničenje.</div>
+  </details>
+</div>
+
+<!-- ==================== KEY INSIGHT ==================== -->
+<div class="card insight-card">
+  <h2>Ključni uvid</h2>
+  <p>Zahvaljujući <strong>simetriji</strong> (isti broj devojčica i dečaka), dva slučaja su jednaka, pa je dovoljno izračunati jedan i pomnožiti sa 2:</p>
+  <div class="insight-formula">
+    \[2 \cdot \binom{10}{2} \cdot \binom{10}{3} = 2 \cdot 45 \cdot 120 = 10800\]
+  </div>
+</div>
+
+<!-- ==================== FINAL ANSWER ==================== -->
+<div class="card final-answer-card">
+  <h2>Konačan odgovor</h2>
+  <div class="big-answer">\(10800\)</div>
+
+  <div class="final-options">
+    <div class="final-option">(A) 252</div>
+    <div class="final-option">(B) 2025</div>
+    <div class="final-option">(C) 5400</div>
+    <div class="final-option correct">(D) 10800</div>
+    <div class="final-option">(E) 15504</div>
+  </div>
+
+  <div class="verification">
+    <strong>Verifikacija (metod komplementa):</strong><br>
+    Ukupno načina bez ograničenja: \(\binom{20}{5} = 15504\).<br>
+    Oduzimamo nevalidne slučajeve: \((0,5)\): 252, \((1,4)\): 2100, \((4,1)\): 2100, \((5,0)\): 252.<br>
+    Nevalidno ukupno: \(252 + 2100 + 2100 + 252 = 4704\).<br>
+    Validno: \(15504 - 4704 = 10800\). Rezultat se poklapa.
+  </div>
+</div>
+
+<!-- ==================== COMMON PITFALLS ==================== -->
+<div class="card pitfall-card">
+  <h2>Česte greške</h2>
+  <ul>
+    <li><strong>Zaboraviti jedan slučaj:</strong> Ako računamo samo \(\binom{10}{2} \cdot \binom{10}{3} = 5400\), dobijamo odgovor (C) jer smo prebrojali samo grupu sa 2 devojčice i 3 dečaka, a propustili obrnutu raspodelu (3 devojčice i 2 dečaka).</li>
+    <li><strong>Koristiti permutacije umesto kombinacija:</strong> Redosled izbora učenika nije bitan (biramo grupu, ne poređamo ih u red), pa koristimo kombinacije \(\binom{n}{k}\), a ne varijacije \(\frac{n!}{(n-k)!}\).</li>
+  </ul>
+</div>
+
+<!-- ==================== CHALLENGE ==================== -->
+<div class="card challenge-card">
+  <h2>Dodatni izazov</h2>
+  <p>Šta ako razred ima 10 devojčica i 10 dečaka, ali sada treba izabrati 6 učenika tako da bude bar 2 devojčice i bar 2 dečaka?</p>
+  <details>
+    <summary>Otkrij nagoveštaj</summary>
+    <div style="padding-top: 12px; color: #e2e8f0;">
+      Sada postoje tri validna slučaja: \((2,4)\), \((3,3)\) i \((4,2)\). Izračunaj svaki i saberi. Koristi simetriju za slučajeve \((2,4)\) i \((4,2)\). Rezultat je \(2 \cdot \binom{10}{2} \cdot \binom{10}{4} + \binom{10}{3}^2 = 2 \cdot 45 \cdot 210 + 120^2 = 18900 + 14400 = 33300\).
+    </div>
+  </details>
+</div>
+
+</div> <!-- end container -->
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let currentView = 'all'; // 'all', 'case1', 'case2'
+
+  // Colors
+  const PINK = '#f472b6';
+  const BLUE = '#60a5fa';
+  const PURPLE = '#a78bfa';
+  const GREEN = '#4ade80';
+  const MUTED = '#94a3b8';
+  const BG = '#0f172a';
+  const CARD_BG = '#1e293b';
+  const BORDER = '#334155';
+
+  function drawCircle(x, y, r, fillColor, strokeColor, label, labelColor) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    if (fillColor) {
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    if (strokeColor) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    if (label) {
+      ctx.fillStyle = labelColor || '#e2e8f0';
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, x, y);
+    }
+  }
+
+  function drawGroupLabel(x, y, text, color) {
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+  }
+
+  function drawBracket(x, y1, y2, label, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y1);
+    ctx.lineTo(x + 12, y1);
+    ctx.lineTo(x + 12, y2);
+    ctx.lineTo(x, y2);
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x + 18, (y1 + y2) / 2);
+  }
+
+  function drawPeople(startX, startY, count, color, selectedIndices, selColor) {
+    const spacing = 36;
+    const r = 13;
+    const positions = [];
+
+    for (let i = 0; i < count; i++) {
+      const row = Math.floor(i / 5);
+      const col = i % 5;
+      const x = startX + col * spacing;
+      const y = startY + row * spacing;
+      positions.push({ x, y });
+
+      const isSelected = selectedIndices && selectedIndices.includes(i);
+      const fill = isSelected ? selColor : 'rgba(255,255,255,0.05)';
+      const stroke = isSelected ? selColor : color;
+      const lbl = (i + 1).toString();
+      const lblCol = isSelected ? '#0f172a' : color;
+
+      drawCircle(x, y, r, fill, stroke, lbl, lblCol);
+
+      if (isSelected) {
+        // glow
+        ctx.beginPath();
+        ctx.arc(x, y, r + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = selColor + '60';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+    return positions;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Background
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (currentView === 'all') {
+      drawOverviewMode();
+    } else if (currentView === 'case1') {
+      drawCaseDetail(1);
+    } else {
+      drawCaseDetail(2);
+    }
+  }
+
+  function drawOverviewMode() {
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Raspodela 5 učenika iz razreda', canvas.width / 2, 30);
+
+    ctx.fillStyle = MUTED;
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('10 devojčica + 10 dečaka → biramo 5 sa uslovom ≥2 oba pola', canvas.width / 2, 52);
+
+    // Draw all possible distributions as a horizontal chart
+    const distributions = [
+      { d: 0, m: 5, valid: false, count: 252 },
+      { d: 1, m: 4, valid: false, count: 2100 },
+      { d: 2, m: 3, valid: true, count: 5400 },
+      { d: 3, m: 2, valid: true, count: 5400 },
+      { d: 4, m: 1, valid: false, count: 2100 },
+      { d: 5, m: 0, valid: false, count: 252 },
+    ];
+
+    const barAreaY = 90;
+    const barHeight = 200;
+    const barWidth = 80;
+    const gapX = 30;
+    const totalW = distributions.length * barWidth + (distributions.length - 1) * gapX;
+    const startX = (canvas.width - totalW) / 2;
+    const maxCount = 5400;
+
+    distributions.forEach((dist, i) => {
+      const x = startX + i * (barWidth + gapX);
+      const h = (dist.count / maxCount) * (barHeight - 40);
+      const barY = barAreaY + barHeight - h;
+
+      // Bar
+      const grad = ctx.createLinearGradient(x, barY, x, barAreaY + barHeight);
+      if (dist.valid) {
+        grad.addColorStop(0, GREEN + '40');
+        grad.addColorStop(1, GREEN + '15');
+        ctx.strokeStyle = GREEN;
+      } else {
+        grad.addColorStop(0, '#ef444440');
+        grad.addColorStop(1, '#ef444415');
+        ctx.strokeStyle = '#ef4444';
+      }
+
+      // rounded rect
+      const rr = 6;
+      ctx.beginPath();
+      ctx.moveTo(x + rr, barY);
+      ctx.lineTo(x + barWidth - rr, barY);
+      ctx.quadraticCurveTo(x + barWidth, barY, x + barWidth, barY + rr);
+      ctx.lineTo(x + barWidth, barAreaY + barHeight);
+      ctx.lineTo(x, barAreaY + barHeight);
+      ctx.lineTo(x, barY + rr);
+      ctx.quadraticCurveTo(x, barY, x + rr, barY);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Count on top
+      ctx.fillStyle = dist.valid ? GREEN : '#ef4444';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(dist.count.toLocaleString('sr-RS'), x + barWidth / 2, barY - 10);
+
+      // Label below
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(`(${dist.d}, ${dist.m})`, x + barWidth / 2, barAreaY + barHeight + 18);
+
+      // D/M icons
+      ctx.fillStyle = PINK;
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(`${dist.d}D`, x + barWidth / 2 - 14, barAreaY + barHeight + 36);
+      ctx.fillStyle = BLUE;
+      ctx.fillText(`${dist.m}M`, x + barWidth / 2 + 14, barAreaY + barHeight + 36);
+
+      // Valid/invalid mark
+      if (dist.valid) {
+        ctx.fillStyle = GREEN;
+        ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+        ctx.fillText('✓', x + barWidth / 2, barAreaY + barHeight + 56);
+      } else {
+        ctx.fillStyle = '#ef4444';
+        ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+        ctx.fillText('✗', x + barWidth / 2, barAreaY + barHeight + 56);
+      }
+    });
+
+    // Legend at bottom
+    const legendY = barAreaY + barHeight + 80;
+
+    ctx.fillStyle = MUTED;
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('(devojčice, dečaci) — D = devojčice, M = momci (dečaci)', canvas.width / 2, legendY);
+
+    // Summary
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Validni slučajevi:', canvas.width / 2, legendY + 30);
+
+    ctx.fillStyle = GREEN;
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('5400 + 5400 = 10800', canvas.width / 2, legendY + 55);
+
+    // Decorative line
+    ctx.strokeStyle = BORDER;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(startX, barAreaY + barHeight + 2);
+    ctx.lineTo(startX + totalW, barAreaY + barHeight + 2);
+    ctx.stroke();
+  }
+
+  function drawCaseDetail(caseNum) {
+    const girlsSelected = caseNum === 1 ? [0, 3] : [1, 4, 7];
+    const boysSelected = caseNum === 1 ? [2, 5, 8] : [0, 6];
+    const girlCount = caseNum === 1 ? 2 : 3;
+    const boyCount = caseNum === 1 ? 3 : 2;
+    const caseColor = caseNum === 1 ? PINK : PURPLE;
+
+    // Title
+    ctx.fillStyle = caseColor;
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Slučaj ${caseNum}: ${girlCount} devojčice + ${boyCount} dečaka`, canvas.width / 2, 30);
+
+    // Girls section
+    const girlsX = 80;
+    const girlsY = 80;
+    drawGroupLabel(girlsX + 72, girlsY - 15, '10 devojčica', PINK);
+    drawPeople(girlsX, girlsY, 10, PINK, girlsSelected, PINK);
+
+    // Boys section
+    const boysX = canvas.width / 2 + 40;
+    const boysY = 80;
+    drawGroupLabel(boysX + 72, boysY - 15, '10 dečaka', BLUE);
+    drawPeople(boysX, boysY, 10, boysSelected, BLUE);
+
+    // Bracket for girls
+    const gSelY1 = girlsY - 16;
+    const gSelY2 = girlsY + 20;
+    drawBracket(girlsX + 182, gSelY1, gSelY2 + (girlCount > 2 ? 36 : 0),
+      `C(10,${girlCount}) = ${caseNum === 1 ? 45 : 120}`, caseColor);
+
+    // Bracket for boys
+    const bSelY1 = boysY - 16;
+    const bSelY2 = boysY + 20;
+    drawBracket(boysX + 182, bSelY1, bSelY2 + (boyCount > 2 ? 36 : 0),
+      `C(10,${boyCount}) = ${caseNum === 1 ? 120 : 45}`, caseColor);
+
+    // Arrow and formula area
+    const formulaY = 260;
+
+    // Multiplication symbol
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('×', canvas.width / 2, formulaY);
+
+    // Left factor
+    ctx.fillStyle = PINK;
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(`C(10,${girlCount}) = ${caseNum === 1 ? 45 : 120}`, canvas.width / 2 - 140, formulaY);
+
+    // Right factor
+    ctx.fillStyle = BLUE;
+    ctx.fillText(`C(10,${boyCount}) = ${caseNum === 1 ? 120 : 45}`, canvas.width / 2 + 140, formulaY);
+
+    // Equals
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('=', canvas.width / 2, formulaY + 40);
+
+    // Result
+    ctx.fillStyle = GREEN;
+    ctx.font = 'bold 24px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('5.400', canvas.width / 2, formulaY + 75);
+
+    // Selected group illustration
+    const groupY = formulaY + 120;
+    ctx.fillStyle = MUTED;
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Primer jedne moguće grupe:', canvas.width / 2, groupY);
+
+    const groupStartX = canvas.width / 2 - (girlCount + boyCount) * 20;
+    for (let i = 0; i < girlCount; i++) {
+      drawCircle(groupStartX + i * 42, groupY + 35, 16, PINK + '40', PINK, 'D', PINK);
+    }
+    for (let i = 0; i < boyCount; i++) {
+      drawCircle(groupStartX + (girlCount + i) * 42, groupY + 35, 16, BLUE + '40', BLUE, 'M', BLUE);
+    }
+
+    // Summary
+    const sumY = groupY + 90;
+    ctx.strokeStyle = BORDER;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(100, sumY - 15);
+    ctx.lineTo(canvas.width - 100, sumY - 15);
+    ctx.stroke();
+
+    ctx.fillStyle = MUTED;
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(`Ovaj slučaj daje 5.400 kombinacija`, canvas.width / 2, sumY + 10);
+    ctx.fillText(`Ukupno sa oba slučaja: 5.400 + 5.400 = 10.800`, canvas.width / 2, sumY + 35);
+  }
+
+  // Button handlers
+  document.getElementById('btnAll').addEventListener('click', function() {
+    currentView = 'all';
+    draw();
+  });
+
+  document.getElementById('btnCase1').addEventListener('click', function() {
+    currentView = 'case1';
+    draw();
+  });
+
+  document.getElementById('btnCase2').addEventListener('click', function() {
+    currentView = 'case2';
+    draw();
+  });
+
+  // Step click handlers
+  document.querySelectorAll('.step-container').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      step.classList.toggle('active');
+    });
+  });
+
+  // Initial draw
+  draw();
+
+  // Responsive resize
+  function handleResize() {
+    const parent = canvas.parentElement;
+    const ratio = canvas.width / canvas.height;
+    const maxW = parent.clientWidth - 48;
+    if (maxW < canvas.width) {
+      canvas.style.width = maxW + 'px';
+      canvas.style.height = (maxW / ratio) + 'px';
+    }
+  }
+
+  window.addEventListener('resize', handleResize);
+  handleResize();
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Kombinatorika: Izbor učenika sa ograničenjima",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinacije", "binomni koeficijent", "pravilo zbira", "pravilo proizvoda", "kombinatorika sa ograničenjima"]
+}
+BRAINSPARK_META-->

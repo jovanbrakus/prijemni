@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje algebarskog izraza sa apsolutnom vrednoscu i korenima</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+For a in (-1, 0), simplify:
+  sqrt(|a-1|) / [2(a-1)] * ( sqrt(2 - 2*sqrt(a+1) + a) + sqrt(2 + 2*sqrt(a+1) + a) )
+
+GIVEN:
+- a in (-1, 0)
+- Therefore: a-1 in (-2, -1), so a-1 < 0, and |a-1| = 1-a
+- Also: a+1 in (0, 1), so sqrt(a+1) in (0, 1)
+
+STEP 1: Simplify |a-1|
+Since a < 0 < 1, we have a-1 < 0, so |a-1| = 1-a.
+Thus sqrt(|a-1|) = sqrt(1-a).
+
+STEP 2: Simplify 2 - 2*sqrt(a+1) + a
+Rewrite: a + 2 - 2*sqrt(a+1)
+       = (a+1) + 1 - 2*sqrt(a+1)
+       = (sqrt(a+1))^2 - 2*sqrt(a+1) + 1^2
+       = (sqrt(a+1) - 1)^2
+
+STEP 3: Simplify 2 + 2*sqrt(a+1) + a
+Rewrite: a + 2 + 2*sqrt(a+1)
+       = (a+1) + 1 + 2*sqrt(a+1)
+       = (sqrt(a+1))^2 + 2*sqrt(a+1) + 1^2
+       = (sqrt(a+1) + 1)^2
+
+STEP 4: Evaluate the square roots
+sqrt((sqrt(a+1) - 1)^2) = |sqrt(a+1) - 1|
+Since sqrt(a+1) < 1 (because a+1 < 1), we have sqrt(a+1) - 1 < 0.
+So |sqrt(a+1) - 1| = 1 - sqrt(a+1).
+
+sqrt((sqrt(a+1) + 1)^2) = |sqrt(a+1) + 1| = sqrt(a+1) + 1 (always positive).
+
+STEP 5: Sum
+(1 - sqrt(a+1)) + (sqrt(a+1) + 1) = 2
+
+STEP 6: Front factor
+sqrt(1-a) / [2(a-1)]
+= sqrt(1-a) / [-2(1-a)]
+= sqrt(1-a) / [-2 * (sqrt(1-a))^2]
+= 1 / [-2 * sqrt(1-a)]
+= -1 / [2*sqrt(1-a)]
+
+STEP 7: Multiply
+-1/(2*sqrt(1-a)) * 2 = -1/sqrt(1-a)
+
+ANSWER: (C) -1/sqrt(1-a)
+
+VERIFICATION:
+Test a = -0.5:
+- |a-1| = |-1.5| = 1.5, sqrt(1.5) ≈ 1.2247
+- a-1 = -1.5
+- Front factor: 1.2247 / (2 * -1.5) = 1.2247 / (-3) ≈ -0.4082
+
+- a+1 = 0.5, sqrt(0.5) ≈ 0.7071
+- First inner: 2 - 2*0.7071 + (-0.5) = 2 - 1.4142 - 0.5 = 0.0858
+  sqrt(0.0858) ≈ 0.2929
+- Second inner: 2 + 2*0.7071 + (-0.5) = 2 + 1.4142 - 0.5 = 2.9142
+  sqrt(2.9142) ≈ 1.7071
+- Sum: 0.2929 + 1.7071 = 2.0000
+
+- Result: -0.4082 * 2 = -0.8165
+
+Check (C): -1/sqrt(1-(-0.5)) = -1/sqrt(1.5) = -1/1.2247 ≈ -0.8165  ✓ MATCHES!
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 120px;
+  flex: 1 1 auto;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1rem;
+  color: #e2e8f0;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card h2 {
+  color: #a78bfa;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 0;
+  list-style: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+details summary::before {
+  content: '\25B6';
+  display: inline-block;
+  margin-right: 8px;
+  transition: transform 0.2s;
+  font-size: 0.8em;
+}
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.theory-card {
+  border-left: 3px solid #60a5fa;
+}
+
+.theory-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+.theory-card li:last-child { border-bottom: none; }
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-left: 3px solid transparent;
+  padding-left: 12px;
+  transition: border-color 0.2s;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.step-container:hover,
+.step-container.active {
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(96,165,250,0.06);
+  border: 1px dashed rgba(96,165,250,0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  text-align: center;
+  padding: 28px;
+}
+
+.insight-card h2 {
+  color: #a78bfa;
+}
+
+.final-answer {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+  text-align: center;
+  padding: 28px;
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.answer-big {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+  font-weight: 700;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.answer-opt {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: rgba(51,65,85,0.5);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.answer-opt.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: rgba(52,211,153,0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(52,211,153,0.15);
+  color: #94a3b8;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.pitfalls {
+  border-left: 3px solid #f472b6;
+}
+
+.pitfalls h2 {
+  color: #f472b6;
+}
+
+.pitfalls ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfalls li {
+  padding: 8px 0;
+  color: #e2e8f0;
+  line-height: 1.6;
+}
+
+.pitfalls li::before {
+  content: '\26A0';
+  margin-right: 8px;
+  color: #e09468;
+}
+
+.challenge-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.challenge-card h2 {
+  color: #a78bfa;
+}
+
+canvas {
+  touch-action: none;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 700px;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .given-grid { flex-direction: column; }
+  .given-item { min-width: auto; }
+  .step-container { flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Pojednostavljivanje izraza sa korenima i apsolutnom vrednoscu</h1>
+  <p class="subtitle">Algebra — apsolutna vrednost, potpun kvadrat, racionalizacija</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako je \( a \in (-1,\, 0) \), onda je</p>
+    <div class="math-block">
+      \[ \frac{\sqrt{|a-1|}}{2(a-1)} \cdot \left(\sqrt{2 - 2\sqrt{a+1} + a}\; +\; \sqrt{2 + 2\sqrt{a+1} + a}\right) \]
+    </div>
+    <p>jednako:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\sqrt{\dfrac{a+1}{a-1}}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(-\dfrac{1}{2\sqrt{1-a}}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(-\dfrac{1}{\sqrt{1-a}}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-\dfrac{\sqrt{1+a}}{\sqrt{1-a}}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{1}{\sqrt{a-1}}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Prvo cemo odrediti znak izraza \(a-1\) i pojednostaviti apsolutnu vrednost. Zatim cemo prepoznati potpune kvadrate pod unutrasnjim korenima, izracunati njihov zbir, i na kraju sve pomnoziti sa razlomkom ispred zagrade.</p>
+  </div>
+
+  <!-- Theory -->
+  <div class="card theory-card">
+    <details>
+      <summary>Kljucne formule i pravila</summary>
+      <ul>
+        <li><strong>Apsolutna vrednost:</strong> \(|x| = \begin{cases} x, & x \geq 0 \\ -x, & x < 0 \end{cases}\)</li>
+        <li><strong>Potpun kvadrat (razlika):</strong> \(a^2 - 2ab + b^2 = (a - b)^2\)</li>
+        <li><strong>Potpun kvadrat (zbir):</strong> \(a^2 + 2ab + b^2 = (a + b)^2\)</li>
+        <li><strong>Koren kvadrata:</strong> \(\sqrt{x^2} = |x|\) za svako realno \(x\)</li>
+        <li><strong>Racionalizacija:</strong> \(\dfrac{\sqrt{c}}{c} = \dfrac{1}{\sqrt{c}}\) za \(c > 0\)</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color:#94a3b8; margin-bottom:12px;">Pomerajte klizac da vidite kako se vrednost izraza menja za razlicite vrednosti parametra \(a\) na intervalu \((-1,\, 0)\).</p>
+    <canvas id="diagram" width="700" height="420"></canvas>
+    <p class="canvas-hint">Prevucite klizac za promenu vrednosti \(a\)</p>
+  </div>
+
+  <!-- Steps -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Analiza znaka: odredimo \(|a-1|\)</h3>
+        <p>Posto je \(a \in (-1,\, 0)\), vrednost \(a\) je uvek manja od 1. Prema tome:</p>
+        <div class="math-block">
+          \[ a - 1 < 0 \quad \Longrightarrow \quad |a - 1| = -(a-1) = 1 - a \]
+        </div>
+        <p>Razlomak ispred zagrade postaje:</p>
+        <div class="math-block">
+          \[ \frac{\sqrt{|a-1|}}{2(a-1)} = \frac{\sqrt{1-a}}{2(a-1)} \]
+        </div>
+        <p class="note">Zapamtite: imenilac \(2(a-1)\) je negativan jer je \(a - 1 < 0\). To ce uticati na znak krajnjeg rezultata.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Unutrasnji koren #1: prepoznajemo potpun kvadrat</h3>
+        <p>Posmatrajmo izraz pod prvim unutrasnjim korenom:</p>
+        <div class="math-block">
+          \[ 2 - 2\sqrt{a+1} + a \]
+        </div>
+        <p>Preurecujemo tako sto rastavimo \(2\) na \((a+1) + 1\):</p>
+        <div class="math-block">
+          \[ = (a + 1) - 2\sqrt{a+1} + 1 \]
+        </div>
+        <p>Uvedimo smenu \(t = \sqrt{a+1}\). Tada je \(a + 1 = t^2\), pa dobijamo:</p>
+        <div class="math-block">
+          \[ = t^2 - 2t + 1 = (t - 1)^2 = \left(\sqrt{a+1} - 1\right)^2 \]
+        </div>
+        <p class="note">Kljucni trik: broj 2 smo "razbili" na \((a+1) + 1\), sto nam je omogucilo da prepoznamo potpun kvadrat.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Sta je \(2 + 2\sqrt{a+1} + a\) kao potpun kvadrat?</summary>
+      <p style="margin-top:10px;">Potpuno analogno: \(2 + 2\sqrt{a+1} + a = (\sqrt{a+1} + 1)^2\). Jedina razlika je predznak ispred \(2\sqrt{a+1}\).</p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Unutrasnji koren #2: analogni potpun kvadrat</h3>
+        <p>Isti postupak za drugi izraz pod korenom:</p>
+        <div class="math-block">
+          \[ 2 + 2\sqrt{a+1} + a = (a+1) + 2\sqrt{a+1} + 1 = \left(\sqrt{a+1} + 1\right)^2 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Vadimo korene: pazimo na znak!</h3>
+        <p>Primenjujemo pravilo \(\sqrt{x^2} = |x|\):</p>
+        <div class="math-block">
+          \[ \sqrt{\left(\sqrt{a+1} - 1\right)^2} = \left|\sqrt{a+1} - 1\right| \]
+        </div>
+        <p>Posto je \(a \in (-1, 0)\), imamo \(a + 1 \in (0, 1)\), pa je \(\sqrt{a+1} \in (0, 1)\). Prema tome, \(\sqrt{a+1} - 1 < 0\), i:</p>
+        <div class="math-block">
+          \[ \left|\sqrt{a+1} - 1\right| = 1 - \sqrt{a+1} \]
+        </div>
+        <p>Za drugi koren, \(\sqrt{a+1} + 1 > 0\) uvek, pa:</p>
+        <div class="math-block">
+          \[ \sqrt{\left(\sqrt{a+1} + 1\right)^2} = \sqrt{a+1} + 1 \]
+        </div>
+        <p class="note">Ovo je najvazniji korak! Greska u znaku pri skidanju apsolutne vrednosti je najcesca greska na prijemnom.</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" data-step="5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Sabiramo — \(\sqrt{a+1}\) se krati!</h3>
+        <p>Izracunajmo zbir iz zagrade:</p>
+        <div class="math-block">
+          \[ \left(1 - \sqrt{a+1}\right) + \left(\sqrt{a+1} + 1\right) = 1 - \cancel{\sqrt{a+1}} + \cancel{\sqrt{a+1}} + 1 = 2 \]
+        </div>
+        <p>Elegantno! Ceo izraz u zagradi je jednak konstanti \(2\), bez obzira na vrednost parametra \(a\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko je \(\dfrac{\sqrt{1-a}}{2(a-1)}\) za \(a = -0{,}5\)?</summary>
+      <p style="margin-top:10px;">\(1-a = 1{,}5\), \(\sqrt{1{,}5} \approx 1{,}2247\). Imenilac: \(2 \cdot (-1{,}5) = -3\). Rezultat: \(\dfrac{1{,}2247}{-3} \approx -0{,}4082\).</p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container" data-step="6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Mnozimo i pojednostavljujemo razlomak</h3>
+        <p>Ceo izraz sada glasi:</p>
+        <div class="math-block">
+          \[ \frac{\sqrt{1-a}}{2(a-1)} \cdot 2 = \frac{\sqrt{1-a}}{a-1} \]
+        </div>
+        <p>Posto je \(a - 1 < 0\), zapisujemo \(a - 1 = -(1 - a)\):</p>
+        <div class="math-block">
+          \[ = \frac{\sqrt{1-a}}{-(1-a)} = -\frac{\sqrt{1-a}}{1-a} \]
+        </div>
+        <p>Koristimo cinjenicu da je \(\dfrac{\sqrt{c}}{c} = \dfrac{1}{\sqrt{c}}\) za \(c > 0\):</p>
+        <div class="math-block">
+          \[ = -\frac{1}{\sqrt{1-a}} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Numericki test za \(a = -0{,}5\)</summary>
+      <p style="margin-top:10px;">Ceo izraz \(\approx -0{,}4082 \cdot 2 = -0{,}8165\). Odgovor (C): \(-\dfrac{1}{\sqrt{1{,}5}} \approx -0{,}8165\). Poklapa se!</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2>Kljucni uvid</h2>
+    <p style="margin-bottom:14px;">Oba izraza pod unutrasnjim korenima su potpuni kvadrati — njihovi koreni se medusobno poniste pri sabiranju, ostavljajuci samo konstantu \(2\):</p>
+    <div class="math-block" style="text-align:center; font-size:1.15rem;">
+      \[ \underbrace{(1-\sqrt{a+1})}_{\text{prvi koren}} + \underbrace{(\sqrt{a+1}+1)}_{\text{drugi koren}} = 2 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konacan odgovor</h2>
+    <div class="answer-big">
+      \[ \frac{\sqrt{|a-1|}}{2(a-1)} \cdot \left(\sqrt{2 - 2\sqrt{a+1} + a} + \sqrt{2 + 2\sqrt{a+1} + a}\right) = -\frac{1}{\sqrt{1-a}} \]
+    </div>
+    <div class="answer-options-final">
+      <div class="answer-opt">(A) \(\sqrt{\frac{a+1}{a-1}}\)</div>
+      <div class="answer-opt">(B) \(-\frac{1}{2\sqrt{1-a}}\)</div>
+      <div class="answer-opt correct">(C) \(-\frac{1}{\sqrt{1-a}}\)</div>
+      <div class="answer-opt">(D) \(-\frac{\sqrt{1+a}}{\sqrt{1-a}}\)</div>
+      <div class="answer-opt">(E) \(\frac{1}{\sqrt{a-1}}\)</div>
+    </div>
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> Za \(a = -0{,}5\) direktno racunanje daje \(\approx -0{,}8165\). Odgovor (C): \(-1/\sqrt{1{,}5} \approx -0{,}8165\). Rezultat se poklapa. Takoce, proverite da odgovor (B) daje upola manju vrednost (\(\approx -0{,}4082\)), sto potvrcuje da je (C) tacan izbor, a ne (B).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls">
+    <h2>Ceste greske</h2>
+    <ul>
+      <li><strong>Zaboraviti apsolutnu vrednost pri vadenju korena:</strong> \(\sqrt{(\sqrt{a+1}-1)^2} \neq \sqrt{a+1}-1\) jer je \(\sqrt{a+1} < 1\). Bez apsolutne vrednosti, dobija se pogresan znak, i student bira odgovor (D) umesto (C).</li>
+      <li><strong>Zameniti \(a-1\) i \(1-a\) u imenioci:</strong> Posto je \(a - 1 < 0\), lako je izgubiti negativan predznak. To dovodi do odgovora \(+\frac{1}{\sqrt{1-a}}\) umesto \(-\frac{1}{\sqrt{1-a}}\), ili do besmislenog odgovora (E) koji zahteva koren negativnog broja.</li>
+    </ul>
+  </div>
+
+  <!-- Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Sta bi bio rezultat istog izraza kada bi \(a \in (0, 1)\) umesto \(a \in (-1, 0)\)? Da li se menja samo znak ili i forma rezultata?</p>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p style="margin-top:10px;">Kada je \(a \in (0,1)\), i dalje je \(a-1 < 0\) i \(\sqrt{a+1} > 1\). Razmislite kako se menja \(|\sqrt{a+1}-1|\) sada kada je \(\sqrt{a+1} > 1\). Zbir u zagradi nece vise biti 2!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  // High DPI support
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = 700 * dpr;
+  canvas.height = 420 * dpr;
+  ctx.scale(dpr, dpr);
+  const W = 700, H = 420;
+
+  // Slider state
+  let sliderVal = 0.5; // 0 to 1 maps to a in (-1, 0)
+  let dragging = false;
+
+  const sliderX0 = 80, sliderX1 = W - 80, sliderY = 370;
+
+  function aFromSlider(t) {
+    return -1 + t; // t in (0,1) -> a in (-1, 0)
+  }
+
+  function evaluate(a) {
+    const absA1 = Math.abs(a - 1);
+    const front = Math.sqrt(absA1) / (2 * (a - 1));
+    const inner1 = Math.sqrt(2 - 2 * Math.sqrt(a + 1) + a);
+    const inner2 = Math.sqrt(2 + 2 * Math.sqrt(a + 1) + a);
+    return front * (inner1 + inner2);
+  }
+
+  function answerC(a) {
+    return -1 / Math.sqrt(1 - a);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, W, H, 12);
+    ctx.fill();
+
+    const a = aFromSlider(sliderVal);
+
+    // --- Graph area ---
+    const gLeft = 80, gRight = W - 40, gTop = 40, gBottom = 320;
+    const gW = gRight - gLeft, gH = gBottom - gTop;
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 5; i++) {
+      const y = gTop + (gH / 5) * i;
+      ctx.beginPath(); ctx.moveTo(gLeft, y); ctx.lineTo(gRight, y); ctx.stroke();
+    }
+    for (let i = 0; i <= 5; i++) {
+      const x = gLeft + (gW / 5) * i;
+      ctx.beginPath(); ctx.moveTo(x, gTop); ctx.lineTo(x, gBottom); ctx.stroke();
+    }
+
+    // Axes labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('a', gLeft + gW / 2, gBottom + 18);
+    ctx.save();
+    ctx.translate(gLeft - 40, gTop + gH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('vrednost', 0, 0);
+    ctx.restore();
+
+    // Scale: a from -0.99 to -0.01, y from -5 to 0
+    const aMin = -0.99, aMax = -0.01;
+    const yMin = -5, yMax = 0.5;
+
+    function toPixel(av, yv) {
+      const px = gLeft + ((av - aMin) / (aMax - aMin)) * gW;
+      const py = gBottom - ((yv - yMin) / (yMax - yMin)) * gH;
+      return [px, py];
+    }
+
+    // Tick marks on x-axis
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let v = -0.9; v <= -0.09; v += 0.2) {
+      const [px, py] = toPixel(v, yMin);
+      ctx.fillText(v.toFixed(1).replace('.', ','), px, gBottom + 16);
+    }
+
+    // Tick marks on y-axis
+    ctx.textAlign = 'right';
+    for (let v = -5; v <= 0; v += 1) {
+      const [px, py] = toPixel(aMin, v);
+      ctx.fillText(v.toString(), gLeft - 8, py + 4);
+    }
+
+    // Zero line
+    const [, zeroY] = toPixel(aMin, 0);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(gLeft, zeroY); ctx.lineTo(gRight, zeroY); ctx.stroke();
+
+    // Plot the original expression (evaluated numerically)
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i <= 200; i++) {
+      const av = aMin + (aMax - aMin) * (i / 200);
+      const yv = evaluate(av);
+      if (isFinite(yv) && yv >= yMin && yv <= yMax) {
+        const [px, py] = toPixel(av, yv);
+        if (!started) { ctx.moveTo(px, py); started = true; }
+        else ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+
+    // Plot answer (C) - should overlap perfectly
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    started = false;
+    for (let i = 0; i <= 200; i++) {
+      const av = aMin + (aMax - aMin) * (i / 200);
+      const yv = answerC(av);
+      if (isFinite(yv) && yv >= yMin && yv <= yMax) {
+        const [px, py] = toPixel(av, yv);
+        if (!started) { ctx.moveTo(px, py); started = true; }
+        else ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Current point
+    const curY = evaluate(a);
+    if (isFinite(curY)) {
+      const [px, py] = toPixel(a, curY);
+      // Glow
+      const grad = ctx.createRadialGradient(px, py, 0, px, py, 20);
+      grad.addColorStop(0, 'rgba(244,114,182,0.5)');
+      grad.addColorStop(1, 'rgba(244,114,182,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(px, py, 20, 0, Math.PI * 2); ctx.fill();
+      // Point
+      ctx.fillStyle = '#f472b6';
+      ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Vertical dashed line
+      ctx.strokeStyle = 'rgba(244,114,182,0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, gBottom); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Legend
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    // Original expression
+    ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(gLeft + 10, gTop + 15); ctx.lineTo(gLeft + 35, gTop + 15); ctx.stroke();
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Polazni izraz', gLeft + 42, gTop + 19);
+    // Answer C
+    ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(gLeft + 10, gTop + 33); ctx.lineTo(gLeft + 35, gTop + 33); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('Odgovor (C): -1/\u221A(1-a)', gLeft + 42, gTop + 37);
+
+    // --- Slider ---
+    // Track
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(sliderX0, sliderY); ctx.lineTo(sliderX1, sliderY); ctx.stroke();
+
+    // Filled part
+    const sx = sliderX0 + sliderVal * (sliderX1 - sliderX0);
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(sliderX0, sliderY); ctx.lineTo(sx, sliderY); ctx.stroke();
+
+    // Handle
+    const hGrad = ctx.createRadialGradient(sx, sliderY, 0, sx, sliderY, 14);
+    hGrad.addColorStop(0, 'rgba(167,139,250,0.4)');
+    hGrad.addColorStop(1, 'rgba(167,139,250,0)');
+    ctx.fillStyle = hGrad;
+    ctx.beginPath(); ctx.arc(sx, sliderY, 14, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.beginPath(); ctx.arc(sx, sliderY, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Labels
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'left';
+    ctx.fillText('a = -1', sliderX0, sliderY + 22);
+    ctx.textAlign = 'right';
+    ctx.fillText('a = 0', sliderX1, sliderY + 22);
+
+    // Current value display
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#f472b6';
+    const aStr = a.toFixed(2).replace('.', ',');
+    const valStr = isFinite(curY) ? curY.toFixed(4).replace('.', ',') : '---';
+    ctx.fillText('a = ' + aStr + '   \u2192   f(a) = ' + valStr, W / 2, sliderY - 14);
+
+    ctx.lineCap = 'butt';
+  }
+
+  function getSliderT(clientX, clientY) {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = W / r.width;
+    const x = (clientX - r.left) * scaleX;
+    let t = (x - sliderX0) / (sliderX1 - sliderX0);
+    t = Math.max(0.01, Math.min(0.99, t));
+    return t;
+  }
+
+  function isNearSlider(clientX, clientY) {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = W / r.width;
+    const scaleY = H / r.height;
+    const x = (clientX - r.left) * scaleX;
+    const y = (clientY - r.top) * scaleY;
+    return Math.abs(y - sliderY) < 30 && x >= sliderX0 - 15 && x <= sliderX1 + 15;
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    if (isNearSlider(e.clientX, e.clientY)) {
+      dragging = true;
+      sliderVal = getSliderT(e.clientX, e.clientY);
+      draw();
+    }
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (dragging) {
+      sliderVal = getSliderT(e.clientX, e.clientY);
+      draw();
+    }
+  });
+
+  canvas.addEventListener('mouseup', () => { dragging = false; });
+  canvas.addEventListener('mouseleave', () => { dragging = false; });
+
+  canvas.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    if (isNearSlider(t.clientX, t.clientY)) {
+      dragging = true;
+      sliderVal = getSliderT(t.clientX, t.clientY);
+      draw();
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    if (dragging) {
+      const t = e.touches[0];
+      sliderVal = getSliderT(t.clientX, t.clientY);
+      draw();
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', () => { dragging = false; });
+
+  // Step click highlight
+  document.querySelectorAll('.step-container').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.step-container').forEach(s => s.classList.remove('active'));
+      el.classList.toggle('active');
+    });
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje izraza sa korenima i apsolutnom vrednoscu",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["apsolutna vrednost", "potpun kvadrat", "koreni", "racionalizacija", "algebarski izrazi"]
+}
+BRAINSPARK_META-->

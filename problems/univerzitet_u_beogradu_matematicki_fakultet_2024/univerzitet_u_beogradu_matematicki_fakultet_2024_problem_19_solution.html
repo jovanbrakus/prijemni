@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bijekcije skupa sa fiksiranim parnim brojevima</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM ANALYSIS:
+We have the set S = {1, 2, ..., 2024} and need to count bijections f: S -> S
+such that every even number maps to itself, i.e. f(k) = k for every even k.
+
+KNOWN FACTS:
+- S = {1, 2, ..., 2024}
+- Even numbers in S: {2, 4, 6, ..., 2024} — there are 2024/2 = 1012 of them
+- Odd numbers in S: {1, 3, 5, ..., 2023} — there are 1012 of them
+- Condition: f(k) = k for all even k (every even number is a fixed point)
+
+SOLUTION:
+Since every even number must map to itself (f(k) = k for even k), those 1012 elements
+are completely fixed. A bijection must be injective and surjective.
+
+Since f is a bijection of S to itself, and f fixes all 1012 even numbers, the remaining
+1012 odd numbers must map among themselves. (No odd number can map to an even number
+because that even number is already "taken" by itself, and f must be injective.)
+
+So f restricted to {1, 3, 5, ..., 2023} is a bijection from this set of 1012 odd numbers
+to itself. The number of such bijections is exactly 1012!.
+
+ANSWER VERIFICATION:
+- (A) 2024! — this would be all bijections with no restriction. Too many.
+- (B) 2 * 1012! — there's no factor of 2 involved. Wrong.
+- (C) 1012! — correct! The 1012 odd numbers permute freely.
+- (D) 2^1012 — this would arise if each odd number had exactly 2 choices, but that's not the case.
+- (E) nijedan od ponudjenih odgovora — wrong, (C) is correct.
+
+Correct answer: (C) 1012!
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.plan-card h2 {
+  color: #a78bfa;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .detail-content {
+  padding: 16px 0 8px 8px;
+}
+
+details .detail-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+details .detail-content li {
+  margin-bottom: 12px;
+  padding-left: 20px;
+  position: relative;
+  line-height: 1.8;
+}
+
+details .detail-content li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: #60a5fa;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.step-container:hover,
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .reveal {
+  padding-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 14px;
+}
+
+.insight-formula {
+  font-size: 1.5rem;
+  color: #4ade80;
+  margin: 14px 0;
+}
+
+.final-answer {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer h2 {
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-answer .answer-text {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.answer-options-final .option-card {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(56,189,248,0.06);
+  border: 1px solid #334155;
+  min-width: 90px;
+  text-align: center;
+  font-size: 1rem;
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+
+.answer-options-final .option-card.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(52,211,153,0.15);
+}
+
+.verification {
+  margin-top: 18px;
+  padding: 14px 18px;
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.15);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfalls {
+  border-left: 4px solid #f472b6;
+}
+
+.pitfalls h2 {
+  color: #f472b6;
+}
+
+.pitfalls ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfalls li {
+  margin-bottom: 12px;
+  padding-left: 24px;
+  position: relative;
+  line-height: 1.7;
+}
+
+.pitfalls li::before {
+  content: '⚠';
+  position: absolute;
+  left: 0;
+}
+
+.challenge {
+  border-left: 4px solid #60a5fa;
+}
+
+.challenge h2 {
+  color: #60a5fa;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 8px 12px; }
+  .step-container { flex-direction: column; gap: 10px; }
+  .answer-options-final { gap: 8px; }
+  .answer-options-final .option-card { min-width: 70px; padding: 8px 14px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Bijekcije sa fiksiranim parnim brojevima</h1>
+  <p class="subtitle">Kombinatorika — prebrojavanje permutacija sa ograničenjima</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Broj bijekcija skupa \(\{1, 2, \ldots, 2024\}\) u sebe, kojima se svaki paran broj slika u sebe, je:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(2024!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2 \cdot 1012!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(1012!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(2^{1012}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">Nijedan od ponuđenih</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Pošto su svi parni brojevi fiksirani (preslikavaju se u sebe), preostaje da prebrojimo na koliko načina možemo permutovati neparne brojeve međusobno. Ukupno ima 1012 neparnih brojeva, a svaka njihova permutacija daje jednu validnu bijekciju.</p>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i pojmovi</summary>
+      <div class="detail-content">
+        <ul>
+          <li><strong>Bijekcija (bijektivno preslikavanje):</strong> Preslikavanje \(f: A \to A\) koje je i injektivno (1-1) i surjektivno (na). Za konačan skup \(A\), bijekcija je isto što i permutacija.</li>
+          <li><strong>Broj permutacija:</strong> Skup od \(n\) elemenata ima tačno \(n!\) permutacija. Važi \(n! = n \cdot (n-1) \cdot (n-2) \cdots 2 \cdot 1\).</li>
+          <li><strong>Fiksna tačka:</strong> Element \(x\) za koji važi \(f(x) = x\). Ako je \(f\) bijekcija i neki elementi su fiksirani, preostali elementi se permutuju nezavisno.</li>
+          <li><strong>Princip razdvajanja:</strong> Ako je \(A = A_1 \cup A_2\) disjunktna unija i \(f\) fiksira svaki element iz \(A_1\), onda \(f\) ograničeno na \(A_2\) mora biti bijekcija \(A_2 \to A_2\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="bijectCanvas" width="800" height="500"></canvas>
+    <p class="drag-hint">Kliknite na neparan broj da vidite kako se permutacija menja</p>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Identifikujemo parne i neparne brojeve</h3>
+        <p>Skup \(\{1, 2, 3, \ldots, 2024\}\) sadrži:</p>
+        <div class="math-block">
+          \[\text{Parni: } \{2, 4, 6, \ldots, 2024\} \quad \Rightarrow \quad \frac{2024}{2} = 1012 \text{ brojeva}\]
+        </div>
+        <div class="math-block">
+          \[\text{Neparni: } \{1, 3, 5, \ldots, 2023\} \quad \Rightarrow \quad \frac{2024}{2} = 1012 \text{ brojeva}\]
+        </div>
+        <p class="note">Skup je podeljen na dva jednaka dela: po 1012 parnih i 1012 neparnih brojeva.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Primenjujemo uslov: svaki paran broj je fiksna tačka</h3>
+        <p>Uslov zadatka kaže da se svaki paran broj <strong>slika u sebe</strong>. To znači:</p>
+        <div class="math-block">
+          \[f(2) = 2, \quad f(4) = 4, \quad f(6) = 6, \quad \ldots, \quad f(2024) = 2024\]
+        </div>
+        <p>Dakle, svih 1012 parnih brojeva je <strong>fiksirano</strong> — za njih nemamo nikakav izbor.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Koliko elemenata je fiksirano?</summary>
+      <div class="reveal">Tačno 1012 elemenata (svi parni) je fiksirano. Preostaje nam sloboda samo nad neparnim brojevima.</div>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Neparni brojevi moraju preslikavati u neparne</h3>
+        <p>Pošto je \(f\) bijekcija (svaki element ima tačno jednu sliku i svaki element je slika tačno jednog elementa), a svi parni su već "zauzeti" — svaki paran broj je slika samog sebe — sledi da se neparni brojevi mogu preslikavati <strong>samo u neparne brojeve</strong>.</p>
+        <div class="math-block">
+          \[f\big|_{\{1,3,5,\ldots,2023\}} : \{1, 3, 5, \ldots, 2023\} \to \{1, 3, 5, \ldots, 2023\}\]
+        </div>
+        <p class="note">Ograničenje bijekcije na podskup neparnih daje bijekciju tog podskupa u sebe.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Brojimo permutacije neparnih brojeva</h3>
+        <p>Svaka bijekcija skupa od 1012 neparnih brojeva u sebe je jedna permutacija tog skupa. Broj takvih permutacija je:</p>
+        <div class="math-block">
+          \[1012!\]
+        </div>
+        <p>Nema dodatnih ograničenja na neparne brojeve — oni se mogu rasporediti potpuno slobodno.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Zašto odgovor nije \(2024!\)?</summary>
+      <div class="reveal">\(2024!\) je broj <em>svih</em> bijekcija bez ikakvog ograničenja. Mi imamo jako strogo ograničenje — 1012 od 2024 elementa su potpuno fiksirani, pa preostaje samo \(1012!\) izbora.</div>
+    </details>
+
+    <div class="step-container" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Eliminišemo ostale ponuđene odgovore</h3>
+        <p>Proverimo zašto ostali odgovori nisu tačni:</p>
+        <ul style="margin-top:10px; padding-left: 20px; line-height: 2;">
+          <li><strong>(A) \(2024!\)</strong> — ovo je broj svih permutacija bez ograničenja. Previše.</li>
+          <li><strong>(B) \(2 \cdot 1012!\)</strong> — nema razloga za faktor 2. Parni brojevi nemaju nikakav izbor.</li>
+          <li><strong>(D) \(2^{1012}\)</strong> — ovo bi bilo tačno ako bi svaki neparni imao tačno 2 moguća izbora (npr. zamena u parovima), ali to ovde nije slučaj.</li>
+          <li><strong>(E)</strong> — odgovor (C) je tačan, pa ovo ne važi.</li>
+        </ul>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Kada bi odgovor bio \(2^{1012}\)?</summary>
+      <div class="reveal">Odgovor \(2^{1012}\) bi bio tačan ako bi se neparni brojevi delili u 1012 nezavisnih parova, gde u svakom paru biramo jedan od dva rasporeda. Na primer, ako bi uslov bio da je \(f\) involucija (tj. \(f(f(x)) = x\)) koja fiksira sve parne brojeve. Ali u ovom zadatku nema takvog ograničenja.</div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Kada bijekcija fiksira određene elemente, preostali elementi formiraju nezavisan podskup koji se permutuje slobodno.</p>
+    <div class="insight-formula">
+      \[\text{1012 fiksiranih (parni)} + \text{1012 slobodnih (neparni)} \implies \boxed{1012!}\]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+
+    <div class="answer-options-final">
+      <div class="option-card">
+        <div>(A) \(2024!\)</div>
+      </div>
+      <div class="option-card">
+        <div>(B) \(2 \cdot 1012!\)</div>
+      </div>
+      <div class="option-card correct">
+        <div>(C) \(1012!\)</div>
+      </div>
+      <div class="option-card">
+        <div>(D) \(2^{1012}\)</div>
+      </div>
+      <div class="option-card">
+        <div>(E) Nijedan</div>
+      </div>
+    </div>
+
+    <div class="answer-text">\(\text{Odgovor je (C)} \quad 1012!\)</div>
+
+    <div class="verification">
+      <strong>Provera:</strong> Imamo 2024 elementa, od kojih je 1012 (parnih) fiksirano. Preostalih 1012 (neparnih) se permutuje slobodno. Broj permutacija skupa od \(n\) elemenata je \(n!\), dakle odgovor je \(1012!\). Dimenzionalno, ovo ima smisla: \(1012!\) je ogromno velik broj, ali daleko manji od \(2024!\), što odgovara činjenici da smo nametnuli strogo ograničenje.
+    </div>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card pitfalls">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Brkanje „slika u sebe" sa „slika u paran".</strong> Uslov kaže da se svaki paran broj slika <em>u sebe</em> (tj. \(f(k) = k\)), a ne u bilo koji paran broj. Da je uslov bio „svaki paran se slika u paran", odgovor bi bio \((1012!)^2\) jer bi i parni i neparni imali slobodu permutacije.</li>
+      <li><strong>Dodavanje faktora 2.</strong> Neki studenti dodaju faktor 2 misleći da postoji neki „izbor parnosti" ili slično. Ali pošto su svi parni potpuno fiksirani, nema nikakvog dodatnog izbora — samo neparni se permutuju.</li>
+    </ul>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card challenge">
+    <h2>Dodatni izazov</h2>
+    <p>Koliki bi bio broj bijekcija skupa \(\{1, 2, \ldots, 2024\}\) u sebe ako bi uslov bio da se svaki paran broj slika u <em>neki</em> paran broj (ne obavezno u sebe)?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="detail-content">
+        <p>U tom slučaju, parni brojevi se permutuju među sobom (1012! načina), a neparni takođe među sobom (1012! načina). Ukupno: \((1012!)^2\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('bijectCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Example with small set {1,2,3,4,5,6,7,8} to illustrate
+  const leftSet = [1, 2, 3, 4, 5, 6, 7, 8];
+  const rightSet = [1, 2, 3, 4, 5, 6, 7, 8];
+
+  // Current permutation of odd numbers
+  let oddPerm = [1, 3, 5, 7]; // images of 1,3,5,7
+  let animating = false;
+
+  function shuffleOddPerm() {
+    const arr = [1, 3, 5, 7];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    oddPerm = arr;
+  }
+
+  function getMapping(n) {
+    if (n % 2 === 0) return n; // even -> fixed
+    const oddIndex = Math.floor(n / 2); // 1->0, 3->1, 5->2, 7->3
+    return oddPerm[oddIndex];
+  }
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const leftX = 180;
+    const rightX = 620;
+    const startY = 55;
+    const gap = 55;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Primer: S = {1, 2, 3, 4, 5, 6, 7, 8}', W / 2, 30);
+
+    // Labels
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Domen', leftX, startY - 20);
+    ctx.fillText('Kodomen', rightX, startY - 20);
+
+    // Draw arrows and elements
+    for (let i = 0; i < 8; i++) {
+      const n = leftSet[i];
+      const y = startY + i * gap;
+      const isEven = n % 2 === 0;
+      const target = getMapping(n);
+      const targetIndex = rightSet.indexOf(target);
+      const targetY = startY + targetIndex * gap;
+
+      // Left element circle
+      const radius = 22;
+      ctx.beginPath();
+      ctx.arc(leftX, y, radius, 0, 2 * Math.PI);
+      if (isEven) {
+        ctx.fillStyle = 'rgba(52,211,153,0.15)';
+        ctx.strokeStyle = '#34d399';
+      } else {
+        ctx.fillStyle = 'rgba(96,165,250,0.15)';
+        ctx.strokeStyle = '#60a5fa';
+      }
+      ctx.lineWidth = 2;
+      ctx.fill();
+      ctx.stroke();
+
+      // Left number
+      ctx.fillStyle = isEven ? '#34d399' : '#60a5fa';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(n), leftX, y);
+
+      // Right element circle
+      ctx.beginPath();
+      ctx.arc(rightX, y, radius, 0, 2 * Math.PI);
+      if (isEven) {
+        ctx.fillStyle = 'rgba(52,211,153,0.15)';
+        ctx.strokeStyle = '#34d399';
+      } else {
+        ctx.fillStyle = 'rgba(96,165,250,0.15)';
+        ctx.strokeStyle = '#60a5fa';
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      // Right number
+      ctx.fillStyle = isEven ? '#34d399' : '#60a5fa';
+      ctx.fillText(String(n), rightX, y);
+
+      // Arrow from left to right
+      const arrowStartX = leftX + radius + 4;
+      const arrowEndX = rightX - radius - 4;
+
+      ctx.beginPath();
+      ctx.moveTo(arrowStartX, y);
+
+      if (isEven) {
+        // Even: straight arrow to same position
+        ctx.lineTo(arrowEndX, targetY);
+        ctx.strokeStyle = 'rgba(52,211,153,0.5)';
+        ctx.setLineDash([6, 4]);
+      } else {
+        // Odd: curved arrow
+        const midX = (arrowStartX + arrowEndX) / 2;
+        const curveOffset = (targetIndex - i) * 8;
+        ctx.bezierCurveTo(midX, y + curveOffset, midX, targetY - curveOffset, arrowEndX, targetY);
+        ctx.strokeStyle = 'rgba(96,165,250,0.7)';
+        ctx.setLineDash([]);
+      }
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Arrowhead
+      const angle = Math.atan2(targetY - y, arrowEndX - arrowStartX);
+      const headLen = 8;
+      ctx.beginPath();
+      ctx.moveTo(arrowEndX, targetY);
+      ctx.lineTo(arrowEndX - headLen * Math.cos(angle - 0.4), targetY - headLen * Math.sin(angle - 0.4));
+      ctx.moveTo(arrowEndX, targetY);
+      ctx.lineTo(arrowEndX - headLen * Math.cos(angle + 0.4), targetY - headLen * Math.sin(angle + 0.4));
+      ctx.strokeStyle = isEven ? 'rgba(52,211,153,0.5)' : 'rgba(96,165,250,0.7)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Legend
+    const legendY = startY + 8 * gap + 10;
+
+    ctx.beginPath();
+    ctx.arc(leftX - 40, legendY, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(52,211,153,0.3)';
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Parni — fiksirani (f(k) = k)', leftX - 26, legendY);
+
+    ctx.beginPath();
+    ctx.arc(leftX - 40, legendY + 28, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(96,165,250,0.3)';
+    ctx.strokeStyle = '#60a5fa';
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Neparni — slobodno se permutuju', leftX - 26, legendY + 28);
+
+    // Info text
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Trenutna permutacija neparnih: 1→' + oddPerm[0] + ', 3→' + oddPerm[1] + ', 5→' + oddPerm[2] + ', 7→' + oddPerm[3], W / 2, legendY + 60);
+    ctx.fillText('Za 4 neparna broja: 4! = 24 mogućih bijekcija', W / 2, legendY + 80);
+  }
+
+  draw();
+
+  // Click handler to shuffle odd permutation
+  canvas.addEventListener('click', function(e) {
+    if (animating) return;
+    shuffleOddPerm();
+    draw();
+  });
+
+  canvas.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    if (animating) return;
+    shuffleOddPerm();
+    draw();
+  });
+
+  // Step click handlers
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', function() {
+      steps.forEach(s => s.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Bijekcije sa fiksiranim parnim brojevima",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["bijekcije", "permutacije", "kombinatorika", "fiksne tačke", "faktorijel"]
+}
+BRAINSPARK_META-->

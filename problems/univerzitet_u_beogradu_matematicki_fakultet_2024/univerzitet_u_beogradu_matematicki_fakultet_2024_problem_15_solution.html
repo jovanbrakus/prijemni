@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trocifreni brojevi - zbir kvadrata cifara deljiv sa 3</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Find the count of three-digit numbers whose sum of squares of digits is divisible by 3.
+
+A three-digit number has digits a, b, c where a is the hundreds digit (1-9), b is tens (0-9), c is units (0-9).
+We need: a^2 + b^2 + c^2 ≡ 0 (mod 3).
+
+KEY INSIGHT: n^2 mod 3 depends only on n mod 3:
+- If n ≡ 0 (mod 3): n^2 ≡ 0 (mod 3)
+- If n ≡ 1 (mod 3): n^2 ≡ 1 (mod 3)
+- If n ≡ 2 (mod 3): n^2 ≡ 4 ≡ 1 (mod 3)
+
+So n^2 mod 3 is either 0 (when 3|n) or 1 (when 3∤n).
+
+For a^2 + b^2 + c^2 ≡ 0 (mod 3), we need the sum of the remainders to be 0 mod 3.
+Each remainder is either 0 or 1, so possible sums are: 0+0+0=0, 0+0+1=1, 0+1+0=1, 1+0+0=1, 0+1+1=2, 1+0+1=2, 1+1+0=2, 1+1+1=3≡0.
+
+So the sum is divisible by 3 iff:
+CASE 1: All three digits are divisible by 3 (remainders 0+0+0=0)
+CASE 2: None of the three digits is divisible by 3 (remainders 1+1+1=3≡0)
+
+CASE 1: All digits divisible by 3
+- a (hundreds): from {3, 6, 9} → 3 choices (can't be 0)
+- b (tens): from {0, 3, 6, 9} → 4 choices
+- c (units): from {0, 3, 6, 9} → 4 choices
+- Total: 3 × 4 × 4 = 48
+
+CASE 2: No digit divisible by 3
+- a (hundreds): from {1, 2, 4, 5, 7, 8} → 6 choices (all non-multiples-of-3 in 1-9)
+- b (tens): from {1, 2, 4, 5, 7, 8} → 6 choices (all non-multiples-of-3 in 0-9, same set since 0 is divisible by 3)
+- c (units): from {1, 2, 4, 5, 7, 8} → 6 choices
+- Total: 6 × 6 × 6 = 216
+
+GRAND TOTAL: 48 + 216 = 264
+
+Answer: (D) 264
+
+VERIFICATION: Total three-digit numbers = 900 (100-999).
+Expected fraction divisible by 3: roughly 1/3 of 900 = 300. Our answer 264 is close but less, which makes sense because the distribution is not uniform (digit 0 behaves differently for hundreds place).
+
+Alternative verification: Count by considering all digits 0-9:
+Digits divisible by 3: {0,3,6,9} → 4 out of 10
+Digits not divisible by 3: {1,2,4,5,7,8} → 6 out of 10
+For three independent digits 0-9: P(all div by 3) = (4/10)^3, P(none div by 3) = (6/10)^3
+But hundreds digit restricted to 1-9, so this isn't exactly right. Our case analysis is correct.
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.theory-content li {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: rgba(96,165,250,0.06);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(96,165,250,0.06);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 1rem;
+}
+
+.checkpoint-answer {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(52,211,153,0.08);
+  border-radius: 8px;
+  color: #4ade80;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.insight-formula {
+  font-size: 1.3rem;
+  margin: 16px 0;
+  color: #e2e8f0;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid rgba(74,222,128,0.3);
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(74,222,128,0.08));
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.answer-opt {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+.answer-opt.correct {
+  background: rgba(74,222,128,0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(52,211,153,0.06);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.pitfalls {
+  border-left: 4px solid #e09468;
+}
+
+.pitfalls h2 {
+  color: #e09468;
+}
+
+.pitfalls ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfalls li {
+  padding: 8px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.pitfalls li::before {
+  content: "!";
+  position: absolute;
+  left: 0;
+  color: #e09468;
+  font-weight: 700;
+}
+
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+.mod-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+
+.mod-table th, .mod-table td {
+  padding: 10px 14px;
+  text-align: center;
+  border: 1px solid #334155;
+}
+
+.mod-table th {
+  background: rgba(96,165,250,0.12);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.mod-table td {
+  background: rgba(56,189,248,0.04);
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.case-box {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.12);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.case-title {
+  font-weight: 700;
+  color: #60a5fa;
+  margin-bottom: 8px;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .container { padding: 16px 12px; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 8px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Trocifreni brojevi i deljivost zbira kvadrata cifara</h1>
+  <p class="subtitle">Teorija brojeva - modularna aritmetika i kombinatorika</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Trocifrenih brojeva čiji je zbir kvadrata cifara deljiv sa <span class="highlight-blue">3</span> ima:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(48\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(102\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(216\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(264\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(300\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Koristićemo osobinu da \(n^2 \bmod 3\) zavisi samo od \(n \bmod 3\): ako je cifra deljiva sa 3, njen kvadrat daje ostatak 0, inače daje ostatak 1. Analiziraćemo kada je zbir tih ostataka deljiv sa 3, pa za svaki slučaj prebrojati kombinacije cifara.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Ostatak kvadrata pri deljenju sa 3:</strong> Za svaki ceo broj \(n\) važi: \(n^2 \equiv 0 \pmod{3}\) ako je \(3 \mid n\), odnosno \(n^2 \equiv 1 \pmod{3}\) ako \(3 \nmid n\).</li>
+          <li><strong>Deljivost zbira:</strong> Zbir \(a^2 + b^2 + c^2\) je deljiv sa 3 ako i samo ako je \((a^2 \bmod 3) + (b^2 \bmod 3) + (c^2 \bmod 3) \equiv 0 \pmod{3}\).</li>
+          <li><strong>Princip množenja (pravilo proizvoda):</strong> Ako se prvi izbor može napraviti na \(m\) načina, a drugi nezavisno na \(n\) načina, ukupan broj kombinacija je \(m \cdot n\).</li>
+          <li><strong>Trocifreni brojevi:</strong> To su brojevi od 100 do 999. Cifra stotina \(a \in \{1, 2, \ldots, 9\}\), cifra desetica \(b \in \{0, 1, \ldots, 9\}\), cifra jedinica \(c \in \{0, 1, \ldots, 9\}\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz: ostatak \(n^2\) pri deljenju sa 3</h2>
+    <canvas id="mainCanvas" width="800" height="420"></canvas>
+    <p class="drag-hint">Dijagram prikazuje klasifikaciju cifara 0-9 prema ostatku njihovog kvadrata pri deljenju sa 3</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step" tabindex="0">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Odredimo ostatke kvadrata cifara pri deljenju sa 3</h3>
+        <p>Neka je trocifreni broj \(\overline{abc}\), gde je \(a\) cifra stotina, \(b\) cifra desetica i \(c\) cifra jedinica. Potrebno je da važi:</p>
+        <div class="math-block">
+          \[a^2 + b^2 + c^2 \equiv 0 \pmod{3}\]
+        </div>
+        <p>Izračunajmo \(n^2 \bmod 3\) za sve cifre od 0 do 9:</p>
+        <div class="table-container">
+          <table class="mod-table">
+            <tr>
+              <th>\(n\)</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+            </tr>
+            <tr>
+              <th>\(n^2\)</th><td>0</td><td>1</td><td>4</td><td>9</td><td>16</td><td>25</td><td>36</td><td>49</td><td>64</td><td>81</td>
+            </tr>
+            <tr>
+              <th>\(n^2 \bmod 3\)</th>
+              <td class="highlight-green">0</td>
+              <td class="highlight-pink">1</td>
+              <td class="highlight-pink">1</td>
+              <td class="highlight-green">0</td>
+              <td class="highlight-pink">1</td>
+              <td class="highlight-pink">1</td>
+              <td class="highlight-green">0</td>
+              <td class="highlight-pink">1</td>
+              <td class="highlight-pink">1</td>
+              <td class="highlight-green">0</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" tabindex="0">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Uočimo pravilnost</h3>
+        <p>Iz tabele vidimo da važi prosta zakonitost:</p>
+        <div class="math-block">
+          \[n^2 \bmod 3 = \begin{cases} 0, & \text{ako } 3 \mid n \\ 1, & \text{ako } 3 \nmid n \end{cases}\]
+        </div>
+        <p>To znači da svaka cifra daje doprinos zbiru ostataka jednak ili <span class="highlight-green">0</span> ili <span class="highlight-pink">1</span>.</p>
+        <p class="note">Ovo važi jer je \(n \equiv 0, 1\) ili \(2 \pmod{3}\), pa je \(n^2 \equiv 0, 1\) ili \(4 \equiv 1 \pmod{3}\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko iznosi \(7^2 \bmod 3\)?</summary>
+      <div class="checkpoint-answer">
+        \(7^2 = 49\), a \(49 = 16 \cdot 3 + 1\), dakle \(7^2 \bmod 3 = 1\). Pošto \(3 \nmid 7\), ostatak je 1.
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step" tabindex="0">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Kada je zbir ostataka deljiv sa 3?</h3>
+        <p>Neka su ostaci pojedinih cifara \(r_a, r_b, r_c \in \{0, 1\}\). Treba da važi:</p>
+        <div class="math-block">
+          \[r_a + r_b + r_c \equiv 0 \pmod{3}\]
+        </div>
+        <p>Pošto su svi ostaci 0 ili 1, zbir može biti 0, 1, 2 ili 3. Od toga su deljivi sa 3:</p>
+        <div class="case-box">
+          <div class="case-title">Slučaj I: \(r_a + r_b + r_c = 0\)</div>
+          <p>Sva tri ostatka su 0, tj. <span class="highlight-green">sve tri cifre su deljive sa 3</span>.</p>
+        </div>
+        <div class="case-box">
+          <div class="case-title">Slučaj II: \(r_a + r_b + r_c = 3\)</div>
+          <p>Sva tri ostatka su 1, tj. <span class="highlight-pink">nijedna cifra nije deljiva sa 3</span>.</p>
+        </div>
+        <p class="note">Zbir 1 ili 2 ne daje deljivost sa 3, pa mešoviti slučajevi ne odgovaraju.</p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" tabindex="0">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Slučaj I: Sve cifre deljive sa 3</h3>
+        <p>Cifre deljive sa 3 su: \(\{0, 3, 6, 9\}\).</p>
+        <p>Cifra stotina \(a\) ne može biti 0 (jer je broj trocifreni), pa:</p>
+        <div class="math-block">
+          \[\begin{align}
+          a &\in \{3, 6, 9\} &&\Rightarrow 3 \text{ izbora} \\
+          b &\in \{0, 3, 6, 9\} &&\Rightarrow 4 \text{ izbora} \\
+          c &\in \{0, 3, 6, 9\} &&\Rightarrow 4 \text{ izbora}
+          \end{align}\]
+        </div>
+        <p>Po pravilu proizvoda:</p>
+        <div class="math-block">
+          \[N_I = 3 \cdot 4 \cdot 4 = \color{#4ade80}{48}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Nabroj sve trocifrene brojeve čije su sve cifre deljive sa 3 i cifra stotina je 3.</summary>
+      <div class="checkpoint-answer">
+        To su: 300, 303, 306, 309, 330, 333, 336, 339, 360, 363, 366, 369, 390, 393, 396, 399. Ukupno \(4 \times 4 = 16\) brojeva, što je tačno \(48 / 3 = 16\) po svakom izboru za \(a\).
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step" tabindex="0">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Slučaj II: Nijedna cifra nije deljiva sa 3</h3>
+        <p>Cifre koje nisu deljive sa 3 su: \(\{1, 2, 4, 5, 7, 8\}\) &mdash; to je 6 cifara.</p>
+        <p>Pošto nijedna od ovih cifara nije 0, ne postoji ograničenje za cifru stotina &mdash; sve tri cifre biramo iz istog skupa:</p>
+        <div class="math-block">
+          \[\begin{align}
+          a &\in \{1, 2, 4, 5, 7, 8\} &&\Rightarrow 6 \text{ izbora} \\
+          b &\in \{1, 2, 4, 5, 7, 8\} &&\Rightarrow 6 \text{ izbora} \\
+          c &\in \{1, 2, 4, 5, 7, 8\} &&\Rightarrow 6 \text{ izbora}
+          \end{align}\]
+        </div>
+        <p>Po pravilu proizvoda:</p>
+        <div class="math-block">
+          \[N_{II} = 6 \cdot 6 \cdot 6 = 6^3 = \color{#4ade80}{216}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step" tabindex="0">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Ukupan broj</h3>
+        <p>Slučajevi su međusobno isključivi (cifre su ili sve deljive sa 3 ili nijedna nije), pa sabiramo:</p>
+        <div class="math-block">
+          \[N = N_I + N_{II} = 48 + 216 = \color{#4ade80}{264}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Zašto ne postoji slučaj gde su tačno jedna ili tačno dve cifre deljive sa 3?</summary>
+      <div class="checkpoint-answer">
+        Ako je tačno jedna cifra deljiva sa 3, ostaci su \(0 + 1 + 1 = 2\), što nije deljivo sa 3. Ako su tačno dve deljive sa 3, ostaci su \(0 + 0 + 1 = 1\), što takođe nije deljivo sa 3. Samo \(0+0+0=0\) i \(1+1+1=3\) daju deljivost sa 3.
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Kvadrat broja pri deljenju sa 3 daje samo ostatak 0 ili 1. Zato zbir tri takva ostatka može biti deljiv sa 3 jedino ako su svi ostaci jednaki &mdash; ili svi 0 ili svi 1.</p>
+    <div class="insight-formula">
+      \[48 + 216 = \color{#4ade80}{264}\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-options-final">
+      <div class="answer-opt">(A) \(48\)</div>
+      <div class="answer-opt">(B) \(102\)</div>
+      <div class="answer-opt">(C) \(216\)</div>
+      <div class="answer-opt correct">(D) \(264\)</div>
+      <div class="answer-opt">(E) \(300\)</div>
+    </div>
+    <div class="answer-value">\(\boxed{264}\)</div>
+    <p>Tačan odgovor je <strong>(D) 264</strong>.</p>
+    <div class="verification">
+      <strong>Provera:</strong> Ukupno trocifrenih brojeva ima 900. Primetimo da je \(264/900 \approx 29{,}3\%\), što je blizu trećine. To ima smisla jer od tri moguća ostatka pri deljenju sa 3 (0, 1, 2), kvadrati cifara daju samo dva (0 i 1), pa distribucija nije savršeno uniformna, ali je bliska vrednosti \(\frac{1}{3}\). Takođe, primetimo da su parcijalni rezultati 48 i 216 ponuđeni odgovori (A) i (C), što potvrđuje da je rešenje 48 + 216 = 264 konzistentno.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Zaboraviti da cifra stotina ne može biti 0:</strong> U slučaju I, za cifru stotina imamo samo 3 izbora (\(\{3,6,9\}\)), ne 4. Ako bismo uzeli 4, dobili bismo \(4 \cdot 4 \cdot 4 = 64\) umesto 48, i konačan rezultat bi bio 280 &mdash; što nije ni među ponuđenim odgovorima.</li>
+      <li><strong>Pomisliti da su svi ostaci (0, 1, 2) mogući za \(n^2 \bmod 3\):</strong> Ostatak 2 se nikada ne pojavljuje kao kvadratni ostatak po modulu 3. To drastično pojednostavljuje analizu na samo dva slučaja.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Koliko ima trocifrenih brojeva čiji je zbir <em>kubova</em> cifara deljiv sa 9?</p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <div class="checkpoint-answer">
+        Primetimo da \(n^3 \equiv n \pmod{3}\) za svako \(n\) (mali Fermaov teorem za \(p = 3\)). Ali pošto se traži deljivost sa 9, trebalo bi ispitati \(n^3 \bmod 9\) za sve cifre 0-9 i analizirati sve kombinacije ostataka čiji je zbir deljiv sa 9.
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+    step.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        step.click();
+      }
+    });
+  });
+
+  // Canvas visualization
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function drawVisualization() {
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Klasifikacija cifara prema n\u00B2 mod 3', W / 2, 30);
+
+    // Two groups
+    const groupY = 70;
+    const groupH = 320;
+
+    // Group 1: divisible by 3 (remainder 0)
+    const g1x = 60;
+    const g1w = 300;
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.06)';
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(g1x, groupY, g1w, groupH, 14);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('n\u00B2 mod 3 = 0', g1x + g1w / 2, groupY + 28);
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('(cifre deljive sa 3)', g1x + g1w / 2, groupY + 48);
+
+    // Digits in group 1: 0, 3, 6, 9
+    const digits1 = [0, 3, 6, 9];
+    const digitSize = 44;
+    const startY1 = groupY + 70;
+    digits1.forEach((d, i) => {
+      const cx = g1x + g1w / 2;
+      const cy = startY1 + i * 60;
+
+      // Circle
+      ctx.beginPath();
+      ctx.arc(cx - 60, cy, digitSize / 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
+      ctx.fill();
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Digit
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(d), cx - 60, cy);
+
+      // Arrow and calculation
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(d + '\u00B2 = ' + (d * d) + '  \u2192  ' + (d * d) + ' mod 3 = 0', cx - 20, cy);
+    });
+
+    // Group 2: not divisible by 3 (remainder 1)
+    const g2x = 420;
+    const g2w = 340;
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.06)';
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(g2x, groupY, g2w, groupH, 14);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('n\u00B2 mod 3 = 1', g2x + g2w / 2, groupY + 28);
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('(cifre koje nisu deljive sa 3)', g2x + g2w / 2, groupY + 48);
+
+    // Digits in group 2: 1, 2, 4, 5, 7, 8
+    const digits2 = [1, 2, 4, 5, 7, 8];
+    const startY2 = groupY + 70;
+    digits2.forEach((d, i) => {
+      const cx = g2x + g2w / 2;
+      const cy = startY2 + i * 45;
+
+      // Circle
+      ctx.beginPath();
+      ctx.arc(cx - 80, cy, digitSize / 2 - 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(244, 114, 182, 0.15)';
+      ctx.fill();
+      ctx.strokeStyle = '#f472b6';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Digit
+      ctx.fillStyle = '#f472b6';
+      ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(d), cx - 80, cy);
+
+      // Calculation
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(d + '\u00B2 = ' + (d * d) + '  \u2192  ' + (d * d) + ' mod 3 = 1', cx - 40, cy);
+    });
+
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  drawVisualization();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Trocifreni brojevi sa zbirom kvadrata cifara deljivim sa 3",
+  "subject": "math",
+  "unit": "number-theory",
+  "topic_tags": ["modularna aritmetika", "kvadratni ostaci", "kombinatorika", "deljivost", "trocifreni brojevi"]
+}
+BRAINSPARK_META-->

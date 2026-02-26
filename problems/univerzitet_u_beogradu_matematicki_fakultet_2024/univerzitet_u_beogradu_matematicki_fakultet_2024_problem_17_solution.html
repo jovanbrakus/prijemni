@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nule polinoma sa kompleksnim korenima</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Given that 1 + i*sqrt(3) is a zero of the polynomial
+  P(x) = x^3 + a*x^2 + 2x + b, where a, b are real numbers,
+  find the real zero of the polynomial.
+
+  Key insight: Since the polynomial has REAL coefficients (a, b in R),
+  complex roots come in conjugate pairs. So if 1 + i*sqrt(3) is a root,
+  then 1 - i*sqrt(3) is also a root.
+
+  Method 1: Substitution
+  P(1 + i*sqrt(3)) = 0
+
+  Compute (1 + i*sqrt(3))^2:
+  = 1 + 2*i*sqrt(3) + (i*sqrt(3))^2
+  = 1 + 2i*sqrt(3) - 3
+  = -2 + 2i*sqrt(3)
+
+  Compute (1 + i*sqrt(3))^3:
+  = (1 + i*sqrt(3)) * (-2 + 2i*sqrt(3))
+  = -2 + 2i*sqrt(3) - 2i*sqrt(3) + 2i^2 * 3
+  = -2 + 2i*sqrt(3) - 2i*sqrt(3) - 6
+  = -8
+
+  So P(1 + i*sqrt(3)) = -8 + a*(-2 + 2i*sqrt(3)) + 2*(1 + i*sqrt(3)) + b
+  = -8 - 2a + 2ai*sqrt(3) + 2 + 2i*sqrt(3) + b
+  = (-8 - 2a + 2 + b) + i*sqrt(3)*(2a + 2)
+  = (-6 - 2a + b) + i*sqrt(3)*(2a + 2)
+
+  For this to equal 0, both real and imaginary parts must be 0:
+  Imaginary: 2a + 2 = 0 => a = -1
+  Real: -6 - 2(-1) + b = 0 => -6 + 2 + b = 0 => b = 4
+
+  So the polynomial is: x^3 - x^2 + 2x + 4
+
+  Method 2: Using conjugate pairs
+  The two complex roots are 1 + i*sqrt(3) and 1 - i*sqrt(3).
+  Their product as a quadratic factor:
+  (x - (1 + i*sqrt(3)))(x - (1 - i*sqrt(3)))
+  = (x - 1)^2 - (i*sqrt(3))^2
+  = (x - 1)^2 + 3
+  = x^2 - 2x + 1 + 3
+  = x^2 - 2x + 4
+
+  Now divide x^3 - x^2 + 2x + 4 by x^2 - 2x + 4:
+  x^3 - x^2 + 2x + 4 = (x^2 - 2x + 4)(x + c)
+  Expanding: x^3 + cx^2 - 2x^2 - 2cx + 4x + 4c
+  = x^3 + (c-2)x^2 + (-2c+4)x + 4c
+
+  Comparing with x^3 - x^2 + 2x + 4:
+  c - 2 = -1 => c = 1
+  -2c + 4 = -2 + 4 = 2 ✓
+  4c = 4 ✓
+
+  So x^3 - x^2 + 2x + 4 = (x^2 - 2x + 4)(x + 1)
+
+  The real root is x = -1.
+
+  Answer: (B) -1
+
+  Verification: P(-1) = (-1)^3 - (-1)^2 + 2(-1) + 4 = -1 - 1 - 2 + 4 = 0 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-text {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  text-align: center;
+  min-width: 70px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+  padding: 8px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  background: rgba(96, 165, 250, 0.04);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-note {
+  color: #34d399;
+  font-size: 1.2rem;
+  margin-top: 8px;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.final-option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  min-width: 70px;
+  text-align: center;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.verification-note {
+  margin-top: 18px;
+  padding: 14px 20px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid {
+    flex-wrap: wrap;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+  .final-options {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Nule polinoma sa kompleksnim korenima</h1>
+  <p class="subtitle">Polinomi sa realnim koeficijentima — konjugovani kompleksni koreni i faktorizacija</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <div class="problem-text">
+      <p>Ako je \( 1 + i\sqrt{3} \) nula polinoma \( x^3 + ax^2 + 2x + b \), gde su \( a, b \in \mathbb{R} \), onda je realna nula tog polinoma:</p>
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">
+          <div class="label">(A)</div>
+          <div class="value">\(-2\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="B">
+          <div class="label">(B)</div>
+          <div class="value">\(-1\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="C">
+          <div class="label">(C)</div>
+          <div class="value">\(1\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="D">
+          <div class="label">(D)</div>
+          <div class="value">\(2\)</div>
+        </div>
+        <div class="given-item answer-option" data-option="E">
+          <div class="label">(E)</div>
+          <div class="value">\(4\)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan resavanja</div>
+    <p class="plan-text">
+      Posto polinom ima realne koeficijente, kompleksni koreni dolaze u konjugovanim parovima. Iskoristicemo to da formiramo kvadratni faktor od dva kompleksna korena, a zatim podelimo polinom tim faktorom da nadjemo realni koren.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Kompleksni koreni polinoma sa realnim koeficijentima (klikni da otvoris)</summary>
+      <div class="detail-content">
+        <p><strong>Teorema o konjugovanim korenima:</strong> Ako polinom sa realnim koeficijentima ima kompleksan koren \( z = \alpha + i\beta \), onda je i njegov konjugat \( \bar{z} = \alpha - i\beta \) takodje koren tog polinoma.</p>
+        <div class="step-math">
+          \[ P(z) = 0 \;\Rightarrow\; P(\bar{z}) = 0 \quad \text{(za } P \text{ sa realnim koeficijentima)} \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Kvadratni faktor od konjugovanih korena:</strong> Par konjugovanih korena daje kvadratni faktor sa realnim koeficijentima:</p>
+        <div class="step-math">
+          \[ (x - z)(x - \bar{z}) = (x - \alpha)^2 + \beta^2 = x^2 - 2\alpha x + (\alpha^2 + \beta^2) \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Supstitucija kompleksnog broja:</strong> Kada ubacimo \( z = \alpha + i\beta \) u polinom sa realnim koeficijentima, izraz \( P(z) = 0 \) daje dva uslova: realni deo jednak nuli i imaginarni deo jednak nuli.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Canvas: Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Koreni polinoma u kompleksnoj ravni</div>
+    <div class="canvas-wrapper">
+      <canvas id="rootsPlane" width="700" height="500"></canvas>
+    </div>
+    <p class="canvas-caption">Tri korena polinoma \( x^3 - x^2 + 2x + 4 \): dva konjugovana kompleksna i jedan realan. Prevuci slider ispod da menjas koeficijent \( a \).</p>
+    <div style="text-align: center; margin-top: 14px;">
+      <label style="color: #94a3b8; font-size: 0.95rem;" id="slider-label">Koeficijent \( a \): <span id="a-display" style="color: #60a5fa; font-weight: 600;">-1</span></label>
+      <br>
+      <input type="range" id="a-slider" min="-4" max="2" step="0.1" value="-1"
+        style="width: 80%; max-width: 400px; margin-top: 8px; accent-color: #60a5fa;">
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step" id="step-1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Primenjujemo teoremu o konjugovanim korenima</div>
+        <p>Polinom \( P(x) = x^3 + ax^2 + 2x + b \) ima <strong>realne koeficijente</strong> (jer su \( a, b \in \mathbb{R} \)).</p>
+        <p style="margin-top: 8px;">Prema teoremi o konjugovanim korenima, ako je \( 1 + i\sqrt{3} \) nula polinoma, onda je i njegov konjugat nula:</p>
+        <div class="step-math">
+          \[ z_1 = 1 + i\sqrt{3} \quad \Rightarrow \quad z_2 = \overline{z_1} = 1 - i\sqrt{3} \]
+        </div>
+        <p style="margin-top: 8px; color: #94a3b8;">Polinom treceg stepena ima tacno tri korena (racunajuci kratnost). Dva su kompleksna, treci mora biti realan.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" id="step-2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Formiramo kvadratni faktor od kompleksnih korena</div>
+        <p>Proizvod dva linearna faktora koji odgovaraju konjugovanim korenima daje kvadratni faktor sa realnim koeficijentima:</p>
+        <div class="step-math">
+          \[ \bigl(x - (1 + i\sqrt{3})\bigr)\bigl(x - (1 - i\sqrt{3})\bigr) \]
+        </div>
+        <p>Koristimo formulu za razliku kvadrata \( (A-B)(A+B) = A^2 - B^2 \), gde je \( A = x - 1 \) i \( B = i\sqrt{3} \):</p>
+        <div class="step-math">
+          \[ = (x - 1)^2 - (i\sqrt{3})^2 \]
+        </div>
+        <p>Izracunavamo svaki deo:</p>
+        <div class="step-math">
+          \[ (x-1)^2 = x^2 - 2x + 1 \]
+        </div>
+        <div class="step-math">
+          \[ (i\sqrt{3})^2 = i^2 \cdot 3 = -3 \]
+        </div>
+        <p>Zamenjujemo:</p>
+        <div class="step-math">
+          \[ (x^2 - 2x + 1) - (-3) = x^2 - 2x + 1 + 3 = x^2 - 2x + 4 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Koliko iznosi \( (1+i\sqrt{3})(1-i\sqrt{3}) \)?</summary>
+            <div class="detail-content">
+              To je proizvod konjugovanih kompleksnih brojeva: \( |1 + i\sqrt{3}|^2 = 1^2 + (\sqrt{3})^2 = 1 + 3 = 4 \). Ovo je slobodni clan kvadratnog faktora \( x^2 - 2x + 4 \).
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step" id="step-3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Nalazimo koeficijente \( a \) i \( b \) supstitucijom</div>
+        <p>Posto su \( z_1 \) i \( z_2 \) koreni, polinom se moze zapisati kao:</p>
+        <div class="step-math">
+          \[ x^3 + ax^2 + 2x + b = (x^2 - 2x + 4)(x + c) \]
+        </div>
+        <p>Razmnoziemo desnu stranu:</p>
+        <div class="step-math">
+          \[ (x^2 - 2x + 4)(x + c) = x^3 + cx^2 - 2x^2 - 2cx + 4x + 4c \]
+        </div>
+        <div class="step-math">
+          \[ = x^3 + (c - 2)x^2 + (4 - 2c)x + 4c \]
+        </div>
+        <p>Izjednacavamo koeficijente sa \( x^3 + ax^2 + 2x + b \):</p>
+        <div class="step-math">
+          \[ \begin{align}
+          x^2: \quad & c - 2 = a \\
+          x^1: \quad & 4 - 2c = 2 \\
+          x^0: \quad & 4c = b
+          \end{align} \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Iz jednacine \( 4 - 2c = 2 \), koliko je \( c \)?</summary>
+            <div class="detail-content">
+              Resavamo: \( 4 - 2c = 2 \;\Rightarrow\; 2c = 2 \;\Rightarrow\; c = 1 \). Dakle treci (linearni) faktor je \( (x + 1) \).
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" id="step-4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Odredjujemo vrednosti \( a \), \( b \) i \( c \)</div>
+        <p>Iz jednacine za koeficijent uz \( x \):</p>
+        <div class="step-math">
+          \[ 4 - 2c = 2 \quad \Rightarrow \quad 2c = 2 \quad \Rightarrow \quad c = 1 \]
+        </div>
+        <p>Sada nalazimo \( a \) i \( b \):</p>
+        <div class="step-math">
+          \[ a = c - 2 = 1 - 2 = -1 \]
+        </div>
+        <div class="step-math">
+          \[ b = 4c = 4 \cdot 1 = 4 \]
+        </div>
+        <p>Polinom je, dakle:</p>
+        <div class="step-math">
+          \[ P(x) = x^3 - x^2 + 2x + 4 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step" id="step-5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Kompletna faktorizacija i realan koren</div>
+        <p>Sada znamo potpunu faktorizaciju:</p>
+        <div class="step-math">
+          \[ x^3 - x^2 + 2x + 4 = (x^2 - 2x + 4)(x + 1) \]
+        </div>
+        <p>Faktor \( x + 1 = 0 \) daje realan koren:</p>
+        <div class="step-math">
+          \[ x = -1 \]
+        </div>
+        <p style="color: #94a3b8; margin-top: 8px;">Kvadratni faktor \( x^2 - 2x + 4 \) nema realnih korena (diskriminanta je \( D = 4 - 16 = -12 < 0 \)), sto potvrdjuje da su njegovi koreni upravo \( 1 \pm i\sqrt{3} \).</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Da li je \( P(-1) = 0 \)?</summary>
+            <div class="detail-content">
+              \( P(-1) = (-1)^3 - (-1)^2 + 2 \cdot (-1) + 4 = -1 - 1 - 2 + 4 = 0 \). Da, potvrdjeno!
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Kljucni uvid</div>
+    <p>Kada polinom ima realne koeficijente, kompleksni koreni uvek dolaze u <strong>konjugovanim parovima</strong>. To znaci da od jednog kompleksnog korena mozemo odmah formirati kvadratni faktor sa realnim koeficijentima, a zatim jednostavnom deobom naci preostali (realni) koren. Nema potrebe racunati \( (1 + i\sqrt{3})^3 \) direktno!</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( x = -1 \)</div>
+    <div class="answer-note">Tacan odgovor je (B)</div>
+    <div class="final-options">
+      <div class="final-option">(A) \(-2\)</div>
+      <div class="final-option correct">(B) \(-1\)</div>
+      <div class="final-option">(C) \(1\)</div>
+      <div class="final-option">(D) \(2\)</div>
+      <div class="final-option">(E) \(4\)</div>
+    </div>
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> \( P(-1) = (-1)^3 - (-1)^2 + 2(-1) + 4 = -1 - 1 - 2 + 4 = 0 \;\checkmark \)
+      <br>Takodje, \( P(x) = (x^2 - 2x + 4)(x + 1) \), gde \( x^2 - 2x + 4 \) ima korene \( 1 \pm i\sqrt{3} \;\checkmark \)
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Ceste greske</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Zaboravljanje konjugovanog korena:</strong> Ako polinom ima realne koeficijente i kompleksan koren \( 1 + i\sqrt{3} \), onda je i \( 1 - i\sqrt{3} \) koren. Mnogi ucenici pokusaju da rade samo sa jednim kompleksnim korenom i zavrse sa komplikovanom algebrom.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Greska pri racunanju \( (i\sqrt{3})^2 \):</strong> Cesta greska je pisati \( (i\sqrt{3})^2 = 3 \) umesto \( (i\sqrt{3})^2 = i^2 \cdot 3 = -3 \). Ovo potpuno menja kvadratni faktor!</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Ako je \( 2 - i \) nula polinoma \( x^3 + cx^2 + dx + e \) sa realnim koeficijentima, i znamo da je zbir svih korena jednak \( -3 \), odredi sve tri nule i vrednosti \( c, d, e \).</p>
+    <details>
+      <summary>Pogledaj savet</summary>
+      <div class="detail-content">
+        <p>Konjugovani koren je \( 2 + i \). Zbir svih korena je \( -c = -3 \), pa je \( c = 3 \).</p>
+        <p>Zbir dva kompleksna korena je \( (2-i) + (2+i) = 4 \).</p>
+        <p>Treci koren je \( -3 - 4 = -7 \). Konstruisi polinom iz tri korena.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('rootsPlane');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const slider = document.getElementById('a-slider');
+  const aDisplay = document.getElementById('a-display');
+
+  // Roots of the actual polynomial (a=-1, b=4)
+  const root1Re = 1, root1Im = Math.sqrt(3);
+  const root2Re = 1, root2Im = -Math.sqrt(3);
+  const realRoot = -1;
+
+  function draw(aVal) {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const cx = W / 2 + 30;
+    const cy = H / 2;
+    const scale = 70;
+
+    // Grid
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+    ctx.lineWidth = 1;
+    for (let i = -4; i <= 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(cx + i * scale, 20);
+      ctx.lineTo(cx + i * scale, H - 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(30, cy + i * scale);
+      ctx.lineTo(W - 30, cy + i * scale);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(30, cy);
+    ctx.lineTo(W - 30, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, 15);
+    ctx.lineTo(cx, H - 15);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Re', W - 28, cy - 10);
+    ctx.textAlign = 'center';
+    ctx.fillText('Im', cx + 18, 26);
+
+    // Tick marks
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = -4; i <= 4; i++) {
+      if (i === 0) continue;
+      ctx.beginPath();
+      ctx.moveTo(cx + i * scale, cy - 4);
+      ctx.lineTo(cx + i * scale, cy + 4);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillText(i.toString(), cx + i * scale, cy + 18);
+
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, cy - i * scale);
+      ctx.lineTo(cx + 4, cy - i * scale);
+      ctx.stroke();
+      ctx.textAlign = 'right';
+      ctx.fillText(i + 'i', cx - 10, cy - i * scale + 4);
+      ctx.textAlign = 'center';
+    }
+
+    // For a = aVal, compute the polynomial:
+    // The complex root is still 1 + i*sqrt(3), conjugate is 1 - i*sqrt(3)
+    // quadratic factor: x^2 - 2x + 4
+    // P(x) = (x^2 - 2x + 4)(x + c) where c = a + 2
+    // b = 4c = 4(a+2)
+    var cVal = aVal + 2;
+    var bVal = 4 * cVal;
+    var realRootDynamic = -cVal;
+
+    // Draw the polynomial curve on the real axis
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.5)';
+    ctx.lineWidth = 2;
+    var firstPoint = true;
+    for (var px = -4; px <= 4; px += 0.02) {
+      var py = px * px * px + aVal * px * px + 2 * px + bVal;
+      var canvasX = cx + px * scale;
+      var canvasY = cy - py * (scale / 8);
+      if (canvasY < -50 || canvasY > H + 50) {
+        firstPoint = true;
+        continue;
+      }
+      if (firstPoint) {
+        ctx.moveTo(canvasX, canvasY);
+        firstPoint = false;
+      } else {
+        ctx.lineTo(canvasX, canvasY);
+      }
+    }
+    ctx.stroke();
+
+    // Draw x-axis zero line reference for the curve
+    // (already the real axis)
+
+    // Highlight the conjugate pair roots (always at 1 +/- i*sqrt(3))
+    function drawRoot(re, im, color, label, offX, offY) {
+      var rpx = cx + re * scale;
+      var rpy = cy - im * scale;
+
+      // Glow
+      var grad = ctx.createRadialGradient(rpx, rpy, 0, rpx, rpy, 18);
+      grad.addColorStop(0, color.replace(')', ', 0.3)').replace('rgb', 'rgba'));
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(rpx, rpy, 18, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(rpx, rpy, 7, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(rpx, rpy, 3, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Label
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(label, rpx + offX, rpy + offY);
+    }
+
+    // Dashed line connecting conjugate pair
+    var p1x = cx + root1Re * scale;
+    var p1y = cy - root1Im * scale;
+    var p2x = cx + root2Re * scale;
+    var p2y = cy + root1Im * scale;
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(p1x, p1y);
+    ctx.lineTo(p2x, p2y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw conjugate roots
+    drawRoot(root1Re, root1Im, '#60a5fa', '1 + i\u221A3', 10, -8);
+    drawRoot(root2Re, root2Im, '#a78bfa', '1 \u2212 i\u221A3', 10, 18);
+
+    // Draw real root (dynamic based on slider)
+    var isCorrectA = Math.abs(aVal - (-1)) < 0.05;
+    var realColor = isCorrectA ? '#4ade80' : '#e09468';
+    var realLabel = 'x = ' + realRootDynamic.toFixed(1);
+
+    if (Math.abs(realRootDynamic) <= 4.5) {
+      drawRoot(realRootDynamic, 0, realColor, realLabel, 8, -14);
+    }
+
+    // Information box
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    var boxX = 20, boxY = 20, boxW = 220, boxH = 100;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('a = ' + aVal.toFixed(1) + ',  b = ' + bVal.toFixed(1), boxX + 12, boxY + 24);
+    ctx.fillText('c = ' + cVal.toFixed(1), boxX + 12, boxY + 42);
+    ctx.fillStyle = realColor;
+    ctx.fillText('Realan koren: x = ' + realRootDynamic.toFixed(1), boxX + 12, boxY + 62);
+
+    if (isCorrectA) {
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Uslovi ispunjeni!', boxX + 12, boxY + 84);
+    } else {
+      ctx.fillStyle = '#e09468';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Koef. uz x: ' + (4 - 2 * cVal).toFixed(1) + ' (treba: 2)', boxX + 12, boxY + 84);
+    }
+
+    // Legend
+    var legY = H - 18;
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.beginPath();
+    ctx.arc(W / 2 - 200, legY - 3, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.textAlign = 'left';
+    ctx.fillText('1 + i\u221A3', W / 2 - 190, legY);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.beginPath();
+    ctx.arc(W / 2 - 80, legY - 3, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillText('1 \u2212 i\u221A3', W / 2 - 70, legY);
+
+    ctx.fillStyle = realColor;
+    ctx.beginPath();
+    ctx.arc(W / 2 + 50, legY - 3, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillText('Realan koren', W / 2 + 60, legY);
+
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.5)';
+    ctx.beginPath();
+    ctx.arc(W / 2 + 180, legY - 3, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillText('P(x)', W / 2 + 190, legY);
+  }
+
+  draw(-1);
+
+  slider.addEventListener('input', function() {
+    var val = parseFloat(this.value);
+    aDisplay.textContent = val.toFixed(1);
+    draw(val);
+  });
+
+  // Step click highlighting
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Nule polinoma sa kompleksnim korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["polinomi", "kompleksni brojevi", "konjugovani koreni", "faktorizacija polinoma", "nule polinoma"]
+}
+BRAINSPARK_META-->

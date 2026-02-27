@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brojanje ishoda igre sa novcicem</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Ucenik baca novcic i belezi rezultat. Igra se zavrsava kada se po cetvrti put pojavi
+jedna od strana novcica. Koliko ima mogucih ishoda?
+
+ANALIZA:
+- Novcic ima dve strane: oznacimo ih P (pismo/glava) i G (grb/pismo).
+- Igra se zavrsava cim jedna strana dodje do 4 pojavljivanja.
+- Niz rezultata moze imati duzinu od 4 do 7:
+  * Duzina 4: sva 4 bacanja ista strana (npr. PPPP ili GGGG)
+  * Duzina 5: jedna strana se pojavi 4 puta, druga 1 put
+  * Duzina 6: jedna strana 4 puta, druga 2 puta
+  * Duzina 7: jedna strana 4 puta, druga 3 puta
+  (Duzina 8 bi bila 4:4 ali igra se zavrsava pre toga)
+
+KLJUCNI UVID: Poslednje bacanje MORA biti strana koja je dostigla 4 pojavljivanja.
+
+BROJANJE ISHODA KOJI SE ZAVRSAVAJU 4. POJAVOM P:
+- Niz ima duzinu k (gde je k od 4 do 7)
+- Poslednji element je P
+- Medju prvih k-1 elemenata, tacno 3 su P (i ostali su G)
+- Broj nacina da se rasporedi 3 P medju k-1 pozicija: C(k-1, 3)
+
+Za k=4: C(3,3) = 1    (PPPP)
+Za k=5: C(4,3) = 4    (3 P medju prvih 4, poslednji P)
+Za k=6: C(5,3) = 10   (3 P medju prvih 5, poslednji P)
+Za k=7: C(6,3) = 20   (3 P medju prvih 6, poslednji P)
+
+Ukupno za P: 1 + 4 + 10 + 20 = 35
+
+SIMETRIJA: Isti broj ishoda za G: 35
+
+UKUPNO: 35 + 35 = 70
+
+ALTERNATIVNI PRISTUP:
+Bijekija sa nizovima duzine 7 sa tacno 4 jedne strane.
+Svaki ishod je prefiks nekog niza duzine 7 sa tacno 4 P (ili 4 G).
+Zapravo, bijekcija: svaki ishod koji zavrsava 4. P jednoznacno odgovara
+rasporedu 4 P i 3 G u nizu duzine 7 (dopunimo preostale pozicije sa G).
+Broj takvih nizova: C(7,4) = 35. Puta 2 (za obe strane): 70.
+
+ODGOVOR: (C) 70
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h2 .icon {
+  font-size: 1.4rem;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 14px 0;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  text-align: center;
+  flex: 1 1 auto;
+  min-width: 80px;
+}
+
+.answer-option {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.18);
+}
+
+.answer-option .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.answer-option .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step {
+  margin-bottom: 20px;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.check-yourself {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.18);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.check-yourself summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.18);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.insight-box h3 {
+  color: #a78bfa;
+  margin-bottom: 10px;
+}
+
+.final-answer {
+  background: rgba(52,211,153,0.08);
+  border: 2px solid rgba(52,211,153,0.25);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin: 24px 0;
+}
+
+.final-answer h2 {
+  color: #4ade80;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.final-answer .answer-text {
+  font-size: 1.6rem;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.pitfalls {
+  color: #f472b6;
+}
+
+.pitfalls li {
+  margin-bottom: 8px;
+  margin-left: 20px;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 10px 0;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto;
+  touch-action: none;
+}
+
+.highlight-blue { color: #60a5fa; font-weight: 600; }
+.highlight-green { color: #34d399; font-weight: 600; }
+.highlight-pink { color: #f472b6; font-weight: 600; }
+.highlight-purple { color: #a78bfa; font-weight: 600; }
+
+.challenge-box {
+  background: rgba(244,114,182,0.08);
+  border: 1px solid rgba(244,114,182,0.18);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.challenge-box h3 {
+  color: #f472b6;
+  margin-bottom: 10px;
+}
+
+.drag-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.4rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { flex-direction: column; }
+  .final-answer .answer-text { font-size: 1.2rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Brojanje ishoda igre sa novčićem</h1>
+  <p class="subtitle">Kombinatorika — sistematično prebrojavanje nizova</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2><span class="icon">📋</span> Tekst zadatka</h2>
+    <p>
+      Učenik igra igru u kojoj baca novčić (koji ima dve različite strane) i nakon svakog bacanja beleži dobijeni rezultat, a igra se završava u momentu u kom se <span class="highlight-blue">po četvrti put pojavi jedna od strana novčića</span>. Ishod igre predstavlja dobijeni niz rezultata. Koliko ima mogućih ishoda opisane igre?
+    </p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(35\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(56\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(70\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(112\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(117\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2><span class="icon">🗺️</span> Plan rešavanja</h2>
+    <p class="plan-text">
+      Prebrojićemo ishode koji se završavaju <span class="highlight-blue">četvrtim pojavljivanjem jedne strane</span>, razdvajajući po dužini niza.
+      Koristićemo <span class="highlight-purple">binomne koeficijente</span> za brojanje rasporeda, a zatim simetriju za ukupan rezultat.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <details>
+    <summary>📖 Podsetnik iz teorije</summary>
+    <div class="card">
+      <p style="margin-bottom: 12px;">Ključne formule iz kombinatorike:</p>
+      <div class="math-box">
+        \[\binom{n}{k} = \frac{n!}{k!(n-k)!}\]
+      </div>
+      <p style="margin-bottom: 8px;"><span class="highlight-blue">Binomni koeficijent</span> \(\binom{n}{k}\) daje broj načina da se izabere \(k\) elemenata iz skupa od \(n\) elemenata, bez obzira na redosled.</p>
+      <div class="math-box">
+        \[\binom{n}{0} = 1, \quad \binom{n}{1} = n, \quad \binom{n}{n} = 1\]
+      </div>
+      <p style="margin-bottom: 8px;">Konkretne vrednosti koje koristimo:</p>
+      <div class="math-box">
+        \[\binom{3}{3} = 1, \quad \binom{4}{3} = 4, \quad \binom{5}{3} = 10, \quad \binom{6}{3} = 20\]
+      </div>
+      <p><span class="highlight-purple">Princip simetrije:</span> ako se isti argument primeni na obe strane novčića, rezultate možemo udvostručiti.</p>
+    </div>
+  </details>
+
+  <!-- Canvas Visual — Tree diagram -->
+  <div class="card">
+    <h2><span class="icon">📊</span> Vizuelni prikaz — stablo ishoda</h2>
+    <canvas id="mainCanvas" width="900" height="520"></canvas>
+    <p class="drag-hint">Dijagram stabla sa primerima ishoda po dužini niza</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2><span class="icon">📝</span> Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-header"><span class="step-badge">1</span> Razumemo strukturu igre</div>
+      <p>Označimo strane novčića sa <span class="highlight-blue">P</span> (pismo) i <span class="highlight-pink">G</span> (grb). Igra se završava čim jedna strana dostigne <strong>4 pojavljivanja</strong>.</p>
+      <p>To znači da niz rezultata može imati različite dužine:</p>
+      <div class="math-box">
+        \[\text{Dužina niza: } 4, \; 5, \; 6 \text{ ili } 7\]
+      </div>
+      <p>Niz ne može biti duži od 7, jer bi to značilo da obe strane imaju po 4 ili više pojavljivanja pre završetka — ali igra se završava čim jedna strana dostigne 4.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-header"><span class="step-badge">2</span> Fiksiramo stranu koja pobeđuje</div>
+      <p>Prebrojimo najpre ishode u kojima se igra završava <span class="highlight-blue">četvrtim P</span>. Poslednje bacanje <strong>mora</strong> biti P.</p>
+      <p>Ako je niz dužine \(k\), onda:</p>
+      <ul style="margin: 10px 0 10px 24px;">
+        <li>Poslednji element je P (fiksiran)</li>
+        <li>Među prvih \(k - 1\) elemenata, tačno <strong>3 su P</strong></li>
+        <li>Preostala \(k - 4\) mesta su G (i mora ih biti manje od 4, tj. \(k - 4 \leq 3\))</li>
+      </ul>
+      <p>Broj načina da rasporedimo 3 slova P na \(k - 1\) pozicija:</p>
+      <div class="math-box">
+        \[\binom{k-1}{3}\]
+      </div>
+    </div>
+
+    <!-- Micro-checkpoint 1 -->
+    <details class="check-yourself">
+      <summary>Proveri sebe: Zašto mora poslednji element biti P?</summary>
+      <p style="margin-top: 8px;">Zato što igra završava <em>u momentu</em> kada se P pojavi četvrti put. Da je četvrto P bilo ranije, igra bi se završila pre kraja niza. Dakle, četvrto P je upravo poslednji element.</p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-header"><span class="step-badge">3</span> Sabiramo po dužinama niza</div>
+      <p>Za svaku moguću dužinu \(k\) od 4 do 7 izračunamo:</p>
+      <div class="math-box">
+        \[\begin{aligned}
+        k = 4: &\quad \binom{3}{3} = 1 \\[6pt]
+        k = 5: &\quad \binom{4}{3} = 4 \\[6pt]
+        k = 6: &\quad \binom{5}{3} = 10 \\[6pt]
+        k = 7: &\quad \binom{6}{3} = 20
+        \end{aligned}\]
+      </div>
+      <p>Primer za \(k = 5\): niz ima oblik \(\_ \; \_ \; \_ \; \_ \; \mathbf{P}\), gde su među prva 4 mesta tačno 3 slova P. Četiri načina: PPPGP, PPGPP, PGPPP, GPPP P.</p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-header"><span class="step-badge">4</span> Ukupno ishoda za jednu stranu</div>
+      <p>Saberemo sve ishode koji se završavaju četvrtim P:</p>
+      <div class="math-box">
+        \[1 + 4 + 10 + 20 = 35\]
+      </div>
+    </div>
+
+    <!-- Micro-checkpoint 2 -->
+    <details class="check-yourself">
+      <summary>Proveri sebe: Koliko ishoda dužine 6 se završava četvrtim G?</summary>
+      <p style="margin-top: 8px;">Odgovor: \(\binom{5}{3} = 10\). Isti račun kao za P — samo zamenimo uloge P i G.</p>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-header"><span class="step-badge">5</span> Primenimo simetriju</div>
+      <p>Potpuno istim argumentom, broj ishoda koji se završavaju <span class="highlight-pink">četvrtim G</span> je takođe <strong>35</strong>.</p>
+      <p>Ovi skupovi ishoda su <em>disjunktni</em> (niz se završava ili četvrtim P ili četvrtim G, nikada oboje), pa ih sabiramo:</p>
+      <div class="math-box">
+        \[\text{Ukupno} = 35 + 35 = 70\]
+      </div>
+    </div>
+
+    <!-- Micro-checkpoint 3 -->
+    <details class="check-yourself">
+      <summary>Proveri sebe: Zašto se ovi skupovi ne preklapaju?</summary>
+      <p style="margin-top: 8px;">Svaki niz se završava tačno jednim slušajem: ili je poslednji element četvrto P, ili je poslednji element četvrto G. Ne može biti oboje, jer igra završava čim jedna strana dostigne 4.</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h3>💡 Ključni uvid</h3>
+    <p>
+      Postoji elegantna bijekcija: svaki ishod koji se završava četvrtim P jednoznačno dopunimo do niza dužine 7 (dodamo preostale G do ukupno 3). Tako dobijamo sve nizove od 4 P i 3 G dužine 7 — a tih ima \(\binom{7}{4} = 35\). Udvostručimo za G i dobijamo \(2 \times 35 = 70\).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-text">
+      \[\boxed{70}\]
+    </div>
+    <p style="margin-top: 12px; color: #4ade80; font-size: 1.15rem; font-weight: 600;">Odgovor je (C)</p>
+    <p style="margin-top: 10px; color: #94a3b8; font-size: 0.95rem;">
+      Verifikacija: za dužinu 4 imamo 2 ishoda (PPPP i GGGG), za dužinu 5 imamo 8, za dužinu 6 imamo 20, za dužinu 7 imamo 40. Zbir: \(2 + 8 + 20 + 40 = 70\).
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2 class="pitfalls"><span class="icon">⚠️</span> Česte greške</h2>
+    <ul class="pitfalls">
+      <li>Računanje samo za jednu stranu i zaboravljanje da se udvostruči: dobija se 35 umesto 70. Obavezno uračunati obe strane novčića!</li>
+      <li>Pogrešno tumačenje pravila: igra se završava kada se jedna strana pojavi 4 puta, a <strong>ne</strong> kada ukupan broj bacanja bude 4. Dužina niza može biti do 7.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <h3>🚀 Izazov za tebe</h3>
+    <p>Šta ako se igra završava kada se po <strong>treći</strong> put pojavi jedna od strana novčića? Koliko tada ima mogućih ishoda?</p>
+    <details>
+      <summary style="color: #f472b6;">Savet</summary>
+      <p style="margin-top: 8px; color: #94a3b8;">Isti pristup: dužina niza je od 3 do 5. Za jednu stranu: \(\binom{2}{2} + \binom{3}{2} + \binom{4}{2} = 1 + 3 + 6 = 10\). Udvostruči za obe strane!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = 520;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(51,65,85,0.4)';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    const centerX = W / 2;
+    const fontSize = W < 500 ? 12 : 15;
+    const smallFont = W < 500 ? 10 : 12;
+    const tinyFont = W < 500 ? 9 : 11;
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold ' + (fontSize + 3) + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Prebrojavanje ishoda po duzini niza', centerX, 30);
+
+    // Draw table of counts
+    var tableTop = 55;
+    var colW = W < 500 ? 70 : 100;
+    var rowH = 38;
+    var cols = ['k = 4', 'k = 5', 'k = 6', 'k = 7', 'Zbir'];
+    var valsP = ['C(3,3)=1', 'C(4,3)=4', 'C(5,3)=10', 'C(6,3)=20', '35'];
+    var tableW = cols.length * colW;
+    var tableLeft = centerX - tableW / 2;
+
+    // Header row — "Duzina niza"
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold ' + smallFont + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+
+    // Label column
+    var labelW = W < 500 ? 80 : 110;
+    var fullLeft = tableLeft - labelW;
+
+    // Draw header labels
+    ctx.fillStyle = 'rgba(96,165,250,0.12)';
+    roundRect(ctx, fullLeft, tableTop, labelW + tableW, rowH, 8);
+    ctx.fill();
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold ' + smallFont + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Duzina', fullLeft + labelW / 2, tableTop + rowH / 2 + 5);
+
+    for (var i = 0; i < cols.length; i++) {
+      var cx = tableLeft + i * colW + colW / 2;
+      ctx.fillStyle = i === cols.length - 1 ? '#4ade80' : '#60a5fa';
+      ctx.fillText(cols[i], cx, tableTop + rowH / 2 + 5);
+    }
+
+    // P row
+    var pRowTop = tableTop + rowH + 4;
+    ctx.fillStyle = 'rgba(96,165,250,0.06)';
+    roundRect(ctx, fullLeft, pRowTop, labelW + tableW, rowH, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    roundRect(ctx, fullLeft, pRowTop, labelW + tableW, rowH, 8);
+    ctx.stroke();
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold ' + smallFont + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('4. P', fullLeft + labelW / 2, pRowTop + rowH / 2 + 5);
+
+    for (var i = 0; i < valsP.length; i++) {
+      var cx = tableLeft + i * colW + colW / 2;
+      ctx.fillStyle = i === valsP.length - 1 ? '#4ade80' : '#e2e8f0';
+      ctx.font = (i === valsP.length - 1 ? 'bold ' : '') + smallFont + 'px "Segoe UI", sans-serif';
+      ctx.fillText(valsP[i], cx, pRowTop + rowH / 2 + 5);
+    }
+
+    // G row
+    var gRowTop = pRowTop + rowH + 4;
+    ctx.fillStyle = 'rgba(244,114,182,0.06)';
+    roundRect(ctx, fullLeft, gRowTop, labelW + tableW, rowH, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    roundRect(ctx, fullLeft, gRowTop, labelW + tableW, rowH, 8);
+    ctx.stroke();
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold ' + smallFont + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('4. G', fullLeft + labelW / 2, gRowTop + rowH / 2 + 5);
+
+    for (var i = 0; i < valsP.length; i++) {
+      var cx = tableLeft + i * colW + colW / 2;
+      ctx.fillStyle = i === valsP.length - 1 ? '#4ade80' : '#e2e8f0';
+      ctx.font = (i === valsP.length - 1 ? 'bold ' : '') + smallFont + 'px "Segoe UI", sans-serif';
+      ctx.fillText(valsP[i], cx, gRowTop + rowH / 2 + 5);
+    }
+
+    // Total row
+    var totRowTop = gRowTop + rowH + 8;
+    ctx.fillStyle = 'rgba(52,211,153,0.1)';
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    roundRect(ctx, centerX - 120, totRowTop, 240, 36, 10);
+    ctx.fill(); ctx.stroke();
+
+    ctx.shadowColor = '#4ade80';
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold ' + (fontSize + 2) + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ukupno = 35 + 35 = 70', centerX, totRowTop + 23);
+    ctx.shadowBlur = 0;
+
+    // --- Example sequences section ---
+    var seqTop = totRowTop + 56;
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold ' + (fontSize + 1) + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Primeri ishoda (zavrsetak 4. P)', centerX, seqTop);
+
+    var examples = [
+      { len: 4, seqs: ['PPPP'], count: 1 },
+      { len: 5, seqs: ['GPPP|P', 'PGPP|P', 'PPGP|P', 'PPPG|P'], count: 4 },
+      { len: 6, seqs: ['GGPPP|P', 'GPGPP|P', 'GPPGP|P', '...'], count: 10 },
+      { len: 7, seqs: ['GGGPPP|P', 'GGPGPP|P', '...'], count: 20 }
+    ];
+
+    var exY = seqTop + 20;
+    var blockH = W < 500 ? 78 : 82;
+    var charW = W < 500 ? 14 : 18;
+
+    examples.forEach(function(ex, idx) {
+      var y = exY + idx * blockH;
+
+      // Length label
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold ' + smallFont + 'px "Segoe UI", sans-serif';
+      ctx.textAlign = 'left';
+      var labelX = W < 500 ? 10 : 40;
+      ctx.fillText('k = ' + ex.len, labelX, y + 14);
+
+      // Count badge
+      ctx.fillStyle = 'rgba(74,222,128,0.15)';
+      var badgeX = labelX + (W < 500 ? 42 : 52);
+      roundRect(ctx, badgeX, y, W < 500 ? 30 : 38, 22, 6);
+      ctx.fill();
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold ' + smallFont + 'px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('' + ex.count, badgeX + (W < 500 ? 15 : 19), y + 15);
+
+      // Draw sequences
+      var seqStartX = badgeX + (W < 500 ? 45 : 60);
+      ex.seqs.forEach(function(seq, si) {
+        var sx = seqStartX;
+        var sy = y + si * 20;
+        if (sy + 14 > y + blockH) return;
+
+        if (seq === '...') {
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = smallFont + 'px "Segoe UI", sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('...', sx, sy + 14);
+          return;
+        }
+
+        var parts = seq.replace('|', '');
+        var pipeIdx = seq.indexOf('|');
+
+        for (var ci = 0; ci < parts.length; ci++) {
+          var ch = parts[ci];
+          var isLast = (pipeIdx >= 0 && ci === parts.length - 1);
+
+          // Draw character box
+          var bx = sx + ci * (charW + 3);
+          if (isLast) {
+            ctx.fillStyle = 'rgba(74,222,128,0.2)';
+            ctx.strokeStyle = '#4ade80';
+          } else if (ch === 'P') {
+            ctx.fillStyle = 'rgba(96,165,250,0.15)';
+            ctx.strokeStyle = '#60a5fa';
+          } else {
+            ctx.fillStyle = 'rgba(244,114,182,0.15)';
+            ctx.strokeStyle = '#f472b6';
+          }
+          ctx.lineWidth = 1;
+          roundRect(ctx, bx, sy, charW, 18, 4);
+          ctx.fill();
+          roundRect(ctx, bx, sy, charW, 18, 4);
+          ctx.stroke();
+
+          // Character
+          if (isLast) {
+            ctx.fillStyle = '#4ade80';
+            ctx.font = 'bold ' + tinyFont + 'px "Segoe UI", sans-serif';
+          } else if (ch === 'P') {
+            ctx.fillStyle = '#60a5fa';
+            ctx.font = tinyFont + 'px "Segoe UI", sans-serif';
+          } else {
+            ctx.fillStyle = '#f472b6';
+            ctx.font = tinyFont + 'px "Segoe UI", sans-serif';
+          }
+          ctx.textAlign = 'center';
+          ctx.fillText(ch, bx + charW / 2, sy + 13);
+        }
+      });
+    });
+
+    // Legend
+    var legY = H - 30;
+    ctx.font = smallFont + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+
+    // P legend
+    ctx.fillStyle = 'rgba(96,165,250,0.15)';
+    roundRect(ctx, centerX - 120, legY - 12, 16, 16, 3);
+    ctx.fill();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 1;
+    roundRect(ctx, centerX - 120, legY - 12, 16, 16, 3);
+    ctx.stroke();
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold ' + tinyFont + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('P', centerX - 112, legY + 1);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = smallFont + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('= Pismo', centerX - 100, legY + 1);
+
+    // G legend
+    ctx.fillStyle = 'rgba(244,114,182,0.15)';
+    roundRect(ctx, centerX + 10, legY - 12, 16, 16, 3);
+    ctx.fill();
+    ctx.strokeStyle = '#f472b6';
+    roundRect(ctx, centerX + 10, legY - 12, 16, 16, 3);
+    ctx.stroke();
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold ' + tinyFont + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('G', centerX + 18, legY + 1);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = smallFont + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('= Grb', centerX + 30, legY + 1);
+
+    // Final highlight
+    ctx.fillStyle = 'rgba(74,222,128,0.15)';
+    roundRect(ctx, centerX + 90, legY - 12, 16, 16, 3);
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    roundRect(ctx, centerX + 90, legY - 12, 16, 16, 3);
+    ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = smallFont + 'px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('= 4. pojava', centerX + 110, legY + 1);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Brojanje ishoda igre sa novčićem",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "binomni koeficijent", "prebrojavanje", "simetrija", "nizovi"]
+}
+BRAINSPARK_META-->

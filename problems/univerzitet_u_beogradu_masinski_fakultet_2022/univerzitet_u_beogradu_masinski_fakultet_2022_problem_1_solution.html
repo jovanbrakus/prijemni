@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepenovanje i korenovanje — numerički izraz</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Izračunati vrednost izraza
+[ ( sqrt((-7)^2) + 10 3/5 + 18,4 ) · 2^(-1) · (1/9)^(-1/2) : 8^(1/3) ]^(2/3)
+
+Ponuđeni odgovori: (A) sqrt(3), (B) 3·sqrt(3), (C) 9·sqrt(3), (D) 3, (E) 9
+
+PARSIRANJE IZRAZA:
+- Koren pokriva samo (-7)^2, dakle sqrt((-7)^2) = sqrt(49) = 7
+- Zatim imamo zbir u zagradi: 7 + 10 3/5 + 18,4
+- 10 3/5 = 10 + 3/5 = 53/5 = 10,6 (mešoviti broj)
+- 18,4 = 18 + 0,4 = 92/5
+- Zbir: 7 + 10,6 + 18,4 = 36
+
+POJEDINAČNI FAKTORI:
+- 2^(-1) = 1/2
+- (1/9)^(-1/2) = 9^(1/2) = 3
+  (jer (a^m)^n = a^(mn), i negativan eksponent znači recipročnu vrednost)
+- 8^(1/3) = kub. koren od 8 = 2
+- Operacija ":" je deljenje
+
+IZRAZ U UGLASTOJ ZAGRADI:
+= 36 · (1/2) · 3 : 2
+= 36 · (1/2) · 3 · (1/2)
+= 36 · 3 / 4
+= 108 / 4
+= 27
+
+KONAČNO STEPENOVANJE:
+27^(2/3) = (27^(1/3))^2 = 3^2 = 9
+
+Ili: 27 = 3^3, pa 27^(2/3) = (3^3)^(2/3) = 3^(3·2/3) = 3^2 = 9
+
+ODGOVOR: (E) 9
+
+VERIFIKACIJA:
+- sqrt(49) = 7 ✓
+- 7 + 10,6 + 18,4 = 36 ✓  (10,6 + 18,4 = 29; 7 + 29 = 36)
+- 36 · 1/2 = 18 ✓
+- 18 · 3 = 54 ✓
+- 54 / 2 = 27 ✓
+- 27^(2/3) = 9 ✓
+Sve se slaže, odgovor je (E) 9.
+</script>
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.7;padding:1.5rem}
+.container{max-width:1200px;margin:0 auto}
+h1{font-size:2rem;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:0.5rem;line-height:1.3}
+.subtitle{color:#94a3b8;font-size:1.05rem;margin-bottom:1.5rem}
+h2{color:#60a5fa;font-size:1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem}
+h3{color:#a78bfa;font-size:1.1rem;margin-bottom:0.5rem}
+.card{background:#1e293b;border:1px solid #334155;border-radius:1rem;padding:1.5rem;margin-bottom:1.25rem}
+.problem-statement{border-left:4px solid #60a5fa}
+.problem-statement p{font-size:1.1rem;margin-bottom:1rem}
+.given-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.75rem;margin-top:1rem}
+.given-item{background:#334155;border-radius:0.5rem;padding:0.6rem 1rem;text-align:center;font-size:1.05rem}
+.given-item .label{color:#94a3b8;font-size:0.85rem;margin-bottom:0.25rem}
+.given-item .value{color:#e2e8f0;font-size:1.05rem}
+.answer-option{cursor:default;transition:border-color 0.2s}
+.plan{border-left:4px solid #a78bfa}
+details{margin:0.75rem 0}
+summary{cursor:pointer;color:#60a5fa;font-weight:600;padding:0.4rem 0;user-select:none}
+summary:hover{color:#93c5fd}
+.step{display:flex;gap:1rem;margin-bottom:1.25rem;align-items:flex-start}
+.badge{background:linear-gradient(135deg,#60a5fa,#a78bfa);color:#0f172a;font-weight:800;min-width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;margin-top:0.2rem}
+.step-content{flex:1}
+.step-content p{margin-bottom:0.5rem}
+.checkpoint{background:#1a2332;border:1px solid #334155;border-radius:0.5rem;padding:0.75rem 1rem;margin:0.75rem 0;font-size:0.95rem}
+.checkpoint summary{color:#34d399;font-size:0.95rem}
+.key-insight{border-left:4px solid #f472b6;background:linear-gradient(135deg,#1e293b,#1a2035)}
+.final-answer{border:2px solid #34d399;background:linear-gradient(135deg,#1e293b,#0f2922)}
+.final-answer .answer-value{font-size:1.5rem;color:#4ade80;font-weight:700;text-align:center;padding:0.75rem 0}
+.final-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:0.6rem;margin-top:1rem}
+.final-option{background:#1a2332;border:1px solid #334155;border-radius:0.5rem;padding:0.5rem;text-align:center;font-size:1rem;color:#94a3b8}
+.final-option.correct{border-color:#34d399;color:#4ade80;background:rgba(52,211,153,0.1)}
+.pitfalls{border-left:4px solid #e09468}
+.pitfall-item{background:#1a2332;border-radius:0.5rem;padding:0.75rem 1rem;margin-bottom:0.5rem;border-left:3px solid #e09468}
+.challenge{border-left:4px solid #34d399;background:linear-gradient(135deg,#1e293b,#0f2922)}
+canvas{display:block;margin:0 auto;border-radius:0.75rem;background:#0c1222;border:1px solid #334155;touch-action:none;max-width:100%}
+.muted{color:#94a3b8}
+.math-block{background:#0f172a;border-radius:0.5rem;padding:1rem;margin:0.75rem 0;overflow-x:auto}
+@media(max-width:700px){
+  body{padding:1rem}
+  h1{font-size:1.5rem}
+  .given-grid{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
+  .final-options{grid-template-columns:repeat(auto-fit,minmax(90px,1fr))}
+  .step{flex-direction:column;gap:0.5rem}
+  canvas{width:100%!important;height:auto!important}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Stepenovanje i korenovanje — numerički izraz</h1>
+<p class="subtitle">Primena pravila za stepenovanje, korenovanje i računske operacije sa razlomcima</p>
+
+<!-- PROBLEM STATEMENT -->
+<div class="card problem-statement">
+<h2>Zadatak</h2>
+<p>Vrednost izraza</p>
+<div class="math-block">
+\[\left[\left(\sqrt{(-7)^2} + 10\frac{3}{5} + 18{,}4\right) \cdot 2^{-1} \cdot \left(\frac{1}{9}\right)^{-1/2} : 8^{1/3}\right]^{2/3}\]
+</div>
+<p>je:</p>
+<div class="given-grid">
+  <div class="given-item answer-option" data-option="A">
+    <div class="label">(A)</div>
+    <div class="value">\(\sqrt{3}\)</div>
+  </div>
+  <div class="given-item answer-option" data-option="B">
+    <div class="label">(B)</div>
+    <div class="value">\(3\sqrt{3}\)</div>
+  </div>
+  <div class="given-item answer-option" data-option="C">
+    <div class="label">(C)</div>
+    <div class="value">\(9\sqrt{3}\)</div>
+  </div>
+  <div class="given-item answer-option" data-option="D">
+    <div class="label">(D)</div>
+    <div class="value">\(3\)</div>
+  </div>
+  <div class="given-item answer-option" data-option="E">
+    <div class="label">(E)</div>
+    <div class="value">\(9\)</div>
+  </div>
+</div>
+</div>
+
+<!-- PLAN -->
+<div class="card plan">
+<h2>Plan rešavanja</h2>
+<p>Izračunaćemo vrednost izraza „iznutra ka spolja": najpre izračunamo svaki faktor posebno (koren, stepene, razlomke), zatim ih kombinujemo množenjem i deljenjem, i na kraju primenimo spoljašnji eksponent \(\frac{2}{3}\).</p>
+</div>
+
+<!-- THEORY REFRESHER -->
+<div class="card">
+<h2>Podsetnik iz teorije</h2>
+<details>
+<summary>Pravila stepenovanja i korenovanja</summary>
+<div style="padding:0.75rem 0">
+<p><strong>Kvadratni koren kvadrata:</strong></p>
+<div class="math-block">
+\[\sqrt{a^2} = |a|\]
+</div>
+<p>Koren „poništava" kvadrat, ali uvek daje nenegativan rezultat.</p>
+
+<p style="margin-top:0.75rem"><strong>Negativan eksponent — recipročna vrednost:</strong></p>
+<div class="math-block">
+\[a^{-n} = \frac{1}{a^n} \qquad \text{i} \qquad \left(\frac{1}{a}\right)^{-n} = a^n\]
+</div>
+
+<p style="margin-top:0.75rem"><strong>Razlomljeni eksponent — korenovanje:</strong></p>
+<div class="math-block">
+\[a^{1/n} = \sqrt[n]{a} \qquad \text{i} \qquad a^{m/n} = \left(\sqrt[n]{a}\right)^m\]
+</div>
+
+<p style="margin-top:0.75rem"><strong>Stepen stepena:</strong></p>
+<div class="math-block">
+\[\left(a^m\right)^n = a^{m \cdot n}\]
+</div>
+</div>
+</details>
+</div>
+
+<!-- VISUAL AID -->
+<div class="card">
+<h2>Vizuelni prikaz</h2>
+<p class="muted" style="margin-bottom:0.75rem">Dijagram prikazuje tok izračunavanja — od pojedinačnih faktora do konačnog rezultata. Kliknite na dugme za animaciju.</p>
+<canvas id="vizCanvas" width="720" height="500"></canvas>
+<p class="muted" style="text-align:center;margin-top:0.5rem;font-size:0.85rem">Prevucite mišem ili prstom za pomicanje dijagrama</p>
+</div>
+
+<!-- STEP BY STEP -->
+<div class="card">
+<h2>Rešenje korak po korak</h2>
+
+<div class="step">
+<div class="badge">1</div>
+<div class="step-content">
+<h3>Izračunavanje \(\sqrt{(-7)^2}\)</h3>
+<p>Prvo izračunamo vrednost pod korenom:</p>
+<div class="math-block">
+\[(-7)^2 = 49\]
+</div>
+<p>Zatim vadimo kvadratni koren:</p>
+<div class="math-block">
+\[\sqrt{49} = 7\]
+</div>
+<p class="muted">Napomena: \(\sqrt{(-7)^2} = |-7| = 7\). Koren kvadrata broja uvek daje apsolutnu vrednost.</p>
+</div>
+</div>
+
+<div class="step">
+<div class="badge">2</div>
+<div class="step-content">
+<h3>Sabiranje u velikoj zagradi</h3>
+<p>Pretvaramo mešoviti broj i decimalni zapis u razlomke:</p>
+<div class="math-block">
+\[10\frac{3}{5} = \frac{53}{5} = 10{,}6\]
+</div>
+<div class="math-block">
+\[18{,}4 = \frac{92}{5}\]
+</div>
+<p>Sabiramo sve tri vrednosti:</p>
+<div class="math-block">
+\[7 + 10{,}6 + 18{,}4 = 7 + 29 = 36\]
+</div>
+<p class="muted">Primetimo da se decimalni delovi zgodno skrate: \(0{,}6 + 0{,}4 = 1{,}0\).</p>
+<details class="checkpoint">
+<summary>Proveri sebe: koliko iznosi \(10{,}6 + 18{,}4\)?</summary>
+<p>\(10{,}6 + 18{,}4 = 29{,}0 = 29\). Dodamo 7 i dobijamo \(36\).</p>
+</details>
+</div>
+</div>
+
+<div class="step">
+<div class="badge">3</div>
+<div class="step-content">
+<h3>Izračunavanje faktora \(2^{-1}\)</h3>
+<p>Negativan eksponent znači recipročnu vrednost:</p>
+<div class="math-block">
+\[2^{-1} = \frac{1}{2}\]
+</div>
+</div>
+</div>
+
+<div class="step">
+<div class="badge">4</div>
+<div class="step-content">
+<h3>Izračunavanje faktora \(\left(\frac{1}{9}\right)^{-1/2}\)</h3>
+<p>Primenimo pravilo za negativan eksponent — „prebacujemo" razlomak:</p>
+<div class="math-block">
+\[\left(\frac{1}{9}\right)^{-1/2} = 9^{1/2}\]
+</div>
+<p>Zatim izračunamo koren:</p>
+<div class="math-block">
+\[9^{1/2} = \sqrt{9} = 3\]
+</div>
+<details class="checkpoint">
+<summary>Proveri sebe: zašto \(\left(\frac{1}{9}\right)^{-1/2} = 9^{1/2}\)?</summary>
+<p>Negativan eksponent daje recipročnu vrednost: \(\left(\frac{1}{9}\right)^{-1/2} = \left(\frac{9}{1}\right)^{1/2} = 9^{1/2}\). Alternativno: \(\left(\frac{1}{9}\right)^{-1/2} = \left(9^{-1}\right)^{-1/2} = 9^{(-1) \cdot (-1/2)} = 9^{1/2}\).</p>
+</details>
+</div>
+</div>
+
+<div class="step">
+<div class="badge">5</div>
+<div class="step-content">
+<h3>Izračunavanje faktora \(8^{1/3}\)</h3>
+<p>Razlomljeni eksponent \(\frac{1}{3}\) znači kubni koren:</p>
+<div class="math-block">
+\[8^{1/3} = \sqrt[3]{8} = 2\]
+</div>
+<p class="muted">Jer je \(2^3 = 8\).</p>
+</div>
+</div>
+
+<div class="step">
+<div class="badge">6</div>
+<div class="step-content">
+<h3>Kombinovanje faktora unutar uglaste zagrade</h3>
+<p>Sada zamenjujemo sve izračunate vrednosti. Znak „ : " označava deljenje:</p>
+<div class="math-block">
+\[36 \cdot \frac{1}{2} \cdot 3 : 2\]
+</div>
+<p>Računamo sleva nadesno:</p>
+<div class="math-block">
+\[36 \cdot \frac{1}{2} = 18\]
+</div>
+<div class="math-block">
+\[18 \cdot 3 = 54\]
+</div>
+<div class="math-block">
+\[54 : 2 = 27\]
+</div>
+<p>Dakle, vrednost izraza u uglastoj zagradi je <strong>27</strong>.</p>
+<details class="checkpoint">
+<summary>Proveri sebe: da li je tačno da izraz u zagradi daje 27?</summary>
+<p>Da! \(36 \cdot \frac{1}{2} \cdot 3 \div 2 = \frac{36 \cdot 3}{2 \cdot 2} = \frac{108}{4} = 27\). Primetimo: \(27 = 3^3\), što nagoveštava da će stepenovanje sa \(\frac{2}{3}\) dati lep rezultat.</p>
+</details>
+</div>
+</div>
+
+<div class="step">
+<div class="badge">7</div>
+<div class="step-content">
+<h3>Primena spoljašnjeg eksponenta \(\frac{2}{3}\)</h3>
+<p>Zapišemo 27 kao stepen broja 3:</p>
+<div class="math-block">
+\[27 = 3^3\]
+</div>
+<p>Primenimo pravilo za stepen stepena:</p>
+<div class="math-block">
+\[27^{2/3} = \left(3^3\right)^{2/3} = 3^{3 \cdot \frac{2}{3}} = 3^2 = 9\]
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- KEY INSIGHT -->
+<div class="card key-insight">
+<h2>Ključni uvid</h2>
+<p>Celokupan izraz je dizajniran tako da se svi „ružni" brojevi i razlomci poništavaju. Decimalni delovi \(0{,}6 + 0{,}4 = 1\) daju ceo broj, a konačan rezultat \(27 = 3^3\) je savršen stepen — što omogućava da eksponent \(\frac{2}{3}\) da celobrojni rezultat. Uvek tražite ovakve „signale" u numeričkim zadacima na prijemnom!</p>
+<div class="math-block" style="text-align:center;font-size:1.2rem">
+\[27^{2/3} = \left(3^3\right)^{2/3} = 3^2 = \mathbf{9}\]
+</div>
+</div>
+
+<!-- FINAL ANSWER -->
+<div class="card final-answer">
+<h2>Konačan odgovor</h2>
+<div class="answer-value">\(\displaystyle \text{(E)}\ 9\)</div>
+<div class="final-options">
+  <div class="final-option">(A) \(\sqrt{3}\)</div>
+  <div class="final-option">(B) \(3\sqrt{3}\)</div>
+  <div class="final-option">(C) \(9\sqrt{3}\)</div>
+  <div class="final-option">(D) \(3\)</div>
+  <div class="final-option correct">(E) \(9\)</div>
+</div>
+<p class="muted" style="margin-top:1rem;font-size:0.9rem"><strong>Provera:</strong> Rezultat je ceo broj, što je u skladu sa činjenicom da svi međurezultati daju tačne stepene (49, 36, 27). Ni jedna od opcija sa korenom (\(\sqrt{3}\)) nije mogla biti tačna jer su svi faktori racionalni brojevi čiji proizvod daje savršen stepen.</p>
+</div>
+
+<!-- COMMON PITFALLS -->
+<div class="card pitfalls">
+<h2>Česte greške</h2>
+<div class="pitfall-item">
+<strong>Pogrešno tumačenje \(\sqrt{(-7)^2}\):</strong> Neki studenti pišu \(\sqrt{(-7)^2} = -7\), ali to je netačno. Kvadratni koren uvek daje nenegativan rezultat: \(\sqrt{(-7)^2} = |-7| = 7\). Rezultat korena nikada nije negativan.
+</div>
+<div class="pitfall-item">
+<strong>Greška sa negativnim eksponentom:</strong> Česta zabuna je da se \(\left(\frac{1}{9}\right)^{-1/2}\) pogrešno izračuna kao \(\frac{1}{3}\) umesto \(3\). Zapamtite: negativan eksponent „okreće" razlomak, pa \(\left(\frac{1}{9}\right)^{-1/2} = 9^{1/2} = 3\).
+</div>
+</div>
+
+<!-- OPTIONAL CHALLENGE -->
+<div class="card challenge">
+<h2>Dodatni izazov</h2>
+<p>Pokušajte da izračunate sličan izraz: \(\left[\left(\sqrt{(-5)^2} + 3{,}75 + 2\frac{1}{4}\right) \cdot 4^{-1} \cdot \left(\frac{1}{25}\right)^{-1/2} : 27^{1/3}\right]^{3/4}\)</p>
+<details>
+<summary>Nagoveštaj</summary>
+<div style="padding:0.75rem 0">
+<p>Pristupite isto: \(\sqrt{25} = 5\), saberite decimale, izračunajte svaki faktor posebno. Tražite savršen stepen na kraju (da bi eksponent \(\frac{3}{4}\) dao ceo broj, treba da dobijete stepen broja sa eksponentom deljivim sa 4). Rezultat je \(8\).</p>
+</div>
+</details>
+</div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('vizCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width, H = canvas.height;
+  let offsetX = 0, offsetY = 0, dragging = false, lastX = 0, lastY = 0;
+  let animPhase = 0;
+  let animating = false;
+  let animFrame = null;
+
+  const font = "'Segoe UI', system-ui, sans-serif";
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  function drawArrow(x1, y1, x2, y2, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const headLen = 8;
+    ctx.beginPath();
+    ctx.moveTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+    ctx.stroke();
+  }
+
+  function drawFactorBox(x, y, w, h, label, value, color, glow) {
+    if (glow) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 12;
+    }
+    ctx.fillStyle = 'rgba(15,23,42,0.8)';
+    roundRect(x, y, w, h, 8);
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    roundRect(x, y, w, h, 8);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px ' + font;
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x + w / 2, y + 16);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px ' + font;
+    ctx.fillText(value, x + w / 2, y + 38);
+  }
+
+  function drawOperator(x, y, op) {
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 18px ' + font;
+    ctx.textAlign = 'center';
+    ctx.fillText(op, x, y);
+  }
+
+  function draw() {
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+    ctx.translate(offsetX, offsetY);
+
+    const show = Math.min(animPhase, 7);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px ' + font;
+    ctx.textAlign = 'center';
+    ctx.fillText('Tok izračunavanja', W / 2, 25);
+
+    // Row 1: Individual factors
+    const boxW = 110, boxH = 50, gap = 12;
+    const factors = [
+      { label: 'sqrt((-7)²)', val: '7', color: '#60a5fa' },
+      { label: '10 3/5', val: '10,6', color: '#60a5fa' },
+      { label: '18,4', val: '18,4', color: '#60a5fa' }
+    ];
+
+    const row1Y = 45;
+    const totalW1 = 3 * boxW + 2 * 30;
+    const startX1 = (W - totalW1) / 2;
+
+    if (show >= 1) {
+      for (let i = 0; i < 3; i++) {
+        const bx = startX1 + i * (boxW + 30);
+        drawFactorBox(bx, row1Y, boxW, boxH, factors[i].label, factors[i].val, factors[i].color, show === 1);
+        if (i < 2) {
+          drawOperator(bx + boxW + 15, row1Y + 33, '+');
+        }
+      }
+    }
+
+    // Arrow down to sum
+    const sumY = row1Y + boxH + 40;
+    if (show >= 2) {
+      drawArrow(W / 2, row1Y + boxH + 5, W / 2, sumY - 5, '#34d399');
+      ctx.fillStyle = '#34d399';
+      ctx.font = '11px ' + font;
+      ctx.textAlign = 'left';
+      ctx.fillText('7 + 10,6 + 18,4', W / 2 + 12, row1Y + boxH + 25);
+
+      // Sum box
+      drawFactorBox(W / 2 - 55, sumY, 110, boxH, 'Zbir u zagradi', '36', '#34d399', show === 2);
+    }
+
+    // Row 2: Other factors
+    const row2Y = sumY + boxH + 40;
+    const otherFactors = [
+      { label: '2⁻¹', val: '1/2', color: '#a78bfa' },
+      { label: '(1/9)⁻¹ᐟ²', val: '3', color: '#a78bfa' },
+      { label: '8¹ᐟ³', val: '2', color: '#f472b6' }
+    ];
+
+    if (show >= 3) {
+      const totalW2 = 3 * boxW + 2 * 30;
+      const startX2 = (W - totalW2) / 2;
+      for (let i = 0; i < 3; i++) {
+        const bx = startX2 + i * (boxW + 30);
+        drawFactorBox(bx, row2Y, boxW, boxH, otherFactors[i].label, otherFactors[i].val, otherFactors[i].color, show === 3);
+        if (i === 0) drawOperator(bx + boxW + 15, row2Y + 33, '\u00d7');
+        if (i === 1) drawOperator(bx + boxW + 15, row2Y + 33, ':');
+      }
+    }
+
+    // Combining: 36 · 1/2 · 3 : 2
+    const combY = row2Y + boxH + 40;
+    if (show >= 4) {
+      drawArrow(W / 2 - 60, sumY + boxH + 5, W / 2 - 20, combY - 5, '#94a3b8');
+      drawArrow(W / 2, row2Y + boxH + 5, W / 2, combY - 5, '#94a3b8');
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px ' + font;
+      ctx.textAlign = 'center';
+      ctx.fillText('36 \u00b7 1/2 \u00b7 3 : 2', W / 2, combY - 12);
+    }
+
+    // Steps of multiplication
+    const stepBoxW = 90;
+    if (show >= 4) {
+      const stepsData = [
+        { label: '36 \u00b7 1/2', val: '18', color: '#60a5fa' },
+        { label: '18 \u00b7 3', val: '54', color: '#a78bfa' },
+        { label: '54 : 2', val: '27', color: '#34d399' }
+      ];
+
+      const totalW3 = 3 * stepBoxW + 2 * 40;
+      const startX3 = (W - totalW3) / 2;
+      for (let i = 0; i < 3; i++) {
+        if (show >= 4 + i) {
+          const bx = startX3 + i * (stepBoxW + 40);
+          drawFactorBox(bx, combY, stepBoxW, boxH, stepsData[i].label, stepsData[i].val, stepsData[i].color, show === 4 + i);
+          if (i < 2) {
+            drawArrow(bx + stepBoxW + 5, combY + boxH / 2, bx + stepBoxW + 35, combY + boxH / 2, '#94a3b8');
+          }
+        }
+      }
+    }
+
+    // Final exponentiation
+    const finalY = combY + boxH + 45;
+    if (show >= 7) {
+      const totalW3 = 3 * stepBoxW + 2 * 40;
+      const startX3 = (W - totalW3) / 2;
+      const lastBox = startX3 + 2 * (stepBoxW + 40);
+      drawArrow(lastBox + stepBoxW / 2, combY + boxH + 5, W / 2, finalY - 5, '#34d399');
+
+      ctx.fillStyle = '#34d399';
+      ctx.font = '12px ' + font;
+      ctx.textAlign = 'center';
+      ctx.fillText('27²ᐟ³ = (3³)²ᐟ³ = 3²', W / 2, finalY - 12);
+
+      // Final result box with glow
+      ctx.shadowColor = '#4ade80';
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = 'rgba(52,211,153,0.1)';
+      roundRect(W / 2 - 65, finalY, 130, 55, 10);
+      ctx.fill();
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2.5;
+      roundRect(W / 2 - 65, finalY, 130, 55, 10);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px ' + font;
+      ctx.textAlign = 'center';
+      ctx.fillText('Konačan rezultat', W / 2, finalY + 18);
+
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 22px ' + font;
+      ctx.fillText('9', W / 2, finalY + 43);
+    }
+
+    ctx.restore();
+  }
+
+  function animate() {
+    if (animPhase <= 7) {
+      animPhase += 0.04;
+      draw();
+      animFrame = requestAnimationFrame(animate);
+    } else {
+      animPhase = 7;
+      animating = false;
+      draw();
+    }
+  }
+
+  // Initial static draw with all phases visible
+  animPhase = 7;
+  draw();
+
+  // Button to replay animation
+  const btn = document.createElement('button');
+  btn.textContent = 'Pokreni animaciju';
+  btn.style.cssText = 'display:block;margin:0.75rem auto 0;padding:0.5rem 1.25rem;background:linear-gradient(135deg,#60a5fa,#a78bfa);color:#0f172a;border:none;border-radius:0.5rem;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:inherit';
+  canvas.parentNode.insertBefore(btn, canvas.nextSibling);
+
+  btn.addEventListener('click', function() {
+    if (animating) return;
+    animPhase = 0;
+    animating = true;
+    animate();
+  });
+
+  // Drag support (mouse)
+  canvas.addEventListener('mousedown', function(e) {
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    offsetX += e.clientX - lastX;
+    offsetY += e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    draw();
+  });
+  window.addEventListener('mouseup', function() { dragging = false; });
+
+  // Touch support
+  canvas.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) {
+      dragging = true;
+      lastX = e.touches[0].clientX;
+      lastY = e.touches[0].clientY;
+    }
+  });
+  canvas.addEventListener('touchmove', function(e) {
+    if (!dragging || e.touches.length !== 1) return;
+    e.preventDefault();
+    offsetX += e.touches[0].clientX - lastX;
+    offsetY += e.touches[0].clientY - lastY;
+    lastX = e.touches[0].clientX;
+    lastY = e.touches[0].clientY;
+    draw();
+  });
+  canvas.addEventListener('touchend', function() { dragging = false; });
+
+  // Responsive resize
+  window.addEventListener('resize', function() {
+    if (window.innerWidth < 700) {
+      canvas.width = Math.min(720, window.innerWidth - 32);
+      W = canvas.width;
+    } else {
+      canvas.width = 720;
+      W = 720;
+    }
+    draw();
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Stepenovanje i korenovanje — numerički izraz","subject":"math","unit":"algebra","topic_tags":["stepenovanje","korenovanje","negativan_eksponent","razlomljeni_eksponent","numericki_izraz"]}
+BRAINSPARK_META-->

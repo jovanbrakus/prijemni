@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepen kompleksnog izraza</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Izračunati vrednost izraza (3/(1+i) + (1+i)/(2i))^16
+
+Step 1: Simplify 3/(1+i)
+  Multiply numerator and denominator by conjugate (1-i):
+  3/(1+i) = 3(1-i)/((1+i)(1-i))
+  (1+i)(1-i) = 1 - i² = 1 - (-1) = 2
+  So: 3/(1+i) = 3(1-i)/2
+
+Step 2: Simplify (1+i)/(2i)
+  Multiply numerator and denominator by (-i):
+  (1+i)/(2i) = (1+i)(-i)/(2i·(-i))
+  Numerator: (1+i)(-i) = -i - i² = -i - (-1) = 1 - i
+  Denominator: 2i·(-i) = -2i² = -2(-1) = 2
+  So: (1+i)/(2i) = (1-i)/2
+
+Step 3: Add the two fractions
+  3(1-i)/2 + (1-i)/2 = (3(1-i) + (1-i))/2 = 4(1-i)/2 = 2(1-i)
+
+Step 4: Compute (2(1-i))^16
+  First, express 2(1-i) in polar form:
+  |2(1-i)| = 2·|1-i| = 2·sqrt(1² + (-1)²) = 2·sqrt(2) = 2^(3/2)
+  arg(1-i) = -π/4 (fourth quadrant, real part positive, imaginary part negative)
+  So 2(1-i) = 2√2 · e^(-iπ/4)
+
+Step 5: Raise to 16th power
+  (2(1-i))^16 = (2√2)^16 · e^(-i·16π/4)
+  = (2√2)^16 · e^(-4πi)
+
+  (2√2)^16 = (2^(3/2))^16 = 2^(3/2 · 16) = 2^24
+
+  e^(-4πi) = cos(-4π) + i·sin(-4π) = 1 + 0i = 1
+
+  Therefore: (2(1-i))^16 = 2^24 · 1 = 2^24
+
+Answer: (D) 2^24
+
+Verification:
+  - 2(1-i) = 2 - 2i
+  - (2-2i)^2 = 4 - 8i + 4i² = 4 - 8i - 4 = -8i
+  - (-8i)^2 = 64i² = -64
+  - So (2-2i)^4 = -64
+  - (-64)^2 = 4096 = 2^12, so (2-2i)^8 = 4096
+  - 4096^2 = 16777216 = 2^24, so (2-2i)^16 = 2^24 ✓
+
+  The result is a real positive number, which makes sense since the argument
+  -4π is a multiple of 2π, bringing us back to the positive real axis.
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 28px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.3rem;
+  margin-bottom: 14px;
+  font-weight: 700;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 90px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 6px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+  padding-left: 8px;
+}
+
+details .theory-content li {
+  margin-bottom: 10px;
+  color: #cbd5e1;
+  list-style: none;
+  padding-left: 18px;
+  position: relative;
+}
+
+details .theory-content li::before {
+  content: "\25B8";
+  color: #a78bfa;
+  position: absolute;
+  left: 0;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  background: rgba(96, 165, 250, 0.04);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content h3 {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 18px 0;
+  background: rgba(163, 139, 250, 0.06);
+  border: 1px solid rgba(163, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(96,165,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .big-formula {
+  font-size: 1.4rem;
+  color: #e2e8f0;
+  margin: 16px 0;
+}
+
+.final-answer {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer h2 {
+  color: #4ade80;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.final-answer .verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(52,211,153,0.15);
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.option-card {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.option-card.correct {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.option-card .opt-label {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+
+.option-card .opt-value {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.pitfalls {
+  border-left: 3px solid #f472b6;
+}
+
+.pitfalls h2 {
+  color: #f472b6;
+}
+
+.pitfalls li {
+  margin-bottom: 10px;
+  color: #cbd5e1;
+  list-style: none;
+  padding-left: 18px;
+  position: relative;
+}
+
+.pitfalls li::before {
+  content: "\26A0";
+  position: absolute;
+  left: 0;
+  color: #e09468;
+}
+
+.challenge {
+  border-left: 3px solid #a78bfa;
+}
+
+.challenge h2 {
+  color: #a78bfa;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 10px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px 18px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Stepen kompleksnog izraza</h1>
+  <p class="subtitle">Kompleksni brojevi — racionalizacija, polarna forma i stepenovanje</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Vrednost izraza:</p>
+    <div class="math-block">
+      \[\left(\dfrac{3}{1+i} + \dfrac{1+i}{2i}\right)^{16}\]
+    </div>
+    <p>je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2^8\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(2^{16}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(2^{24}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(2^{32}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Najpre ćemo racionalizovati (uprosti) svaki razlomak pojedinačno — pomnožićemo brojilac i imenilac konjugovanim brojem, zatim ćemo ih sabrati. Dobijena suma će imati prost oblik koji ćemo lako stepenovat koristeći polarni zapis kompleksnog broja.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i pravila</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Konjugovani kompleksni broj:</strong> Konjugat broja \(a + bi\) je \(a - bi\). Važi \((a+bi)(a-bi) = a^2 + b^2\).</li>
+          <li><strong>Racionalizacija razlomka:</strong> Da bismo uklonili \(i\) iz imenioca, množimo i brojilac i imenilac konjugatom imenioca.</li>
+          <li><strong>Polarni oblik:</strong> \(z = r(\cos\varphi + i\sin\varphi)\), gde je \(r = |z|\) moduo, a \(\varphi = \arg(z)\) argument.</li>
+          <li><strong>De Moivreova formula:</strong> \(z^n = r^n(\cos(n\varphi) + i\sin(n\varphi))\). Koristi se za stepenovanje kompleksnih brojeva u polarnom obliku.</li>
+          <li><strong>Važne vrednosti:</strong> \(i^2 = -1\), \(\quad \dfrac{1}{i} = -i\), \(\quad |1-i| = \sqrt{2}\), \(\quad \arg(1-i) = -\dfrac{\pi}{4}\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz u kompleksnoj ravni</h2>
+    <canvas id="complexCanvas" width="600" height="500"></canvas>
+    <p class="canvas-hint">Prikaz ključnih kompleksnih brojeva i putanje stepenovanja u polarnom obliku</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Racionalizacija prvog razlomka: \(\dfrac{3}{1+i}\)</h3>
+        <p>Množimo i brojilac i imenilac konjugatom imenioca, tj. brojem \(1-i\):</p>
+        <div class="math-block">
+          \[\frac{3}{1+i} = \frac{3 \cdot (1-i)}{(1+i)(1-i)} = \frac{3(1-i)}{1^2 + 1^2} = \frac{3(1-i)}{2}\]
+        </div>
+        <p class="note">Koristili smo formulu za množenje konjugovanim parom: \((1+i)(1-i) = 1 - i^2 = 1 - (-1) = 2\).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Racionalizacija drugog razlomka: \(\dfrac{1+i}{2i}\)</h3>
+        <p>Množimo i brojilac i imenilac brojem \(-i\) (konjugat od \(i\) je \(-i\)):</p>
+        <div class="math-block">
+          \[\frac{1+i}{2i} = \frac{(1+i) \cdot (-i)}{2i \cdot (-i)} = \frac{-i - i^2}{-2i^2}\]
+        </div>
+        <p>Zamenom \(i^2 = -1\):</p>
+        <div class="math-block">
+          \[\frac{-i - (-1)}{-2 \cdot (-1)} = \frac{1-i}{2}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Kolika je vrednost \(\dfrac{1+i}{2i}\)?</summary>
+      <div class="answer">
+        <p>\(\dfrac{1+i}{2i} = \dfrac{1-i}{2}\). Oba razlomka se uprošćavaju na oblik koji sadrži \((1-i)\) u brojiocu!</p>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Sabiranje uprošćenih razlomaka</h3>
+        <p>Oba razlomka imaju isti imenilac \(2\), pa ih jednostavno sabiramo:</p>
+        <div class="math-block">
+          \[\frac{3(1-i)}{2} + \frac{1-i}{2} = \frac{3(1-i) + (1-i)}{2} = \frac{4(1-i)}{2} = 2(1-i)\]
+        </div>
+        <p class="note">Izlučili smo \((1-i)\) kao zajednički faktor: \(3(1-i) + 1 \cdot (1-i) = (3+1)(1-i) = 4(1-i)\).</p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Polarni oblik broja \(2(1-i)\)</h3>
+        <p>Zapišimo \(z = 2(1-i) = 2 - 2i\) u polarnom obliku. Potrebni su nam moduo i argument:</p>
+        <div class="math-block">
+          \[|z| = |2 - 2i| = \sqrt{2^2 + (-2)^2} = \sqrt{4 + 4} = \sqrt{8} = 2\sqrt{2}\]
+        </div>
+        <p>Argument (ugao): kako je \(\text{Re}(z) = 2 > 0\) i \(\text{Im}(z) = -2 < 0\), tačka leži u IV kvadrantu:</p>
+        <div class="math-block">
+          \[\varphi = \arg(z) = -\frac{\pi}{4}\]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[z = 2\sqrt{2} \cdot \left(\cos\left(-\frac{\pi}{4}\right) + i\sin\left(-\frac{\pi}{4}\right)\right)\]
+        </div>
+        <p class="note">Primetimo da je \(2\sqrt{2} = 2^{3/2}\). Ovo će nam biti korisno u sledećem koraku.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliki je moduo broja \(2-2i\)?</summary>
+      <div class="answer">
+        <p>\(|2 - 2i| = 2\sqrt{2} \approx 2{,}83\). Možeš proveriti: \((2\sqrt{2})^2 = 8 = 2^2 + 2^2\).</p>
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Primena De Moivreove formule: \(z^{16}\)</h3>
+        <p>Primenjujemo formulu \(z^n = r^n \cdot (\cos(n\varphi) + i\sin(n\varphi))\):</p>
+        <div class="math-block">
+          \[z^{16} = (2\sqrt{2})^{16} \cdot \left(\cos\left(16 \cdot \left(-\frac{\pi}{4}\right)\right) + i\sin\left(16 \cdot \left(-\frac{\pi}{4}\right)\right)\right)\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step" id="step6">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Izračunavanje modula \((2\sqrt{2})^{16}\)</h3>
+        <p>Koristimo \(2\sqrt{2} = 2^{3/2}\):</p>
+        <div class="math-block">
+          \[(2\sqrt{2})^{16} = \left(2^{3/2}\right)^{16} = 2^{\,3/2 \,\cdot\, 16} = 2^{24}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step" id="step7">
+      <div class="step-number">7</div>
+      <div class="step-content">
+        <h3>Izračunavanje argumenta \(16 \cdot \left(-\dfrac{\pi}{4}\right)\)</h3>
+        <p>Množimo:</p>
+        <div class="math-block">
+          \[16 \cdot \left(-\frac{\pi}{4}\right) = -4\pi\]
+        </div>
+        <p>Pošto je \(-4\pi\) celobrojni umnožak od \(2\pi\), trigonometrijske funkcije daju:</p>
+        <div class="math-block">
+          \[\cos(-4\pi) = 1, \qquad \sin(-4\pi) = 0\]
+        </div>
+        <p class="note">Ugao \(-4\pi\) je ekvivalentan uglu \(0\) (dva puna kruga u negativnom smeru), pa se vraćamo na pozitivnu realnu poluosu.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto je \(\cos(-4\pi) = 1\)?</summary>
+      <div class="answer">
+        <p>Kosinus ima period \(2\pi\). Kako je \(-4\pi = -2 \cdot 2\pi\), to je tačno dva puna obrtaja, pa se vraćamo u početni položaj: \(\cos(-4\pi) = \cos(0) = 1\).</p>
+      </div>
+    </details>
+
+    <!-- Step 8 -->
+    <div class="step" id="step8">
+      <div class="step-number">8</div>
+      <div class="step-content">
+        <h3>Konačan rezultat</h3>
+        <p>Kombinujemo moduo i argument:</p>
+        <div class="math-block">
+          \[z^{16} = 2^{24} \cdot (1 + i \cdot 0) = 2^{24}\]
+        </div>
+        <p>Rezultat je realan pozitivan broj \(2^{24}\).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Oba razlomka se uprošćavaju na isti oblik \(\dfrac{k(1-i)}{2}\), što drastično pojednostavljuje sabiranje. Zatim se zahvaljujući De Moivreovoj formuli i činjenici da je \(16 \cdot \dfrac{\pi}{4} = 4\pi\) (celobrojni umnožak od \(2\pi\)), imaginarna komponenta potpuno nestaje!</p>
+    <div class="big-formula">
+      \[\left(\frac{3}{1+i} + \frac{1+i}{2i}\right)^{16} = \bigl(2(1-i)\bigr)^{16} = (2\sqrt{2})^{16} = 2^{24}\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(1\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(2^8\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(2^{16}\)</div>
+      </div>
+      <div class="option-card correct">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(2^{24}\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(2^{32}\)</div>
+      </div>
+    </div>
+    <div class="answer-value">\(\text{Odgovor: } (\text{D}) \quad 2^{24}\)</div>
+    <div class="verification">
+      <strong>Provera:</strong> Direktno stepenovanje: \((2-2i)^2 = -8i\), pa \((2-2i)^4 = (-8i)^2 = -64\), zatim \((2-2i)^8 = (-64)^2 = 4096 = 2^{12}\), i konačno \((2-2i)^{16} = 4096^2 = 2^{24}\).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Pogrešna racionalizacija \(\frac{1+i}{2i}\):</strong> Mnogi studenti zaborave da je konjugat od \(i\) zapravo \(-i\), ili pokušavaju da množe sa \(1-i\) umesto sa \(-i\). Imenilac \(2i\) je čisto imaginaran, pa je najjednostavnije pomnožiti sa \(\frac{-i}{-i}\).</li>
+      <li><strong>Greška u eksponentu:</strong> Pri računanju \((2\sqrt{2})^{16}\), česta greška je pisanje \(2\sqrt{2} = 2^1 \cdot 2^{1/2} = 2^{3/2}\) ali onda pogrešno množenje \(\frac{3}{2} \cdot 16 = 16\) umesto \(24\). Pažljivo: \(\frac{3}{2} \cdot 16 = 24\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge">
+    <h2>Dodatni izazov</h2>
+    <p>Kolika je vrednost izraza \(\left(\dfrac{3}{1+i} + \dfrac{1+i}{2i}\right)^{12}\)?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div style="margin-top: 10px; color: #cbd5e1;">
+        <p>Isti je bazni broj \(z = 2(1-i) = 2\sqrt{2} \cdot e^{-i\pi/4}\). Sada stepenujemo sa \(n = 12\):</p>
+        <p>\((2\sqrt{2})^{12} = 2^{18}\), a \(\cos(-3\pi) + i\sin(-3\pi) = \cos(\pi) + i\sin(\pi) = -1\).</p>
+        <p>Dakle, rezultat je \(-2^{18}\). Obrati pažnju: rezultat je negativan jer \(12 \cdot \frac{\pi}{4} = 3\pi\) nije celobrojni umnožak od \(2\pi\)!</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+
+  // Complex plane canvas
+  const canvas = document.getElementById('complexCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Coordinate system
+  const originX = W / 2;
+  const originY = H / 2 + 30;
+  const scale = 60;
+
+  function toCanvas(x, y) {
+    return { x: originX + x * scale, y: originY - y * scale };
+  }
+
+  function drawArrow(x1, y1, x2, y2, color, headLen) {
+    headLen = headLen || 8;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const angle = Math.atan2(dy, dx);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawPoint(x, y, color, label, offsetX, offsetY) {
+    const p = toCanvas(x, y);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI);
+    ctx.fill();
+    // Glow
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // Label
+    if (label) {
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(label, p.x + (offsetX || 10), p.y + (offsetY || -10));
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = -5; i <= 5; i++) {
+      const px = toCanvas(i, 0);
+      const py = toCanvas(0, i);
+      ctx.beginPath();
+      ctx.moveTo(px.x, 0);
+      ctx.lineTo(px.x, H);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, py.y);
+      ctx.lineTo(W, py.y);
+      ctx.stroke();
+    }
+
+    // Axes
+    drawArrow(0, originY, W, originY, '#475569', 10);
+    drawArrow(originX, H, originX, 0, '#475569', 10);
+
+    // Axis labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', W - 20, originY - 10);
+    ctx.fillText('Im', originX + 15, 18);
+
+    // Axis ticks
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    for (let i = -4; i <= 4; i++) {
+      if (i === 0) continue;
+      const p = toCanvas(i, 0);
+      ctx.beginPath();
+      ctx.moveTo(p.x, originY - 4);
+      ctx.lineTo(p.x, originY + 4);
+      ctx.strokeStyle = '#475569';
+      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.fillText(String(i), p.x, originY + 18);
+    }
+    for (let i = -3; i <= 3; i++) {
+      if (i === 0) continue;
+      const p = toCanvas(0, i);
+      ctx.beginPath();
+      ctx.moveTo(originX - 4, p.y);
+      ctx.lineTo(originX + 4, p.y);
+      ctx.strokeStyle = '#475569';
+      ctx.stroke();
+      ctx.textAlign = 'right';
+      ctx.fillText(i + 'i', originX - 10, p.y + 4);
+    }
+
+    // Draw circle |z| = 2sqrt(2)
+    const r = 2 * Math.SQRT2 * scale;
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.arc(originX, originY, r, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label for circle
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.5)';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    const circLabelPos = toCanvas(2 * Math.SQRT2 * Math.cos(Math.PI / 6), 2 * Math.SQRT2 * Math.sin(Math.PI / 6));
+    ctx.fillText('r = 2\u221A2', circLabelPos.x + 5, circLabelPos.y - 5);
+
+    // Draw angle arc for -pi/4
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(originX, originY, 35, 0, Math.PI / 4, false);
+    ctx.stroke();
+    // Small label
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('-\u03C0/4', originX + 40, originY + 8);
+
+    // Draw vector to 1+i (for reference)
+    const p1i = toCanvas(1, 1);
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(p1i.x, p1i.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawPoint(1, 1, '#94a3b8', '1+i', 8, -8);
+
+    // Draw vector to 2-2i (the sum)
+    const pSum = toCanvas(2, -2);
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(pSum.x, pSum.y);
+    ctx.stroke();
+    drawArrow(originX, originY, pSum.x, pSum.y, '#60a5fa', 10);
+    drawPoint(2, -2, '#60a5fa', 'z = 2-2i', 10, 18);
+
+    // Draw vector to 3(1-i)/2
+    const pFrac1 = toCanvas(1.5, -1.5);
+    ctx.strokeStyle = 'rgba(167, 139, 250, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(pFrac1.x, pFrac1.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawPoint(1.5, -1.5, '#a78bfa', '3(1-i)/2', 10, -8);
+
+    // Draw vector to (1-i)/2
+    const pFrac2 = toCanvas(0.5, -0.5);
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(originX, originY);
+    ctx.lineTo(pFrac2.x, pFrac2.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawPoint(0.5, -0.5, '#f472b6', '(1-i)/2', -75, -8);
+
+    // Result point on positive real axis at scaled position
+    // 2^24 is huge, so we mark it symbolically
+    const pResult = toCanvas(4, 0);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('z\u00B9\u2076 = 2\u00B2\u2074', pResult.x, pResult.y - 15);
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.arc(pResult.x, pResult.y, 6, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.shadowColor = '#4ade80';
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(pResult.x, pResult.y, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Curved arrow from z to result (indicating ^16)
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath();
+    ctx.arc(originX, originY, r * 0.65, -Math.PI / 4, -0.05, true);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label on the curved arrow
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.6)';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    const midAngle = -Math.PI / 8;
+    const labelR = r * 0.65 + 14;
+    ctx.fillText('^16', originX + labelR * Math.cos(midAngle), originY - labelR * Math.sin(midAngle));
+
+    // Legend
+    const legendX = 16;
+    const legendY = 20;
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillRect(legendX, legendY, 12, 12);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.textAlign = 'left';
+    ctx.fillText('3(1-i)/2  (1. razlomak)', legendX + 18, legendY + 10);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.fillRect(legendX, legendY + 20, 12, 12);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText('(1-i)/2  (2. razlomak)', legendX + 18, legendY + 30);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(legendX, legendY + 40, 12, 12);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText('z = 2(1-i) = 2-2i  (zbir)', legendX + 18, legendY + 50);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(legendX, legendY + 60, 12, 12);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText('z\u00B9\u2076 = 2\u00B2\u2074  (rezultat)', legendX + 18, legendY + 70);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepen kompleksnog izraza sa racionalizacijom",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "racionalizacija", "De Moivreova formula", "polarni oblik", "stepenovanje"]
+}
+BRAINSPARK_META-->

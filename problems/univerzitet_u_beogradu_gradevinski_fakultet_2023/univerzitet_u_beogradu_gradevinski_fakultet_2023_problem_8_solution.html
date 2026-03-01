@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formiranje ekipe od golubova</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Ivan has 12 pigeons: 3 white and 9 colorful (sareni).
+He must form a team of 7 with at least 2 white pigeons.
+
+"Bar dva bela" = at least 2 white.
+
+Cases:
+Case 1: Exactly 2 white + 5 colorful
+  C(3,2) * C(9,5) = 3 * 126 = 378
+
+Case 2: Exactly 3 white + 4 colorful
+  C(3,3) * C(9,4) = 1 * 126 = 126
+
+Total = 378 + 126 = 504
+
+Verification:
+C(3,2) = 3! / (2! * 1!) = 3
+C(9,5) = 9! / (5! * 4!) = (9*8*7*6) / (4*3*2*1) = 3024 / 24 = 126
+C(3,3) = 1
+C(9,4) = 9! / (4! * 5!) = (9*8*7*6) / (4*3*2*1) = 126
+
+Total = 3*126 + 1*126 = 378 + 126 = 504
+
+Alternative verification (complement):
+Total ways to pick 7 from 12: C(12,7) = 792
+Ways with 0 white: C(3,0)*C(9,7) = 1*36 = 36
+Ways with 1 white: C(3,1)*C(9,6) = 3*84 = 252
+Complement: 792 - 36 - 252 = 504. Confirmed!
+
+ANSWER: V) 504
+</script>
+
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  background: #1e293b;
+  border: 2px solid #a78bfa;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+}
+
+.given-item .label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+}
+
+.given-item .value {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.given-item.answer-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin-bottom: 1.5rem;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin: 15px 0;
+  font-size: 0.95rem;
+  color: #a78bfa;
+}
+
+.checkpoint-label {
+  font-weight: 700;
+  margin-right: 0.25rem;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.final-answer .options-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.final-answer .option-pill {
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.final-answer .option-pill.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  body { padding: 0.5rem; }
+  .card, .problem-statement, details .detail-content, .final-answer,
+  .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Formiranje ekipe golubova</h1>
+  <p class="subtitle">Kombinatorika &mdash; kombinacije sa ograničenjem</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Ivan je izabrao <span style="color:#60a5fa;font-weight:600;">12 golubova</span>: <span style="color:#e2e8f0;font-weight:600;">3 bela</span> i <span style="color:#a78bfa;font-weight:600;">9 šarenih</span>. Na koliko načina može da napravi ekipu od <span style="color:#f472b6;font-weight:600;">7 golubova</span> sa bar dva bela?</p>
+
+    <div class="given-grid" style="margin-bottom:0.5rem;">
+      <div class="given-item">
+        <div class="label">Ukupno</div>
+        <div class="value">12</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Belih</div>
+        <div class="value">3</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Šarenih</div>
+        <div class="value">9</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Ekipa</div>
+        <div class="value">7</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Uslov</div>
+        <div class="value" style="font-size:0.9rem;">&ge; 2 bela</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(84\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(378\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">\(504\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\(630\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(2200\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</div>
+    <ol class="plan-list">
+      <li>Razdvojiti problem na slučajeve: tačno 2 bela i tačno 3 bela goluba</li>
+      <li>Za svaki slučaj izračunati broj kombinacija korišćenjem binomnih koeficijenata</li>
+      <li>Sabrati rezultate oba slučaja</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>Podsetnik iz teorije</summary>
+    <div class="detail-content">
+      <p><strong>Kombinacije bez ponavljanja:</strong></p>
+      <p>Broj načina da se od \(n\) elemenata izabere \(k\) bez obzira na redosled:</p>
+      \[\binom{n}{k} = \frac{n!}{k!(n-k)!}\]
+
+      <p style="margin-top:0.75rem"><strong>Pravilo zbira (princip sabiranja):</strong></p>
+      <p>Ako se neki događaj može ostvariti na više međusobno isključivih načina, ukupan broj načina jednak je zbiru broja načina svakog slučaja.</p>
+
+      <p style="margin-top:0.75rem"><strong>Pravilo proizvoda:</strong></p>
+      <p>Ako se izbor vrši u dva nezavisna koraka, gde prvi ima \(m\) a drugi \(n\) mogućnosti, ukupan broj načina je \(m \cdot n\).</p>
+
+      <p style="margin-top:0.75rem"><strong>Korisne vrednosti:</strong></p>
+      \[\binom{9}{5} = \binom{9}{4} = 126, \quad \binom{3}{2} = 3, \quad \binom{3}{3} = 1\]
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Vizuelni prikaz</div>
+    <p class="muted" style="margin-bottom:0.75rem;">Dijagram koji prikazuje razlaganje na slučajeve: tačno 2 bela i tačno 3 bela goluba u ekipi od 7.</p>
+    <div class="canvas-wrap">
+      <canvas id="diagram" width="700" height="480"></canvas>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Prepoznavanje strukture zadatka</div>
+      <p>Imamo dve grupe golubova: <strong>3 bela</strong> i <strong>9 šarenih</strong>. Biramo ekipu od 7, pri čemu mora biti <em>bar dva bela</em>.</p>
+      <p>Pošto ukupno imamo samo 3 bela goluba, moguć broj belih u ekipi je:</p>
+      \[\text{tačno } 2 \text{ bela} \quad \text{ili} \quad \text{tačno } 3 \text{ bela}\]
+      <p class="muted">Više od 3 bela ne može jer ih ukupno ima samo 3.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Slučaj 1 &mdash; Tačno 2 bela goluba</div>
+      <p>Biramo 2 od 3 bela i 5 od 9 šarenih (jer \(7 - 2 = 5\)):</p>
+      \[\binom{3}{2} \cdot \binom{9}{5}\]
+      <p>Izračunavamo svaki faktor:</p>
+      \[\binom{3}{2} = \frac{3!}{2! \cdot 1!} = 3\]
+      \[\binom{9}{5} = \frac{9!}{5! \cdot 4!} = \frac{9 \cdot 8 \cdot 7 \cdot 6}{4 \cdot 3 \cdot 2 \cdot 1} = \frac{3024}{24} = 126\]
+      <p>Dakle:</p>
+      \[\binom{3}{2} \cdot \binom{9}{5} = 3 \cdot 126 = 378\]
+    </div>
+
+    <details style="margin: 15px 0;">
+      <summary style="color:#a78bfa;">Proveri se: Koliko je \(\binom{9}{5}\)?</summary>
+      <div class="detail-content">
+        <p>\(\binom{9}{5} = \binom{9}{4} = 126\). Koristili smo simetriju binomnog koeficijenta: \(\binom{n}{k} = \binom{n}{n-k}\).</p>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Slučaj 2 &mdash; Tačno 3 bela goluba</div>
+      <p>Biramo sva 3 bela i 4 od 9 šarenih (jer \(7 - 3 = 4\)):</p>
+      \[\binom{3}{3} \cdot \binom{9}{4}\]
+      <p>Izračunavamo:</p>
+      \[\binom{3}{3} = 1\]
+      \[\binom{9}{4} = \frac{9!}{4! \cdot 5!} = \frac{9 \cdot 8 \cdot 7 \cdot 6}{4 \cdot 3 \cdot 2 \cdot 1} = 126\]
+      <p>Dakle:</p>
+      \[\binom{3}{3} \cdot \binom{9}{4} = 1 \cdot 126 = 126\]
+    </div>
+
+    <div class="checkpoint">
+      <span class="checkpoint-label">Proveri se:</span> Primeti da su \(\binom{9}{5}\) i \(\binom{9}{4}\) jednaki. Zašto? Jer \(\binom{n}{k} = \binom{n}{n-k}\), pa je \(\binom{9}{5} = \binom{9}{4} = 126\).
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Sabiranje slučajeva</div>
+      <p>Slučajevi su međusobno isključivi (golub ne može biti istovremeno u ekipi sa tačno 2 i tačno 3 bela), pa sabiramo:</p>
+      \[\text{Ukupno} = 378 + 126 = 504\]
+    </div>
+
+    <details style="margin: 15px 0;">
+      <summary style="color:#a78bfa;">Proveri se: Verifikacija komplementom</summary>
+      <div class="detail-content">
+        <p>Proverimo preko komplementa. Ukupan broj načina da se izabere 7 od 12:</p>
+        \[\binom{12}{7} = 792\]
+        <p>Oduzmemo neželjene slučajeve (0 ili 1 beli golub):</p>
+        \[\binom{3}{0} \cdot \binom{9}{7} = 1 \cdot 36 = 36\]
+        \[\binom{3}{1} \cdot \binom{9}{6} = 3 \cdot 84 = 252\]
+        <p>Traženi broj:</p>
+        \[792 - 36 - 252 = 504 \quad \checkmark\]
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Ključni uvid</div>
+    <p>Kada uslov kaže „bar \(k\)" elemenata neke vrste, razmisli da li je lakše direktno sabrati slučajeve (\(k, k{+}1, \ldots\)) ili koristiti komplement (ukupno minus neželjeno). Ovde su samo 2 povoljna slučaja (2 ili 3 bela), pa je direktan pristup brži. Da je uslov bio „bar 1 beli", komplement bi bio elegantniji jer oduzimaš samo jedan slučaj (0 belih).</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konačan odgovor</div>
+    <div class="value">V) \(\;\binom{3}{2}\cdot\binom{9}{5} + \binom{3}{3}\cdot\binom{9}{4} = 378 + 126 = 504\)</div>
+    <div class="options-row">
+      <span class="option-pill">A) 84</span>
+      <span class="option-pill">B) 378</span>
+      <span class="option-pill correct">V) 504</span>
+      <span class="option-pill">G) 630</span>
+      <span class="option-pill">D) 2200</span>
+    </div>
+    <p class="verification">Verifikacija: Komplementarni pristup daje isti rezultat: \(792 - 36 - 252 = 504\). Odgovor 378 (opcija B) odgovara samo slučaju sa tačno 2 bela &mdash; zaboravljen je slučaj sa 3 bela.</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall">
+      <strong>Zaboravljen slučaj sa 3 bela:</strong> Mnogi izračunaju samo \(\binom{3}{2} \cdot \binom{9}{5} = 378\) i zaokruže opciju B. Ali „bar dva" uključuje i tačno tri bela goluba!
+    </div>
+    <div class="pitfall">
+      <strong>Mešanje kombinacija i varijacija:</strong> Redosled izbora golubova nije bitan &mdash; koristimo kombinacije \(\binom{n}{k}\), ne varijacije \(V_k^n\).
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Šta ako Ivan ima 4 bela, 8 šarenih i pravi ekipu od 6 sa bar 3 bela? Koliko načina ima?</p>
+    <details style="margin: 15px 0; background: transparent; border: 1px solid #34d399;">
+      <summary style="color:#34d399;">Savet</summary>
+      <div class="detail-content">
+        <p>Slučaj 1: \(\binom{4}{3} \cdot \binom{8}{3} = 4 \cdot 56 = 224\)</p>
+        <p>Slučaj 2: \(\binom{4}{4} \cdot \binom{8}{2} = 1 \cdot 28 = 28\)</p>
+        <p>Ukupno: \(224 + 28 = 252\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  // Clear
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Title
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Razlaganje na slučajeve', W / 2, 30);
+
+  // Draw pigeon circles - top section showing the two groups
+  var topY = 70;
+
+  // White pigeons group
+  ctx.fillStyle = '#60a5fa';
+  ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Beli golubovi (3)', 175, topY);
+
+  for (var i = 0; i < 3; i++) {
+    var cx = 115 + i * 60;
+    var cy = topY + 35;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 18, 0, 2 * Math.PI);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fill();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('B' + (i + 1), cx, cy + 5);
+  }
+
+  // Colorful pigeons group
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+  ctx.fillText('Šareni golubovi (9)', 500, topY);
+
+  var colors = ['#f472b6', '#a78bfa', '#60a5fa', '#34d399', '#f472b6', '#a78bfa', '#60a5fa', '#34d399', '#f472b6'];
+  for (var j = 0; j < 9; j++) {
+    var col = j % 5;
+    var row = Math.floor(j / 5);
+    var sx = 365 + col * 55;
+    var sy = topY + 35 + row * 50;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 18, 0, 2 * Math.PI);
+    ctx.fillStyle = colors[j];
+    ctx.globalAlpha = 0.3;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = colors[j];
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = colors[j];
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Š' + (j + 1), sx, sy + 5);
+  }
+
+  // Divider line
+  var divY = 195;
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(40, divY);
+  ctx.lineTo(W - 40, divY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Case 1
+  var case1Y = 225;
+  ctx.fillStyle = '#60a5fa';
+  ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Slučaj 1: Tačno 2 bela + 5 šarenih', 50, case1Y);
+
+  // Formula box for case 1
+  var boxY1 = case1Y + 15;
+  ctx.fillStyle = 'rgba(96,165,250,0.08)';
+  ctx.strokeStyle = 'rgba(96,165,250,0.3)';
+  ctx.lineWidth = 1;
+  roundRect(ctx, 50, boxY1, 600, 70, 10);
+
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '15px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('C(3, 2) \u00D7 C(9, 5)  =  3 \u00D7 126  =  378', W / 2, boxY1 + 30);
+
+  // Draw selected pigeons for case 1
+  var selY1 = boxY1 + 50;
+  // 2 white
+  for (var w = 0; w < 2; w++) {
+    var wx = 120 + w * 45;
+    ctx.beginPath();
+    ctx.arc(wx, selY1, 14, 0, 2 * Math.PI);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+  // 5 colored
+  var caseColors1 = ['#f472b6', '#a78bfa', '#60a5fa', '#34d399', '#f472b6'];
+  for (var c = 0; c < 5; c++) {
+    var ccx = 230 + c * 45;
+    ctx.beginPath();
+    ctx.arc(ccx, selY1, 14, 0, 2 * Math.PI);
+    ctx.fillStyle = caseColors1[c];
+    ctx.globalAlpha = 0.4;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+
+  // Result badge for case 1
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('378', 560, selY1 + 6);
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('načina', 560, selY1 + 22);
+
+  // Case 2
+  var case2Y = selY1 + 55;
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Slučaj 2: Tačno 3 bela + 4 šarena', 50, case2Y);
+
+  // Formula box for case 2
+  var boxY2 = case2Y + 15;
+  ctx.fillStyle = 'rgba(167,139,250,0.08)';
+  ctx.strokeStyle = 'rgba(167,139,250,0.3)';
+  ctx.lineWidth = 1;
+  roundRect(ctx, 50, boxY2, 600, 70, 10);
+
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '15px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('C(3, 3) \u00D7 C(9, 4)  =  1 \u00D7 126  =  126', W / 2, boxY2 + 30);
+
+  // Draw selected pigeons for case 2
+  var selY2 = boxY2 + 50;
+  // 3 white
+  for (var w2 = 0; w2 < 3; w2++) {
+    var wx2 = 120 + w2 * 45;
+    ctx.beginPath();
+    ctx.arc(wx2, selY2, 14, 0, 2 * Math.PI);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+  // 4 colored
+  var caseColors2 = ['#f472b6', '#a78bfa', '#60a5fa', '#34d399'];
+  for (var c2 = 0; c2 < 4; c2++) {
+    var ccx2 = 255 + c2 * 45;
+    ctx.beginPath();
+    ctx.arc(ccx2, selY2, 14, 0, 2 * Math.PI);
+    ctx.fillStyle = caseColors2[c2];
+    ctx.globalAlpha = 0.4;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+
+  // Result badge for case 2
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('126', 560, selY2 + 6);
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('načina', 560, selY2 + 22);
+
+  // Total
+  var totalY = selY2 + 55;
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(150, totalY);
+  ctx.lineTo(W - 150, totalY);
+  ctx.stroke();
+
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Ukupno: 378 + 126 = 504', W / 2, totalY + 30);
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Formiranje ekipe golubova sa ograničenjem","subject":"math","unit":"combinatorics","topic_tags":["kombinacije","binomni koeficijent","princip sabiranja","kombinatorika sa ograničenjem"]}
+BRAINSPARK_META-->

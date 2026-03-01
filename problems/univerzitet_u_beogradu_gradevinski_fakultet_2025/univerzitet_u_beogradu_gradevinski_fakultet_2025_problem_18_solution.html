@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Realni deo sume geometrijskog reda kompleksnih brojeva</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: If z = 1 + i, find the real part of the sum S = 1 + z + z² + ... + z^2025.
+
+STEP 1: Recognize this as a geometric series.
+S = 1 + z + z² + ... + z^2025 = sum_{k=0}^{2025} z^k
+This is a geometric series with first term 1, common ratio q = z = 1+i, and 2026 terms.
+
+STEP 2: Apply the geometric series formula.
+S = (1 - z^2026) / (1 - z)
+
+STEP 3: Compute z^2026.
+z = 1 + i
+z² = (1+i)² = 1 + 2i + i² = 1 + 2i - 1 = 2i
+z^2026 = (z²)^1013 = (2i)^1013 = 2^1013 · i^1013
+
+STEP 4: Compute i^1013.
+i^1 = i, i^2 = -1, i^3 = -i, i^4 = 1 (period 4)
+1013 = 4 · 253 + 1
+So i^1013 = i^1 = i
+
+STEP 5: Therefore z^2026 = 2^1013 · i.
+
+STEP 6: Compute the denominator.
+1 - z = 1 - (1+i) = -i
+
+STEP 7: Compute the sum.
+S = (1 - 2^1013 · i) / (-i)
+
+To divide by -i, multiply numerator and denominator by the conjugate of -i, which is i:
+S = (1 - 2^1013 · i) · i / ((-i) · i)
+  = (i - 2^1013 · i²) / (-i²)
+  = (i - 2^1013 · (-1)) / (-(-1))
+  = (i + 2^1013) / 1
+  = 2^1013 + i
+
+STEP 8: Extract the real part.
+Re(S) = 2^1013
+
+ANSWER: G) 2^1013
+
+VERIFICATION:
+- Alternative: multiply by i/i: (1 - 2^1013·i)·i / ((-i)·i) = (i - 2^1013·i²)/(-i²) = (i + 2^1013)/1 = 2^1013 + i. Correct.
+- Check small case: z = 1+i, S_0 = 1, Re = 1.
+  S_1 = 1 + (1+i) = 2 + i, Re = 2.
+  S_2 = 2 + i + (1+i)² = 2 + i + 2i = 2 + 3i, Re = 2.
+  Using formula for n=2: (1 - z³)/(1-z). z³ = z·z² = (1+i)·2i = 2i + 2i² = -2 + 2i.
+  (1-(-2+2i))/(-i) = (3-2i)/(-i) = (3-2i)·i/(-i·i) = (3i-2i²)/(1) = 2 + 3i. Re = 2. Checks out!
+</script>
+
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  background: #1e293b;
+  border: 2px solid #a78bfa;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.given-item.answer-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.given-item.answer-option .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+
+.given-item.answer-option .value {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin-bottom: 1.5rem;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  margin: 15px 0;
+  font-size: 0.95rem;
+  color: #a78bfa;
+}
+
+.checkpoint summary {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+}
+
+.checkpoint summary::-webkit-details-marker { display: none; }
+
+.checkpoint .detail-content {
+  padding: 0 1rem 0.75rem;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.final-answer-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.final-answer-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.final-answer-option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.verification {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(96, 165, 250, 0.08);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  body { padding: 0.5rem; }
+  .card, .problem-statement, details .detail-content, .final-answer,
+  .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: repeat(3, 1fr); }
+  .final-answer-options { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Suma geometrijskog reda kompleksnih brojeva</h1>
+  <p class="subtitle">Kompleksni brojevi &mdash; stepeni i geometrijski red</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Ako je \(z = 1 + i\), onda je realni deo sume \(1 + z + z^2 + \cdots + z^{2025}\) jednak:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(-2^{2024}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2^{2024}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">\(-2^{1013}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\(2^{1013}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-2^{1023}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</div>
+    <ol class="plan-list">
+      <li>Prepoznati sumu kao geometrijski red i primeniti formulu za konačnu sumu</li>
+      <li>Izračunati \(z^{2026}\) koristeći \(z^2 = 2i\)</li>
+      <li>Izračunati sumu i izdvojiti njen realni deo</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>Podsetnik iz teorije</summary>
+    <div class="detail-content">
+      <p><strong>Geometrijski red (konačna suma):</strong></p>
+      \[1 + q + q^2 + \cdots + q^n = \frac{1 - q^{n+1}}{1 - q}, \quad q \neq 1\]
+
+      <p style="margin-top:0.75rem"><strong>Kompleksan broj \(z = 1 + i\):</strong></p>
+      <ul style="margin-left:1rem; margin-top:0.25rem;">
+        <li>Moduo: \(|z| = \sqrt{1^2 + 1^2} = \sqrt{2}\)</li>
+        <li>Kvadrat: \(z^2 = (1+i)^2 = 1 + 2i + i^2 = 2i\)</li>
+      </ul>
+
+      <p style="margin-top:0.75rem"><strong>Stepeni imaginarne jedinice:</strong></p>
+      \[i^1 = i,\quad i^2 = -1,\quad i^3 = -i,\quad i^4 = 1 \quad \text{(period 4)}\]
+
+      <p style="margin-top:0.75rem"><strong>Deljenje kompleksnim brojem:</strong></p>
+      <p>Za deljenje sa \(-i\), množimo brojilac i imenilac konjugovanim brojem \(i\):</p>
+      \[\frac{w}{-i} = \frac{w \cdot i}{(-i) \cdot i} = \frac{w \cdot i}{-i^2} = \frac{w \cdot i}{1} = w \cdot i\]
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Vizuelni prikaz u kompleksnoj ravni</div>
+    <p class="muted" style="margin-bottom:0.75rem;">Stepeni kompleksnog broja \(z = 1+i\) u kompleksnoj ravni. Svaki stepen se dobija množenjem prethodnog sa \(z\), što znači rotaciju za \(45°\) i skaliranje za \(\sqrt{2}\).</p>
+    <div class="canvas-wrap">
+      <canvas id="complex-plane" width="700" height="500"></canvas>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Prepoznavanje geometrijskog reda</div>
+      <p>Data suma ima oblik:</p>
+      \[S = 1 + z + z^2 + \cdots + z^{2025} = \sum_{k=0}^{2025} z^k\]
+      <p>Ovo je geometrijski red sa prvim članom \(a = 1\), količnikom \(q = z = 1 + i\) i \(2026\) članova.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Primena formule za sumu</div>
+      <p>Pošto je \(q = 1 + i \neq 1\), primenjujemo formulu za konačan geometrijski red:</p>
+      \[S = \frac{1 - z^{2026}}{1 - z}\]
+      <p>Potrebno je izračunati \(z^{2026}\) i \(1 - z\).</p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Računanje \(z^2\)</div>
+      <p>Prvo izračunamo kvadrat:</p>
+      \[z^2 = (1 + i)^2 = 1 + 2i + i^2 = 1 + 2i - 1 = 2i\]
+      <p>Ovo je ključna činjenica &mdash; kvadrat broja \(1+i\) je čisto imaginaran broj \(2i\).</p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Računanje \(z^{2026}\)</div>
+      <p>Koristimo rezultat iz prethodnog koraka:</p>
+      \[z^{2026} = (z^2)^{1013} = (2i)^{1013}\]
+      <p>Razdvajamo stepen na proizvod:</p>
+      \[(2i)^{1013} = 2^{1013} \cdot i^{1013}\]
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(i^{1013}\)?</summary>
+      <div class="detail-content">
+        <p>Stepeni od \(i\) se ponavljaju sa periodom 4. Delimo eksponent sa 4:</p>
+        <p>\(1013 = 4 \cdot 253 + 1\), pa je \(i^{1013} = i^1 = i\).</p>
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-title">Korak 5: Određivanje \(i^{1013}\)</div>
+      <p>Stepeni broja \(i\) se ciklično ponavljaju sa periodom 4:</p>
+      \[i^1 = i, \quad i^2 = -1, \quad i^3 = -i, \quad i^4 = 1, \quad i^5 = i, \;\ldots\]
+      <p>Nalazimo ostatak pri deljenju sa 4:</p>
+      \[1013 = 4 \cdot 253 + 1\]
+      <p>Dakle:</p>
+      \[i^{1013} = i^1 = i\]
+      <p>Pa je:</p>
+      \[z^{2026} = 2^{1013} \cdot i\]
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-title">Korak 6: Računanje imenioca</div>
+      <p>Imenilac formule je:</p>
+      \[1 - z = 1 - (1 + i) = -i\]
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-title">Korak 7: Računanje sume</div>
+      <p>Zamenjujemo u formulu:</p>
+      \[S = \frac{1 - 2^{1013} \cdot i}{-i}\]
+      <p>Da bismo podelili sa \(-i\), množimo brojilac i imenilac sa \(i\):</p>
+      \[S = \frac{(1 - 2^{1013} \cdot i) \cdot i}{(-i) \cdot i}\]
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step">
+      <div class="step-title">Korak 8: Sređivanje brojioca</div>
+      <p>Brojilac:</p>
+      \[(1 - 2^{1013} \cdot i) \cdot i = i - 2^{1013} \cdot i^2 = i - 2^{1013} \cdot (-1) = 2^{1013} + i\]
+    </div>
+
+    <!-- Step 9 -->
+    <div class="step">
+      <div class="step-title">Korak 9: Sređivanje imenioca</div>
+      <p>Imenilac:</p>
+      \[(-i) \cdot i = -i^2 = -(-1) = 1\]
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(S\)?</summary>
+      <div class="detail-content">
+        <p>\(S = \dfrac{2^{1013} + i}{1} = 2^{1013} + i\)</p>
+      </div>
+    </details>
+
+    <!-- Step 10 -->
+    <div class="step">
+      <div class="step-title">Korak 10: Izdvajanje realnog dela</div>
+      <p>Konačno:</p>
+      \[S = 2^{1013} + i\]
+      <p>Realni deo sume je:</p>
+      \[\operatorname{Re}(S) = 2^{1013}\]
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Ključni uvid</div>
+    <p>Ceo zadatak se oslanja na jednu elegantnu činjenicu: \((1+i)^2 = 2i\). Ova jednakost transformiše ogroman stepen \(z^{2026}\) u lako izračunljivu vrednost \((2i)^{1013} = 2^{1013} \cdot i\). Deljenje sa \(-i\) je zatim samo množenje sa \(i\), što značajno uprošćava račun.</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konačan odgovor</div>
+    <div class="value">G) \(\;\operatorname{Re}(S) = 2^{1013}\)</div>
+    <div class="final-answer-options">
+      <div class="final-answer-option" data-option="A">(A) \(-2^{2024}\)</div>
+      <div class="final-answer-option" data-option="B">(B) \(2^{2024}\)</div>
+      <div class="final-answer-option" data-option="V">(V) \(-2^{1013}\)</div>
+      <div class="final-answer-option correct" data-option="G">(G) \(2^{1013}\)</div>
+      <div class="final-answer-option" data-option="D">(D) \(-2^{1023}\)</div>
+    </div>
+    <div class="verification">
+      Verifikacija na malom primeru: za \(n=2\), suma je \(1 + (1+i) + (1+i)^2 = 1 + 1 + i + 2i = 2 + 3i\). Formula daje \(\frac{1-z^3}{1-z} = \frac{1-(-2+2i)}{-i} = \frac{3-2i}{-i} = \frac{(3-2i) \cdot i}{1} = 2 + 3i\). Tačno!
+    </div>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall">
+      <strong>Pogrešan broj članova:</strong> Suma \(1 + z + z^2 + \cdots + z^{2025}\) ima \(2026\) članova (od \(z^0\) do \(z^{2025}\)), pa u formuli stoji \(z^{2026}\), a ne \(z^{2025}\). Ova greška može dovesti do potpuno drugačijeg rezultata.
+    </div>
+    <div class="pitfall">
+      <strong>Greška pri određivanju stepena od \(i\):</strong> Ako se pogrešno izračuna \(i^{1013}\) (npr. kao \(-i\) ili \(-1\)), dobija se pogrešan znak ili eksponent u konačnom odgovoru. Uvek deliti eksponent sa 4 i koristiti ostatak.
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Odrediti <em>imaginarni</em> deo iste sume \(1 + z + z^2 + \cdots + z^{2025}\) za \(z = 1 + i\).</p>
+    <details style="background:transparent; border:none; margin:0.5rem 0 0 0;">
+      <summary style="color:#34d399; padding:0.5rem 0;">Savet</summary>
+      <div class="detail-content" style="padding:0.25rem 0 0 0;">
+        <p>Iz rešenja već znamo da je \(S = 2^{1013} + i\), pa je \(\operatorname{Im}(S) = 1\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('complex-plane');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const padL = 60, padR = 30, padT = 30, padB = 50;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  // Coordinate range: show z^0 to z^7 (after that they get too large)
+  const xMin = -5, xMax = 5;
+  const yMin = -5, yMax = 5;
+
+  function toCanvasX(x) { return padL + ((x - xMin) / (xMax - xMin)) * plotW; }
+  function toCanvasY(y) { return padT + ((yMax - y) / (yMax - yMin)) * plotH; }
+
+  // Background
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  for (let gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(gx), padT);
+    ctx.lineTo(toCanvasX(gx), H - padB);
+    ctx.stroke();
+  }
+  for (let gy = Math.ceil(yMin); gy <= Math.floor(yMax); gy++) {
+    ctx.beginPath();
+    ctx.moveTo(padL, toCanvasY(gy));
+    ctx.lineTo(W - padR, toCanvasY(gy));
+    ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 1.5;
+  // x-axis (Re)
+  ctx.beginPath();
+  ctx.moveTo(padL, toCanvasY(0));
+  ctx.lineTo(W - padR, toCanvasY(0));
+  ctx.stroke();
+  // y-axis (Im)
+  ctx.beginPath();
+  ctx.moveTo(toCanvasX(0), padT);
+  ctx.lineTo(toCanvasX(0), H - padB);
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  for (let gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+    if (gx === 0) continue;
+    ctx.fillText(gx.toString(), toCanvasX(gx), toCanvasY(0) + 16);
+  }
+  ctx.textAlign = 'right';
+  for (let gy = Math.ceil(yMin); gy <= Math.floor(yMax); gy++) {
+    if (gy === 0) continue;
+    ctx.fillText(gy.toString(), toCanvasX(0) - 8, toCanvasY(gy) + 4);
+  }
+
+  // Axis names
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '14px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Re', W - padR + 15, toCanvasY(0) + 5);
+  ctx.fillText('Im', toCanvasX(0) + 5, padT - 10);
+
+  // Compute powers of z = 1+i
+  // z^0 = 1, z^1 = 1+i, z^2 = 2i, z^3 = -2+2i, z^4 = -4, z^5 = -4-4i, z^6 = -8i, z^7 = 8-8i
+  const powers = [
+    { re: 1, im: 0, label: 'z\u2070 = 1' },
+    { re: 1, im: 1, label: 'z\u00B9 = 1+i' },
+    { re: 0, im: 2, label: 'z\u00B2 = 2i' },
+    { re: -2, im: 2, label: 'z\u00B3 = -2+2i' },
+    { re: -4, im: 0, label: 'z\u2074 = -4' },
+    { re: -4, im: -4, label: 'z\u2075 = -4-4i' }
+  ];
+
+  const colors = ['#4ade80', '#60a5fa', '#a78bfa', '#f472b6', '#34d399', '#fca5a5'];
+
+  // Draw spiral path connecting the powers
+  ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(toCanvasX(powers[0].re), toCanvasY(powers[0].im));
+  for (let i = 1; i < powers.length; i++) {
+    ctx.lineTo(toCanvasX(powers[i].re), toCanvasY(powers[i].im));
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw vectors from origin to each power
+  powers.forEach((p, idx) => {
+    // Line from origin
+    ctx.strokeStyle = colors[idx] + '88';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), toCanvasY(0));
+    ctx.lineTo(toCanvasX(p.re), toCanvasY(p.im));
+    ctx.stroke();
+
+    // Point
+    const sx = toCanvasX(p.re);
+    const sy = toCanvasY(p.im);
+
+    // Glow
+    const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 15);
+    grad.addColorStop(0, colors[idx] + '44');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(sx - 15, sy - 15, 30, 30);
+
+    ctx.beginPath();
+    ctx.arc(sx, sy, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = colors[idx];
+    ctx.fill();
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label with offset to avoid overlap
+    ctx.fillStyle = colors[idx];
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    const offsets = [
+      { x: 10, y: -10, align: 'left' },
+      { x: 10, y: -10, align: 'left' },
+      { x: 10, y: -8, align: 'left' },
+      { x: -10, y: -10, align: 'right' },
+      { x: -10, y: -10, align: 'right' },
+      { x: -10, y: 14, align: 'right' }
+    ];
+    ctx.textAlign = offsets[idx].align;
+    ctx.fillText(p.label, sx + offsets[idx].x, sy + offsets[idx].y);
+  });
+
+  // Annotation: rotation and scaling info
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '13px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Svako množenje sa z = 1+i: rotacija 45° + skaliranje \u00D7\u221A2', W / 2, H - 10);
+
+  // Rotation arc between z^0 and z^1
+  ctx.strokeStyle = '#60a5fa88';
+  ctx.lineWidth = 1;
+  const r = 40;
+  ctx.beginPath();
+  ctx.arc(toCanvasX(0), toCanvasY(0), r, -Math.PI / 4, 0);
+  ctx.stroke();
+  ctx.fillStyle = '#60a5fa';
+  ctx.font = '11px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('45°', toCanvasX(0) + r + 3, toCanvasY(0) - 5);
+
+  // Click event for steps
+  document.querySelectorAll('.step').forEach(step => {
+    step.addEventListener('click', () => {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Realni deo sume geometrijskog reda kompleksnih brojeva","subject":"math","unit":"algebra","topic_tags":["kompleksni brojevi","geometrijski red","stepeni imaginarne jedinice","suma reda"]}
+BRAINSPARK_META-->

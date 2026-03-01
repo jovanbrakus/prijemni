@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Podizanje nivoa vode u bazenu</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+A rectangular pool (cuboid) has base dimensions 3m × 4m.
+Water is filled to a height of 1.5m.
+A heavy cube with edge length 2m is lowered to the bottom.
+How much does the water level rise?
+
+KNOWN:
+- Pool base: 3m × 4m → area = 12 m²
+- Initial water height: h₀ = 1.5m
+- Initial water volume: V_water = 12 × 1.5 = 18 m³
+- Cube edge: a = 2m → base area = 4 m², volume = 8 m³
+- Cube fits inside pool (2 < 3 and 2 < 4) ✓
+
+SOLUTION:
+The cube sits on the bottom, occupying a 2×2 base area up to height 2m.
+At any cross-section below h=2m, the available area for water is 12 - 4 = 8 m².
+Above h=2m, the full 12 m² is available.
+
+Let h = new water level.
+
+Case 1: h ≤ 2m
+Available volume for water = 8h
+8h = 18 → h = 2.25m > 2m — CONTRADICTION. Case 1 fails.
+
+Case 2: h > 2m
+Volume of water below cube top (0 to 2m): (12 - 4) × 2 = 16 m³
+Volume of water above cube top (2m to h): 12 × (h - 2) m³
+Total: 16 + 12(h - 2) = 12h - 8
+
+12h - 8 = 18
+12h = 26
+h = 26/12 = 13/6 ≈ 2.1667m ✓ (h > 2)
+
+Rise = h - h₀ = 13/6 - 3/2 = 13/6 - 9/6 = 4/6 = 2/3 m
+
+ANSWER: (D) 2/3 m
+
+VERIFICATION:
+- Final water volume check: below 2m → 8 × 2 = 16 m³; above 2m → 12 × (13/6 - 2) = 12 × 1/6 = 2 m³
+- Total = 16 + 2 = 18 m³ ✓ matches initial volume
+- The cube is 2m tall, new level is 13/6 ≈ 2.167m, so water is just slightly above the cube — makes sense physically.
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  transition: none;
+  cursor: default;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.15s;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+details {
+  margin: 15px 0;
+  background: rgba(56, 189, 248, 0.05);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #60a5fa;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.1));
+  border: 2px solid rgba(52, 211, 153, 0.35);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-box h2 {
+  color: #4ade80;
+  margin-bottom: 14px;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 18px 0;
+}
+
+.option-card {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+  box-shadow: 0 0 18px rgba(74, 222, 128, 0.15);
+}
+
+.option-card .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: rgba(52, 211, 153, 0.06);
+  border-left: 3px solid #34d399;
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  background: rgba(224, 148, 104, 0.06);
+  border-left: 3px solid #e09468;
+  border-radius: 6px;
+  color: #cbd5e1;
+}
+
+.pitfall-list li strong {
+  color: #e09468;
+}
+
+.canvas-container {
+  background: #0c1222;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  text-align: center;
+  overflow: hidden;
+}
+
+canvas {
+  touch-action: none;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+
+.highlight-value {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { padding: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Podizanje nivoa vode u bazenu</h1>
+  <p class="subtitle">Zapremina i nivo tečnosti — potapanje tela u pravougaoni bazen</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>
+      U bazenu oblika kvadra, čije dno ima dimenzije \(3\text{ m} \times 4\text{ m}\), nalazi se voda do visine \(1{,}5\text{ m}\). Za koliko će se podići nivo vode u bazenu ako se na njegovo dno spusti teška kocka (koja ne pliva, već tone) ivice \(2\text{ m}\)?
+    </p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Dno bazena</div>
+        <div class="value">\(3\text{ m} \times 4\text{ m}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Visina vode</div>
+        <div class="value">\(1{,}5\text{ m}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Ivica kocke</div>
+        <div class="value">\(2\text{ m}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Površina dna</div>
+        <div class="value">\(12\text{ m}^2\)</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 20px; color: #94a3b8; font-size: 1rem;">Ponuđeni odgovori:</h3>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{3}{4}\text{ m}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{4}{3}\text{ m}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{1}{2}\text{ m}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{2}{3}\text{ m}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(1\text{ m}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Zapremina vode se ne menja — samo se preraspoređuje oko kocke. Postavićemo jednačinu očuvanja zapremine vode, vodeći računa o tome da kocka (visine \(2\text{ m}\)) može da viri iznad početnog nivoa vode, pa ćemo morati da razmotrimo dva slučaja u zavisnosti od toga da li novi nivo vode prelazi vrh kocke ili ne.
+    </p>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i pojmovi</summary>
+      <ul style="margin-top: 10px; list-style: disc; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;">
+          <strong>Zapremina kvadra:</strong> \(V = a \times b \times c\) (dužina × širina × visina)
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Očuvanje zapremine tečnosti:</strong> Kada potopimo čvrsto telo u zatvoreni sud, voda se ne gubi ni stvara. Zapremina vode pre i posle potapanja je ista.
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Presek na visini \(z\):</strong> Ako je kocka ivice \(a\) na dnu bazena dimenzija \(L \times W\), onda za \(z \leq a\) slobodna površina preseka je \(L \cdot W - a^2\), a za \(z > a\) slobodna površina je \(L \cdot W\).
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Princip istisnine:</strong> Potopljeno telo istiskuje zapreminu tečnosti jednaku zapremini svog potopljenog dela. Nivo raste jer se ista zapremina vode raspoređuje na manju efektivnu površinu.
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color: #94a3b8; margin-bottom: 12px;">Uporedni prikaz bazena pre i posle potapanja kocke. Koristite klizač da vidite kako veličina kocke utiče na nivo vode.</p>
+    <div class="canvas-container">
+      <canvas id="poolCanvas" width="800" height="500"></canvas>
+      <div style="margin-top: 14px;">
+        <label style="color: #94a3b8; font-size: 0.9rem;">Ivica kocke: <span id="sliderValue" style="color: #60a5fa; font-weight: 600;">2,0 m</span></label>
+        <br>
+        <input type="range" id="cubeSlider" min="0" max="28" value="20" style="width: 260px; margin-top: 6px; accent-color: #60a5fa;">
+      </div>
+      <p class="canvas-hint">Pomerajte klizač da promenite veličinu kocke i pratite promenu nivoa vode.</p>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" data-step="1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapremina vode pre potapanja</h3>
+        <p>Dno bazena ima površinu \(3 \times 4 = 12\text{ m}^2\). Voda je na visini \(1{,}5\text{ m}\).</p>
+        <div class="math-block">
+          \[V_{\text{vode}} = 12 \times 1{,}5 = 18\text{ m}^3\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" data-step="2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Kocka na dnu bazena — analiza preseka</h3>
+        <p>Kocka ima ivicu \(2\text{ m}\), pa njena osnova zauzima \(2 \times 2 = 4\text{ m}^2\) na dnu.</p>
+        <p>Na bilo kojoj visini \(z \leq 2\text{ m}\), kocka „blokira" \(4\text{ m}^2\) preseka bazena. Preostala slobodna površina za vodu je:</p>
+        <div class="math-block">
+          \[S_{\text{slobodno}} = 12 - 4 = 8\text{ m}^2 \quad \text{(za } z \leq 2\text{ m)}\]
+        </div>
+        <p>Iznad \(z = 2\text{ m}\) (iznad vrha kocke), cela površina bazena \(12\text{ m}^2\) je slobodna za vodu.</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Kolika je zapremina kocke?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">\(V_{\text{kocke}} = 2^3 = 8\text{ m}^3\). Primetimo da je to manje od zapremine vode (\(18\text{ m}^3\)), ali to ovde nije presudno — bitna je geometrija preseka.</p>
+    </details>
+
+    <div class="step-container" data-step="3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Pretpostavka: nivo vode ispod vrha kocke (\(h \leq 2\))</h3>
+        <p>Ako novi nivo vode \(h\) ne prelazi vrh kocke, onda voda na svim visinama od \(0\) do \(h\) ima efektivnu površinu od \(8\text{ m}^2\).</p>
+        <div class="math-block">
+          \[8h = 18 \implies h = \frac{18}{8} = 2{,}25\text{ m}\]
+        </div>
+        <p>Ali \(2{,}25 > 2\), što je u kontradikciji sa pretpostavkom \(h \leq 2\).</p>
+        <p class="note">Dakle, voda prelazi vrh kocke — moramo razmotriti drugi slučaj.</p>
+      </div>
+    </div>
+
+    <div class="step-container" data-step="4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Ispravan slučaj: nivo vode iznad vrha kocke (\(h > 2\))</h3>
+        <p>Delimo bazen na dva pojasa po visini:</p>
+        <p><strong>Donji pojas</strong> (od \(0\) do \(2\text{ m}\)) — kocka zauzima deo preseka:</p>
+        <div class="math-block">
+          \[V_{\text{donji}} = (12 - 4) \times 2 = 8 \times 2 = 16\text{ m}^3\]
+        </div>
+        <p><strong>Gornji pojas</strong> (od \(2\text{ m}\) do \(h\)) — cela površina bazena je slobodna:</p>
+        <div class="math-block">
+          \[V_{\text{gornji}} = 12 \times (h - 2)\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" data-step="5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Jednačina očuvanja zapremine</h3>
+        <p>Ukupna zapremina vode mora ostati \(18\text{ m}^3\):</p>
+        <div class="math-block">
+          \[\begin{align}
+          16 + 12(h - 2) &= 18 \\[6pt]
+          16 + 12h - 24 &= 18 \\[6pt]
+          12h - 8 &= 18 \\[6pt]
+          12h &= 26 \\[6pt]
+          h &= \frac{26}{12} = \frac{13}{6}\text{ m}
+          \end{align}\]
+        </div>
+        <p class="note">Proveravamo: \(\frac{13}{6} \approx 2{,}167\text{ m} > 2\text{ m}\) — uslov je zadovoljen.</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Da li zapremina konvergira?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Donji pojas: \(8 \times 2 = 16\text{ m}^3\). Gornji pojas: \(12 \times \left(\frac{13}{6} - 2\right) = 12 \times \frac{1}{6} = 2\text{ m}^3\).
+        Ukupno: \(16 + 2 = 18\text{ m}^3\). Tačno!
+      </p>
+    </details>
+
+    <div class="step-container" data-step="6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Podizanje nivoa vode</h3>
+        <p>Novi nivo je \(h = \frac{13}{6}\text{ m}\), a početni je bio \(h_0 = 1{,}5 = \frac{3}{2}\text{ m}\).</p>
+        <div class="math-block">
+          \[\Delta h = \frac{13}{6} - \frac{3}{2} = \frac{13}{6} - \frac{9}{6} = \frac{4}{6} = \frac{2}{3}\text{ m}\]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p style="color: #cbd5e1; margin-bottom: 14px;">
+      Kocka visine \(2\text{ m}\) viri iznad početnog nivoa vode (\(1{,}5\text{ m}\)), ali posle potapanja voda prelazi vrh kocke! To znači da se jednačina zapremine deli na dva pojasa — donji (uz kocku) i gornji (iznad kocke). Ovo je ključ za tačno rešenje.
+    </p>
+    <div style="font-size: 1.5rem; color: #a78bfa; font-weight: 700;">
+      \[\Delta h = \frac{13}{6} - \frac{3}{2} = \frac{2}{3}\text{ m}\]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">
+      \(\Delta h = \dfrac{2}{3}\text{ m}\)
+    </div>
+
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-label">(A)</div>
+        <div>\(\frac{3}{4}\text{ m}\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div>\(\frac{4}{3}\text{ m}\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(C)</div>
+        <div>\(\frac{1}{2}\text{ m}\)</div>
+      </div>
+      <div class="option-card correct">
+        <div class="opt-label">(D)</div>
+        <div>\(\frac{2}{3}\text{ m}\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(E)</div>
+        <div>\(1\text{ m}\)</div>
+      </div>
+    </div>
+
+    <div class="verification">
+      <strong>Verifikacija:</strong> Zapremina vode posle potapanja: donji pojas \(8 \times 2 = 16\text{ m}^3\), gornji pojas \(12 \times \frac{1}{6} = 2\text{ m}^3\). Ukupno: \(16 + 2 = 18\text{ m}^3 = V_{\text{početno}}\). Rezultat ima smisla i fizički: kocka zauzima značajan deo bazena, ali voda se podiže umereno jer se raspoređuje i iznad kocke.
+    </div>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li>
+        <strong>Pretpostavka da voda ostaje ispod vrha kocke:</strong> Ako se jednostavno podeli zapremina kocke sa celom površinom dna (\(8/12 = 2/3\)), dobija se tačan odgovor — ali slučajno! Ispravno rešenje zahteva proveru da li voda prelazi vrh kocke, jer se efektivna površina menja na toj visini. Uvek proverite konzistentnost pretpostavke.
+      </li>
+      <li>
+        <strong>Zaboravljanje da kocka ne pliva:</strong> Pošto kocka tone i stoji na dnu, njena celokupna zapremina ispod nivoa vode istiskuje vodu. Da pliva, situacija bi bila potpuno drugačija (Arhimedov zakon).
+      </li>
+    </ul>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card">
+    <h2>Dodatni izazov</h2>
+    <p style="color: #cbd5e1;">Koliko bi bila ivica najveće kocke koja može da stane u bazen, a da nivo vode ne pređe ivicu bazena visine \(3\text{ m}\)?</p>
+    <details>
+      <summary>Hint</summary>
+      <p style="margin-top: 8px; color: #94a3b8;">
+        Kocka ivice \(a\) mora da zadovolji \(a \leq 3\) (da stane u kraću dimenziju dna). Postavite jednačinu očuvanja zapremine: ako \(h \leq a\), tada \((12 - a^2) \cdot h = 18\); ako \(h > a\), tada \((12 - a^2) \cdot a + 12 \cdot (h - a) = 18\). Uslov je \(h \leq 3\). Ispitajte oba slučaja!
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('poolCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('cubeSlider');
+  const sliderLabel = document.getElementById('sliderValue');
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function solveWaterLevel(poolL, poolW, h0, cubeEdge) {
+    const poolArea = poolL * poolW;
+    const waterVol = poolArea * h0;
+    const cubeBase = cubeEdge * cubeEdge;
+
+    if (cubeEdge <= 0) return h0;
+    if (cubeEdge > Math.min(poolL, poolW)) return h0;
+
+    const freeArea = poolArea - cubeBase;
+    if (freeArea <= 0) return h0;
+
+    const hBelow = waterVol / freeArea;
+    if (hBelow <= cubeEdge) {
+      return hBelow;
+    }
+
+    const volBelow = freeArea * cubeEdge;
+    const remaining = waterVol - volBelow;
+    const hAbove = remaining / poolArea;
+    return cubeEdge + hAbove;
+  }
+
+  function draw(cubeEdge) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const poolL = 3, poolW = 4, h0 = 1.5;
+    const hNew = solveWaterLevel(poolL, poolW, h0, cubeEdge);
+    const rise = hNew - h0;
+
+    const leftX = 50, rightX = W / 2 - 20;
+    const leftX2 = W / 2 + 20, rightX2 = W - 50;
+
+    const poolDrawH = 250;
+    const bottomY = H - 80;
+    const topY = bottomY - poolDrawH;
+    const scale = poolDrawH / 3.5;
+
+    function drawPool(x1, x2, waterH, cubeE, label, showRise) {
+      const poolW_draw = x2 - x1;
+
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x1, topY);
+      ctx.lineTo(x1, bottomY);
+      ctx.lineTo(x2, bottomY);
+      ctx.lineTo(x2, topY);
+      ctx.stroke();
+
+      for (let i = 0; i <= 3; i++) {
+        const y = bottomY - i * scale;
+        ctx.strokeStyle = '#1e3a5f';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x2, y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(i + ' m', x1 - 6, y + 4);
+      }
+
+      const waterTop = bottomY - waterH * scale;
+      const grad = ctx.createLinearGradient(0, waterTop, 0, bottomY);
+      grad.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
+      grad.addColorStop(1, 'rgba(56, 189, 248, 0.12)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x1 + 1, waterTop, poolW_draw - 2, bottomY - waterTop - 1);
+
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x1, waterTop);
+      ctx.lineTo(x2, waterTop);
+      ctx.stroke();
+
+      if (cubeE > 0) {
+        const cubeW = (cubeE / 4) * poolW_draw * 0.8;
+        const cubeH = cubeE * scale;
+        const cubeX = x1 + (poolW_draw - cubeW) / 2;
+        const cubeY = bottomY - cubeH;
+
+        ctx.fillStyle = 'rgba(167, 139, 250, 0.3)';
+        ctx.fillRect(cubeX, cubeY, cubeW, cubeH);
+        ctx.strokeStyle = '#a78bfa';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(cubeX, cubeY, cubeW, cubeH);
+
+        ctx.fillStyle = '#a78bfa';
+        ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Kocka', cubeX + cubeW / 2, cubeY + cubeH / 2 + 4);
+      }
+
+      if (showRise && rise > 0 && cubeE > 0) {
+        const oldTop = bottomY - h0 * scale;
+        ctx.setLineDash([5, 4]);
+        ctx.strokeStyle = '#f472b6';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x1, oldTop);
+        ctx.lineTo(x2, oldTop);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const arrowX = x2 + 12;
+        ctx.strokeStyle = '#4ade80';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(arrowX, oldTop);
+        ctx.lineTo(arrowX, waterTop);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(arrowX - 4, waterTop + 7);
+        ctx.lineTo(arrowX, waterTop);
+        ctx.lineTo(arrowX + 4, waterTop + 7);
+        ctx.stroke();
+
+        ctx.fillStyle = '#4ade80';
+        ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        const riseText = rise.toFixed(4).replace('.', ',');
+        ctx.fillText('Δh = ' + riseText.replace(/0+$/, '').replace(/,$/, '') + ' m', arrowX + 8, (oldTop + waterTop) / 2 + 4);
+      }
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, (x1 + x2) / 2, topY - 12);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      const hText = waterH.toFixed(4).replace('.', ',').replace(/0+$/, '').replace(/,$/, '');
+      ctx.fillText('h = ' + hText + ' m', (x1 + x2) / 2, bottomY + 25);
+    }
+
+    drawPool(leftX, rightX, h0, 0, 'Pre potapanja', false);
+    drawPool(leftX2, rightX2, hNew, cubeEdge, 'Posle potapanja', true);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Bazen: 3 m × 4 m, visina vode = 1,5 m', W / 2, 28);
+
+    if (cubeEdge > 0) {
+      const riseStr = rise.toFixed(4).replace('.', ',').replace(/0+$/, '').replace(/,$/, '');
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Podizanje nivoa: ' + riseStr + ' m', W / 2, 52);
+    }
+  }
+
+  function update() {
+    const val = parseFloat(slider.value) / 10;
+    sliderLabel.textContent = val.toFixed(1).replace('.', ',') + ' m';
+    draw(val);
+  }
+
+  slider.addEventListener('input', update);
+  update();
+
+  document.querySelectorAll('.step-container').forEach(step => {
+    step.addEventListener('click', () => {
+      document.querySelectorAll('.step-container').forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Podizanje nivoa vode u bazenu pri potapanju kocke",
+  "subject": "math",
+  "unit": "geometry",
+  "topic_tags": ["zapremina", "kvadar", "kocka", "nivo vode", "očuvanje zapremine", "stereometrija"]
+}
+BRAINSPARK_META-->

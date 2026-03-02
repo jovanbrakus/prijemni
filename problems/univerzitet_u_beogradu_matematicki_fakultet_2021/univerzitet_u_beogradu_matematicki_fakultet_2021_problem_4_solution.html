@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binomni koeficijenti - kombinatorna jednacina</title>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Find n >= 3 such that 2*C(n+1,4) + 2 = 2n + C(n,3), then compute C(12,n).
+
+  Known formulas:
+  C(n,k) = n! / (k!(n-k)!)
+  C(n+1,4) = (n+1)! / (4! * (n-3)!) = (n+1)*n*(n-1)*(n-2) / 24
+  C(n,3) = n! / (3!(n-3)!) = n*(n-1)*(n-2) / 6
+
+  Key identity: C(n+1,4) = (n+1)/4 * C(n,3)
+  Proof: C(n+1,4) = (n+1)*n*(n-1)*(n-2)/24 = (n+1)/4 * [n*(n-1)*(n-2)/6] = (n+1)/4 * C(n,3)
+
+  Substituting into the equation:
+  2 * (n+1)/4 * C(n,3) + 2 = 2n + C(n,3)
+  (n+1)/2 * C(n,3) + 2 = 2n + C(n,3)
+
+  Multiply both sides by 2:
+  (n+1) * C(n,3) + 4 = 4n + 2*C(n,3)
+
+  Rearrange:
+  (n+1)*C(n,3) - 2*C(n,3) = 4n - 4
+  C(n,3) * (n+1-2) = 4(n-1)
+  C(n,3) * (n-1) = 4(n-1)
+
+  For n >= 3, n-1 >= 2 > 0, so we can divide both sides by (n-1):
+  C(n,3) = 4
+
+  C(n,3) = n*(n-1)*(n-2)/6 = 4
+  n*(n-1)*(n-2) = 24
+
+  Check n=4: 4*3*2 = 24 ✓
+  Check n=3: 3*2*1 = 6 ≠ 24
+  Check n=5: 5*4*3 = 60 ≠ 24
+
+  f(n) = n(n-1)(n-2) is strictly increasing for n >= 2, f(4) = 24, so n = 4 is the unique solution.
+
+  Alternatively: n^3 - 3n^2 + 2n - 24 = 0
+  Try n=4: 64 - 48 + 8 - 24 = 0 ✓
+  Factor: (n-4)(n^2 + n + 6) = 0
+  n^2 + n + 6 > 0 for all real n (discriminant = 1 - 24 = -23 < 0)
+  So n = 4 is the only real root.
+
+  Therefore: C(12,n) = C(12,4) = 12!/(4!*8!) = (12*11*10*9)/(4*3*2*1) = 11880/24 = 495
+
+  Answer: C) 495
+
+  Verification of original equation with n=4:
+  LHS: 2*C(5,4) + 2 = 2*5 + 2 = 12
+  RHS: 2*4 + C(4,3) = 8 + 4 = 12
+  LHS = RHS ✓
+
+  Check answer options:
+  A) 66 = C(12,2) ... no
+  B) 220 = C(12,3)
+  C) 495 = C(12,4) ✓
+  D) 792 = C(12,5)
+  E) 924 = C(12,6)
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+}
+
+details .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+}
+
+details .theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(52,211,153,0.05);
+  border-left-color: #34d399;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #f472b6;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.step-math {
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52,211,153,0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-note {
+  color: #34d399;
+  font-size: 1.1rem;
+  margin-top: 8px;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: rgba(51,65,85,0.6);
+  border: 1px solid #334155;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.pitfall-card h2 {
+  color: #f472b6;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244,114,182,0.08);
+  border: 1px solid rgba(244,114,182,0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box h2 {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.verification-note {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: rgba(30,41,59,0.7);
+  border-left: 3px solid #34d399;
+  border-radius: 0 8px 8px 0;
+}
+
+.detail-content {
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: rgba(30,41,59,0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+}
+
+.note-text {
+  color: #94a3b8;
+  font-size: 0.93rem;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .step-badge { align-self: flex-start; }
+  .final-answer-box .answer-value { font-size: 1.5rem; }
+  .final-options { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- a. Title & Subtitle -->
+  <h1>Binomni koeficijenti i kombinatorna jednacina</h1>
+  <p class="subtitle">Kombinatorika — resavanje jednacine sa binomnim koeficijentima i veza izmedju njih</p>
+
+  <!-- b. Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Ako je \( n \geq 3 \) prirodan broj takav da je \( 2\binom{n+1}{4} + 2 = 2n + \binom{n}{3} \), onda je \( \binom{12}{n} \) jednako:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( 66 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( 220 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( 495 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( 792 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( 924 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- c. Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Iskoristicemo vezu \( \binom{n+1}{4} = \frac{n+1}{4} \cdot \binom{n}{3} \) da sve izrazimo preko \( \binom{n}{3} \). Zatim cemo iz dobijene jednacine naci \( n \), pa izracunati \( \binom{12}{n} \).</p>
+  </div>
+
+  <!-- d. Theory Refresher -->
+  <div class="card">
+    <h2>Podsetnik iz teorije</h2>
+    <details>
+      <summary>Kljucne formule i definicije</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Binomni koeficijent:</strong> \( \displaystyle\binom{n}{k} = \frac{n!}{k!(n-k)!} = \frac{n(n-1)\cdots(n-k+1)}{k!} \)</li>
+          <li><strong>Specijalan slucaj \( k = 3 \):</strong> \( \displaystyle\binom{n}{3} = \frac{n(n-1)(n-2)}{6} \)</li>
+          <li><strong>Specijalan slucaj \( k = 4 \):</strong> \( \displaystyle\binom{n}{4} = \frac{n(n-1)(n-2)(n-3)}{24} \)</li>
+          <li><strong>Veza izmedju susednih binomnih koeficijenata:</strong> \( \displaystyle\binom{n+1}{k} = \frac{n+1}{n+1-k} \cdot \binom{n}{k} \), sto za \( k = 4 \) daje:
+            \[ \binom{n+1}{4} = \frac{n+1}{n-3} \cdot \binom{n}{4} = \frac{n+1}{4} \cdot \binom{n}{3} \]
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- e. Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <div style="text-align:center;">
+      <canvas id="diagram" width="800" height="500"></canvas>
+    </div>
+    <p class="canvas-caption">Paskalov trougao sa istaknutim binomnim koeficijentima koji se pojavljuju u zadatku. Prevucite mis za isticanje redova.</p>
+  </div>
+
+  <!-- f. Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapisujemo polaznu jednacinu</h3>
+        <p>Zadata jednacina je:</p>
+        <div class="step-math">
+          \[ 2\binom{n+1}{4} + 2 = 2n + \binom{n}{3} \]
+        </div>
+        <p>Cilj nam je da nadjemo \( n \geq 3 \).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Koristimo vezu izmedju \( \binom{n+1}{4} \) i \( \binom{n}{3} \)</h3>
+        <p>Raspisujuci definiciju, dobijamo korisnu vezu:</p>
+        <div class="step-math">
+          \[ \binom{n+1}{4} = \frac{(n+1) \cdot n \cdot (n-1) \cdot (n-2)}{24} = \frac{n+1}{4} \cdot \frac{n(n-1)(n-2)}{6} = \frac{n+1}{4} \cdot \binom{n}{3} \]
+        </div>
+        <p class="note-text">Ovo je kljucna veza koja nam omogucava da sve izrazimo preko \( \binom{n}{3} \).</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Zamenjujemo u polaznu jednacinu</h3>
+        <p>Uvrstimo \( \binom{n+1}{4} = \frac{n+1}{4} \cdot \binom{n}{3} \) u jednacinu:</p>
+        <div class="step-math">
+          \[ 2 \cdot \frac{n+1}{4} \cdot \binom{n}{3} + 2 = 2n + \binom{n}{3} \]
+        </div>
+        <p>Skracujemo levu stranu:</p>
+        <div class="step-math">
+          \[ \frac{n+1}{2} \cdot \binom{n}{3} + 2 = 2n + \binom{n}{3} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko je \( \binom{n+1}{4} \) za \( n = 4 \)?</summary>
+        <div class="detail-content">
+          \( \binom{5}{4} = 5 \). A formula daje: \( \frac{4+1}{4} \cdot \binom{4}{3} = \frac{5}{4} \cdot 4 = 5 \). Poklapa se!
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Prebacujemo \( \binom{n}{3} \) na jednu stranu</h3>
+        <p>Oduzimamo \( \binom{n}{3} \) sa obe strane:</p>
+        <div class="step-math">
+          \[ \frac{n+1}{2} \cdot \binom{n}{3} - \binom{n}{3} = 2n - 2 \]
+        </div>
+        <p>Na levoj strani izlacimo \( \binom{n}{3} \):</p>
+        <div class="step-math">
+          \[ \binom{n}{3} \cdot \left(\frac{n+1}{2} - 1\right) = 2(n - 1) \]
+        </div>
+        <p>Sredimo izraz u zagradi:</p>
+        <div class="step-math">
+          \[ \frac{n+1}{2} - 1 = \frac{n+1 - 2}{2} = \frac{n-1}{2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Dobijamo preglednu jednacinu</h3>
+        <p>Zamenom dobijamo:</p>
+        <div class="step-math">
+          \[ \frac{n-1}{2} \cdot \binom{n}{3} = 2(n-1) \]
+        </div>
+        <p>Ili ekvivalentno:</p>
+        <div class="step-math">
+          \[ (n-1) \cdot \binom{n}{3} = 4(n-1) \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Skracujemo sa \( (n-1) \)</h3>
+        <p>Posto je \( n \geq 3 \), vazi \( n - 1 \geq 2 > 0 \), pa mozemo da podelimo obe strane sa \( (n-1) \):</p>
+        <div class="step-math">
+          \[ \binom{n}{3} = 4 \]
+        </div>
+        <p class="note-text">Sada treba da nadjemo prirodan broj \( n \geq 3 \) za koji je \( \binom{n}{3} = 4 \).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Zasto smemo da podelimo sa \( (n-1) \)?</summary>
+        <div class="detail-content">
+          Uslov zadatka je \( n \geq 3 \), sto znaci da je \( n - 1 \geq 2 \), pa sigurno \( n - 1 \neq 0 \). Deljenje nenulom je uvek dozvoljeno. Da je bio uslov \( n \geq 1 \), morali bismo da razmatramo i slucaj \( n = 1 \) posebno.
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Raspisujemo \( \binom{n}{3} = 4 \)</h3>
+        <p>Koristimo formulu \( \binom{n}{3} = \frac{n(n-1)(n-2)}{6} \):</p>
+        <div class="step-math">
+          \[ \frac{n(n-1)(n-2)}{6} = 4 \]
+        </div>
+        <p>Pomnozimo obe strane sa 6:</p>
+        <div class="step-math">
+          \[ n(n-1)(n-2) = 24 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step-container">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3>Nalazimo \( n \)</h3>
+        <p>Trazimo proizvod tri uzastopna prirodna broja koji daje 24. Probamo \( n = 4 \):</p>
+        <div class="step-math">
+          \[ 4 \cdot 3 \cdot 2 = 24 \;\; \checkmark \]
+        </div>
+        <p>Da li je ovo jedino resenje? Funkcija \( f(n) = n(n-1)(n-2) \) je strogo rastuca za \( n > 2 \), pa posto je \( f(4) = 24 \), resenje je jedinstveno:</p>
+        <div class="step-math">
+          \[ n = 4 \]
+        </div>
+        <p class="note-text">Alternativno: jednacina \( n^3 - 3n^2 + 2n - 24 = 0 \) se faktorizuje kao \( (n-4)(n^2 + n + 6) = 0 \), a \( n^2 + n + 6 > 0 \) za svako realno \( n \).</p>
+      </div>
+    </div>
+
+    <!-- Step 9 -->
+    <div class="step-container">
+      <div class="step-badge">9</div>
+      <div class="step-content">
+        <h3>Racunamo \( \binom{12}{n} = \binom{12}{4} \)</h3>
+        <p>Sada uvrstimo \( n = 4 \):</p>
+        <div class="step-math">
+          \[ \binom{12}{4} = \frac{12!}{4! \cdot 8!} = \frac{12 \cdot 11 \cdot 10 \cdot 9}{4 \cdot 3 \cdot 2 \cdot 1} \]
+        </div>
+        <p>Racunamo brojilac i imenilac:</p>
+        <div class="step-math">
+          \[ \text{Brojilac: } 12 \cdot 11 = 132, \quad 132 \cdot 10 = 1320, \quad 1320 \cdot 9 = 11880 \]
+        </div>
+        <div class="step-math">
+          \[ \text{Imenilac: } 4! = 24 \]
+        </div>
+        <p>Konacno:</p>
+        <div class="step-math">
+          \[ \binom{12}{4} = \frac{11880}{24} = 495 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Mozes li da proveris da li polazna jednacina vazi za \( n = 4 \)?</summary>
+        <div class="detail-content">
+          <p>Leva strana: \( 2\binom{5}{4} + 2 = 2 \cdot 5 + 2 = 12 \)</p>
+          <p style="margin-top: 6px;">Desna strana: \( 2 \cdot 4 + \binom{4}{3} = 8 + 4 = 12 \)</p>
+          <p style="margin-top: 6px;">Leva = desna = 12. Sve se slaze!</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- g. Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>Umesto da raspisujemo binomne koeficijente po definiciji (sto daje komplikovane razlomke), mnogo je elegantnije koristiti <strong>vezu izmedju susednih binomnih koeficijenata</strong>. Veza \( \binom{n+1}{4} = \frac{n+1}{4} \cdot \binom{n}{3} \) nam je omogucila da sve izrazimo preko jednog nepoznatog \( \binom{n}{3} \) i brzo dodjemo do resenja.</p>
+    <div class="step-math" style="margin-top: 16px;">
+      \[ \binom{n}{3} = 4 \;\;\Longrightarrow\;\; n = 4 \;\;\Longrightarrow\;\; \binom{12}{4} = 495 \]
+    </div>
+  </div>
+
+  <!-- h. Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( \binom{12}{4} = 495 \)</div>
+    <div class="answer-note">Tacan odgovor: C) \( 495 \)</div>
+    <div class="final-options">
+      <span class="final-option">A) \( 66 \)</span>
+      <span class="final-option">B) \( 220 \)</span>
+      <span class="final-option correct">C) \( 495 \)</span>
+      <span class="final-option">D) \( 792 \)</span>
+      <span class="final-option">E) \( 924 \)</span>
+    </div>
+    <div class="verification-note">
+      <strong>Provera:</strong> Za \( n = 4 \), leva strana jednacine je \( 2\binom{5}{4} + 2 = 12 \), desna je \( 2 \cdot 4 + \binom{4}{3} = 12 \). Jednacina vazi. Vrednosti ponudjenih odgovora su redom \( \binom{12}{2}, \binom{12}{3}, \binom{12}{4}, \binom{12}{5}, \binom{12}{6} \), pa tacan odgovor odgovara \( n = 4 \).
+    </div>
+  </div>
+
+  <!-- i. Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2>Ceste greske</h2>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Raspisivanje po definiciji umesto koriscenja veza:</strong> Ako se odmah krene sa \( \binom{n+1}{4} = \frac{(n+1)n(n-1)(n-2)}{24} \) i \( \binom{n}{3} = \frac{n(n-1)(n-2)}{6} \), dobija se jednacina sa polinomom 4. stepena po \( n \) koja je nepotrebno komplikovana. Bolje je prepoznati da se \( \binom{n+1}{4} \) moze izraziti preko \( \binom{n}{3} \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Racunska greska pri izracunavanju \( \binom{12}{4} \):</strong> Cesta greska je pogresno mnozenje u brojilocu \( 12 \cdot 11 \cdot 10 \cdot 9 \). Korisno je skracivati pre mnozenja: \( \frac{12}{4} \cdot \frac{10}{2} \cdot 11 \cdot \frac{9}{3} = 3 \cdot 5 \cdot 11 \cdot 3 = 495 \).</p>
+    </div>
+  </div>
+
+  <!-- j. Optional Challenge -->
+  <div class="challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Naci sve prirodne brojeve \( n \) za koje vazi \( \binom{n}{3} = \binom{n}{4} \). Koliko je tada \( \binom{2n}{n} \)?</p>
+    <details>
+      <summary>Pogledaj hint</summary>
+      <div class="detail-content">
+        <p>Koristeci identitet \( \binom{n}{k} = \binom{n}{n-k} \), jednakost \( \binom{n}{3} = \binom{n}{4} \) je ekvivalentna sa \( \binom{n}{n-3} = \binom{n}{4} \), sto daje \( n - 3 = 4 \), tj. \( n = 7 \). Alternativno, raspisati oba koeficijenta: \( \frac{n!}{3!(n-3)!} = \frac{n!}{4!(n-4)!} \) i skratiti. Koliko je \( \binom{14}{7} \)?</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  let hoveredRow = -1;
+
+  // Pascal's triangle data - rows 0 through 12
+  const pascal = [];
+  for (let n = 0; n <= 12; n++) {
+    pascal[n] = [];
+    for (let k = 0; k <= n; k++) {
+      if (k === 0 || k === n) {
+        pascal[n][k] = 1;
+      } else {
+        pascal[n][k] = pascal[n-1][k-1] + pascal[n-1][k];
+      }
+    }
+  }
+
+  // Highlighted cells: C(n,3)=C(4,3), C(n+1,4)=C(5,4), C(12,4)
+  const highlights = [
+    { n: 4, k: 3, color: '#60a5fa', label: 'C(4,3)=4' },
+    { n: 5, k: 4, color: '#a78bfa', label: 'C(5,4)=5' },
+    { n: 12, k: 4, color: '#4ade80', label: 'C(12,4)=495' }
+  ];
+
+  function isHighlighted(n, k) {
+    for (const h of highlights) {
+      if (h.n === n && h.k === k) return h;
+    }
+    return null;
+  }
+
+  // We'll show rows 0-7 fully and then jump to row 12 with an ellipsis
+  const displayRows = [0, 1, 2, 3, 4, 5, 6, 7, -1, 12]; // -1 means ellipsis row
+
+  function getRowY(idx) {
+    return 40 + idx * 46;
+  }
+
+  function getCellX(n, k, rowIdx) {
+    const cellW = 58;
+    const totalW = (n + 1) * cellW;
+    const startX = W / 2 - totalW / 2;
+    return startX + k * cellW + cellW / 2;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Paskalov trougao sa istaknutim koeficijentima iz zadatka', W / 2, 22);
+
+    for (let idx = 0; idx < displayRows.length; idx++) {
+      const n = displayRows[idx];
+      const y = getRowY(idx);
+
+      if (n === -1) {
+        // Ellipsis row
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '18px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('. . .', W / 2, y + 5);
+
+        // Row label
+        ctx.fillStyle = '#475569';
+        ctx.font = '11px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('...', 38, y + 4);
+        continue;
+      }
+
+      // Row label on the left
+      ctx.fillStyle = (n === hoveredRow) ? '#e2e8f0' : '#475569';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('n=' + n, 38, y + 4);
+
+      // Draw cells
+      const cellW = 58;
+      // For row 12, limit display to k=0..6 and k=12 with ellipsis
+      if (n === 12) {
+        const showK = [0, 1, 2, 3, 4, 5, 6];
+        for (const k of showK) {
+          const x = getCellX(n, k, idx);
+          const val = pascal[n][k];
+          const hl = isHighlighted(n, k);
+
+          if (hl) {
+            // Glow
+            const grd = ctx.createRadialGradient(x, y, 0, x, y, 30);
+            grd.addColorStop(0, hl.color.replace(')', ',0.3)').replace('rgb', 'rgba'));
+            grd.addColorStop(0, hl.color + '4D');
+            grd.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = grd;
+            ctx.beginPath();
+            ctx.arc(x, y, 30, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = hl.color;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(x, y, 22, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = hl.color;
+            ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+          } else {
+            const isHovRow = (n === hoveredRow);
+            ctx.fillStyle = isHovRow ? '#1e3a5f' : '#1e293b';
+            ctx.strokeStyle = isHovRow ? '#60a5fa' : '#334155';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, 22, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = isHovRow ? '#e2e8f0' : '#94a3b8';
+            ctx.font = '12px Segoe UI, system-ui, sans-serif';
+          }
+
+          ctx.textAlign = 'center';
+          ctx.fillText(String(val), x, y + 5);
+        }
+
+        // Ellipsis after k=6
+        const afterX = getCellX(n, 7, idx);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '14px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('. . .', afterX, y + 4);
+
+      } else {
+        for (let k = 0; k <= n; k++) {
+          const x = getCellX(n, k, idx);
+          const val = pascal[n][k];
+          const hl = isHighlighted(n, k);
+
+          if (hl) {
+            // Glow effect
+            const grd = ctx.createRadialGradient(x, y, 0, x, y, 30);
+            grd.addColorStop(0, hl.color + '4D');
+            grd.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = grd;
+            ctx.beginPath();
+            ctx.arc(x, y, 30, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = hl.color;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(x, y, 22, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = hl.color;
+            ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+          } else {
+            const isHovRow = (n === hoveredRow);
+            ctx.fillStyle = isHovRow ? '#1e3a5f' : '#1e293b';
+            ctx.strokeStyle = isHovRow ? '#60a5fa' : '#334155';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, 22, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = isHovRow ? '#e2e8f0' : '#94a3b8';
+            ctx.font = '12px Segoe UI, system-ui, sans-serif';
+          }
+
+          ctx.textAlign = 'center';
+          ctx.fillText(String(val), x, y + 5);
+        }
+      }
+    }
+
+    // Legend
+    const legendY = H - 30;
+    const legendItems = [
+      { color: '#60a5fa', text: 'C(4,3) = 4' },
+      { color: '#a78bfa', text: 'C(5,4) = 5' },
+      { color: '#4ade80', text: 'C(12,4) = 495' }
+    ];
+
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    const totalLegendW = legendItems.length * 140;
+    let lx = W / 2 - totalLegendW / 2;
+
+    for (const item of legendItems) {
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.arc(lx + 8, legendY, 6, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.textAlign = 'left';
+      ctx.fillText(item.text, lx + 20, legendY + 4);
+      lx += 150;
+    }
+  }
+
+  draw();
+
+  function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function findRow(my) {
+    for (let idx = 0; idx < displayRows.length; idx++) {
+      const n = displayRows[idx];
+      if (n === -1) continue;
+      const y = getRowY(idx);
+      if (Math.abs(my - y) < 23) return n;
+    }
+    return -1;
+  }
+
+  function handleMove(e) {
+    e.preventDefault();
+    let pos;
+    if (e.touches) {
+      pos = getMousePos(e.touches[0]);
+    } else {
+      pos = getMousePos(e);
+    }
+    const newRow = findRow(pos.y);
+    if (newRow !== hoveredRow) {
+      hoveredRow = newRow;
+      draw();
+    }
+  }
+
+  function handleLeave() {
+    if (hoveredRow !== -1) {
+      hoveredRow = -1;
+      draw();
+    }
+  }
+
+  canvas.addEventListener('mousemove', handleMove);
+  canvas.addEventListener('mouseleave', handleLeave);
+  canvas.addEventListener('touchstart', handleMove, { passive: false });
+  canvas.addEventListener('touchmove', handleMove, { passive: false });
+  canvas.addEventListener('touchend', handleLeave);
+
+  // Step click toggling
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Binomni koeficijenti i kombinatorna jednacina",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["binomni koeficijenti", "kombinatorika", "Paskalov trougao", "kombinatorna jednacina", "faktorijel"]
+}
+BRAINSPARK_META-->

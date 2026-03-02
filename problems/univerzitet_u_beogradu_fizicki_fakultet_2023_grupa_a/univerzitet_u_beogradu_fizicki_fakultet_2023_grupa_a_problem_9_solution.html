@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepenovanje kompleksnog izraza sa imaginarnom jedinicom</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Vrednost izraza ((i^2023 - i^2022) / (1 + i^2021))^4274 jednaka je:
+a) 1   b) -1   v) i   g) -i
+
+Step 0: Recall powers of i
+  i^1 = i
+  i^2 = -1
+  i^3 = -i
+  i^4 = 1
+  Powers of i cycle with period 4: i^n depends on n mod 4.
+
+Step 1: Compute i^2021, i^2022, i^2023
+  2021 = 4*505 + 1, so i^2021 = i^1 = i
+  2022 = 4*505 + 2, so i^2022 = i^2 = -1
+  2023 = 4*505 + 3, so i^2023 = i^3 = -i
+
+Step 2: Compute the numerator
+  i^2023 - i^2022 = -i - (-1) = -i + 1 = 1 - i
+
+Step 3: Compute the denominator
+  1 + i^2021 = 1 + i
+
+Step 4: Compute the fraction
+  (1 - i) / (1 + i)
+  Multiply numerator and denominator by conjugate of denominator (1 - i):
+  = (1 - i)(1 - i) / ((1 + i)(1 - i))
+  = (1 - i)^2 / (1 - i^2)
+  = (1 - 2i + i^2) / (1 - (-1))
+  = (1 - 2i - 1) / 2
+  = -2i / 2
+  = -i
+
+Step 5: Compute (-i)^4274
+  4274 = 4*1068 + 2, so (-i)^4274 = ((-i)^4)^1068 * (-i)^2
+  (-i)^2 = (-1)^2 * i^2 = 1 * (-1) = -1
+  (-i)^4 = ((-i)^2)^2 = (-1)^2 = 1
+  Therefore: (-i)^4274 = 1^1068 * (-1) = -1
+
+Step 6: Verification
+  The answer is -1, which is option b).
+
+  Alternative verification of (-i)^4274:
+  -i = e^{-i*pi/2}, so (-i)^4274 = e^{-i*4274*pi/2} = e^{-i*2137*pi}
+  2137 is odd, so e^{-i*2137*pi} = cos(2137*pi) - i*sin(2137*pi) = -1 - 0 = -1. Confirmed!
+
+Answer: b) -1
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+  padding: 12px;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.final-answer-box .answer-note {
+  color: #34d399;
+  font-size: 1.1rem;
+  margin-top: 8px;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.final-option {
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 1rem;
+  border: 1px solid #334155;
+  background: rgba(51, 65, 85, 0.6);
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.challenge-box h2 {
+  color: #f472b6;
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 10px;
+  border-left: 3px solid #34d399;
+}
+
+.cycle-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.cycle-table th, .cycle-table td {
+  padding: 8px 14px;
+  text-align: center;
+  border: 1px solid #334155;
+}
+
+.cycle-table th {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.cycle-table td {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.cycle-table .highlight-cell {
+  background: rgba(52, 211, 153, 0.12);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .step { flex-direction: column; gap: 8px; }
+  .step-badge { align-self: flex-start; }
+  .final-answer-box .answer-value { font-size: 1.5rem; }
+  .final-options { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- a. Title & Subtitle -->
+  <h1>Stepenovanje kompleksnog izraza sa imaginarnom jedinicom</h1>
+  <p class="subtitle">Kompleksni brojevi &mdash; ciklicnost stepena imaginarne jedinice, racionalizacija imenioca</p>
+
+  <!-- b. Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p style="font-size: 1.15rem; line-height: 1.8;">
+      Vrednost izraza
+    </p>
+    <div class="step-math" style="font-size: 1.15rem;">
+      \[ \left(\frac{i^{2023} - i^{2022}}{1 + i^{2021}}\right)^{4274} \]
+    </div>
+    <p style="font-size: 1.15rem;">jednaka je:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(а)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(б)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(в)</div>
+        <div class="value">\(i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(г)</div>
+        <div class="value">\(-i\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- c. Plan -->
+  <div class="card">
+    <h2>Plan resavanja</h2>
+    <p class="plan-text">
+      Koristicemo ciklicnost stepena imaginarne jedinice (period 4) da svedemo \( i^{2021} \), \( i^{2022} \) i \( i^{2023} \) na proste vrednosti. Zatim cemo pojednostaviti razlomak racionalizacijom imenioca, i na kraju primeniti istu ciklicnost na konacno stepenovanje.
+    </p>
+  </div>
+
+  <!-- d. Theory Refresher -->
+  <div class="card">
+    <h2>Podsetnik iz teorije</h2>
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <div class="detail-content">
+        <p style="margin-bottom: 10px;"><strong>Definicija imaginarne jedinice:</strong></p>
+        <div class="step-math">
+          \[ i^2 = -1 \]
+        </div>
+        <p style="margin-top: 12px; margin-bottom: 10px;"><strong>Ciklicnost stepena od \( i \):</strong> Stepeni od \( i \) se ponavljaju sa periodom 4:</p>
+        <div class="step-math">
+          \[ i^0 = 1, \quad i^1 = i, \quad i^2 = -1, \quad i^3 = -i, \quad i^4 = 1, \quad \ldots \]
+        </div>
+        <p style="margin-top: 6px;">Dakle, za bilo koji ceo broj \( n \): \( i^n = i^{n \bmod 4} \).</p>
+        <p style="margin-top: 12px; margin-bottom: 10px;"><strong>Racionalizacija imenioca:</strong> Da bismo podelili sa kompleksnim brojem, mnozimo brojilac i imenilac konjugatom imenioca:</p>
+        <div class="step-math">
+          \[ \frac{a + bi}{c + di} = \frac{(a + bi)(c - di)}{c^2 + d^2} \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Konjugat proizvod:</strong></p>
+        <div class="step-math">
+          \[ (1 + i)(1 - i) = 1 - i^2 = 1 - (-1) = 2 \]
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- e. Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Ciklus stepena od \( i \) u kompleksnoj ravni</h2>
+    <div class="canvas-wrapper">
+      <canvas id="mainCanvas" width="700" height="500"></canvas>
+    </div>
+    <p class="canvas-caption">Kompleksna ravan sa jedinicnim krugom. Stepeni od \( i \) cine ciklus sa periodom 4. Koristite klizac da istrazite razlicite stepene.</p>
+    <div style="text-align: center; margin-top: 12px;">
+      <label for="powerSlider" style="color: #94a3b8; font-size: 0.95rem;">Stepen \( n \): </label>
+      <input type="range" id="powerSlider" min="0" max="20" value="3" style="width: 200px; vertical-align: middle;">
+      <span id="powerLabel" style="color: #60a5fa; font-weight: 600; font-size: 1rem; margin-left: 8px;">3</span>
+    </div>
+  </div>
+
+  <!-- f. Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Podsetimo se ciklicnosti stepena od \( i \)</div>
+        <p>Imaginarna jedinica \( i \) ima kljucno svojstvo \( i^2 = -1 \). Njeni stepeni se ponavljaju sa periodom 4:</p>
+        <table class="cycle-table">
+          <tr>
+            <th>Ostatak pri deljenju sa 4</th>
+            <th>0</th>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+          </tr>
+          <tr>
+            <td style="color: #94a3b8; font-weight: 600;">Vrednost \( i^n \)</td>
+            <td>\( 1 \)</td>
+            <td>\( i \)</td>
+            <td>\( -1 \)</td>
+            <td>\( -i \)</td>
+          </tr>
+        </table>
+        <p>Da bismo odredili \( i^n \), dovoljno je naci ostatak pri deljenju \( n \) sa 4.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Odredimo \( i^{2021} \)</div>
+        <p>Podelimo eksponent sa 4:</p>
+        <div class="step-math">
+          \[ 2021 = 4 \cdot 505 + 1 \]
+        </div>
+        <p>Ostatak je 1, pa je:</p>
+        <div class="step-math">
+          \[ i^{2021} = i^1 = i \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Odredimo \( i^{2022} \) i \( i^{2023} \)</div>
+        <p>Posto znamo da je \( i^{2021} = i \), jednostavno mnozimo sa \( i \):</p>
+        <div class="step-math">
+          \[ i^{2022} = i^{2021} \cdot i = i \cdot i = i^2 = -1 \]
+        </div>
+        <div class="step-math">
+          \[ i^{2023} = i^{2022} \cdot i = (-1) \cdot i = -i \]
+        </div>
+        <p style="color: #94a3b8; font-size: 0.95rem;">
+          Alternativno: \( 2022 = 4 \cdot 505 + 2 \), pa \( i^{2022} = i^2 = -1 \). Slicno, \( 2023 = 4 \cdot 505 + 3 \), pa \( i^{2023} = i^3 = -i \).
+        </p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko je \( i^{2024} \)?</summary>
+        <div class="detail-content">
+          \( 2024 = 4 \cdot 506 \), ostatak je 0, pa je \( i^{2024} = i^0 = 1 \). Ovo ima smisla jer se posle \( i^3 = -i \) ciklus vraca na 1.
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Izracunamo brojilac</div>
+        <p>Uvrstimo dobijene vrednosti u brojilac:</p>
+        <div class="step-math">
+          \[ i^{2023} - i^{2022} = -i - (-1) = -i + 1 = 1 - i \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Izracunamo imenilac</div>
+        <p>Uvrstimo \( i^{2021} = i \) u imenilac:</p>
+        <div class="step-math">
+          \[ 1 + i^{2021} = 1 + i \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <div class="step-title">Pojednostavimo razlomak racionalizacijom</div>
+        <p>Sada imamo razlomak:</p>
+        <div class="step-math">
+          \[ \frac{1 - i}{1 + i} \]
+        </div>
+        <p>Mnozimo brojilac i imenilac konjugatom imenioca, tj. brojem \( 1 - i \):</p>
+        <div class="step-math">
+          \[ \frac{(1-i)(1-i)}{(1+i)(1-i)} = \frac{(1-i)^2}{1 - i^2} \]
+        </div>
+        <p>Izracunajmo posebno brojilac i imenilac:</p>
+        <div class="step-math">
+          \[ (1 - i)^2 = 1 - 2i + i^2 = 1 - 2i - 1 = -2i \]
+        </div>
+        <div class="step-math">
+          \[ 1 - i^2 = 1 - (-1) = 2 \]
+        </div>
+        <p>Prema tome:</p>
+        <div class="step-math">
+          \[ \frac{(1-i)^2}{1 - i^2} = \frac{-2i}{2} = -i \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko je \( \frac{1-i}{1+i} \) ako pomnozimo sa \( \frac{\bar{z}}{\bar{z}} \)?</summary>
+        <div class="detail-content">
+          Konjugat od \( 1 + i \) je \( 1 - i \). Mnozeci: \( \frac{(1-i)(1-i)}{(1+i)(1-i)} = \frac{(1-i)^2}{2} = \frac{-2i}{2} = -i \). Rezultat se poklapa!
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <div class="step-title">Stepenujemo rezultat na 4274</div>
+        <p>Sada treba da izracunamo:</p>
+        <div class="step-math">
+          \[ (-i)^{4274} \]
+        </div>
+        <p>Ponovo koristimo ciklicnost. Odredimo prvih nekoliko stepena od \( -i \):</p>
+        <div class="step-math">
+          \[ (-i)^1 = -i, \quad (-i)^2 = i^2 = -1, \quad (-i)^3 = (-i)^2 \cdot (-i) = -1 \cdot (-i) = i, \quad (-i)^4 = i \cdot (-i) = 1 \]
+        </div>
+        <p>Stepeni od \( -i \) se takodje ponavljaju sa periodom 4. Potreban nam je ostatak:</p>
+        <div class="step-math">
+          \[ 4274 = 4 \cdot 1068 + 2 \]
+        </div>
+        <p>Ostatak je 2, pa je:</p>
+        <div class="step-math">
+          \[ (-i)^{4274} = (-i)^2 = (-1)^2 \cdot i^2 = 1 \cdot (-1) = -1 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Zasto vazi \( (-i)^2 = -1 \), a ne \( +1 \)?</summary>
+        <div class="detail-content">
+          Racunamo: \( (-i)^2 = (-i) \cdot (-i) = (-1)(-1) \cdot i \cdot i = 1 \cdot i^2 = 1 \cdot (-1) = -1 \). Minus ispred \( i \) se "ponisti" (\( (-1)^2 = 1 \)), ali \( i^2 = -1 \) i dalje daje negativan rezultat.
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <div class="step-title">Zakljucak</div>
+        <p>Vrednost datog izraza je:</p>
+        <div class="step-math">
+          \[ \left(\frac{i^{2023} - i^{2022}}{1 + i^{2021}}\right)^{4274} = (-i)^{4274} = -1 \]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- g. Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>Ceo zadatak se svodi na jednu kljucnu ideju: <strong>ciklicnost stepena od \( i \) sa periodom 4</strong>. Bez obzira na to koliko je eksponent veliki (2021, 2022, 2023, ili 4274), uvek je dovoljno naci ostatak pri deljenju sa 4. Razlomak \( \frac{1-i}{1+i} \) se elegantno svodi na \( -i \), a zatim se isti princip primenjuje na konacni stepen.</p>
+    <div class="step-math" style="margin-top: 14px; font-size: 1.1rem;">
+      \[ \left(\frac{i^{2023} - i^{2022}}{1 + i^{2021}}\right)^{4274} = (-i)^{4274} = \boxed{-1} \]
+    </div>
+  </div>
+
+  <!-- h. Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( -1 \)</div>
+    <div class="final-options">
+      <div class="final-option">(а) \(1\)</div>
+      <div class="final-option correct">(б) \(-1\)</div>
+      <div class="final-option">(в) \(i\)</div>
+      <div class="final-option">(г) \(-i\)</div>
+    </div>
+  </div>
+
+  <!-- Verification -->
+  <div class="verification-note">
+    <strong>Verifikacija:</strong> Proverimo lanac: \( i^{2021} = i \), \( i^{2022} = -1 \), \( i^{2023} = -i \). Brojilac: \( -i - (-1) = 1 - i \). Imenilac: \( 1 + i \). Razlomak: \( \frac{1-i}{1+i} = -i \). Stepen: \( (-i)^{4274} = (-i)^{4 \cdot 1068 + 2} = ((-i)^4)^{1068} \cdot (-i)^2 = 1^{1068} \cdot (-1) = -1 \). Rezultat je \( -1 \), sto je ponudjeni odgovor (б).
+  </div>
+
+  <!-- i. Common Pitfalls -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Pogresno odredjivanje ostatka pri deljenju sa 4:</strong> Ako se pogresi u deljenju (npr. pomisli da je \( 2023 = 4 \cdot 506 + 0 \) umesto \( 4 \cdot 505 + 3 \)), sve naredne vrednosti ce biti pogresne. Uvek proverite: \( 4 \cdot 505 = 2020 \), pa je \( 2021 - 2020 = 1 \), \( 2022 - 2020 = 2 \), \( 2023 - 2020 = 3 \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Zaboraviti minus u \( (-i)^2 \):</strong> Cesta greska je pomisliti da je \( (-i)^2 = i^2 = -1 \) "ocigledno", ali zatim pogresno zakljuciti da je \( (-i)^2 = +1 \) jer je "minus na kvadrat pozitivan". Zapamtite: \( (-i)^2 = (-1 \cdot i)^2 = (-1)^2 \cdot i^2 = 1 \cdot (-1) = -1 \).</p>
+    </div>
+  </div>
+
+  <!-- j. Optional Challenge -->
+  <div class="challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Koliko je \( \displaystyle \left(\frac{1+i}{1-i}\right)^{2025} + \left(\frac{1-i}{1+i}\right)^{2025} \)?</p>
+    <details>
+      <summary>Pogledaj nagovestaj</summary>
+      <div class="detail-content">
+        <p>Koristite isti pristup racionalizacije. Primetite da je \( \frac{1+i}{1-i} = i \) i \( \frac{1-i}{1+i} = -i \). Zatim treba izracunati \( i^{2025} + (-i)^{2025} \). Koristite ciklicnost: \( 2025 = 4 \cdot 506 + 1 \), pa je \( i^{2025} = i \) i \( (-i)^{2025} = -i \). Zbir je \( i + (-i) = 0 \).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const centerX = W / 2;
+  const centerY = H / 2;
+  const radius = 160;
+
+  const slider = document.getElementById('powerSlider');
+  const powerLabel = document.getElementById('powerLabel');
+
+  // Colors for the 4 cycle positions
+  const cycleColors = ['#4ade80', '#60a5fa', '#f472b6', '#a78bfa'];
+  const cycleLabels = ['1', 'i', '\u22121', '\u2212i'];
+  const cyclePositions = [
+    { x: 1, y: 0 },
+    { x: 0, y: 1 },
+    { x: -1, y: 0 },
+    { x: 0, y: -1 }
+  ];
+
+  function toCanvas(x, y) {
+    return { x: centerX + x * radius, y: centerY - y * radius };
+  }
+
+  function draw(n) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let g = -2; g <= 2; g++) {
+      // Vertical lines
+      const gx = centerX + g * radius;
+      ctx.beginPath();
+      ctx.moveTo(gx, centerY - 2 * radius);
+      ctx.lineTo(gx, centerY + 2 * radius);
+      ctx.stroke();
+      // Horizontal lines
+      const gy = centerY - g * radius;
+      ctx.beginPath();
+      ctx.moveTo(centerX - 2 * radius, gy);
+      ctx.lineTo(centerX + 2 * radius, gy);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(30, centerY);
+    ctx.lineTo(W - 30, centerY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(centerX, 30);
+    ctx.lineTo(centerX, H - 30);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', W - 22, centerY - 10);
+    ctx.fillText('Im', centerX + 16, 28);
+
+    // Tick marks
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('1', centerX + radius, centerY + 20);
+    ctx.fillText('\u22121', centerX - radius, centerY + 20);
+    ctx.textAlign = 'right';
+    ctx.fillText('i', centerX - 10, centerY - radius + 5);
+    ctx.fillText('\u2212i', centerX - 10, centerY + radius + 5);
+
+    // Unit circle
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw the 4 cycle positions
+    for (let k = 0; k < 4; k++) {
+      const pos = toCanvas(cyclePositions[k].x, cyclePositions[k].y);
+      const isActive = (n % 4) === k;
+      const sz = isActive ? 12 : 8;
+
+      // Glow for active position
+      if (isActive) {
+        const grd = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 35);
+        grd.addColorStop(0, cycleColors[k] + '88');
+        grd.addColorStop(1, cycleColors[k] + '00');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 35, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      // Point
+      ctx.fillStyle = isActive ? cycleColors[k] : 'rgba(148, 163, 184, 0.5)';
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, sz, 0, 2 * Math.PI);
+      ctx.fill();
+
+      if (isActive) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // Label
+      ctx.fillStyle = isActive ? cycleColors[k] : '#94a3b8';
+      ctx.font = isActive ? 'bold 16px Segoe UI, system-ui, sans-serif' : '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+
+      const labelOffsetX = [30, 0, -30, 0][k];
+      const labelOffsetY = [0, -22, 0, 26][k];
+      ctx.fillText(cycleLabels[k], pos.x + labelOffsetX, pos.y + labelOffsetY);
+    }
+
+    // Draw arrows between cycle positions
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+    ctx.lineWidth = 1.5;
+    const arrowR = radius + 20;
+    for (let k = 0; k < 4; k++) {
+      const startAngle = -k * Math.PI / 2 - 0.15;
+      const endAngle = -(k + 1) * Math.PI / 2 + 0.15;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, arrowR, startAngle, endAngle, true);
+      ctx.stroke();
+
+      // Arrowhead
+      const ax = centerX + arrowR * Math.cos(endAngle);
+      const ay = centerY + arrowR * Math.sin(endAngle);
+      const tangentAngle = endAngle - Math.PI / 2;
+      ctx.fillStyle = 'rgba(96, 165, 250, 0.4)';
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax + 8 * Math.cos(tangentAngle + 0.5), ay + 8 * Math.sin(tangentAngle + 0.5));
+      ctx.lineTo(ax + 8 * Math.cos(tangentAngle - 0.5), ay + 8 * Math.sin(tangentAngle - 0.5));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Multiplication label on arrows
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.5)';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u00D7i', centerX + arrowR + 14, centerY - arrowR / 2 + 10);
+    ctx.fillText('\u00D7i', centerX - arrowR / 2 + 10, centerY - arrowR - 8);
+    ctx.fillText('\u00D7i', centerX - arrowR - 18, centerY + arrowR / 2 - 10);
+    ctx.fillText('\u00D7i', centerX + arrowR / 2 - 10, centerY + arrowR + 14);
+
+    // Info panel
+    const panelW = 260;
+    const panelH = 70;
+    const panelX = 10;
+    const panelY = H - panelH - 10;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.fillRect(panelX, panelY, panelW, panelH);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(panelX, panelY, panelW, panelH);
+
+    const remainder = ((n % 4) + 4) % 4;
+    ctx.fillStyle = cycleColors[remainder];
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('i^' + n + ' = ' + cycleLabels[remainder], panelX + 14, panelY + 24);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(n + ' = 4 \u00B7 ' + Math.floor(n / 4) + ' + ' + remainder, panelX + 14, panelY + 46);
+    ctx.fillText('ostatak: ' + remainder, panelX + 14, panelY + 62);
+
+    // Legend
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.fillRect(W - 200, 10, 190, 50);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(W - 200, 10, 190, 50);
+
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('Ciklus stepena od i', W - 188, 30);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Period = 4', W - 188, 48);
+  }
+
+  function onSliderChange() {
+    const n = parseInt(slider.value, 10);
+    powerLabel.textContent = n;
+    draw(n);
+  }
+
+  slider.addEventListener('input', onSliderChange);
+  draw(parseInt(slider.value, 10));
+})();
+</script>
+
+<script>
+(() => {
+  // Step click highlight
+  const steps = document.querySelectorAll('.step');
+  steps.forEach((step) => {
+    step.addEventListener('click', () => {
+      steps.forEach((s) => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje kompleksnog izraza sa imaginarnom jedinicom",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "imaginarna jedinica", "ciklicnost stepena", "racionalizacija imenioca", "stepenovanje"]
+}
+BRAINSPARK_META-->

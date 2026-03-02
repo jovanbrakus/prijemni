@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dijagonale sedmougla</title>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Koliko dijagonala ima sedmougao?
+  Options: a) 7  b) 10  v) 14  g) 28
+
+  Formula for the number of diagonals of a convex polygon with n sides:
+  D = n(n - 3) / 2
+
+  For n = 7 (heptagon / sedmougao):
+  D = 7 * (7 - 3) / 2
+  D = 7 * 4 / 2
+  D = 28 / 2
+  D = 14
+
+  Correct answer: v) 14
+
+  Derivation of the formula:
+  - Each vertex can be connected to (n - 1) other vertices.
+  - But 2 of those connections are the sides of the polygon (to the two adjacent vertices).
+  - So from each vertex, there are (n - 3) diagonals.
+  - Total connections: n * (n - 3).
+  - But each diagonal is counted twice (once from each endpoint), so: D = n(n-3)/2.
+
+  Verification for n = 7:
+  - From each vertex: 7 - 3 = 4 diagonals
+  - Total: 7 * 4 = 28, divided by 2 = 14
+  - This matches option v) 14.
+
+  Alternative check: total line segments between vertices = C(7,2) = 21.
+  Sides = 7. Diagonals = 21 - 7 = 14. Confirmed.
+
+  Quick sanity checks for smaller polygons:
+  - Triangle (n=3): D = 3*0/2 = 0 ✓
+  - Quadrilateral (n=4): D = 4*1/2 = 2 ✓
+  - Pentagon (n=5): D = 5*2/2 = 5 ✓
+  - Hexagon (n=6): D = 6*3/2 = 9 ✓
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+}
+
+details .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+}
+
+details .theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(52,211,153,0.05);
+  border-left-color: #34d399;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #f472b6;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.step-math {
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52,211,153,0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-note {
+  color: #34d399;
+  font-size: 1.1rem;
+  margin-top: 8px;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: rgba(51,65,85,0.6);
+  border: 1px solid #334155;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.pitfall-card h2 {
+  color: #f472b6;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244,114,182,0.08);
+  border: 1px solid rgba(244,114,182,0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box h2 {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.verification-note {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: rgba(30,41,59,0.7);
+  border-left: 3px solid #34d399;
+  border-radius: 0 8px 8px 0;
+}
+
+.detail-content {
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: rgba(30,41,59,0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+}
+
+.note-text {
+  color: #94a3b8;
+  font-size: 0.93rem;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .step-badge { align-self: flex-start; }
+  .final-answer-box .answer-value { font-size: 1.5rem; }
+  .final-options { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- a. Title & Subtitle -->
+  <h1>Dijagonale pravilnog mnogougla</h1>
+  <p class="subtitle">Kombinatorika — prebrojavanje dijagonala konveksnog poligona</p>
+
+  <!-- b. Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Koliko dijagonala ima <span style="color:#60a5fa; font-weight:600;">sedmougao</span>?</p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Broj stranica</div>
+        <div class="value">\( n = 7 \)</div>
+      </div>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(а)</div>
+        <div class="value">\( 7 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(б)</div>
+        <div class="value">\( 10 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(в)</div>
+        <div class="value">\( 14 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(г)</div>
+        <div class="value">\( 28 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- c. Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Primenicemo formulu za broj dijagonala konveksnog \( n \)-tougla: \( D = \frac{n(n-3)}{2} \). Uvrsticemo \( n = 7 \) i izracunati rezultat.</p>
+  </div>
+
+  <!-- d. Theory Refresher -->
+  <div class="card">
+    <h2>Podsetnik iz teorije</h2>
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Dijagonala poligona:</strong> Duz koja spaja dva nesusedna temena konveksnog poligona.</li>
+          <li><strong>Broj dijagonala konveksnog \( n \)-tougla:</strong>
+            \[ D = \frac{n(n-3)}{2} \]
+          </li>
+          <li><strong>Izvodjenje formule:</strong> Ukupan broj duzi izmedju \( n \) temena je \( \binom{n}{2} = \frac{n(n-1)}{2} \). Od toga, \( n \) duzi su stranice poligona. Preostaje:
+            \[ D = \binom{n}{2} - n = \frac{n(n-1)}{2} - n = \frac{n(n-1) - 2n}{2} = \frac{n(n-3)}{2} \]
+          </li>
+          <li><strong>Alternativno izvodjenje:</strong> Iz svakog temena polazi \( (n-3) \) dijagonale (ne moze ka sebi ni ka dva susedna temena). Ukupno: \( \frac{n(n-3)}{2} \) (delimo sa 2 jer se svaka dijagonala broji dvaput).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- e. Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <div style="text-align:center;">
+      <canvas id="diagram" width="700" height="520"></canvas>
+    </div>
+    <p class="canvas-caption">Kliknite na teme sedmougla da vidite sve dijagonale koje iz njega polaze. Dijagonale su oznacene isprekidanom linijom.</p>
+  </div>
+
+  <!-- f. Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Identifikujemo podatke</h3>
+        <p>Sedmougao je poligon sa \( n = 7 \) temena (i 7 stranica). Treba da nadjemo koliko dijagonala on ima.</p>
+        <p class="note-text">Dijagonala je duz koja spaja dva temena poligona, a pritom nije stranica tog poligona.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Zapisujemo formulu za broj dijagonala</h3>
+        <p>Formula za broj dijagonala konveksnog \( n \)-tougla glasi:</p>
+        <div class="step-math">
+          \[ D = \frac{n(n-3)}{2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Zasto se u formuli pojavljuje (n - 3), a ne (n - 1)?</summary>
+        <div class="detail-content">
+          Iz jednog temena, dijagonala ne moze da ide ka samom sebi (to je 1 teme) niti ka dva susedna temena (to su stranice, ne dijagonale). Zato od \( n \) temena oduzimamo 3, pa ostaje \( n - 3 \) dijagonala iz svakog temena.
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Uvrstimo \( n = 7 \)</h3>
+        <p>Zamenjujemo \( n = 7 \) u formulu:</p>
+        <div class="step-math">
+          \[ D = \frac{7 \cdot (7 - 3)}{2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izracunamo razliku u zagradi</h3>
+        <p>Vrednost zagrade:</p>
+        <div class="step-math">
+          \[ 7 - 3 = 4 \]
+        </div>
+        <p>Sada imamo:</p>
+        <div class="step-math">
+          \[ D = \frac{7 \cdot 4}{2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Izracunamo konacnu vrednost</h3>
+        <p>Mnozimo brojilac:</p>
+        <div class="step-math">
+          \[ 7 \cdot 4 = 28 \]
+        </div>
+        <p>Delimo sa 2:</p>
+        <div class="step-math">
+          \[ D = \frac{28}{2} = 14 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko dijagonala polazi iz jednog temena sedmougla?</summary>
+        <div class="detail-content">
+          Iz jednog temena polazi \( n - 3 = 7 - 3 = 4 \) dijagonale. Ukupno ima 7 temena, pa je ukupan broj parova teme-dijagonala \( 7 \cdot 4 = 28 \). Posto se svaka dijagonala broji dvaput (jednom za svaki kraj), delimo sa 2 i dobijamo \( 28 / 2 = 14 \).
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Alternativna provera preko kombinacija</h3>
+        <p>Ukupan broj duzi izmedju 7 temena je:</p>
+        <div class="step-math">
+          \[ \binom{7}{2} = \frac{7 \cdot 6}{2} = 21 \]
+        </div>
+        <p>Od toga, 7 duzi su stranice sedmougla. Preostale duzi su dijagonale:</p>
+        <div class="step-math">
+          \[ D = 21 - 7 = 14 \;\; \checkmark \]
+        </div>
+        <p class="note-text">Oba pristupa daju isti rezultat, sto potvrdjuje tacnost.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko dijagonala ima sestougao (n = 6)?</summary>
+        <div class="detail-content">
+          \( D = \frac{6 \cdot (6-3)}{2} = \frac{6 \cdot 3}{2} = \frac{18}{2} = 9 \). Sestougao ima 9 dijagonala.
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- g. Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>Broj dijagonala poligona mozemo izvesti na dva nacina: ili prebrojavanjem dijagonala iz svakog temena (\( n - 3 \) po temenu), ili oduzimanjem broja stranica od ukupnog broja duzi izmedju temena. Oba pristupa daju istu elegantnu formulu:</p>
+    <div class="step-math" style="margin-top: 16px;">
+      \[ D = \frac{n(n-3)}{2} = \frac{7 \cdot 4}{2} = 14 \]
+    </div>
+  </div>
+
+  <!-- h. Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( D = 14 \)</div>
+    <div class="answer-note">Tacan odgovor: (в) \( 14 \)</div>
+    <div class="final-options">
+      <span class="final-option">(а) \( 7 \)</span>
+      <span class="final-option">(б) \( 10 \)</span>
+      <span class="final-option correct">(в) \( 14 \)</span>
+      <span class="final-option">(г) \( 28 \)</span>
+    </div>
+    <div class="verification-note">
+      <strong>Provera:</strong> Ukupan broj duzi izmedju 7 temena je \( \binom{7}{2} = 21 \). Oduzimanjem 7 stranica dobijamo \( 21 - 7 = 14 \) dijagonala. Takodje, iz svakog od 7 temena polaze po 4 dijagonale, sto daje \( 7 \cdot 4 / 2 = 14 \). Odgovor 28 bi bio dvostruko veci (ako zaboravimo da delimo sa 2), a 7 i 10 ne odgovaraju nijednom razumnom izracunavanju.
+    </div>
+  </div>
+
+  <!-- i. Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2>Ceste greske</h2>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Zaboraviti da se deli sa 2:</strong> Ako iz svakog temena povucemo po 4 dijagonale, dobijamo \( 7 \cdot 4 = 28 \). Medjutim, svaka dijagonala je prebrojana dvaput (jednom iz svakog kraja), pa je tacan odgovor \( 28 / 2 = 14 \), a ne 28.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Koristiti (n - 1) umesto (n - 3):</strong> Greska nastaje ako se ne iskljuce samo teme i dva suseda. Iz jednog temena polazi \( n - 3 \) dijagonala (ne racunamo samo teme, vec i dva susedna temena koja su povezana stranicama).</p>
+    </div>
+  </div>
+
+  <!-- j. Optional Challenge -->
+  <div class="challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Za koji \( n \)-tougao je broj dijagonala jednak broju stranica? Tj. za koje \( n \) vazi \( \frac{n(n-3)}{2} = n \)?</p>
+    <details>
+      <summary>Pogledaj hint</summary>
+      <div class="detail-content">
+        <p>Posto \( n \geq 3 \), mozemo da podelimo obe strane sa \( n \) i dobijamo \( \frac{n-3}{2} = 1 \), odakle je \( n - 3 = 2 \), pa \( n = 5 \). Dakle, petougao ima jednak broj dijagonala i stranica (po 5).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const n = 7;
+  const cx = W / 2;
+  const cy = H / 2 - 10;
+  const R = 190;
+  const startAngle = -Math.PI / 2;
+
+  // Compute vertex positions
+  const vertices = [];
+  for (let i = 0; i < n; i++) {
+    const angle = startAngle + (2 * Math.PI * i) / n;
+    vertices.push({
+      x: cx + R * Math.cos(angle),
+      y: cy + R * Math.sin(angle),
+      label: 'V' + (i + 1)
+    });
+  }
+
+  let selectedVertex = -1;
+
+  // All diagonals
+  const diagonals = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 2; j < n; j++) {
+      if (i === 0 && j === n - 1) continue; // adjacent
+      diagonals.push([i, j]);
+    }
+  }
+
+  // Diagonals from a specific vertex
+  function getDiagonalsFrom(v) {
+    return diagonals.filter(function(d) { return d[0] === v || d[1] === v; });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sedmougao sa svim dijagonalama', cx, 22);
+
+    // Draw all diagonals (faint)
+    ctx.strokeStyle = 'rgba(167,139,250,0.15)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    for (const d of diagonals) {
+      ctx.beginPath();
+      ctx.moveTo(vertices[d[0]].x, vertices[d[0]].y);
+      ctx.lineTo(vertices[d[1]].x, vertices[d[1]].y);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // If a vertex is selected, highlight its diagonals
+    if (selectedVertex >= 0) {
+      const vDiags = getDiagonalsFrom(selectedVertex);
+      ctx.strokeStyle = '#a78bfa';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([8, 5]);
+      for (const d of vDiags) {
+        ctx.beginPath();
+        ctx.moveTo(vertices[d[0]].x, vertices[d[0]].y);
+        ctx.lineTo(vertices[d[1]].x, vertices[d[1]].y);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      // Count label
+      ctx.fillStyle = '#a78bfa';
+      ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Dijagonale iz ' + vertices[selectedVertex].label + ': ' + vDiags.length, cx, H - 22);
+    }
+
+    // Draw polygon sides
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const next = (i + 1) % n;
+      if (i === 0) {
+        ctx.moveTo(vertices[i].x, vertices[i].y);
+      }
+      ctx.lineTo(vertices[next].x, vertices[next].y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    // Draw vertices
+    for (let i = 0; i < n; i++) {
+      const v = vertices[i];
+      const isSelected = (i === selectedVertex);
+
+      // Glow for selected
+      if (isSelected) {
+        const grd = ctx.createRadialGradient(v.x, v.y, 0, v.x, v.y, 28);
+        grd.addColorStop(0, 'rgba(167,139,250,0.4)');
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(v.x, v.y, 28, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      // Circle
+      ctx.fillStyle = isSelected ? '#a78bfa' : '#1e293b';
+      ctx.strokeStyle = isSelected ? '#a78bfa' : '#60a5fa';
+      ctx.lineWidth = isSelected ? 3 : 2;
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, 14, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = isSelected ? '#0f172a' : '#e2e8f0';
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(v.label, v.x, v.y);
+    }
+
+    ctx.textBaseline = 'alphabetic';
+
+    // Diagonal count
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ukupno dijagonala: ' + diagonals.length, cx, H - 50);
+
+    // Info text at bottom
+    if (selectedVertex < 0) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Kliknite na teme da vidite dijagonale iz tog temena', cx, H - 22);
+    }
+  }
+
+  draw();
+
+  function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function getTouchPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const touch = e.touches[0] || e.changedTouches[0];
+    return {
+      x: (touch.clientX - rect.left) * scaleX,
+      y: (touch.clientY - rect.top) * scaleY
+    };
+  }
+
+  function findVertex(pos) {
+    for (let i = 0; i < n; i++) {
+      const dx = pos.x - vertices[i].x;
+      const dy = pos.y - vertices[i].y;
+      if (dx * dx + dy * dy < 22 * 22) return i;
+    }
+    return -1;
+  }
+
+  function handleClick(e) {
+    e.preventDefault();
+    var pos;
+    if (e.touches) {
+      pos = getTouchPos(e);
+    } else {
+      pos = getMousePos(e);
+    }
+    var clicked = findVertex(pos);
+    if (clicked >= 0) {
+      selectedVertex = (selectedVertex === clicked) ? -1 : clicked;
+    } else {
+      selectedVertex = -1;
+    }
+    draw();
+  }
+
+  canvas.addEventListener('click', handleClick);
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    handleClick(e);
+  }, { passive: false });
+
+  // Step click toggling
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Dijagonale pravilnog sedmougla",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["dijagonale", "poligon", "sedmougao", "kombinatorika", "formula za dijagonale"]
+}
+BRAINSPARK_META-->

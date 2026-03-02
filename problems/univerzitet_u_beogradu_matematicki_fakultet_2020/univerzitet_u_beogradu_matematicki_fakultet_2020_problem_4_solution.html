@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje algebarskog izraza sa korenima</title>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Za x > 0, x ≠ 1, pojednostaviti izraz:
+  (1 + x^(1/2)) / (1 + x^(1/2) + x)  :  1/(x^(3/2) - 1)
+
+  Deljenje razlomkom je množenje recipročnom vrednošću:
+  = (1 + x^(1/2)) / (1 + x^(1/2) + x) * (x^(3/2) - 1)
+
+  Substitution: Let t = √x, so x = t², x^(3/2) = t³
+
+  Expression becomes:
+  = (1 + t) / (1 + t + t²) * (t³ - 1)
+
+  Factor t³ - 1 using the difference of cubes formula:
+  t³ - 1 = (t - 1)(t² + t + 1)
+
+  So:
+  = (1 + t) / (1 + t + t²) * (t - 1)(t² + t + 1)
+
+  Note: 1 + t + t² = t² + t + 1, so these cancel:
+  = (1 + t)(t - 1)(t² + t + 1) / (t² + t + 1)
+  = (1 + t)(t - 1)
+  = t² - 1
+  = x - 1
+
+  Verification: Let x = 4 (so √x = 2, x^(3/2) = 8)
+  Numerator of first fraction: 1 + 2 = 3
+  Denominator of first fraction: 1 + 2 + 4 = 7
+  First fraction: 3/7
+  Second fraction: 1/(8 - 1) = 1/7
+  Division: (3/7) / (1/7) = (3/7) * 7 = 3
+  x - 1 = 4 - 1 = 3 ✓
+
+  Let x = 9 (so √x = 3, x^(3/2) = 27)
+  Numerator: 1 + 3 = 4
+  Denominator: 1 + 3 + 9 = 13
+  First fraction: 4/13
+  Second fraction: 1/(27 - 1) = 1/26
+  Division: (4/13) / (1/26) = (4/13) * 26 = 104/13 = 8
+  x - 1 = 9 - 1 = 8 ✓
+
+  Answer: B) x - 1
+
+  Note on the answer options:
+  A) √x - 1 and C) √x - 1 appear to be the same — likely a typo in the original.
+  The correct answer is B) x - 1.
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+}
+
+details .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+}
+
+details .theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(52,211,153,0.05);
+  border-left-color: #34d399;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #f472b6;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.step-math {
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52,211,153,0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-note {
+  color: #34d399;
+  font-size: 1.1rem;
+  margin-top: 8px;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: rgba(51,65,85,0.6);
+  border: 1px solid #334155;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.pitfall-card h2 {
+  color: #f472b6;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244,114,182,0.08);
+  border: 1px solid rgba(244,114,182,0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box h2 {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.verification-note {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: rgba(30,41,59,0.7);
+  border-left: 3px solid #34d399;
+  border-radius: 0 8px 8px 0;
+}
+
+.detail-content {
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: rgba(30,41,59,0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+}
+
+.note-text {
+  color: #94a3b8;
+  font-size: 0.93rem;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .step-badge { align-self: flex-start; }
+  .final-answer-box .answer-value { font-size: 1.5rem; }
+  .final-options { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- a. Title & Subtitle -->
+  <h1>Pojednostavljivanje algebarskog izraza sa korenima</h1>
+  <p class="subtitle">Algebra — razlomci sa iracionalnim izrazima, razlika kubova i skracivanje</p>
+
+  <!-- b. Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Za \( x > 0 \), \( x \neq 1 \), izraz</p>
+    <div class="step-math">
+      \[ \frac{1 + x^{1/2}}{1 + x^{1/2} + x} \; : \; \frac{1}{x^{3/2} - 1} \]
+    </div>
+    <p>identicki je jednak izrazu:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( \sqrt{x} - 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( x - 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( \sqrt{x} - 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( x + 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( \sqrt{x} + 1 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- c. Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Uvescemo smenu \( t = \sqrt{x} \) da bismo eliminisali razlomljene eksponente. Zatim cemo primeniti formulu za razliku kubova na \( t^3 - 1 \), skratiti zajednicke faktore i dobiti konacni izraz.</p>
+  </div>
+
+  <!-- d. Theory Refresher -->
+  <div class="card">
+    <h2>Podsetnik iz teorije</h2>
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Razlika kubova:</strong> \( a^3 - b^3 = (a - b)(a^2 + ab + b^2) \)</li>
+          <li><strong>Razlika kvadrata:</strong> \( a^2 - b^2 = (a - b)(a + b) \)</li>
+          <li><strong>Deljenje razlomaka:</strong> \( \dfrac{A}{B} : \dfrac{C}{D} = \dfrac{A}{B} \cdot \dfrac{D}{C} \)</li>
+          <li><strong>Stepenovanje korena:</strong> \( x^{1/2} = \sqrt{x}, \quad x^{3/2} = x \cdot \sqrt{x} = (\sqrt{x})^3 \)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- e. Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz transformacije</h2>
+    <div style="text-align:center;">
+      <canvas id="diagram" width="800" height="480"></canvas>
+    </div>
+    <p class="canvas-caption">Dijagram prikazuje tok pojednostavljivanja: polazni izraz, smena, faktorizacija i skracivanje. Pomerajte mis da istaknte korake.</p>
+  </div>
+
+  <!-- f. Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Pretvaramo deljenje u mnozenje</h3>
+        <p>Deljenje razlomkom je isto sto i mnozenje reciprocnom vrednoscu tog razlomka:</p>
+        <div class="step-math">
+          \[ \frac{1 + x^{1/2}}{1 + x^{1/2} + x} \; : \; \frac{1}{x^{3/2} - 1} = \frac{1 + x^{1/2}}{1 + x^{1/2} + x} \cdot (x^{3/2} - 1) \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Uvodimo smenu \( t = \sqrt{x} \)</h3>
+        <p>Neka je \( t = \sqrt{x} \). Tada je:</p>
+        <div class="step-math">
+          \[ x = t^2, \quad x^{1/2} = t, \quad x^{3/2} = t^3 \]
+        </div>
+        <p>Izraz postaje:</p>
+        <div class="step-math">
+          \[ \frac{1 + t}{1 + t + t^2} \cdot (t^3 - 1) \]
+        </div>
+        <p class="note-text">Smena nam je omogucila da radimo sa celim stepenima umesto sa razlomljenim eksponentima.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koja formula se koristi za faktorizaciju \( t^3 - 1 \)?</summary>
+        <div class="detail-content">
+          Razlika kubova! \( a^3 - b^3 = (a - b)(a^2 + ab + b^2) \). Ovde je \( a = t \) i \( b = 1 \).
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Faktorizujemo \( t^3 - 1 \) pomocu razlike kubova</h3>
+        <p>Primenjujemo formulu \( a^3 - b^3 = (a - b)(a^2 + ab + b^2) \) za \( a = t \) i \( b = 1 \):</p>
+        <div class="step-math">
+          \[ t^3 - 1 = (t - 1)(t^2 + t + 1) \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Zamenjujemo faktorizovan oblik u izraz</h3>
+        <p>Uvrstimo faktorizaciju nazad u nas izraz:</p>
+        <div class="step-math">
+          \[ \frac{1 + t}{1 + t + t^2} \cdot (t - 1)(t^2 + t + 1) \]
+        </div>
+        <p>Zapisimo to kao jedan razlomak:</p>
+        <div class="step-math">
+          \[ \frac{(1 + t) \cdot (t - 1) \cdot (t^2 + t + 1)}{1 + t + t^2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Skracujemo \( t^2 + t + 1 \)</h3>
+        <p>Uocavamo da je imenilac \( 1 + t + t^2 = t^2 + t + 1 \), sto je isti izraz kao jedan od faktora u brojilocu. Skracujemo:</p>
+        <div class="step-math">
+          \[ \frac{(1 + t)(t - 1) \cdot \cancel{(t^2 + t + 1)}}{\cancel{t^2 + t + 1}} = (1 + t)(t - 1) \]
+        </div>
+        <p class="note-text">Ovo skracivanje je dozvoljeno jer je \( t^2 + t + 1 > 0 \) za svako realno \( t \) (diskriminanta \( 1 - 4 = -3 < 0 \)).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko je \( (1 + t)(t - 1) \) za \( t = 3 \)?</summary>
+        <div class="detail-content">
+          \( (1 + 3)(3 - 1) = 4 \cdot 2 = 8 \). A \( t^2 - 1 = 9 - 1 = 8 \). Poklapaju se!
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Primenjujemo razliku kvadrata</h3>
+        <p>Proizvod \( (1 + t)(t - 1) \) prepoznajemo kao razliku kvadrata (samo sa zamenjenim redosledom faktora):</p>
+        <div class="step-math">
+          \[ (1 + t)(t - 1) = (t + 1)(t - 1) = t^2 - 1 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Vracamo smenu \( t = \sqrt{x} \)</h3>
+        <p>Sada zamenjujemo \( t = \sqrt{x} \) nazad:</p>
+        <div class="step-math">
+          \[ t^2 - 1 = (\sqrt{x})^2 - 1 = x - 1 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Numericki test za \( x = 4 \)</summary>
+        <div class="detail-content">
+          <p>Polazni izraz: \( \frac{1 + 2}{1 + 2 + 4} : \frac{1}{8 - 1} = \frac{3}{7} : \frac{1}{7} = \frac{3}{7} \cdot 7 = 3 \)</p>
+          <p style="margin-top: 6px;">Rezultat: \( x - 1 = 4 - 1 = 3 \). Poklapa se!</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- g. Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>Ceo zadatak se svodi na prepoznavanje da se u imeniocu prvog razlomka krije izraz \( t^2 + t + 1 \), koji je upravo jedan od faktora pri rastavljanju razlike kubova \( t^3 - 1 \). Smena \( t = \sqrt{x} \) je kljucna jer pretvara neuredne razlomljene eksponente u ciste stepene, cime se struktura izraza jasno otkriva.</p>
+    <div class="step-math" style="margin-top: 16px;">
+      \[ \frac{(1+t)}{(1 + t + t^2)} \cdot \underbrace{(t-1)(t^2+t+1)}_{t^3 - 1} = (1+t)(t-1) = t^2 - 1 = x - 1 \]
+    </div>
+  </div>
+
+  <!-- h. Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( x - 1 \)</div>
+    <div class="answer-note">Tacan odgovor: B)</div>
+    <div class="final-options">
+      <span class="final-option">A) \( \sqrt{x} - 1 \)</span>
+      <span class="final-option correct">B) \( x - 1 \)</span>
+      <span class="final-option">C) \( \sqrt{x} - 1 \)</span>
+      <span class="final-option">D) \( x + 1 \)</span>
+      <span class="final-option">E) \( \sqrt{x} + 1 \)</span>
+    </div>
+    <div class="verification-note">
+      <strong>Provera:</strong> Za \( x = 4 \): polazni izraz daje \( \frac{3}{7} : \frac{1}{7} = 3 \), a \( x - 1 = 3 \). Za \( x = 9 \): polazni izraz daje \( \frac{4}{13} : \frac{1}{26} = 8 \), a \( x - 1 = 8 \). Rezultat se poklapa u oba slucaja.
+    </div>
+  </div>
+
+  <!-- i. Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2>Ceste greske</h2>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Zaboravljanje reciprocne vrednosti pri deljenju:</strong> Deljenje razlomkom \( \frac{1}{x^{3/2}-1} \) znaci mnozenje sa \( x^{3/2} - 1 \), a ne deljenje njime. Ako se ovo pogresi, dobija se potpuno drugaciji (i mnogo komplikovaniji) rezultat.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Pogresna faktorizacija \( t^3 - 1 \):</strong> Cesta greska je pisati \( t^3 - 1 = (t - 1)(t^2 - t + 1) \) umesto ispravnog \( (t - 1)(t^2 + t + 1) \). Formula za razliku kubova ima <em>plus</em> ispred srednjeg clana, dok formula za <em>zbir</em> kubova ima minus.</p>
+    </div>
+  </div>
+
+  <!-- j. Optional Challenge -->
+  <div class="challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Pojednostaviti izraz \( \dfrac{1 + x^{1/3} + x^{2/3}}{1 - x^{1/3} + x^{2/3}} \cdot \dfrac{1 - x^{2/3}}{x - 1} \) za \( x > 0 \), \( x \neq 1 \).</p>
+    <details>
+      <summary>Pogledaj hint</summary>
+      <div class="detail-content">
+        <p>Ponovo koristi smenu: neka je \( u = x^{1/3} \). Tada je \( x^{2/3} = u^2 \) i \( x = u^3 \). Primeni formule za zbir i razliku kubova na \( u^3 + 1 \) i \( u^3 - 1 \), kao i razliku kvadrata na \( 1 - u^2 \). Rezultat je veoma elegantan!</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  let hoveredStep = -1;
+
+  // Define the transformation steps
+  const steps = [
+    {
+      label: 'Polazni izraz',
+      expr: '(1 + t) / (1 + t + t\u00B2) \u00B7 (t\u00B3 \u2212 1)',
+      color: '#60a5fa',
+      y: 60
+    },
+    {
+      label: 'Razlika kubova',
+      expr: '(1 + t) / (1 + t + t\u00B2) \u00B7 (t \u2212 1)(t\u00B2 + t + 1)',
+      color: '#a78bfa',
+      y: 145
+    },
+    {
+      label: 'Skracivanje',
+      expr: '(1 + t)(t \u2212 1)',
+      color: '#f472b6',
+      y: 230
+    },
+    {
+      label: 'Razlika kvadrata',
+      expr: 't\u00B2 \u2212 1',
+      color: '#34d399',
+      y: 315
+    },
+    {
+      label: 'Vracanje smene',
+      expr: 'x \u2212 1',
+      color: '#4ade80',
+      y: 400
+    }
+  ];
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tok pojednostavljivanja (smena t = \u221Ax)', W / 2, 28);
+
+    for (let i = 0; i < steps.length; i++) {
+      const s = steps[i];
+      const isHovered = (hoveredStep === i);
+
+      // Draw connecting arrow to next step
+      if (i < steps.length - 1) {
+        const nextY = steps[i + 1].y;
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(W / 2, s.y + 28);
+        ctx.lineTo(W / 2, nextY - 28);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Arrow head
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(W / 2, nextY - 24);
+        ctx.lineTo(W / 2 - 6, nextY - 34);
+        ctx.lineTo(W / 2 + 6, nextY - 34);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Draw step box
+      const boxW = isHovered ? 560 : 520;
+      const boxH = isHovered ? 54 : 48;
+      const boxX = W / 2 - boxW / 2;
+      const boxY = s.y - boxH / 2;
+      const radius = 12;
+
+      // Glow on hover
+      if (isHovered) {
+        ctx.shadowColor = s.color;
+        ctx.shadowBlur = 20;
+      }
+
+      // Box background
+      ctx.fillStyle = isHovered ? '#253352' : '#1e293b';
+      ctx.strokeStyle = isHovered ? s.color : '#334155';
+      ctx.lineWidth = isHovered ? 2.5 : 1;
+      ctx.beginPath();
+      ctx.moveTo(boxX + radius, boxY);
+      ctx.lineTo(boxX + boxW - radius, boxY);
+      ctx.quadraticCurveTo(boxX + boxW, boxY, boxX + boxW, boxY + radius);
+      ctx.lineTo(boxX + boxW, boxY + boxH - radius);
+      ctx.quadraticCurveTo(boxX + boxW, boxY + boxH, boxX + boxW - radius, boxY + boxH);
+      ctx.lineTo(boxX + radius, boxY + boxH);
+      ctx.quadraticCurveTo(boxX, boxY + boxH, boxX, boxY + boxH - radius);
+      ctx.lineTo(boxX, boxY + radius);
+      ctx.quadraticCurveTo(boxX, boxY, boxX + radius, boxY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+
+      // Label badge on the left
+      const badgeW = 130;
+      const badgeH = 26;
+      const badgeX = boxX + 14;
+      const badgeY = s.y - badgeH / 2;
+
+      ctx.fillStyle = s.color + '33';
+      ctx.strokeStyle = s.color + '88';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(badgeX + 6, badgeY);
+      ctx.lineTo(badgeX + badgeW - 6, badgeY);
+      ctx.quadraticCurveTo(badgeX + badgeW, badgeY, badgeX + badgeW, badgeY + 6);
+      ctx.lineTo(badgeX + badgeW, badgeY + badgeH - 6);
+      ctx.quadraticCurveTo(badgeX + badgeW, badgeY + badgeH, badgeX + badgeW - 6, badgeY + badgeH);
+      ctx.lineTo(badgeX + 6, badgeY + badgeH);
+      ctx.quadraticCurveTo(badgeX, badgeY + badgeH, badgeX, badgeY + badgeH - 6);
+      ctx.lineTo(badgeX, badgeY + 6);
+      ctx.quadraticCurveTo(badgeX, badgeY, badgeX + 6, badgeY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = s.color;
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.label, badgeX + badgeW / 2, s.y + 5);
+
+      // Expression text
+      ctx.fillStyle = isHovered ? '#ffffff' : '#e2e8f0';
+      ctx.font = isHovered ? 'bold 16px Courier New, monospace' : '15px Courier New, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.expr, boxX + badgeW + (boxW - badgeW) / 2, s.y + 5);
+
+      // Highlight the cancellation for step 2
+      if (i === 1) {
+        // Underline (t² + t + 1) in numerator text and denominator
+        ctx.strokeStyle = '#f472b680';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([3, 2]);
+
+        // Right annotation: what gets cancelled
+        ctx.fillStyle = '#f472b6';
+        ctx.font = '11px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('\u2190 t\u00B2+t+1 se skracuje', boxX + boxW + 8, s.y + 5);
+        ctx.setLineDash([]);
+      }
+    }
+
+    // Smena annotation
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('t = \u221Ax,  x = t\u00B2,  x\u00B3\u02F2 = t\u00B3', boxLeftEdge() - 8, 65);
+
+    function boxLeftEdge() {
+      return W / 2 - 260;
+    }
+  }
+
+  draw();
+
+  function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function findStep(my) {
+    for (let i = 0; i < steps.length; i++) {
+      if (Math.abs(my - steps[i].y) < 30) return i;
+    }
+    return -1;
+  }
+
+  function handleMove(e) {
+    e.preventDefault();
+    let pos;
+    if (e.touches) {
+      pos = getMousePos(e.touches[0]);
+    } else {
+      pos = getMousePos(e);
+    }
+    const newStep = findStep(pos.y);
+    if (newStep !== hoveredStep) {
+      hoveredStep = newStep;
+      draw();
+    }
+  }
+
+  function handleLeave() {
+    if (hoveredStep !== -1) {
+      hoveredStep = -1;
+      draw();
+    }
+  }
+
+  canvas.addEventListener('mousemove', handleMove);
+  canvas.addEventListener('mouseleave', handleLeave);
+  canvas.addEventListener('touchstart', handleMove, { passive: false });
+  canvas.addEventListener('touchmove', handleMove, { passive: false });
+  canvas.addEventListener('touchend', handleLeave);
+
+  // Step click toggling
+  const stepEls = document.querySelectorAll('.step-container');
+  stepEls.forEach(function(step) {
+    step.addEventListener('click', function() {
+      stepEls.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje algebarskog izraza sa korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["algebarski izrazi", "razlika kubova", "razlika kvadrata", "smena promenljive", "racionalizacija", "stepeni koreni"]
+}
+BRAINSPARK_META-->

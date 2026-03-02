@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broj dijagonala sedmougla</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Koliko dijagonala ima sedmougao?
+
+Options:
+a) 7
+b) 14
+v) 21
+g) 28
+
+Theory:
+A diagonal of a polygon is a line segment connecting two non-adjacent vertices.
+For a polygon with n vertices (n-gon):
+- Total number of ways to choose 2 vertices out of n: C(n, 2) = n(n-1)/2
+- Number of sides (adjacent vertex pairs): n
+- Number of diagonals: C(n, 2) - n = n(n-1)/2 - n = n(n-3)/2
+
+For a heptagon (7-gon), n = 7:
+D = 7(7-3)/2 = 7 * 4 / 2 = 28 / 2 = 14
+
+Answer: b) 14
+
+Verification:
+- From each vertex, we can draw diagonals to all non-adjacent vertices.
+- Each vertex connects to 6 other vertices total, minus 2 adjacent = 4 diagonals per vertex.
+- Total: 7 * 4 = 28, but each diagonal is counted twice (from each endpoint).
+- So 28 / 2 = 14 diagonals. Confirmed.
+
+Alternative verification by enumeration:
+Vertices: A, B, C, D, E, F, G (in order around heptagon)
+From A: AC, AD, AE, AF (4 diagonals)
+From B: BD, BE, BF, BG (4 diagonals)
+From C: CE, CF, CG (3 new, CA already counted)
+From D: DF, DG (2 new, DA, DB already counted)
+From E: EG (1 new, EA, EB, EC already counted)
+From F: (none new, all already counted)
+From G: (none new)
+Total: 4 + 4 + 3 + 2 + 1 = 14. Confirmed!
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+}
+.highlight-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  text-align: center;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.2);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 90px;
+  text-align: center;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+.plan-card h2 {
+  color: #a78bfa;
+}
+.theory-card details {
+  margin: 15px 0;
+}
+.theory-card summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+.theory-card summary:hover {
+  color: #93c5fd;
+}
+.theory-card ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 12px;
+}
+.theory-card li {
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  background: rgba(96,165,250,0.06);
+  border-radius: 8px;
+  border-left: 3px solid #60a5fa;
+  line-height: 1.8;
+}
+.canvas-card {
+  text-align: center;
+}
+.canvas-card canvas {
+  border-radius: 12px;
+  border: 1px solid #334155;
+  touch-action: none;
+  max-width: 100%;
+}
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 10px;
+  font-style: italic;
+}
+.canvas-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+.canvas-controls button {
+  background: rgba(96,165,250,0.15);
+  border: 1px solid rgba(96,165,250,0.3);
+  color: #60a5fa;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+.canvas-controls button:hover {
+  background: rgba(96,165,250,0.25);
+}
+.canvas-controls button.active {
+  background: rgba(96,165,250,0.3);
+  border-color: #60a5fa;
+  font-weight: 600;
+}
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.step:hover {
+  background: rgba(96,165,250,0.04);
+  border-left-color: #4ade80;
+}
+.step.active {
+  background: rgba(96,165,250,0.06);
+  border-left-color: #4ade80;
+}
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+  line-height: 1.7;
+}
+.step-content .note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+.checkpoint {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+}
+.checkpoint p {
+  margin-top: 10px;
+  color: #c4b5fd;
+}
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.3);
+  text-align: center;
+  padding: 30px 24px;
+}
+.insight-card h2 {
+  color: #a78bfa;
+}
+.insight-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+  padding: 16px;
+  background: rgba(15,23,42,0.5);
+  border-radius: 10px;
+  display: inline-block;
+}
+.answer-card {
+  border: 2px solid rgba(52,211,153,0.4);
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(30,41,59,1));
+  text-align: center;
+}
+.answer-card h2 {
+  color: #34d399;
+}
+.final-answer {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+.answer-opt {
+  padding: 12px 24px;
+  border-radius: 10px;
+  background: rgba(96,165,250,0.06);
+  border: 1px solid #334155;
+  font-size: 1.1rem;
+  color: #94a3b8;
+  min-width: 80px;
+  text-align: center;
+}
+.answer-opt.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(52,211,153,0.15);
+}
+.verification {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(52,211,153,0.06);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+.pitfalls-card {
+  border-left: 4px solid #f472b6;
+}
+.pitfalls-card h2 {
+  color: #f472b6;
+}
+.pitfalls-card ul {
+  list-style: none;
+  padding: 0;
+}
+.pitfalls-card li {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: rgba(244,114,182,0.06);
+  border-radius: 8px;
+  border-left: 3px solid #f472b6;
+  color: #e09468;
+}
+.challenge-card details {
+  margin: 15px 0;
+}
+.challenge-card summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  user-select: none;
+}
+.challenge-card .hint {
+  margin-top: 10px;
+  padding: 12px;
+  background: rgba(96,165,250,0.06);
+  border-radius: 8px;
+  color: #94a3b8;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 12px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+.legend-swatch {
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { flex-direction: column; }
+  .answer-options { flex-direction: column; align-items: center; }
+  .insight-formula { font-size: 1.1rem; }
+  .final-answer { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Dijagonale sedmougla</h1>
+  <p class="subtitle">Kombinatorika &mdash; prebrojavanje dijagonala pravilnog poligona</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Koliko dijagonala ima sedmougao?</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(7\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(14\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(21\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(28\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Koristićemo kombinatornu formulu za broj dijagonala \(n\)-tougla. Ideja je jednostavna: prebrojimo sve moguće parove temena, pa od tog broja oduzmemo stranice poligona (jer stranice spajaju susedna temena, a nisu dijagonale).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Ključne formule i definicije</summary>
+      <ul>
+        <li>
+          <strong>Dijagonala poligona:</strong> Duž koja spaja dva nesusedna temena poligona. Stranice poligona <em>nisu</em> dijagonale.
+        </li>
+        <li>
+          <strong>Binomni koeficijent (kombinacija):</strong> Broj načina da izaberemo \(k\) elemenata od \(n\) bez obzira na redosled:
+          \[\binom{n}{k} = \frac{n!}{k!(n-k)!}\]
+        </li>
+        <li>
+          <strong>Broj duži između temena:</strong> Svaka duž je određena parom temena, pa ukupan broj duži (stranice + dijagonale) iznosi:
+          \[\binom{n}{2} = \frac{n(n-1)}{2}\]
+        </li>
+        <li>
+          <strong>Formula za broj dijagonala \(n\)-tougla:</strong>
+          \[D = \binom{n}{2} - n = \frac{n(n-1)}{2} - n = \frac{n(n-3)}{2}\]
+          Oduzimamo \(n\) jer poligon ima tačno \(n\) stranica.
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Interactive Diagram -->
+  <div class="card canvas-card">
+    <h2>Interaktivni dijagram</h2>
+    <canvas id="heptagonCanvas" width="600" height="520"></canvas>
+    <div class="canvas-controls">
+      <button id="btnSides" class="active">Stranice</button>
+      <button id="btnDiagonals">Dijagonale</button>
+      <button id="btnAll">Sve</button>
+      <button id="btnAnimate">Animacija</button>
+    </div>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#60a5fa;"></div>
+        <span>Stranice (7)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#f472b6;"></div>
+        <span>Dijagonale (14)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#4ade80; width:10px; height:10px; border-radius:50%;"></div>
+        <span>Temena (A&ndash;G)</span>
+      </div>
+    </div>
+    <p class="canvas-hint">Kliknite na dugmad iznad da biste videli stranice, dijagonale ili sve duži. Dugme &bdquo;Animacija&ldquo; prikazuje dijagonale jednu po jednu.</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Identifikujemo podatke</h3>
+        <p>Sedmougao (heptagon) ima \(n = 7\) temena.</p>
+        <p>Treba da prebrojimo koliko dijagonala možemo da povučemo u ovom poligonu.</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Ukupan broj duži između temena</h3>
+        <p>Svaka duž je određena parom od dva temena. Koliko različitih parova možemo napraviti od 7 temena?</p>
+        <div class="highlight-box">
+          \[\binom{7}{2} = \frac{7!}{2! \cdot 5!} = \frac{7 \cdot 6}{2} = 21\]
+        </div>
+        <p>Dakle, postoji ukupno <strong>21 duž</strong> koja spaja neka dva temena sedmougla.</p>
+        <p class="note">Ovo uključuje i stranice poligona i dijagonale &mdash; sve moguće veze između temena.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko stranica ima sedmougao?</summary>
+      <p>Sedmougao ima tačno <strong>7 stranica</strong> &mdash; svaka stranica spaja dva susedna temena, a temena ima 7.</p>
+    </details>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Oduzimamo stranice</h3>
+        <p>Od svih 21 duži, 7 su stranice poligona (spajaju susedna temena).</p>
+        <p>Dijagonale su sve preostale duži &mdash; one koje spajaju <em>nesusedna</em> temena:</p>
+        <div class="highlight-box">
+          \[D = 21 - 7 = 14\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Primena opšte formule</h3>
+        <p>Možemo ovo proveriti i direktno formulom za broj dijagonala \(n\)-tougla:</p>
+        <div class="highlight-box">
+          \[D = \frac{n(n-3)}{2} = \frac{7 \cdot (7-3)}{2} = \frac{7 \cdot 4}{2} = \frac{28}{2} = 14\]
+        </div>
+        <p class="note">Formula \(\frac{n(n-3)}{2}\) nastaje tako što faktor \((n-3)\) predstavlja broj dijagonala iz jednog temena (od \(n-1\) ostalih temena, 2 su susedna), a delimo sa 2 jer je svaka dijagonala prebrojana dvaput.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko dijagonala polazi iz jednog temena sedmougla?</summary>
+      <p>Iz jednog temena možemo povući dijagonale do svih temena osim do sebe i do dva susedna temena. To je \(7 - 1 - 2 = 4\) dijagonale iz svakog temena.</p>
+    </details>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Alternativna verifikacija &mdash; brojanje iz svakog temena</h3>
+        <p>Označimo temena sa A, B, C, D, E, F, G (redom po obodu).</p>
+        <p>Iz svakog temena polaze 4 dijagonale. Ukupno: \(7 \times 4 = 28\).</p>
+        <p>Ali svaka dijagonala je prebrojana dvaput (jednom iz svakog kraja), pa:</p>
+        <div class="highlight-box">
+          \[D = \frac{7 \times 4}{2} = \frac{28}{2} = 14\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko dijagonala ima petougao (\(n = 5\))?</summary>
+      <p>\(D = \frac{5 \cdot (5-3)}{2} = \frac{5 \cdot 2}{2} = 5\) dijagonala. Nacrtajte petougao i proverite!</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2>Ključni uvid</h2>
+    <p>Broj dijagonala bilo kog konveksnog poligona sa \(n\) temena je:</p>
+    <div class="insight-formula">
+      \[\boxed{D = \frac{n(n-3)}{2}}\]
+    </div>
+    <p style="color:#94a3b8; margin-top:12px;">Za sedmougao (\(n = 7\)): &ensp; \(D = \frac{7 \cdot 4}{2} = 14\)</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer">\(\text{б) } 14\)</div>
+    <div class="answer-options">
+      <div class="answer-opt">(A) \(7\)</div>
+      <div class="answer-opt correct">(B) \(14\)</div>
+      <div class="answer-opt">(C) \(21\)</div>
+      <div class="answer-opt">(D) \(28\)</div>
+    </div>
+    <div class="verification">
+      <strong>Provera ispravnosti:</strong> Broj 21 je ukupan broj duži (stranice + dijagonale), a 28 bi bio dvostruki broj dijagonala (kada ne delimo sa 2). Odgovor 14 ima smisla jer je manji od ukupnog broja duži (21), a veći od broja stranica (7). Pored toga, iz svakog temena polaze tačno 4 dijagonale, što se lako proverava na dijagramu.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls-card">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Zaboraviti deljenje sa 2:</strong> Svaka dijagonala ima dva kraja, pa je svaka prebrojana dvaput. Bez deljenja dobijamo 28 umesto 14 &mdash; to je pogrešan odgovor (D).</li>
+      <li><strong>Mešanje duži i dijagonala:</strong> Ako ne oduzmemo stranice od ukupnog broja duži \(\binom{n}{2}\), dobijamo 21 &mdash; to je pogrešan odgovor (C) koji uključuje i stranice poligona.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Koliko tačaka preseka imaju dijagonale pravilnog sedmougla, ako se nikoje tri dijagonale ne seku u istoj tački (unutar poligona)?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="hint">
+        <p>Svaka tačka preseka dijagonala unutar poligona je jednoznačno određena izborom 4 temena (jer svaka četvorka temena definiše tačno jednu tačku preseka dijagonala). Koliko načina ima da izaberemo 4 temena od 7?</p>
+        <p style="margin-top:8px;">Razmislite o \(\binom{7}{4}\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<!-- Canvas JavaScript -->
+<script>
+(() => {
+  const canvas = document.getElementById('heptagonCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const centerX = W / 2;
+  const centerY = H / 2 + 10;
+  const R = Math.min(W, H) * 0.38;
+
+  const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+  const n = 7;
+
+  // Calculate vertex positions (Y-axis pointing up, starting from top)
+  const vertices = [];
+  for (let i = 0; i < n; i++) {
+    const angle = -Math.PI / 2 + (2 * Math.PI * i) / n;
+    vertices.push({
+      x: centerX + R * Math.cos(angle),
+      y: centerY + R * Math.sin(angle)
+    });
+  }
+
+  // Generate all sides and diagonals
+  const sides = [];
+  const diagonals = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const diff = Math.min(Math.abs(j - i), n - Math.abs(j - i));
+      if (diff === 1) {
+        sides.push([i, j]);
+      } else {
+        diagonals.push([i, j]);
+      }
+    }
+  }
+
+  let mode = 'sides'; // 'sides', 'diagonals', 'all', 'animate'
+  let animDiagIndex = 0;
+  let animFrame = null;
+  let animStartTime = 0;
+  const DIAG_INTERVAL = 400; // ms per diagonal in animation
+
+  function drawBackground() {
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle radial glow
+    const grad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, R * 1.5);
+    grad.addColorStop(0, 'rgba(96,165,250,0.04)');
+    grad.addColorStop(1, 'rgba(15,23,42,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawLine(x1, y1, x2, y2, color, width, dash) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawVertex(x, y, label, highlight) {
+    // Glow
+    const glowGrad = ctx.createRadialGradient(x, y, 0, x, y, 16);
+    glowGrad.addColorStop(0, highlight ? 'rgba(74,222,128,0.4)' : 'rgba(74,222,128,0.2)');
+    glowGrad.addColorStop(1, 'rgba(74,222,128,0)');
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.arc(x, y, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dot
+    ctx.fillStyle = highlight ? '#4ade80' : '#34d399';
+    ctx.beginPath();
+    ctx.arc(x, y, highlight ? 7 : 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Label
+    const angle = Math.atan2(y - centerY, x - centerX);
+    const labelDist = highlight ? 26 : 24;
+    const lx = x + labelDist * Math.cos(angle);
+    const ly = y + labelDist * Math.sin(angle);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, lx, ly);
+  }
+
+  function drawCounter(sidesCount, diagCount) {
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+
+    if (sidesCount !== null) {
+      ctx.fillStyle = '#60a5fa';
+      ctx.fillText('Stranice: ' + sidesCount, 16, 16);
+    }
+    if (diagCount !== null) {
+      ctx.fillStyle = '#f472b6';
+      ctx.fillText('Dijagonale: ' + diagCount, 16, 36);
+    }
+  }
+
+  function drawScene(showSides, showDiags, diagLimit) {
+    drawBackground();
+
+    const diagsToShow = diagLimit !== undefined ? diagonals.slice(0, diagLimit) : diagonals;
+
+    // Draw sides
+    if (showSides) {
+      sides.forEach(function(s) {
+        const v1 = vertices[s[0]];
+        const v2 = vertices[s[1]];
+        drawLine(v1.x, v1.y, v2.x, v2.y, 'rgba(96,165,250,0.7)', 2.5, null);
+      });
+    }
+
+    // Draw diagonals
+    if (showDiags) {
+      diagsToShow.forEach(function(d, idx) {
+        const v1 = vertices[d[0]];
+        const v2 = vertices[d[1]];
+        const alpha = diagLimit !== undefined && idx === diagLimit - 1 ? 1 : 0.6;
+        const color = 'rgba(244,114,182,' + alpha + ')';
+        const width = diagLimit !== undefined && idx === diagLimit - 1 ? 3 : 1.8;
+        drawLine(v1.x, v1.y, v2.x, v2.y, color, width, [6, 4]);
+      });
+    }
+
+    // Draw vertices
+    vertices.forEach(function(v, i) {
+      drawVertex(v.x, v.y, labels[i], false);
+    });
+
+    // Counter
+    const sc = showSides ? sides.length : null;
+    const dc = showDiags ? (diagLimit !== undefined ? diagLimit : diagonals.length) : null;
+    drawCounter(sc, dc);
+  }
+
+  function render() {
+    if (mode === 'sides') {
+      drawScene(true, false);
+    } else if (mode === 'diagonals') {
+      drawScene(false, true);
+    } else if (mode === 'all') {
+      drawScene(true, true);
+    } else if (mode === 'animate') {
+      // handled by animation loop
+    }
+  }
+
+  function startAnimation() {
+    animDiagIndex = 0;
+    animStartTime = performance.now();
+    cancelAnimationFrame(animFrame);
+    function tick(now) {
+      const elapsed = now - animStartTime;
+      const count = Math.min(Math.floor(elapsed / DIAG_INTERVAL) + 1, diagonals.length);
+      drawScene(true, true, count);
+      if (count < diagonals.length) {
+        animFrame = requestAnimationFrame(tick);
+      }
+    }
+    animFrame = requestAnimationFrame(tick);
+  }
+
+  function stopAnimation() {
+    cancelAnimationFrame(animFrame);
+  }
+
+  function setActive(btnId) {
+    var buttons = document.querySelectorAll('.canvas-controls button');
+    buttons.forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById(btnId).classList.add('active');
+  }
+
+  document.getElementById('btnSides').addEventListener('click', function() {
+    stopAnimation();
+    mode = 'sides';
+    setActive('btnSides');
+    render();
+  });
+
+  document.getElementById('btnDiagonals').addEventListener('click', function() {
+    stopAnimation();
+    mode = 'diagonals';
+    setActive('btnDiagonals');
+    render();
+  });
+
+  document.getElementById('btnAll').addEventListener('click', function() {
+    stopAnimation();
+    mode = 'all';
+    setActive('btnAll');
+    render();
+  });
+
+  document.getElementById('btnAnimate').addEventListener('click', function() {
+    mode = 'animate';
+    setActive('btnAnimate');
+    startAnimation();
+  });
+
+  // Step click interactivity
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  // Initial render
+  render();
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Dijagonale sedmougla",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["dijagonale", "poligon", "kombinatorika", "binomni koeficijent", "sedmougao"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kompozitna funkcija - Nalazenje vrednosti</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Ako je f((x+4)/(x-3)) = 4x - 5, koliko je f(2)?
+  Options: a) 35  b) 32  c) 45  d) 16
+
+  Key insight: f is defined through a composite expression. To find f(2), we need
+  to find the value of x such that the inner expression (x+4)/(x-3) equals 2.
+
+  Step 1: Set up the equation
+    (x + 4) / (x - 3) = 2
+
+  Step 2: Solve for x
+    x + 4 = 2(x - 3)
+    x + 4 = 2x - 6
+    4 + 6 = 2x - x
+    10 = x
+    x = 10
+
+  Step 3: Verify inner expression
+    (10 + 4) / (10 - 3) = 14 / 7 = 2 ✓
+
+  Step 4: Compute f(2)
+    f(2) = f((10+4)/(10-3)) = 4(10) - 5 = 40 - 5 = 35
+
+  Answer: a) 35
+
+  Verification:
+    When x = 10: (x+4)/(x-3) = 14/7 = 2, so f(2) = 4*10 - 5 = 35 ✓
+
+  Note on domain: x ≠ 3 (denominator can't be zero), and x = 10 satisfies this.
+
+  General approach for these problems:
+    Given f(g(x)) = h(x), to find f(a):
+    1. Solve g(x) = a for x
+    2. Substitute that x into h(x) to get f(a) = h(x_0)
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-text {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+  padding: 8px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step:hover {
+  background: rgba(96, 165, 250, 0.04);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-note {
+  color: #34d399;
+  font-size: 1.2rem;
+  margin-top: 8px;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.final-option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 24px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.verification-note {
+  margin-top: 18px;
+  padding: 14px 18px;
+  background: rgba(52, 211, 153, 0.06);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid {
+    flex-direction: column;
+  }
+  .final-options {
+    flex-direction: column;
+    align-items: center;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Kompozitna funkcija - nalazenje vrednosti</h1>
+  <p class="subtitle">Funkcije i jednacine — rad sa kompozicijom funkcija i inverznim nalazom argumenta</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <div class="problem-text">
+      <p>Ako je \( f\!\left(\dfrac{x+4}{x-3}\right) = 4x - 5 \), koliko je \( f(2) \)?</p>
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">
+          <div class="label">(A)</div>
+          <div class="value">\( 35 \)</div>
+        </div>
+        <div class="given-item answer-option" data-option="B">
+          <div class="label">(B)</div>
+          <div class="value">\( 32 \)</div>
+        </div>
+        <div class="given-item answer-option" data-option="C">
+          <div class="label">(C)</div>
+          <div class="value">\( 45 \)</div>
+        </div>
+        <div class="given-item answer-option" data-option="D">
+          <div class="label">(D)</div>
+          <div class="value">\( 16 \)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan resavanja</div>
+    <p class="plan-text">
+      Funkcija \( f \) je definisana posredno: znamo sta je \( f \) od nekog izraza, a treba nam \( f(2) \). Pronacicemo vrednost \( x \) za koju unutrasnji izraz \( \frac{x+4}{x-3} \) postaje tacno 2, a zatim tu vrednost \( x \) uvrstiti u desnu stranu \( 4x - 5 \).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Kljucni pojmovi o kompozitnim funkcijama (klikni da otvoris)</summary>
+      <div class="detail-content">
+        <p><strong>Kompozicija funkcija:</strong> Ako imamo funkcije \( f \) i \( g \), kompozicija \( f \circ g \) je definisana kao:</p>
+        <div class="step-math">
+          \[ (f \circ g)(x) = f\big(g(x)\big) \]
+        </div>
+        <p style="margin-top: 12px;">U nasem zadatku, unutrasnja funkcija je \( g(x) = \dfrac{x+4}{x-3} \), a znamo da je:</p>
+        <div class="step-math">
+          \[ f\big(g(x)\big) = 4x - 5 \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Tehnika nalazenja vrednosti \( f(a) \):</strong></p>
+        <p>Kada je \( f \) definisana preko kompozicije \( f(g(x)) = h(x) \), da bismo nasli \( f(a) \):</p>
+        <ol style="margin: 10px 0 0 20px; color: #94a3b8;">
+          <li>Resimo jednacinu \( g(x) = a \) po \( x \) i dobijemo \( x = x_0 \)</li>
+          <li>Uvrstimo u desnu stranu: \( f(a) = h(x_0) \)</li>
+        </ol>
+        <p style="margin-top: 12px;"><strong>Zasto ovo radi?</strong> Jer ako \( g(x_0) = a \), tada \( f(g(x_0)) = f(a) \), a leva strana je po definiciji jednaka \( h(x_0) \).</p>
+        <div class="step-math">
+          \[ g(x_0) = a \implies f(a) = f\big(g(x_0)\big) = h(x_0) \]
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Vizuelni prikaz</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="700" height="400"></canvas>
+    </div>
+    <p class="canvas-caption">Dijagram toka: kako ulaz \( x = 10 \) prolazi kroz unutrasnju funkciju, pa zatim kroz \( f \)</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Razumemo strukturu zadatka</div>
+        <p>Dato nam je da je:</p>
+        <div class="step-math">
+          \[ f\!\left(\frac{x+4}{x-3}\right) = 4x - 5 \]
+        </div>
+        <p>Ovo znaci: kad god u funkciju \( f \) ubacimo vrednost \( \frac{x+4}{x-3} \), rezultat je \( 4x - 5 \).</p>
+        <p>Mi treba da nadjemo \( f(2) \), sto znaci da nas zanima: sta funkcija \( f \) vraca kada joj je <strong>argument jednak 2</strong>?</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Postavimo jednacinu za unutrasnji izraz</div>
+        <p>Da bismo koristili datu formulu, potrebno je da unutrasnji izraz bude jednak 2. Dakle, trazimo \( x \) takvo da:</p>
+        <div class="step-math">
+          \[ \frac{x + 4}{x - 3} = 2 \]
+        </div>
+        <p>Kada nadjemo takvo \( x \), moci cemo da primenimo datu formulu da izracunamo \( f(2) \).</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Resimo jednacinu po \( x \)</div>
+        <p>Pomnozimo obe strane sa \( (x - 3) \), uz uslov da je \( x \neq 3 \):</p>
+        <div class="step-math">
+          \[ x + 4 = 2(x - 3) \]
+        </div>
+        <p>Raspisemo desnu stranu:</p>
+        <div class="step-math">
+          \[ x + 4 = 2x - 6 \]
+        </div>
+        <p>Prebacimo \( x \) na desnu stranu i konstante na levu:</p>
+        <div class="step-math">
+          \[ 4 + 6 = 2x - x \]
+        </div>
+        <div class="step-math">
+          \[ 10 = x \]
+        </div>
+        <p>Dakle, \( x = 10 \).</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Da li je \( x = 10 \) u domenu?</summary>
+            <div class="detail-content">
+              Da! Uslov je da imenilac ne bude nula, tj. \( x \neq 3 \). Posto je \( 10 \neq 3 \), vrednost je u domenu.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Proverimo da unutrasnji izraz zaista daje 2</div>
+        <p>Uvrstimo \( x = 10 \) u izraz \( \frac{x+4}{x-3} \):</p>
+        <div class="step-math">
+          \[ \frac{10 + 4}{10 - 3} = \frac{14}{7} = 2 \quad \checkmark \]
+        </div>
+        <p>Odlicno! Kada je \( x = 10 \), argument funkcije \( f \) je zaista jednak 2.</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Izracunamo \( f(2) \)</div>
+        <p>Sada koristimo datu formulu. Posto znamo da za \( x = 10 \) vazi \( f\!\left(\frac{x+4}{x-3}\right) = 4x - 5 \), dobijamo:</p>
+        <div class="step-math">
+          \[ f(2) = 4 \cdot 10 - 5 \]
+        </div>
+        <div class="step-math">
+          \[ f(2) = 40 - 5 \]
+        </div>
+        <div class="step-math">
+          \[ f(2) = 35 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Koji korak je bio kljucan?</summary>
+            <div class="detail-content">
+              Kljucan korak je bio nalazenje vrednosti \( x = 10 \) takve da je \( \frac{x+4}{x-3} = 2 \). To nam je omogucilo da direktno upotrebimo desnu stranu formule \( 4x - 5 \) za racunanje \( f(2) \).
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Sta bi bilo \( f(3) \)?</summary>
+        <div class="detail-content">
+          <p>Primenimo isti metod! Resavamo \( \frac{x+4}{x-3} = 3 \):</p>
+          <p>\( x + 4 = 3(x-3) = 3x - 9 \)</p>
+          <p>\( 4 + 9 = 3x - x \implies 13 = 2x \implies x = 6{,}5 \)</p>
+          <p>\( f(3) = 4 \cdot 6{,}5 - 5 = 26 - 5 = 21 \)</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Kljucni uvid</div>
+    <p>Kada je funkcija \( f \) definisana posredno, tj. kroz kompoziciju poput \( f(g(x)) = h(x) \), ne pokusavajte da "izvucete" formulu za \( f(t) \) u opstu obliku (mada je to moguce). Mnogo je jednostavnije i brze da za konkretnu trazenu vrednost argumenta postavite jednacinu \( g(x) = a \), nadjete odgovarajuce \( x \), i zatim izracunate \( h(x) \).</p>
+    <div class="step-math" style="margin-top: 14px;">
+      \[ \frac{x+4}{x-3} = 2 \implies x = 10 \implies f(2) = 4 \cdot 10 - 5 = 35 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( f(2) = 35 \)</div>
+    <div class="answer-note">Tacan odgovor je (A)</div>
+    <div class="final-options">
+      <div class="final-option correct">(A) \( 35 \)</div>
+      <div class="final-option">(B) \( 32 \)</div>
+      <div class="final-option">(C) \( 45 \)</div>
+      <div class="final-option">(D) \( 16 \)</div>
+    </div>
+    <div class="verification-note">
+      <strong>Provera:</strong> Za \( x = 10 \) vazi \( \frac{10+4}{10-3} = \frac{14}{7} = 2 \), pa je \( f(2) = 4 \cdot 10 - 5 = 35 \). Rezultat je celobrojan i poklapa se sa jednim od ponudjenih odgovora, sto potvrdjuje korektnost.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Ceste greske</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Zamena \( x = 2 \) direktno u formulu:</strong> Mnogi ucenici pogreno uvrste \( x = 2 \) u \( 4x - 5 \) i dobiju \( 4 \cdot 2 - 5 = 3 \). Ovo je pogresno jer \( x = 2 \) ne znaci da je argument funkcije \( f \) jednak 2! Argument funkcije \( f \) je \( \frac{x+4}{x-3} \), a ne sam \( x \). Za \( x = 2 \), argument bi bio \( \frac{6}{-1} = -6 \), pa bismo dobili \( f(-6) = 3 \), ne \( f(2) \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Greska pri resavanju jednacine:</strong> Kod mnozenja sa \( (x-3) \), cesta greska je zaboraviti distribuciju: \( 2(x-3) = 2x - 6 \), a ne \( 2x - 3 \). Uvek pazljivo raspisujte zagrade!</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Pokusajte da nadjete opstu formulu za \( f(t) \) u zavisnosti od \( t \). Naime, ako izrazite \( x \) iz jednacine \( \frac{x+4}{x-3} = t \) i uvrstite u \( 4x - 5 \), dobicete eksplicitan izraz za \( f(t) \).</p>
+    <details>
+      <summary>Pogledaj hint</summary>
+      <div class="detail-content">
+        <p>Iz \( \frac{x+4}{x-3} = t \) dobijamo \( x + 4 = t(x-3) = tx - 3t \), pa \( x(t-1) = 3t + 4 \), tj. \( x = \frac{3t+4}{t-1} \) za \( t \neq 1 \).</p>
+        <p style="margin-top: 8px;">Sada: \( f(t) = 4 \cdot \frac{3t+4}{t-1} - 5 = \frac{12t + 16}{t-1} - 5 = \frac{12t + 16 - 5(t-1)}{t-1} = \frac{7t + 21}{t-1} = \frac{7(t+3)}{t-1} \).</p>
+        <p style="margin-top: 8px;">Provera: \( f(2) = \frac{7 \cdot 5}{1} = 35 \) ✓</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function roundRect(x, y, w, h, r, fillColor, strokeColor) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+    if (fillColor) {
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    if (strokeColor) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  function drawArrow(fromX, fromY, toX, toY, color) {
+    const headLen = 12;
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headLen * Math.cos(angle - Math.PI / 6), toY - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(toX - headLen * Math.cos(angle + Math.PI / 6), toY - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const midY = H / 2;
+
+    // === Row 1: Flow diagram ===
+    // Input box: x = 10
+    const boxW = 120;
+    const boxH = 50;
+    const gap = 50;
+    const startX = 30;
+    const row1Y = 70;
+
+    // Box 1: x = 10
+    roundRect(startX, row1Y - boxH / 2, boxW, boxH, 10, 'rgba(96, 165, 250, 0.15)', '#60a5fa');
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('x = 10', startX + boxW / 2, row1Y);
+
+    // Arrow 1
+    const arr1Start = startX + boxW;
+    const arr1End = arr1Start + gap;
+    drawArrow(arr1Start, row1Y, arr1End, row1Y, '#94a3b8');
+
+    // Box 2: g(x) = (x+4)/(x-3)
+    const box2W = 170;
+    roundRect(arr1End, row1Y - boxH / 2, box2W, boxH, 10, 'rgba(167, 139, 250, 0.15)', '#a78bfa');
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('g(x) = (x+4)/(x\u22123)', arr1End + box2W / 2, row1Y);
+
+    // Label above
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Unutrasnja funkcija', arr1End + box2W / 2, row1Y - boxH / 2 - 12);
+
+    // Arrow 2
+    const arr2Start = arr1End + box2W;
+    const arr2End = arr2Start + gap;
+    drawArrow(arr2Start, row1Y, arr2End, row1Y, '#94a3b8');
+
+    // Result: 14/7 = 2
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('14/7 = 2', (arr2Start + arr2End) / 2, row1Y - 18);
+
+    // Box 3: f(2) = ?
+    const box3W = 120;
+    roundRect(arr2End, row1Y - boxH / 2, box3W, boxH, 10, 'rgba(52, 211, 153, 0.15)', '#34d399');
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('f(2) = ?', arr2End + box3W / 2, row1Y);
+
+    // Label above
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Trazena vrednost', arr2End + box3W / 2, row1Y - boxH / 2 - 12);
+
+    // === Row 2: Calculation flow ===
+    const row2Y = 185;
+
+    // Step labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Korak 1: Resimo (x+4)/(x\u22123) = 2', 40, row2Y);
+    ctx.fillText('Korak 2: x + 4 = 2(x \u2212 3)', 40, row2Y + 30);
+    ctx.fillText('Korak 3: x + 4 = 2x \u2212 6', 40, row2Y + 60);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Korak 4: x = 10', 40, row2Y + 90);
+
+    // Vertical separator
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(W / 2, row2Y - 20);
+    ctx.lineTo(W / 2, row2Y + 110);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Right side: substitution
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Uvrstimo x = 10 u formulu:', W / 2 + 30, row2Y);
+    ctx.fillText('f(2) = 4x \u2212 5', W / 2 + 30, row2Y + 30);
+    ctx.fillText('f(2) = 4 \u00B7 10 \u2212 5', W / 2 + 30, row2Y + 60);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('f(2) = 35', W / 2 + 30, row2Y + 90);
+
+    // === Bottom: Final result ===
+    const bottomY = H - 50;
+
+    // Result highlight
+    roundRect(W / 2 - 100, bottomY - 22, 200, 44, 12, 'rgba(52, 211, 153, 0.12)', '#34d399');
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('f(2) = 35', W / 2, bottomY + 2);
+
+    // Decorative label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Odgovor: (A)', W / 2, bottomY + 30);
+  }
+
+  draw();
+
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Kompozitna funkcija - nalazenje f(2)",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompozitna funkcija", "jednacine", "funkcije", "inverzni problem", "racionalni izrazi"]
+}
+BRAINSPARK_META-->

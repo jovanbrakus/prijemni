@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir stepena imaginarne jedinice</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Izracunati zbir 1 + i + i^2 + ... + i^2000, gde je i^2 = -1.
+
+Poznato:
+- i je imaginarna jedinica, i^2 = -1
+- Trazimo S = sum(i^k, k=0..2000) = 1 + i + i^2 + ... + i^2000
+
+Korak 1: Ciklicnost stepena imaginarne jedinice.
+Stepeni od i se ponavljaju sa periodom 4:
+  i^0 = 1
+  i^1 = i
+  i^2 = -1
+  i^3 = -i
+  i^4 = 1 (ponovo)
+  i^5 = i (ponovo)
+  ...
+
+Korak 2: Zbir jednog punog ciklusa.
+  i^0 + i^1 + i^2 + i^3 = 1 + i + (-1) + (-i) = 0
+
+Korak 3: Koliko imamo clanova?
+  Indeksi idu od k=0 do k=2000, sto znaci ukupno 2001 clan.
+
+Korak 4: Koliko punih ciklusa i koliko preostaje?
+  2001 / 4 = 500 ostatak 1
+  Dakle: 500 punih ciklusa (svaki daje zbir 0) + 1 preostali clan.
+
+Korak 5: Koji je preostali clan?
+  Posle 500 punih ciklusa (2000 clanova, indeksi 0 do 1999), preostaje samo
+  clan sa indeksom k = 2000.
+  i^2000 = i^(4*500) = (i^4)^500 = 1^500 = 1
+
+Korak 6: Konacni zbir.
+  S = 500 * 0 + i^2000 = 0 + 1 = 1
+
+Alternativni pristup - formula za geometrijski red:
+  S = (i^2001 - 1) / (i - 1)
+  i^2001 = i^(4*500+1) = i^1 = i
+  S = (i - 1) / (i - 1) = 1
+
+Odgovor: S = 1, sto je opcija C.
+
+Provera:
+- 500 * 4 = 2000, 2000 + 1 = 2001 clanova -- tacno
+- Svaki ciklus (4 clana) daje zbir 0 -- tacno
+- i^2000 = 1 jer je 2000 deljivo sa 4 -- tacno
+- Formula za geometrijski red takodje daje 1 -- potvrdjeno
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.step-container:hover {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 6px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.4);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-box h2 {
+  color: #4ade80;
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+}
+
+.final-answer-text {
+  font-size: 1.5rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.answer-opt {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.answer-opt.correct {
+  border-color: #4ade80;
+  background: rgba(52,211,153,0.15);
+  color: #4ade80;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(52,211,153,0.06);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #a78bfa;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+}
+
+.pitfall {
+  background: rgba(224,148,104,0.08);
+  border: 1px solid rgba(224,148,104,0.2);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.pitfall-title {
+  color: #e09468;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.canvas-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  text-align: center;
+}
+
+.canvas-card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+
+.challenge-card {
+  background: rgba(244,114,182,0.06);
+  border: 1px solid rgba(244,114,182,0.2);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .given-grid { flex-direction: column; }
+  .answer-options-final { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Zbir stepena imaginarne jedinice</h1>
+  <p class="subtitle">Kompleksni brojevi - Ciklicnost stepena imaginarne jedinice i geometrijski red</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Zbir \( 1 + i + i^2 + \ldots + i^{2000} \), gde je \( i^2 = -1 \), jednak je:</p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Imaginarna jedinica</div>
+        <div class="value">\( i^2 = -1 \)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Zbir</div>
+        <div class="value">\( \displaystyle\sum_{k=0}^{2000} i^k \)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Broj clanova</div>
+        <div class="value">\( 2001 \)</div>
+      </div>
+    </div>
+    <div class="given-grid" style="margin-top: 20px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( i \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( -i \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( -1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( 0 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2>Plan resavanja</h2>
+    <p>Iskoristicemo cinjenicu da se stepeni imaginarne jedinice \( i \) ponavljaju sa periodom 4, pa je zbir svakog punog ciklusa od 4 uzastopna stepena jednak nuli. Prebrojacemo koliko punih ciklusa staje u 2001 clan i odrediti preostale clanove.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Kljucne formule i teoreme</summary>
+      <div style="margin-top: 12px;">
+        <ul style="list-style: none; padding: 0;">
+          <li style="margin-bottom: 14px;"><strong>Ciklicnost stepena od \( i \):</strong> Stepeni imaginarne jedinice se ponavljaju sa periodom 4:
+            \[ i^0 = 1, \quad i^1 = i, \quad i^2 = -1, \quad i^3 = -i, \quad i^4 = 1, \quad \ldots \]
+            Generalno: \( i^n = i^{n \bmod 4} \).
+          </li>
+          <li style="margin-bottom: 14px;"><strong>Zbir jednog ciklusa:</strong>
+            \[ i^0 + i^1 + i^2 + i^3 = 1 + i + (-1) + (-i) = 0 \]
+          </li>
+          <li style="margin-bottom: 14px;"><strong>Formula za zbir geometrijskog reda:</strong> Za \( q \neq 1 \):
+            \[ S_n = \frac{q^n - 1}{q - 1} \]
+          </li>
+          <li style="margin-bottom: 14px;"><strong>Deljenje sa ostatkom:</strong> Ako je \( n = 4k + r \) gde je \( 0 \leq r < 4 \), tada zbir prvih \( n \) stepena od \( i \) zavisi samo od ostatka \( r \).
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Interactive Diagram - Unit Circle with powers of i -->
+  <div class="canvas-card">
+    <h2>Stepeni imaginarne jedinice na jedinicnom krugu</h2>
+    <canvas id="unitCircleCanvas" width="700" height="500"></canvas>
+    <p class="drag-hint">Koristite dugme ispod za animaciju sabiranja clanova ciklusa.</p>
+    <div style="margin-top: 12px;">
+      <button id="animateBtn" style="background: linear-gradient(135deg, #60a5fa, #a78bfa); border: none; color: #0f172a; padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">Animiraj ciklus</button>
+      <button id="resetBtn" style="background: #334155; border: 1px solid #475569; color: #e2e8f0; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; margin-left: 8px;">Resetuj</button>
+    </div>
+  </div>
+
+  <!-- Step-by-step solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Odredimo ciklicnost stepena od \( i \)</h3>
+        <p>Imaginarna jedinica \( i \) ima svojstvo \( i^2 = -1 \). Izracunajmo prvih nekoliko stepena:</p>
+        <div class="math-block">
+          \[ i^0 = 1 \]
+        </div>
+        <div class="math-block">
+          \[ i^1 = i \]
+        </div>
+        <div class="math-block">
+          \[ i^2 = -1 \]
+        </div>
+        <div class="math-block">
+          \[ i^3 = i^2 \cdot i = (-1) \cdot i = -i \]
+        </div>
+        <div class="math-block">
+          \[ i^4 = i^3 \cdot i = (-i) \cdot i = -i^2 = -(-1) = 1 \]
+        </div>
+        <p class="note">Vidimo da je \( i^4 = 1 = i^0 \), pa se stepeni ponavljaju sa <span class="highlight">periodom 4</span>.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Izracunamo zbir jednog punog ciklusa</h3>
+        <p>Saberimo cetiri uzastopna stepena koji cine jedan ciklus:</p>
+        <div class="math-block">
+          \[ i^0 + i^1 + i^2 + i^3 = 1 + i + (-1) + (-i) \]
+        </div>
+        <p>Grupisemo realne i imaginarne delove:</p>
+        <div class="math-block">
+          \[ = (1 + (-1)) + (i + (-i)) = 0 + 0 = 0 \]
+        </div>
+        <p class="note">Zbir bilo koja cetiri uzastopna stepena od \( i \) je uvek \( 0 \).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko je \( i^7 + i^8 + i^9 + i^{10} \)?</summary>
+      <div style="margin-top: 10px;">
+        <p>To su takodje 4 uzastopna stepena od \( i \), pa je njihov zbir \( 0 \).</p>
+        <p>Provera: \( i^7 = -i \), \( i^8 = 1 \), \( i^9 = i \), \( i^{10} = -1 \). Zbir: \( -i + 1 + i + (-1) = 0 \).</p>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Prebrojimo clanove zbira</h3>
+        <p>Nas zbir je:</p>
+        <div class="math-block">
+          \[ S = i^0 + i^1 + i^2 + \ldots + i^{2000} \]
+        </div>
+        <p>Indeksi idu od \( k = 0 \) do \( k = 2000 \), sto znaci da imamo ukupno:</p>
+        <div class="math-block">
+          \[ 2000 - 0 + 1 = 2001 \text{ clan} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Podelimo na pune cikluse i ostatak</h3>
+        <p>Delimo broj clanova sa 4 (duzina jednog ciklusa):</p>
+        <div class="math-block">
+          \[ 2001 = 4 \cdot 500 + 1 \]
+        </div>
+        <p>Dakle, imamo <span class="highlight">500 punih ciklusa</span> (po 4 clana) i <span class="highlight">1 preostali clan</span>.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko clanova pokrivaju puni ciklusi?</summary>
+      <div style="margin-top: 10px;">
+        <p>\( 500 \times 4 = 2000 \) clanova (indeksi od \( k = 0 \) do \( k = 1999 \)).</p>
+        <p>Ostaje jos samo jedan clan: \( i^{2000} \).</p>
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Izracunamo zbir</h3>
+        <p>Svaki puni ciklus doprinosi zbiru \( 0 \), pa je:</p>
+        <div class="math-block">
+          \[ S = \underbrace{0 + 0 + \ldots + 0}_{500 \text{ ciklusa}} + i^{2000} \]
+        </div>
+        <p>Preostaje da odredimo \( i^{2000} \). Posto je \( 2000 = 4 \cdot 500 \):</p>
+        <div class="math-block">
+          \[ i^{2000} = (i^4)^{500} = 1^{500} = 1 \]
+        </div>
+        <p>Zato je:</p>
+        <div class="math-block">
+          \[ S = 0 + 1 = 1 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Potvrdi rezultat formulom za geometrijski red</summary>
+      <div style="margin-top: 10px;">
+        <p>Ovaj zbir je geometrijski red sa kolicnikom \( q = i \) i \( n = 2001 \) clanom:</p>
+        <p>\[ S = \frac{i^{2001} - 1}{i - 1} \]</p>
+        <p>Posto je \( 2001 = 4 \cdot 500 + 1 \), vazi \( i^{2001} = i^1 = i \).</p>
+        <p>\[ S = \frac{i - 1}{i - 1} = 1 \]</p>
+        <p>Rezultat se poklapa!</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p style="margin-bottom: 14px;">Stepeni imaginarne jedinice se ponavljaju sa periodom 4, a zbir svakog punog ciklusa je nula. Zato zbir zavisi samo od <span class="highlight">ostatka pri deljenju broja clanova sa 4</span>:</p>
+    <div class="math-block" style="font-size: 1.2rem;">
+      \[ \underbrace{1 + i + (-1) + (-i)}_{= \, 0} + \underbrace{1 + i + (-1) + (-i)}_{= \, 0} + \ldots + \underbrace{1}_{i^{2000}} = 1 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2>Konacni odgovor</h2>
+    <div class="final-answer-text">
+      \[ 1 + i + i^2 + \ldots + i^{2000} = 1 \]
+    </div>
+    <div class="answer-options-final">
+      <div class="answer-opt">(A) \( i \)</div>
+      <div class="answer-opt">(B) \( -i \)</div>
+      <div class="answer-opt correct">(C) \( 1 \)</div>
+      <div class="answer-opt">(D) \( -1 \)</div>
+      <div class="answer-opt">(E) \( 0 \)</div>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Potvrdili smo rezultat na dva nezavisna nacina: (1) grupisanjem u cikluse duzine 4, gde svaki daje zbir 0, uz ostatak \( i^{2000} = 1 \); i (2) primenom formule za geometrijski red \( S = \frac{i^{2001} - 1}{i - 1} = \frac{i - 1}{i - 1} = 1 \). Oba pristupa daju isti odgovor.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <div class="pitfall">
+      <div class="pitfall-title">Pogresan broj clanova</div>
+      <p>Cesta greska je reci da ima 2000 clanova umesto 2001. Zbir \( i^0 + i^1 + \ldots + i^{2000} \) ima indekse od 0 do 2000, sto je \( 2000 - 0 + 1 = 2001 \) clan. Ako pogresno uzmemo 2000 clanova, dobili bismo \( 2000 = 4 \times 500 \) (bez ostatka), pa bismo zakljucili da je zbir \( 0 \) - sto je pogresan odgovor (E).</p>
+    </div>
+    <div class="pitfall">
+      <div class="pitfall-title">Zaboravljanje da je \( i^0 = 1 \)</div>
+      <p>Zbir pocinje od \( i^0 = 1 \), ne od \( i^1 = i \). Ako bismo sabirali od \( i^1 \) do \( i^{2000} \), imali bismo 2000 clanova (tacno 500 ciklusa), i zbir bi bio \( 0 \). Ali postoji i clan \( i^0 = 1 \) na pocetku!</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Koliki je zbir \( 1 + i + i^2 + \ldots + i^{2023} \)?</p>
+    <details>
+      <summary>Hint</summary>
+      <div style="margin-top: 10px;">
+        <p>Imamo 2024 clana. Podelimo: \( 2024 = 4 \times 506 \). To je tacno 506 punih ciklusa bez ostatka. Sta to znaci za zbir?</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<!-- Interactive Unit Circle Canvas Script -->
+<script>
+(() => {
+  const canvas = document.getElementById('unitCircleCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.width;
+  const cssH = canvas.height;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  ctx.scale(dpr, dpr);
+
+  const centerX = cssW * 0.35;
+  const centerY = cssH / 2;
+  const radius = 140;
+
+  // Points on the unit circle: i^0=1, i^1=i, i^2=-1, i^3=-i
+  const points = [
+    { re: 1, im: 0, label: 'i\u2070 = 1', color: '#4ade80' },
+    { re: 0, im: 1, label: 'i\u00B9 = i', color: '#60a5fa' },
+    { re: -1, im: 0, label: 'i\u00B2 = -1', color: '#f472b6' },
+    { re: 0, im: -1, label: 'i\u00B3 = -i', color: '#a78bfa' }
+  ];
+
+  let animStep = -1;
+  let animRunning = false;
+  let animId = null;
+  let animProgress = 0;
+
+  // Partial sums for animation: sum of i^0 ... i^k
+  const partialSums = [
+    { re: 1, im: 0 },    // after i^0
+    { re: 1, im: 1 },    // after i^1
+    { re: 0, im: 1 },    // after i^2
+    { re: 0, im: 0 }     // after i^3
+  ];
+
+  function toCanvas(re, im) {
+    return {
+      x: centerX + re * radius,
+      y: centerY - im * radius
+    };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    // Background
+    const bgGrad = ctx.createRadialGradient(cssW / 2, cssH / 2, 0, cssW / 2, cssH / 2, cssW * 0.6);
+    bgGrad.addColorStop(0, '#162036');
+    bgGrad.addColorStop(1, '#0c1222');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, cssW, cssH);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let g = -2; g <= 2; g++) {
+      const gx = centerX + g * radius;
+      ctx.beginPath();
+      ctx.moveTo(gx, 20);
+      ctx.lineTo(gx, cssH - 20);
+      ctx.stroke();
+      const gy = centerY - g * radius;
+      ctx.beginPath();
+      ctx.moveTo(20, gy);
+      ctx.lineTo(cssW * 0.65, gy);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.5;
+    // Real axis
+    ctx.beginPath();
+    ctx.moveTo(20, centerY);
+    ctx.lineTo(cssW * 0.65, centerY);
+    ctx.stroke();
+    // Imaginary axis
+    ctx.beginPath();
+    ctx.moveTo(centerX, 20);
+    ctx.lineTo(centerX, cssH - 20);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Re', cssW * 0.62, centerY - 10);
+    ctx.fillText('Im', centerX + 10, 35);
+
+    // Unit circle
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(96,165,250,0.25)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Dashed lines from origin to each point
+    ctx.setLineDash([5, 4]);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(226,232,240,0.15)';
+    for (const p of points) {
+      const cp = toCanvas(p.re, p.im);
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(cp.x, cp.y);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // Draw the four key points
+    for (let idx = 0; idx < points.length; idx++) {
+      const p = points[idx];
+      const cp = toCanvas(p.re, p.im);
+
+      // Glow
+      const glow = ctx.createRadialGradient(cp.x, cp.y, 0, cp.x, cp.y, 20);
+      glow.addColorStop(0, p.color + '40');
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cp.x, cp.y, 20, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Point
+      ctx.beginPath();
+      ctx.arc(cp.x, cp.y, 7, 0, 2 * Math.PI);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = p.color;
+      let lx = cp.x;
+      let ly = cp.y;
+      if (p.re === 1) { lx += 14; ly += 5; }
+      else if (p.re === -1) { lx -= 80; ly += 5; }
+      else if (p.im === 1) { lx += 14; ly -= 10; }
+      else { lx += 14; ly += 20; }
+      ctx.fillText(p.label, lx, ly);
+    }
+
+    // Animation: show partial sums being built up
+    if (animStep >= 0) {
+      drawSummation();
+    }
+
+    // Right panel: cycle explanation
+    drawCyclePanel();
+  }
+
+  function drawSummation() {
+    // Draw vectors showing the addition
+    const arrowColors = ['#4ade80', '#60a5fa', '#f472b6', '#a78bfa'];
+
+    // Running sum visualization: draw arrows head-to-tail
+    let curRe = 0, curIm = 0;
+
+    for (let k = 0; k <= Math.min(animStep, 3); k++) {
+      const p = points[k];
+      const startPt = toCanvas(curRe, curIm);
+      let endRe = curRe + p.re;
+      let endIm = curIm + p.im;
+
+      // If this is the current animating step, interpolate
+      if (k === animStep && animProgress < 1) {
+        endRe = curRe + p.re * animProgress;
+        endIm = curIm + p.im * animProgress;
+      }
+
+      const endPt = toCanvas(endRe, endIm);
+
+      // Draw arrow
+      ctx.beginPath();
+      ctx.moveTo(startPt.x, startPt.y);
+      ctx.lineTo(endPt.x, endPt.y);
+      ctx.strokeStyle = arrowColors[k];
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Arrowhead
+      const angle = Math.atan2(endPt.y - startPt.y, endPt.x - startPt.x);
+      const headLen = 10;
+      ctx.beginPath();
+      ctx.moveTo(endPt.x, endPt.y);
+      ctx.lineTo(endPt.x - headLen * Math.cos(angle - 0.4), endPt.y - headLen * Math.sin(angle - 0.4));
+      ctx.lineTo(endPt.x - headLen * Math.cos(angle + 0.4), endPt.y - headLen * Math.sin(angle + 0.4));
+      ctx.closePath();
+      ctx.fillStyle = arrowColors[k];
+      ctx.fill();
+
+      if (k < animStep || (k === animStep && animProgress >= 1)) {
+        curRe = curRe + p.re;
+        curIm = curIm + p.im;
+      } else {
+        curRe = endRe;
+        curIm = endIm;
+      }
+    }
+
+    // Draw current sum point
+    const sumPt = toCanvas(curRe, curIm);
+    ctx.beginPath();
+    ctx.arc(sumPt.x, sumPt.y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fill();
+
+    // Label the current sum
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    let sumLabel = 'S = ';
+    if (animStep >= 3 && animProgress >= 1) {
+      sumLabel += '0';
+    } else {
+      const displayRe = Math.round(curRe * 100) / 100;
+      const displayIm = Math.round(curIm * 100) / 100;
+      if (displayRe !== 0 && displayIm > 0) sumLabel += displayRe + ' + ' + displayIm + 'i';
+      else if (displayRe !== 0 && displayIm < 0) sumLabel += displayRe + ' - ' + Math.abs(displayIm) + 'i';
+      else if (displayRe !== 0) sumLabel += displayRe;
+      else if (displayIm !== 0) sumLabel += displayIm + 'i';
+      else sumLabel += '0';
+    }
+    ctx.fillText(sumLabel, sumPt.x + 10, sumPt.y - 10);
+  }
+
+  function drawCyclePanel() {
+    const px = cssW * 0.68;
+    const py = 40;
+    const pw = cssW * 0.30;
+
+    // Panel background
+    ctx.fillStyle = 'rgba(30,41,59,0.9)';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, cssH - 80, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    // Title
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Ciklus stepena', px + 16, py + 30);
+
+    // Period explanation
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    const lines = [
+      { text: 'Perioda = 4', y: py + 60 },
+    ];
+    for (const l of lines) {
+      ctx.fillText(l.text, px + 16, l.y);
+    }
+
+    // Cycle items
+    const cycleData = [
+      { exp: '0', val: '1', color: '#4ade80' },
+      { exp: '1', val: 'i', color: '#60a5fa' },
+      { exp: '2', val: '-1', color: '#f472b6' },
+      { exp: '3', val: '-i', color: '#a78bfa' }
+    ];
+
+    let cy = py + 85;
+    for (let idx = 0; idx < cycleData.length; idx++) {
+      const cd = cycleData[idx];
+      const highlighted = animStep === idx;
+
+      if (highlighted) {
+        ctx.fillStyle = 'rgba(96,165,250,0.1)';
+        ctx.beginPath();
+        ctx.roundRect(px + 10, cy - 12, pw - 20, 32, 6);
+        ctx.fill();
+      }
+
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = cd.color;
+      ctx.fillText('i', px + 20, cy + 6);
+      ctx.font = 'bold 10px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(cd.exp, px + 28, cy);
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText('= ' + cd.val, px + 42, cy + 6);
+
+      cy += 38;
+    }
+
+    // Sum line
+    cy += 5;
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px + 16, cy);
+    ctx.lineTo(px + pw - 16, cy);
+    ctx.stroke();
+
+    cy += 22;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('Zbir ciklusa = 0', px + 16, cy);
+
+    // Main calculation
+    cy += 45;
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px + 16, cy);
+    ctx.lineTo(px + pw - 16, cy);
+    ctx.stroke();
+
+    cy += 25;
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Nas problem:', px + 16, cy);
+
+    cy += 28;
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('2001 clanova', px + 16, cy);
+
+    cy += 24;
+    ctx.fillText('= 500 ciklusa + 1 clan', px + 16, cy);
+
+    cy += 30;
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('500 \u00D7 0 + i\u00B2\u2070\u2070\u2070', px + 16, cy);
+
+    cy += 24;
+    ctx.fillText('= 0 + 1', px + 16, cy);
+
+    cy += 30;
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('S = 1', px + 16, cy);
+  }
+
+  function animateStep() {
+    if (!animRunning) return;
+
+    animProgress += 0.03;
+    if (animProgress >= 1) {
+      animProgress = 1;
+      draw();
+
+      if (animStep < 3) {
+        setTimeout(() => {
+          animStep++;
+          animProgress = 0;
+          animId = requestAnimationFrame(animateStep);
+        }, 600);
+        return;
+      } else {
+        animRunning = false;
+        return;
+      }
+    }
+
+    draw();
+    animId = requestAnimationFrame(animateStep);
+  }
+
+  const animateBtn = document.getElementById('animateBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  animateBtn.addEventListener('click', () => {
+    if (animRunning) return;
+    animStep = 0;
+    animProgress = 0;
+    animRunning = true;
+    animateStep();
+  });
+
+  resetBtn.addEventListener('click', () => {
+    animRunning = false;
+    if (animId) cancelAnimationFrame(animId);
+    animStep = -1;
+    animProgress = 0;
+    draw();
+  });
+
+  // Step click highlight
+  document.querySelectorAll('.step-container').forEach(step => {
+    step.addEventListener('click', () => {
+      document.querySelectorAll('.step-container').forEach(s => {
+        s.style.borderLeftColor = 'transparent';
+        s.style.background = 'transparent';
+      });
+      step.style.borderLeftColor = '#4ade80';
+      step.style.background = 'rgba(96,165,250,0.05)';
+    });
+  });
+
+  // Initial draw
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir stepena imaginarne jedinice",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "imaginarna jedinica", "stepeni od i", "geometrijski red", "ciklicnost"]
+}
+BRAINSPARK_META-->

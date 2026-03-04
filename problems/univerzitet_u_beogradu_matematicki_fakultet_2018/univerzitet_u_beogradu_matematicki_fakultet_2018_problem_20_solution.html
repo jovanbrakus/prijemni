@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koeficijent u razvoju binoma</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Naci koeficijent uz x^20 u razvoju stepena binoma (x^2 + 2x)^11.
+
+Ponudjeni odgovori: A) 110  B) 220  C) 330  D) 440  E) 55
+Tacan odgovor: B) 220
+
+PRISTUP:
+Kljucna ideja je da izlucimo zajednicki faktor x iz izraza (x^2 + 2x).
+
+Korak 1: Faktorizacija baze
+  (x^2 + 2x)^11 = [x(x + 2)]^11 = x^11 * (x + 2)^11
+
+Korak 2: Odredjivanje potrebnog stepena
+  Trazimo koeficijent uz x^20.
+  Vec imamo x^11 ispred, pa iz (x + 2)^11 treba da dobijemo x^(20-11) = x^9.
+
+Korak 3: Binomna formula za (x + 2)^11
+  (x + 2)^11 = sum_{k=0}^{11} C(11,k) * x^k * 2^(11-k)
+
+Korak 4: Clan sa x^9
+  Za k = 9: C(11,9) * x^9 * 2^(11-9) = C(11,9) * x^9 * 2^2
+
+Korak 5: Racunanje
+  C(11,9) = C(11,2) = 11!/(2!*9!) = (11*10)/2 = 55
+  2^2 = 4
+  Koeficijent = 55 * 4 = 220
+
+Korak 6: Verifikacija
+  Koeficijent uz x^20 u x^11 * (x+2)^11 je koeficijent uz x^9 u (x+2)^11.
+  Opsti clan: C(11,k) * x^k * 2^(11-k), za k=9 daje C(11,9)*4 = 55*4 = 220.
+  Alternativno: direktno u (x^2 + 2x)^11 = sum C(11,k) * (x^2)^k * (2x)^(11-k)
+    = sum C(11,k) * x^(2k) * 2^(11-k) * x^(11-k)
+    = sum C(11,k) * 2^(11-k) * x^(k+11)
+  Za x^20: k+11 = 20 => k = 9
+  C(11,9) * 2^(11-9) = 55 * 4 = 220 ✓
+
+Odgovor: B) 220
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.final-option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: default;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.verification-note {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box h2 {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+.note-text {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid {
+    flex-direction: column;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+  .final-options {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- (a) Title & Subtitle -->
+  <h1>Koeficijent u razvoju stepena binoma</h1>
+  <p class="subtitle">Binomna formula -- odredjivanje koeficijenta uz zadati stepen promenljive</p>
+
+  <!-- (b) Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Koeficijent uz \( x^{20} \) u razvoju stepena binoma \( (x^2 + 2x)^{11} \) je:</p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Binom</div>
+        <div class="value">\( (x^2 + 2x)^{11} \)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Trazeni stepen</div>
+        <div class="value">\( x^{20} \)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Eksponent</div>
+        <div class="value">\( n = 11 \)</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top: 18px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( 110 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( 220 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( 330 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( 440 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( 55 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- (c) Plan -->
+  <div class="card">
+    <h2>Plan resavanja</h2>
+    <p class="plan-text">
+      Izlucicemo zajednicki faktor \( x \) iz binoma, a zatim primeniti binomnu formulu na \( (x + 2)^{11} \). Iz uslova da ukupni stepen bude 20, odredimo koji clan razvoja nam treba, pa izracunamo njegov koeficijent.
+    </p>
+  </div>
+
+  <!-- (d) Theory Refresher -->
+  <div class="card">
+    <h2>Podsetnik iz teorije</h2>
+    <details>
+      <summary>Binomna formula i binomni koeficijenti (klikni da otvoris)</summary>
+      <div class="detail-content">
+        <p><strong>Binomna formula (Njutnova):</strong></p>
+        <div class="step-math">
+          \[ (a + b)^n = \sum_{k=0}^{n} \binom{n}{k}\, a^k \cdot b^{n-k} \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Binomni koeficijent:</strong></p>
+        <div class="step-math">
+          \[ \binom{n}{k} = \frac{n!}{k!\,(n-k)!} \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Simetrija binomnog koeficijenta:</strong></p>
+        <div class="step-math">
+          \[ \binom{n}{k} = \binom{n}{n-k} \]
+        </div>
+        <p style="margin-top: 10px;">Na primer: \( \binom{11}{9} = \binom{11}{2} = \frac{11 \cdot 10}{2} = 55 \). Ovo drasticno pojednostavljuje racun.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- (e) Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz -- binomni razvoj</h2>
+    <div class="canvas-wrapper">
+      <canvas id="binomCanvas" width="800" height="450"></canvas>
+    </div>
+    <p class="canvas-caption">Pomeri klizac da vidis kako se menja koeficijent za razlicite stepene \( x \) u razvoju \( (x^2 + 2x)^{11} \)</p>
+    <div style="text-align: center; margin-top: 12px;">
+      <label for="powerSlider" style="color: #94a3b8; font-size: 0.95rem;">Stepen \( x \): </label>
+      <input type="range" id="powerSlider" min="11" max="22" value="20" style="width: 200px; vertical-align: middle;">
+      <span id="powerLabel" style="color: #60a5fa; font-weight: 600; font-size: 1.05rem; margin-left: 8px;">20</span>
+    </div>
+  </div>
+
+  <!-- (f) Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Faktorizacija baze binoma</div>
+        <p>Primetimo da oba clana u zagradi sadrze \( x \) kao faktor. Izlucimo ga:</p>
+        <div class="step-math">
+          \[ x^2 + 2x = x \cdot (x + 2) \]
+        </div>
+        <p>Sada ceo izraz postaje:</p>
+        <div class="step-math">
+          \[ (x^2 + 2x)^{11} = \bigl[x(x + 2)\bigr]^{11} = x^{11} \cdot (x + 2)^{11} \]
+        </div>
+        <p class="note-text">Koristili smo pravilo \( (a \cdot b)^n = a^n \cdot b^n \).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Odredimo koji clan razvoja nam treba</div>
+        <p>Trazimo koeficijent uz \( x^{20} \). Vec imamo faktor \( x^{11} \) ispred, pa iz razvoja \( (x+2)^{11} \) treba da dobijemo stepen:</p>
+        <div class="step-math">
+          \[ x^{20} = x^{11} \cdot x^{9} \quad \Longrightarrow \quad \text{potreban stepen u } (x+2)^{11} \text{ je } x^9 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Zasto bas x^9?</summary>
+        <div class="detail-content">
+          Posto vec imamo \( x^{11} \) kao faktor, a trazimo \( x^{20} \), racunamo: \( 20 - 11 = 9 \). Dakle, iz \( (x+2)^{11} \) nam treba clan koji sadrzi \( x^9 \).
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Primenimo binomnu formulu</div>
+        <p>Razvijamo \( (x + 2)^{11} \) pomocu binomne formule:</p>
+        <div class="step-math">
+          \[ (x + 2)^{11} = \sum_{k=0}^{11} \binom{11}{k}\, x^k \cdot 2^{11-k} \]
+        </div>
+        <p>Za \( x^9 \) biramo \( k = 9 \):</p>
+        <div class="step-math">
+          \[ \text{clan sa } x^9: \quad \binom{11}{9} \cdot x^9 \cdot 2^{11-9} = \binom{11}{9} \cdot x^9 \cdot 2^2 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Izracunajmo binomni koeficijent \( \binom{11}{9} \)</div>
+        <p>Koristimo simetriju: \( \binom{11}{9} = \binom{11}{2} \), sto je mnogo jednostavnije za racunanje:</p>
+        <div class="step-math">
+          \[ \binom{11}{9} = \binom{11}{2} = \frac{11!}{2! \cdot 9!} = \frac{11 \cdot 10}{2 \cdot 1} = \frac{110}{2} = 55 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko je \( 2^2 \)?</summary>
+        <div class="detail-content">
+          \( 2^2 = 4 \). Ovaj faktor dolazi iz toga sto je drugi clan binoma jednak 2, a on se pojavljuje na stepen \( 11 - 9 = 2 \).
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Izracunajmo konacan koeficijent</div>
+        <p>Sada mnozimo binomni koeficijent sa stepenom dvojke:</p>
+        <div class="step-math">
+          \[ \text{koeficijent uz } x^{20} = \binom{11}{9} \cdot 2^2 = 55 \cdot 4 = 220 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Moze li se zadatak resiti i bez faktorizacije?</summary>
+        <div class="detail-content">
+          <p>Da! Mozemo direktno primeniti binomnu formulu na \( (x^2 + 2x)^{11} \):</p>
+          <p>\[ (x^2 + 2x)^{11} = \sum_{k=0}^{11} \binom{11}{k} (x^2)^k (2x)^{11-k} = \sum_{k=0}^{11} \binom{11}{k} \cdot 2^{11-k} \cdot x^{2k + 11 - k} = \sum_{k=0}^{11} \binom{11}{k} \cdot 2^{11-k} \cdot x^{k+11} \]</p>
+          <p>Za \( x^{20} \): \( k + 11 = 20 \Rightarrow k = 9 \), pa je koeficijent \( \binom{11}{9} \cdot 2^2 = 55 \cdot 4 = 220 \). Isti rezultat!</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- (g) Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>Trik ovog zadatka je <strong>izlucivanje zajednickog faktora</strong> pre primene binomne formule. Umesto da radimo sa komplikovanim binomom \( (x^2 + 2x)^{11} \), sveli smo problem na mnogo jednostavniji \( (x + 2)^{11} \).</p>
+    <div class="step-math" style="margin-top: 14px;">
+      \[ \underbrace{(x^2 + 2x)^{11}}_{\text{komplikovano}} = x^{11} \cdot \underbrace{(x+2)^{11}}_{\text{standardna binomna forma}} \]
+    </div>
+    <p style="margin-top: 12px;">Koeficijent uz \( x^{20} \):</p>
+    <div class="step-math" style="margin-top: 8px;">
+      \[ \binom{11}{9} \cdot 2^2 = 55 \cdot 4 = \mathbf{220} \]
+    </div>
+  </div>
+
+  <!-- (h) Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( 220 \)</div>
+    <div class="final-options">
+      <div class="final-option">A) \( 110 \)</div>
+      <div class="final-option correct">B) \( 220 \)</div>
+      <div class="final-option">C) \( 330 \)</div>
+      <div class="final-option">D) \( 440 \)</div>
+      <div class="final-option">E) \( 55 \)</div>
+    </div>
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> Primetimo da su svi ponudjeni odgovori umnozci broja 55 (odnosno \( \binom{11}{2} \)):
+      \( 55 = 55 \cdot 1 \), \( 110 = 55 \cdot 2 \), \( 220 = 55 \cdot 4 \), \( 330 = 55 \cdot 6 \), \( 440 = 55 \cdot 8 \).
+      Nas faktor je \( 2^2 = 4 \), pa je odgovor \( 55 \cdot 4 = 220 \). Ovo ima smisla jer svaki odgovor odgovara razlicitom stepenu dvojke, a mi trazimo \( 2^2 \).
+    </div>
+  </div>
+
+  <!-- (i) Common Pitfalls -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <div class="pitfall">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Zaboravljanje faktora \( 2^{11-k} \):</strong> Mnogi ucenici izracunaju samo binomni koeficijent \( \binom{11}{9} = 55 \) i izaberu odgovor E). Medjutim, drugi clan binoma je \( 2x \) (ne samo \( x \)), pa ne smemo zaboraviti faktor \( 2^2 = 4 \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Pogresan stepen x:</strong> Ako se ne izvrsi faktorizacija \( x^2 + 2x = x(x+2) \), lako je pogresno identifikovati koji clan razvoja daje \( x^{20} \). Uvek pazljivo izracunajte stepen: \( x^{k+11} = x^{20} \Rightarrow k = 9 \).</p>
+    </div>
+  </div>
+
+  <!-- (j) Optional Challenge -->
+  <div class="challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Koji je koeficijent uz \( x^{15} \) u razvoju istog izraza \( (x^2 + 2x)^{11} \)?</p>
+    <details>
+      <summary>Pogledaj nagovestaj</summary>
+      <div class="detail-content">
+        <p>Ponovo koristimo: \( (x^2 + 2x)^{11} = x^{11} \cdot (x+2)^{11} \).</p>
+        <p>Za \( x^{15} \) treba nam \( x^{15-11} = x^4 \) iz \( (x+2)^{11} \), pa biramo \( k = 4 \).</p>
+        <p>Koeficijent: \( \binom{11}{4} \cdot 2^7 = 330 \cdot 128 = \ldots \) Probaj da zavrsis racun!</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // --- Interactive Canvas: Binomial coefficient visualization ---
+  const canvas = document.getElementById('binomCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const slider = document.getElementById('powerSlider');
+  const powerLabel = document.getElementById('powerLabel');
+
+  let selectedPower = 20;
+
+  function factorial(n) {
+    if (n <= 1) return 1;
+    let result = 1;
+    for (let i = 2; i <= n; i++) result *= i;
+    return result;
+  }
+
+  function binomCoeff(n, k) {
+    if (k < 0 || k > n) return 0;
+    if (k === 0 || k === n) return 1;
+    if (k > n - k) k = n - k;
+    let result = 1;
+    for (let i = 0; i < k; i++) {
+      result = result * (n - i) / (i + 1);
+    }
+    return Math.round(result);
+  }
+
+  // Compute coefficients for (x^2 + 2x)^11 = x^11 * (x+2)^11
+  // The coefficient of x^m (where m ranges from 11 to 22) is C(11, m-11) * 2^(11-(m-11)) = C(11, m-11) * 2^(22-m)
+  function getCoefficient(m) {
+    const k = m - 11;
+    if (k < 0 || k > 11) return 0;
+    return binomCoeff(11, k) * Math.pow(2, 11 - k);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Koeficijenti uz x^m u razvoju (x\u00B2 + 2x)\u00B9\u00B9', W / 2, 28);
+
+    // Bar chart: powers from 11 to 22
+    const powers = [];
+    const coeffs = [];
+    let maxCoeff = 0;
+    for (let m = 11; m <= 22; m++) {
+      powers.push(m);
+      const c = getCoefficient(m);
+      coeffs.push(c);
+      if (c > maxCoeff) maxCoeff = c;
+    }
+
+    const chartLeft = 80;
+    const chartRight = W - 40;
+    const chartTop = 55;
+    const chartBottom = H - 70;
+    const chartW = chartRight - chartLeft;
+    const chartH = chartBottom - chartTop;
+
+    const barCount = powers.length;
+    const barGap = 8;
+    const barWidth = (chartW - (barCount + 1) * barGap) / barCount;
+
+    // Y-axis grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    const gridSteps = 5;
+    for (let i = 0; i <= gridSteps; i++) {
+      const y = chartBottom - (i / gridSteps) * chartH;
+      ctx.beginPath();
+      ctx.moveTo(chartLeft, y);
+      ctx.lineTo(chartRight, y);
+      ctx.stroke();
+
+      const val = Math.round((i / gridSteps) * maxCoeff);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(val.toString(), chartLeft - 8, y + 4);
+    }
+
+    // Draw bars
+    for (let i = 0; i < barCount; i++) {
+      const m = powers[i];
+      const c = coeffs[i];
+      const barH = (c / maxCoeff) * chartH;
+      const x = chartLeft + barGap + i * (barWidth + barGap);
+      const y = chartBottom - barH;
+
+      const isSelected = m === selectedPower;
+
+      if (isSelected) {
+        // Glow effect
+        ctx.shadowColor = '#4ade80';
+        ctx.shadowBlur = 18;
+      }
+
+      ctx.fillStyle = isSelected ? '#4ade80' : '#60a5fa';
+      ctx.globalAlpha = isSelected ? 1.0 : 0.6;
+      ctx.beginPath();
+      ctx.roundRect(x, y, barWidth, barH, [4, 4, 0, 0]);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1.0;
+
+      // Coefficient value on top
+      ctx.fillStyle = isSelected ? '#4ade80' : '#94a3b8';
+      ctx.font = isSelected ? 'bold 13px Segoe UI, system-ui, sans-serif' : '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      if (barH > 15) {
+        ctx.fillText(c.toString(), x + barWidth / 2, y - 6);
+      }
+
+      // x-axis label
+      ctx.fillStyle = isSelected ? '#4ade80' : '#94a3b8';
+      ctx.font = isSelected ? 'bold 13px Segoe UI, system-ui, sans-serif' : '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('x\u00B9' + (m < 10 ? '' : '') + getSuper(m), x + barWidth / 2, chartBottom + 18);
+    }
+
+    // Axis lines
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(chartLeft, chartTop);
+    ctx.lineTo(chartLeft, chartBottom);
+    ctx.lineTo(chartRight, chartBottom);
+    ctx.stroke();
+
+    // Info box for selected power
+    const k = selectedPower - 11;
+    const coeff = getCoefficient(selectedPower);
+    const binC = binomCoeff(11, k);
+    const powOf2 = Math.pow(2, 11 - k);
+
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    ctx.strokeStyle = selectedPower === 20 ? '#4ade80' : '#60a5fa';
+    ctx.lineWidth = 1.5;
+    const infoX = W / 2 - 180;
+    const infoY = H - 55;
+    const infoW = 360;
+    const infoH = 42;
+    ctx.beginPath();
+    ctx.roundRect(infoX, infoY, infoW, infoH, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      'C(11,' + k + ') \u00B7 2^' + (11 - k) + ' = ' + binC + ' \u00B7 ' + powOf2 + ' = ' + coeff,
+      W / 2, infoY + 26
+    );
+  }
+
+  function getSuper(n) {
+    const sup = ['\u2070', '\u00B9', '\u00B2', '\u00B3', '\u2074', '\u2075', '\u2076', '\u2077', '\u2078', '\u2079'];
+    if (n < 10) return sup[n];
+    return sup[Math.floor(n / 10)] + sup[n % 10];
+  }
+
+  draw();
+
+  if (slider) {
+    slider.addEventListener('input', function() {
+      selectedPower = parseInt(this.value, 10);
+      if (powerLabel) powerLabel.textContent = selectedPower;
+      draw();
+    });
+  }
+
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+
+  // Touch support for slider (already native, but ensure canvas redraws)
+  if (slider) {
+    slider.addEventListener('touchstart', function(e) { e.stopPropagation(); });
+    slider.addEventListener('touchmove', function(e) { e.stopPropagation(); });
+  }
+
+  // Responsive redraw
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Koeficijent uz x^20 u razvoju binoma (x^2 + 2x)^11",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["binomna formula", "binomni koeficijenti", "razvoj stepena binoma", "kombinatorika"]
+}
+BRAINSPARK_META-->

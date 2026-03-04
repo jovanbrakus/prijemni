@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uprošćavanje algebarskog izraza</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Simplify (8x³ − 26x² + 5x + 3) / (8x² − 2x − 1), for x ≠ 1/2 and x ≠ −1/4.
+
+Step 1: Factor the denominator 8x² − 2x − 1.
+We need two numbers that multiply to 8·(−1) = −8 and add to −2.
+Those are −4 and 2: 8x² − 4x + 2x − 1 = 4x(2x−1) + 1(2x−1) = (4x+1)(2x−1).
+
+Step 2: Since x = 1/2 makes 2x−1 = 0 and x = −1/4 makes 4x+1 = 0, confirming the restrictions.
+
+Step 3: Factor the numerator 8x³ − 26x² + 5x + 3.
+Check if x = 3 is a root: P(3) = 8·27 − 26·9 + 5·3 + 3 = 216 − 234 + 15 + 3 = 0. Yes!
+So (x−3) is a factor. Verify: (x−3)(8x²−2x−1) = 8x³ − 2x² − x − 24x² + 6x + 3 = 8x³ − 26x² + 5x + 3 ✓
+
+Step 4: Therefore (8x³ − 26x² + 5x + 3)/(8x² − 2x − 1) = x − 3.
+
+Answer: а) x − 3
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.7;
+  padding: 2rem 1rem;
+}
+.container { max-width: 1200px; margin: 0 auto; }
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.3rem;
+}
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+}
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  text-align: center;
+  font-size: 1.1rem;
+}
+.answer-option { cursor: default; transition: border-color 0.3s; }
+.answer-option[data-option="a"] { border-color: #a78bfa; }
+
+.plan-list { list-style: none; padding-left: 0; }
+.plan-list li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  color: #94a3b8;
+}
+.plan-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: #60a5fa;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+}
+details summary {
+  padding: 1.2rem 1.8rem;
+  cursor: pointer;
+  color: #60a5fa;
+  font-size: 1.2rem;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+details summary::before { content: '▶'; font-size: 0.8rem; transition: transform 0.3s; }
+details[open] summary::before { transform: rotate(90deg); }
+details .details-content { padding: 0 1.8rem 1.5rem; }
+.theory-block {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin-bottom: 0.8rem;
+  border-left: 3px solid #a78bfa;
+}
+
+canvas#vizCanvas {
+  width: 100%;
+  height: 350px;
+  border-radius: 12px;
+  display: block;
+  background: #0f172a;
+}
+
+.step {
+  background: #0f172a;
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1rem;
+  border-left: 3px solid #334155;
+  cursor: pointer;
+  transition: border-color 0.3s, max-height 0.4s;
+}
+.step.active { border-left-color: #60a5fa; }
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.step-badge {
+  background: #60a5fa;
+  color: #0f172a;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.step-title { font-weight: 600; font-size: 1.05rem; }
+.step-content {
+  margin-top: 1rem;
+  padding-left: 2.8rem;
+  display: none;
+}
+.step.active .step-content { display: block; }
+.checkpoint {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid #34d399;
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin-top: 0.8rem;
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.insight-card {
+  border-left: 4px solid #f472b6;
+  background: rgba(244, 114, 182, 0.05);
+}
+.final-answer {
+  border: 2px solid #34d399;
+  background: rgba(52, 211, 153, 0.08);
+  text-align: center;
+}
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  margin: 1rem 0;
+}
+.options-review {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+.option-item {
+  padding: 0.7rem;
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid #334155;
+  background: #0f172a;
+}
+.option-item.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+}
+.pitfall {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.8rem;
+  border-left: 3px solid #f59e0b;
+}
+.pitfall-title { color: #f59e0b; font-weight: 600; margin-bottom: 0.3rem; }
+.challenge-card { border-left: 4px solid #a78bfa; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Uprošćavanje algebarskog izraza</h1>
+  <p class="subtitle">Deljenje polinoma i faktorizacija</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title">Zadatak</div>
+    <p>Algebarski izraz \(\dfrac{8x^3 - 26x^2 + 5x + 3}{8x^2 - 2x - 1}\), za \(x \neq \dfrac{1}{2}\) i \(x \neq -\dfrac{1}{4}\), je jednak:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="a">\(\textbf{а)}\ x - 3\)</div>
+      <div class="given-item answer-option" data-option="b">\(\textbf{б)}\ x - 1\)</div>
+      <div class="given-item answer-option" data-option="c">\(\textbf{в)}\ x + 3\)</div>
+      <div class="given-item answer-option" data-option="d">\(\textbf{г)}\ x + 1\)</div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title">Plan rešavanja</div>
+    <ul class="plan-list">
+      <li>Faktorizovati imenilac \(8x^2 - 2x - 1\)</li>
+      <li>Proveriti da li je \(x = 3\) nula brojioca (na osnovu ponuđenih odgovora)</li>
+      <li>Potvrditi faktorizaciju množenjem i skratiti razlomak</li>
+    </ul>
+  </div>
+
+  <!-- Theory Refresher -->
+  <details>
+    <summary>Teorijska osnova</summary>
+    <div class="details-content">
+      <div class="theory-block">
+        <strong>Faktorizacija kvadratnog trinoma</strong><br>
+        Za izraz \(ax^2 + bx + c\), tražimo dva broja čiji je proizvod \(a \cdot c\) a zbir \(b\). Zatim rastavljamo srednji član i grupišemo.
+      </div>
+      <div class="theory-block">
+        <strong>Teorema o faktoru</strong><br>
+        Ako je \(P(a) = 0\), tada je \((x - a)\) faktor polinoma \(P(x)\). Ovo je brz način za nalaženje faktora — dovoljno je proveriti da li je neka vrednost nula polinoma.
+      </div>
+      <div class="theory-block">
+        <strong>Deljenje polinoma</strong><br>
+        Ako je \(P(x) = Q(x) \cdot D(x)\), tada važi \(\dfrac{P(x)}{D(x)} = Q(x)\). Kada znamo jedan faktor, drugi dobijamo deljenjem ili direktnom proverom.
+      </div>
+    </div>
+  </details>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title">Vizuelni prikaz</div>
+    <canvas id="vizCanvas"></canvas>
+    <p style="color:#94a3b8; font-size:0.9rem; margin-top:0.8rem; text-align:center;">Grafik: \(f(x)=\frac{8x^3-26x^2+5x+3}{8x^2-2x-1}\) (zelena) i \(g(x)=x-3\) (plava) se poklapaju svuda osim u tačkama prekida</p>
+  </div>
+
+  <!-- Step-by-Step -->
+  <div class="card">
+    <div class="card-title">Rešenje korak po korak</div>
+
+    <div class="step active" onclick="toggleStep(this)">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <div class="step-title">Faktorizacija imenioca</div>
+      </div>
+      <div class="step-content">
+        <p>Razlažemo \(8x^2 - 2x - 1\). Tražimo dva broja čiji je proizvod \(8 \cdot (-1) = -8\) a zbir \(-2\).</p>
+        <p>To su \(-4\) i \(2\), jer \((-4) \cdot 2 = -8\) i \((-4) + 2 = -2\).</p>
+        <p>Rastavljamo srednji član:</p>
+        \[8x^2 - 2x - 1 = 8x^2 - 4x + 2x - 1\]
+        <p>Grupišemo:</p>
+        \[= 4x(2x - 1) + 1(2x - 1) = (4x + 1)(2x - 1)\]
+        <div class="checkpoint">Imenilac: \((4x + 1)(2x - 1)\). Nule su \(x = -\frac{1}{4}\) i \(x = \frac{1}{2}\) — upravo data ograničenja.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggleStep(this)">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <div class="step-title">Nalaženje faktora brojioca</div>
+      </div>
+      <div class="step-content">
+        <p>Brojilac je \(P(x) = 8x^3 - 26x^2 + 5x + 3\). Pošto su ponuđeni odgovori oblika \(x + a\), proverimo da li je neka od vrednosti \(3, 1, -3, -1\) nula brojioca.</p>
+        <p>Proverimo \(x = 3\):</p>
+        \[P(3) = 8 \cdot 27 - 26 \cdot 9 + 5 \cdot 3 + 3 = 216 - 234 + 15 + 3 = 0\]
+        <p>Pošto je \(P(3) = 0\), zaključujemo da je \((x - 3)\) faktor brojioca.</p>
+        <div class="checkpoint">Potvrđeno: \(x = 3\) je nula brojioca, pa je \((x - 3)\) faktor polinoma \(P(x)\).</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggleStep(this)">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <div class="step-title">Provera množenja</div>
+      </div>
+      <div class="step-content">
+        <p>Ako je rezultat \(x - 3\), tada mora da važi:</p>
+        \[8x^3 - 26x^2 + 5x + 3 = (x - 3)(8x^2 - 2x - 1)\]
+        <p>Proverimo:</p>
+        \[\begin{aligned}
+(x - 3)(8x^2 - 2x - 1) &= x \cdot 8x^2 + x \cdot (-2x) + x \cdot (-1) \\
+&\quad + (-3) \cdot 8x^2 + (-3) \cdot (-2x) + (-3) \cdot (-1) \\[6pt]
+&= 8x^3 - 2x^2 - x - 24x^2 + 6x + 3 \\[6pt]
+&= 8x^3 + (-2 - 24)x^2 + (-1 + 6)x + 3 \\[6pt]
+&= 8x^3 - 26x^2 + 5x + 3 \quad \checkmark
+\end{aligned}\]
+        <div class="checkpoint">Množenje potvrđuje: rezultat je tačan.</div>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggleStep(this)">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <div class="step-title">Skraćivanje razlomka</div>
+      </div>
+      <div class="step-content">
+        <p>Sada zapisujemo:</p>
+        \[\frac{8x^3 - 26x^2 + 5x + 3}{8x^2 - 2x - 1} = \frac{(x - 3)\cancel{(8x^2 - 2x - 1)}}{\cancel{(8x^2 - 2x - 1)}} = x - 3\]
+        <p>uz uslove \(x \neq \dfrac{1}{2}\) i \(x \neq -\dfrac{1}{4}\) (da imenilac ne bude jednak nuli).</p>
+        <div class="checkpoint">Konačan rezultat: \(x - 3\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <div class="card-title">Ključni uvid</div>
+    <p>Kod zadataka sa ponuđenim odgovorima, najbrži pristup je koristiti <strong>teoremu o faktoru</strong>: ako je odgovor \(x - a\), tada \(x = a\) mora biti nula brojioca. Dovoljno je uvrstiti kandidate iz ponuđenih odgovora u brojilac i proveriti koji daje nulu. Time izbegavamo dugačko deljenje polinoma.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <div class="card-title" style="justify-content:center;">Konačan odgovor</div>
+    <div class="answer-value">\(\dfrac{8x^3 - 26x^2 + 5x + 3}{8x^2 - 2x - 1} = x - 3\)</div>
+    <div class="options-review">
+      <div class="option-item correct">\(\textbf{а)}\ x - 3\ \checkmark\)</div>
+      <div class="option-item">\(\textbf{б)}\ x - 1\)</div>
+      <div class="option-item">\(\textbf{в)}\ x + 3\)</div>
+      <div class="option-item">\(\textbf{г)}\ x + 1\)</div>
+    </div>
+    <p style="margin-top:1rem; color:#94a3b8;">Verifikacija: \((x-3)(8x^2-2x-1) = 8x^3 - 26x^2 + 5x + 3\ \checkmark\)</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title">Česte greške</div>
+    <div class="pitfall">
+      <div class="pitfall-title">Pogrešan predznak pri množenju</div>
+      <p>Česta greška je zaboraviti minus pri \((-3) \cdot (-2x) = +6x\) ili \((-3) \cdot (-1) = +3\). Obratite pažnju na predznake kod svakog sabirka.</p>
+    </div>
+    <div class="pitfall">
+      <div class="pitfall-title">Zamena \(x - 3\) sa \(x + 3\)</div>
+      <p>Ako je \(P(3) = 0\), faktor je \((x - 3)\), a ne \((x + 3)\). Faktor \((x + 3)\) odgovarao bi nuli \(x = -3\).</p>
+    </div>
+    <div class="pitfall">
+      <div class="pitfall-title">Zaboravljanje uslova za \(x\)</div>
+      <p>Iako je rezultat \(x - 3\), originalni izraz nije definisan za \(x = \frac{1}{2}\) i \(x = -\frac{1}{4}\). Ovi uslovi se moraju navesti uz odgovor.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <div class="card-title">Dodatni izazov</div>
+    <p>Pokušajte da uprostite sličan izraz:</p>
+    \[\frac{6x^3 - 7x^2 - 7x + 6}{6x^2 + 5x - 6}\]
+    <p style="color:#94a3b8; margin-top:0.5rem;">Savet: Prvo faktorizujte imenilac, pa proverite koji ceo broj je nula brojioca.</p>
+  </div>
+
+</div>
+
+<script>
+function toggleStep(el) {
+  const wasActive = el.classList.contains('active');
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  if (!wasActive) el.classList.add('active');
+}
+
+// Canvas visualization
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth * 2;
+  canvas.height = canvas.offsetHeight * 2;
+  ctx.scale(2, 2);
+  draw();
+}
+
+function draw() {
+  const W = canvas.offsetWidth;
+  const H = canvas.offsetHeight;
+  ctx.clearRect(0, 0, W, H);
+
+  const xMin = -3, xMax = 6, yMin = -8, yMax = 5;
+  function toScreenX(x) { return (x - xMin) / (xMax - xMin) * W; }
+  function toScreenY(y) { return H - (y - yMin) / (yMax - yMin) * H; }
+
+  // Grid
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  for (let x = Math.ceil(xMin); x <= xMax; x++) {
+    ctx.beginPath();
+    ctx.moveTo(toScreenX(x), 0);
+    ctx.lineTo(toScreenX(x), H);
+    ctx.stroke();
+  }
+  for (let y = Math.ceil(yMin); y <= yMax; y++) {
+    ctx.beginPath();
+    ctx.moveTo(0, toScreenY(y));
+    ctx.lineTo(W, toScreenY(y));
+    ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(toScreenX(xMin), toScreenY(0));
+  ctx.lineTo(toScreenX(xMax), toScreenY(0));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(toScreenX(0), toScreenY(yMin));
+  ctx.lineTo(toScreenX(0), toScreenY(yMax));
+  ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px sans-serif';
+  for (let x = Math.ceil(xMin); x <= xMax; x++) {
+    if (x === 0) continue;
+    ctx.fillText(x, toScreenX(x) - 3, toScreenY(0) + 14);
+  }
+  for (let y = Math.ceil(yMin); y <= yMax; y++) {
+    if (y === 0) continue;
+    ctx.fillText(y, toScreenX(0) + 5, toScreenY(y) + 4);
+  }
+
+  // g(x) = x - 3 (blue line)
+  ctx.strokeStyle = '#60a5fa';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  let first = true;
+  for (let px = 0; px <= W; px++) {
+    const x = xMin + (px / W) * (xMax - xMin);
+    const y = x - 3;
+    if (y < yMin || y > yMax) { first = true; continue; }
+    if (first) { ctx.moveTo(px, toScreenY(y)); first = false; }
+    else ctx.lineTo(px, toScreenY(y));
+  }
+  ctx.stroke();
+
+  // f(x) = (8x³-26x²+5x+3)/(8x²-2x-1) (green, dashed)
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  first = true;
+  const step = 0.02;
+  for (let x = xMin; x <= xMax; x += step) {
+    const denom = 8*x*x - 2*x - 1;
+    if (Math.abs(denom) < 0.05) { first = true; continue; }
+    const y = (8*x*x*x - 26*x*x + 5*x + 3) / denom;
+    if (y < yMin - 2 || y > yMax + 2) { first = true; continue; }
+    const sy = toScreenY(y);
+    if (first) { ctx.moveTo(toScreenX(x), sy); first = false; }
+    else ctx.lineTo(toScreenX(x), sy);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Holes at x = 0.5 and x = -0.25
+  const holes = [
+    { x: 0.5, y: 0.5 - 3 },
+    { x: -0.25, y: -0.25 - 3 }
+  ];
+  holes.forEach(h => {
+    ctx.beginPath();
+    ctx.arc(toScreenX(h.x), toScreenY(h.y), 5, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+  });
+
+  // Labels for holes
+  ctx.fillStyle = '#f472b6';
+  ctx.font = '10px sans-serif';
+  ctx.fillText('x = 1/2', toScreenX(0.5) + 8, toScreenY(-2.5) - 2);
+  ctx.fillText('x = -1/4', toScreenX(-0.25) + 8, toScreenY(-3.25) - 2);
+
+  // Legend
+  ctx.font = '12px sans-serif';
+  const lx = W - 185, ly = 25;
+  ctx.strokeStyle = '#60a5fa';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(lx, ly + 2); ctx.lineTo(lx + 20, ly + 2); ctx.stroke();
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('g(x) = x \u2212 3', lx + 28, ly + 6);
+
+  ctx.setLineDash([4, 3]);
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(lx, ly + 20); ctx.lineTo(lx + 20, ly + 20); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('f(x) = P(x)/Q(x)', lx + 28, ly + 24);
+
+  ctx.beginPath();
+  ctx.arc(lx + 10, ly + 40, 4, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#0f172a'; ctx.fill();
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('Tačke prekida', lx + 28, ly + 44);
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Uprošćavanje algebarskog izraza sa polinomima","subject":"math","unit":"algebra","topic_tags":["faktorizacija_polinoma","deljenje_polinoma","racionalni_izrazi","algebarski_razlomci"]}
+BRAINSPARK_META-->

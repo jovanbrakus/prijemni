@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rekurentni niz sa periodicnim ponavljanjem</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Niz (a_n) odredjen je sa a_1 = 3, a_2 = 15 i a_{n+2} = a_{n+1} / a_n za n in N.
+Trazi se a_2019.
+
+Step 1: Compute the first several terms.
+  a_1 = 3
+  a_2 = 15
+  a_3 = a_2 / a_1 = 15 / 3 = 5
+  a_4 = a_3 / a_2 = 5 / 15 = 1/3
+  a_5 = a_4 / a_3 = (1/3) / 5 = 1/15
+  a_6 = a_5 / a_4 = (1/15) / (1/3) = (1/15) * (3/1) = 3/15 = 1/5
+  a_7 = a_6 / a_5 = (1/5) / (1/15) = (1/5) * (15/1) = 15/5 = 3
+  a_8 = a_7 / a_6 = 3 / (1/5) = 3 * 5 = 15
+
+Step 2: Observe that a_7 = a_1 = 3 and a_8 = a_2 = 15.
+  Since the recurrence a_{n+2} = a_{n+1}/a_n depends only on the two previous terms,
+  and the pair (a_7, a_8) = (3, 15) = (a_1, a_2), the sequence is periodic with period 6.
+
+  Period: a_1, a_2, a_3, a_4, a_5, a_6 = 3, 15, 5, 1/3, 1/15, 1/5
+  Then it repeats: a_7 = a_1, a_8 = a_2, etc.
+
+Step 3: Find a_2019.
+  We need n = 2019. Since the period is 6:
+  2019 = 6 * 336 + 3
+  So a_2019 = a_3 = 5.
+
+Verification:
+  2019 / 6 = 336.5, so 6 * 336 = 2016, and 2019 - 2016 = 3.
+  Therefore a_2019 has the same value as a_3 = 5.
+
+Answer: B) 5
+
+Alternative algebraic verification of periodicity:
+  Let b_n = ln(a_n). Then b_{n+2} = b_{n+1} - b_n.
+  This is a linear recurrence with characteristic equation x^2 - x + 1 = 0.
+  Roots: x = (1 +/- sqrt(1-4))/2 = (1 +/- i*sqrt(3))/2 = e^{+/- i*pi/3}.
+  Since the roots are 6th roots of unity, the sequence b_n has period 6,
+  hence a_n has period 6 as well.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover,
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.checkpoint {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #34d399;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkpoint summary:hover {
+  color: #6ee7b7;
+}
+
+.checkpoint[open] summary {
+  margin-bottom: 10px;
+}
+
+.checkpoint p {
+  color: #a7f3d0;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.arrow {
+  color: #60a5fa;
+  margin: 0 4px;
+}
+
+.term-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+}
+
+.term-table th,
+.term-table td {
+  padding: 10px 14px;
+  text-align: center;
+  border: 1px solid #334155;
+  font-size: 1rem;
+}
+
+.term-table th {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.term-table td {
+  background: rgba(30, 41, 59, 0.6);
+  color: #e2e8f0;
+}
+
+.term-table .highlight-col {
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.term-table .period-sep {
+  border-right: 2px solid #a78bfa;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .term-table th, .term-table td { padding: 6px 8px; font-size: 0.85rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Rekurentni niz sa periodicnim ponavljanjem</h1>
+  <p class="subtitle">Odredjivanje clana niza zadatog rekurentnom formulom</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Niz \((a_n)\) odredjen je uslovima \(a_1 = 3\), \(a_2 = 15\) i
+      <div class="math-box">
+        \[ a_{n+2} = \frac{a_{n+1}}{a_n}, \quad n \in \mathbb{N} \]
+      </div>
+      Clan \(a_{2019}\) tog niza jednak je:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(5\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(15\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{1}{3}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{1}{5}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      <strong>1.</strong> Izracunati prvih nekoliko clanova niza koristeci rekurentnu formulu.
+      <span class="arrow">&rarr;</span>
+      <strong>2.</strong> Uociti da se niz periodicno ponavlja i odrediti period.
+      <span class="arrow">&rarr;</span>
+      <strong>3.</strong> Koristiti ostatak pri deljenju sa periodom da odredimo \(a_{2019}\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsecanje na teoriju</div>
+    <details>
+      <summary>Rekurentni nizovi i periodicnost</summary>
+      <ul style="margin-top: 10px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 8px;">
+          <strong>Rekurentna formula</strong> \(a_{n+2} = f(a_{n+1}, a_n)\) definise svaki clan niza pomocu prethodna dva.
+        </li>
+        <li style="margin-bottom: 8px;">
+          Niz je <strong>periodican sa periodom \(T\)</strong> ako vazi \(a_{n+T} = a_n\) za sve \(n \in \mathbb{N}\).
+        </li>
+        <li style="margin-bottom: 8px;">
+          Ako se pri racunanju clanova pojavi par \((a_k, a_{k+1}) = (a_1, a_2)\), tada je niz periodican sa periodom \(T = k - 1\).
+        </li>
+        <li style="margin-bottom: 8px;">
+          Za periodican niz: \(a_n = a_r\), gde je \(r\) ostatak pri deljenju \(n\) sa \(T\). Ako je \(r = 0\), uzimamo \(r = T\).
+        </li>
+      </ul>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Modularni racun (ostatak pri deljenju)</summary>
+      <div class="math-box">
+        \[ n = T \cdot q + r, \quad 0 \leq r < T \]
+      </div>
+      <p style="color: #cbd5e1;">
+        Broj \(q\) je kolicnik, a \(r\) je ostatak pri deljenju \(n\) sa \(T\). Pisemo \(n \equiv r \pmod{T}\). Za niz perioda \(T\): ako je \(r \neq 0\), tada \(a_n = a_r\); ako je \(r = 0\), tada \(a_n = a_T\).
+      </p>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz &mdash; periodicnost niza</div>
+    <canvas id="sequenceCanvas" width="900" height="480"></canvas>
+    <p style="color: #64748b; font-size: 0.85rem; text-align: center; margin-top: 8px;">
+      Dijagram prikazuje periodicno ponavljanje clanova niza sa periodom 6
+    </p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Izracunaj prve clanove niza</div>
+      <p class="step-explanation">
+        Poznati su nam prvi dva clana: \(a_1 = 3\) i \(a_2 = 15\). Koristimo rekurentnu formulu \(a_{n+2} = \dfrac{a_{n+1}}{a_n}\) da redom izracunamo naredne clanove.
+      </p>
+      <p class="step-explanation">
+        Racunamo \(a_3\):
+      </p>
+      <div class="math-box">
+        \[ a_3 = \frac{a_2}{a_1} = \frac{15}{3} = 5 \]
+      </div>
+      <p class="step-explanation">
+        Racunamo \(a_4\):
+      </p>
+      <div class="math-box">
+        \[ a_4 = \frac{a_3}{a_2} = \frac{5}{15} = \frac{1}{3} \]
+      </div>
+      <p class="step-explanation">
+        Racunamo \(a_5\):
+      </p>
+      <div class="math-box">
+        \[ a_5 = \frac{a_4}{a_3} = \frac{\frac{1}{3}}{5} = \frac{1}{3} \cdot \frac{1}{5} = \frac{1}{15} \]
+      </div>
+      <p class="step-explanation">
+        Racunamo \(a_6\):
+      </p>
+      <div class="math-box">
+        \[ a_6 = \frac{a_5}{a_4} = \frac{\frac{1}{15}}{\frac{1}{3}} = \frac{1}{15} \cdot \frac{3}{1} = \frac{3}{15} = \frac{1}{5} \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Nastavi racunanje i uoci obrazac</div>
+      <p class="step-explanation">
+        Hajde da izracunamo jos dva clana da vidimo sta se desava:
+      </p>
+      <div class="math-box">
+        \[ a_7 = \frac{a_6}{a_5} = \frac{\frac{1}{5}}{\frac{1}{15}} = \frac{1}{5} \cdot \frac{15}{1} = \frac{15}{5} = 3 \]
+      </div>
+      <div class="math-box">
+        \[ a_8 = \frac{a_7}{a_6} = \frac{3}{\frac{1}{5}} = 3 \cdot 5 = 15 \]
+      </div>
+      <p class="step-explanation">
+        Dobili smo \(a_7 = 3 = a_1\) i \(a_8 = 15 = a_2\). Posto su se ponovila ista dva uzastopna clana od kojih krecu sva izracunavanja, <strong>niz se od ovog mesta ponavlja</strong>.
+      </p>
+
+      <details class="checkpoint">
+        <summary>Proveri sebe: Koliki je period ovog niza?</summary>
+        <p>Period je \(T = 6\), jer se nakon 6 clanova niz ponovo vraca na iste vrednosti: \(a_7 = a_1\), \(a_8 = a_2\), itd.</p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Zapisi niz u tabeli</div>
+      <p class="step-explanation">
+        Pregledajmo sve clanove jednog punog perioda:
+      </p>
+      <div style="overflow-x: auto;">
+        <table class="term-table">
+          <tr>
+            <th>\(n\)</th>
+            <th>1</th>
+            <th>2</th>
+            <th class="highlight-col">3</th>
+            <th>4</th>
+            <th>5</th>
+            <th class="period-sep">6</th>
+            <th>7</th>
+            <th>8</th>
+            <th class="highlight-col">9</th>
+            <th>10</th>
+            <th>11</th>
+            <th class="period-sep">12</th>
+            <th>...</th>
+          </tr>
+          <tr>
+            <th>\(a_n\)</th>
+            <td>3</td>
+            <td>15</td>
+            <td class="highlight-col"><strong>5</strong></td>
+            <td>\(\frac{1}{3}\)</td>
+            <td>\(\frac{1}{15}\)</td>
+            <td class="period-sep">\(\frac{1}{5}\)</td>
+            <td>3</td>
+            <td>15</td>
+            <td class="highlight-col"><strong>5</strong></td>
+            <td>\(\frac{1}{3}\)</td>
+            <td>\(\frac{1}{15}\)</td>
+            <td class="period-sep">\(\frac{1}{5}\)</td>
+            <td>...</td>
+          </tr>
+        </table>
+      </div>
+      <p class="step-explanation">
+        Vidimo da se blok \(\{3,\; 15,\; 5,\; \frac{1}{3},\; \frac{1}{15},\; \frac{1}{5}\}\) beskonacno ponavlja. Zelenim su oznacene kolone sa ostatkom 3 pri deljenju sa 6.
+      </p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Odredi ostatak pri deljenju 2019 sa 6</div>
+      <p class="step-explanation">
+        Posto je period \(T = 6\), treba da nadjemo ostatak pri deljenju broja 2019 sa 6:
+      </p>
+      <div class="math-box">
+        \[ 2019 \div 6 = 336 \text{ sa ostatkom } 3 \]
+      </div>
+      <p class="step-explanation">
+        Proverimo:
+      </p>
+      <div class="math-box">
+        \[ 6 \cdot 336 = 2016 \]
+        \[ 2019 - 2016 = 3 \]
+      </div>
+      <p class="step-explanation">
+        Dakle, \(2019 = 6 \cdot 336 + 3\), sto znaci da je ostatak jednak \(r = 3\).
+      </p>
+
+      <details class="checkpoint">
+        <summary>Proveri sebe: Sta znaci ostatak 3?</summary>
+        <p>Posto je \(2019 \equiv 3 \pmod{6}\), clan \(a_{2019}\) ima istu vrednost kao \(a_3\). Unutar svakog perioda od 6 clanova, pozicija 2019 odgovara trecoj poziciji.</p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Odredi vrednost \(a_{2019}\)</div>
+      <p class="step-explanation">
+        Posto je \(2019 \equiv 3 \pmod{6}\), vazi:
+      </p>
+      <div class="math-box">
+        \[ a_{2019} = a_3 = 5 \]
+      </div>
+      <p class="step-explanation">
+        Vrednost \(a_3 = 5\) smo izracunali u prvom koraku.
+      </p>
+
+      <details class="checkpoint">
+        <summary>Dodatna provera: Da li se za drugi indeks sa ostatkom 3 dobija isti rezultat?</summary>
+        <p>Na primer, \(9 = 6 \cdot 1 + 3\), pa bi trebalo da vazi \(a_9 = a_3 = 5\). Zaista, \(a_9 = a_3 = 5\) jer se niz ponavlja sa periodom 6. Isto tako, \(a_{15} = a_3 = 5\), \(a_{21} = a_3 = 5\), itd.</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Kljucni uvid</div>
+    <p>
+      Rekurentna formula \(a_{n+2} = \frac{a_{n+1}}{a_n}\) uvek proizvodi periodicne nizove sa periodom 6, bez obzira na izbor pocetnih clanova \(a_1\) i \(a_2\) (pod uslovom da su razliciti od nule). Ovo se moze dokazati algebarski: nakon sest primena rekurentne formule, neizbezno se vracamo na polazni par vrednosti.
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ a_1 \to a_2 \to \frac{a_2}{a_1} \to \frac{1}{a_1} \to \frac{1}{a_2} \to \frac{a_1}{a_2} \to a_1 \to a_2 \to \cdots \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konacan odgovor</div>
+    <div class="answer">\(a_{2019} = 5\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(3\)</div>
+      <div class="final-option correct" data-option="B">(B) \(5\)</div>
+      <div class="final-option" data-option="C">(C) \(15\)</div>
+      <div class="final-option" data-option="D">(D) \(\dfrac{1}{3}\)</div>
+      <div class="final-option" data-option="E">(E) \(\dfrac{1}{5}\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(2019 = 6 \times 336 + 3\), pa \(a_{2019} = a_3 = \frac{a_2}{a_1} = \frac{15}{3} = 5\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogresan smer rekurentne formule</div>
+      <p>Pazite na redosled u formuli \(a_{n+2} = \frac{a_{n+1}}{a_n}\): u brojiocu je \(a_{n+1}\) (prethodni clan), a u imeniocu \(a_n\) (pretprethodni). Ako zamenite redosled i racunate \(\frac{a_n}{a_{n+1}}\), dobicete pogresne clanove i pogresan period.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Greska sa ostatkom 0</div>
+      <p>Ako bi ostatak pri deljenju bio \(r = 0\) (npr. za \(n = 2016\)), tada \(a_n = a_6\), a ne \(a_0\) (koji ne postoji). Kada je \(r = 0\), uzimamo poslednji clan perioda, tj. \(a_T\).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Neka je niz \((b_n)\) odredjen sa \(b_1 = 2\), \(b_2 = 8\) i \(b_{n+2} = \frac{b_{n+1}}{b_n}\). Koliko iznosi proizvod \(b_1 \cdot b_2 \cdot b_3 \cdots b_{2024}\)?
+    </p>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p style="color: #cbd5e1;">
+        Prvo izracunaj svih 6 clanova jednog perioda: \(2, 8, 4, \frac{1}{2}, \frac{1}{8}, \frac{1}{4}\). Zatim izracunaj proizvod jednog punog perioda: \(2 \cdot 8 \cdot 4 \cdot \frac{1}{2} \cdot \frac{1}{8} \cdot \frac{1}{4} = 1\). Posto je \(2024 = 6 \cdot 337 + 2\), proizvod prvih 2024 clanova jednak je proizvodu prvih 2 clanova ostatka, tj. \(b_1 \cdot b_2 = 16\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('sequenceCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 480 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 480;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Periodicnost niza: clanovi se ponavljaju sa periodom 6', W / 2, 28);
+
+    // --- Section 1: Circular diagram showing the period ---
+    var circCX = W * 0.3;
+    var circCY = 185;
+    var circR = Math.min(110, W * 0.18);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ciklus perioda 6', circCX, 55);
+
+    // Draw circle
+    ctx.beginPath();
+    ctx.arc(circCX, circCY, circR, 0, Math.PI * 2);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Place 6 terms around the circle
+    var terms = ['3', '15', '5', '1/3', '1/15', '1/5'];
+    var termColors = ['#60a5fa', '#a78bfa', '#4ade80', '#60a5fa', '#a78bfa', '#f472b6'];
+    var indices = ['a\u2081', 'a\u2082', 'a\u2083', 'a\u2084', 'a\u2085', 'a\u2086'];
+
+    for (var i = 0; i < 6; i++) {
+      var angle = -Math.PI / 2 + (i * Math.PI * 2) / 6;
+      var px = circCX + circR * Math.cos(angle);
+      var py = circCY + circR * Math.sin(angle);
+
+      // Node circle
+      ctx.beginPath();
+      ctx.arc(px, py, 26, 0, Math.PI * 2);
+      ctx.fillStyle = '#1e293b';
+      ctx.fill();
+      ctx.strokeStyle = termColors[i];
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Term value
+      ctx.fillStyle = termColors[i];
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(terms[i], px, py - 2);
+
+      // Index label outside
+      var labelDist = circR + 40;
+      var lx = circCX + labelDist * Math.cos(angle);
+      var ly = circCY + labelDist * Math.sin(angle);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(indices[i], lx, ly);
+
+      // Arrow to next node
+      var nextAngle = -Math.PI / 2 + ((i + 1) * Math.PI * 2) / 6;
+      var nx = circCX + circR * Math.cos(nextAngle);
+      var ny = circCY + circR * Math.sin(nextAngle);
+
+      // Arrow along the arc (draw from edge of current node to edge of next)
+      var midAngle = (angle + nextAngle) / 2;
+      if (nextAngle < angle) midAngle += Math.PI;
+      var arrowR = circR * 0.78;
+      var aMidX = circCX + arrowR * Math.cos(midAngle);
+      var aMidY = circCY + arrowR * Math.sin(midAngle);
+
+      // Draw curved arrow
+      var startOff = 0.15;
+      var endOff = 0.15;
+      var aStartAngle = angle + startOff;
+      var aEndAngle = nextAngle - endOff;
+      if (i === 5) aEndAngle = -Math.PI / 2 - endOff + Math.PI * 2;
+
+      ctx.beginPath();
+      ctx.arc(circCX, circCY, circR - 28, aStartAngle, aEndAngle);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Small arrowhead at end
+      var tipAngle = aEndAngle;
+      var tipX = circCX + (circR - 28) * Math.cos(tipAngle);
+      var tipY = circCY + (circR - 28) * Math.sin(tipAngle);
+      var tangent = tipAngle + Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - 6 * Math.cos(tangent - 0.5), tipY - 6 * Math.sin(tangent - 0.5));
+      ctx.lineTo(tipX - 6 * Math.cos(tangent + 0.5), tipY - 6 * Math.sin(tangent + 0.5));
+      ctx.closePath();
+      ctx.fillStyle = '#475569';
+      ctx.fill();
+    }
+
+    ctx.textBaseline = 'alphabetic';
+
+    // Highlight a_3 = 5 node
+    var highlightAngle = -Math.PI / 2 + (2 * Math.PI * 2) / 6;
+    var hx = circCX + circR * Math.cos(highlightAngle);
+    var hy = circCY + circR * Math.sin(highlightAngle);
+    ctx.beginPath();
+    ctx.arc(hx, hy, 30, 0, Math.PI * 2);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label: "a_2019 = a_3"
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('a\u2082\u2080\u2081\u2089 = a\u2083 = 5', hx + 34, hy + 4);
+
+    // --- Section 2: Bar chart of first 12 terms ---
+    var chartLeft = W * 0.55;
+    var chartRight = W - 30;
+    var chartTop = 55;
+    var chartBottom = 295;
+    var chartW = chartRight - chartLeft;
+    var chartH = chartBottom - chartTop;
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Vrednosti prvih 12 clanova', (chartLeft + chartRight) / 2, chartTop - 5);
+
+    // Y-axis: log scale representation for clarity (values range from 1/15 to 15)
+    // We'll use a linear scale mapped to [1/15, 15] but show actual values
+    var vals = [3, 15, 5, 1/3, 1/15, 1/5, 3, 15, 5, 1/3, 1/15, 1/5];
+    var valLabels = ['3', '15', '5', '1/3', '1/15', '1/5', '3', '15', '5', '1/3', '1/15', '1/5'];
+
+    // Use log scale for y-axis
+    var minLog = Math.log(1/15);
+    var maxLog = Math.log(15);
+    var logRange = maxLog - minLog;
+
+    function valToY(v) {
+      var logV = Math.log(v);
+      var frac = (logV - minLog) / logRange;
+      return chartBottom - frac * (chartH - 20);
+    }
+
+    // Y=1 baseline
+    var baseY = valToY(1);
+    ctx.beginPath();
+    ctx.moveTo(chartLeft, baseY);
+    ctx.lineTo(chartRight, baseY);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('1', chartLeft - 4, baseY + 3);
+
+    // Draw bars
+    var barGap = 4;
+    var totalBars = 12;
+    var barW = (chartW - barGap * (totalBars + 1)) / totalBars;
+
+    for (var j = 0; j < totalBars; j++) {
+      var bx = chartLeft + barGap + j * (barW + barGap);
+      var by = valToY(vals[j]);
+      var bh = Math.abs(by - baseY);
+
+      // Color: highlight index 3 and 9 (0-indexed: 2 and 8)
+      var barColor;
+      if (j === 2 || j === 8) {
+        barColor = '#4ade80';
+      } else if (j < 6) {
+        barColor = '#60a5fa';
+      } else {
+        barColor = '#a78bfa';
+      }
+
+      // Period separator line
+      if (j === 6) {
+        ctx.beginPath();
+        ctx.moveTo(bx - barGap / 2, chartTop);
+        ctx.lineTo(bx - barGap / 2, chartBottom + 5);
+        ctx.strokeStyle = '#a78bfa';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#a78bfa';
+        ctx.font = '10px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('period 2', bx - barGap / 2 + (chartRight - bx + barGap / 2) / 2, chartTop + 12);
+      }
+
+      if (j === 0) {
+        ctx.fillStyle = '#60a5fa';
+        ctx.font = '10px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('period 1', chartLeft + (6 * (barW + barGap)) / 2, chartTop + 12);
+      }
+
+      // Draw bar
+      ctx.fillStyle = barColor;
+      ctx.globalAlpha = 0.7;
+      if (vals[j] >= 1) {
+        ctx.fillRect(bx, by, barW, baseY - by);
+      } else {
+        ctx.fillRect(bx, baseY, barW, by - baseY);
+      }
+      ctx.globalAlpha = 1.0;
+
+      // Border
+      ctx.strokeStyle = barColor;
+      ctx.lineWidth = 1;
+      if (vals[j] >= 1) {
+        ctx.strokeRect(bx, by, barW, baseY - by);
+      } else {
+        ctx.strokeRect(bx, baseY, barW, by - baseY);
+      }
+
+      // Value label
+      ctx.fillStyle = barColor;
+      ctx.font = 'bold 10px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      var labelY = vals[j] >= 1 ? by - 5 : by + 12;
+      ctx.fillText(valLabels[j], bx + barW / 2, labelY);
+
+      // Index label below
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('a' + (j + 1), bx + barW / 2, chartBottom + 15);
+    }
+
+    // --- Section 3: Division calculation at bottom ---
+    var calcY = 350;
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Odredjivanje a\u2082\u2080\u2081\u2039 pomocu ostatka pri deljenju', W / 2, calcY);
+
+    // Draw the division diagram
+    var boxW2 = Math.min(180, W * 0.22);
+    var boxH2 = 48;
+    var rowY = calcY + 50;
+
+    // Box 1: 2019
+    drawCalcBox(W * 0.15, rowY, boxW2, boxH2, '2019', '#e2e8f0', '#60a5fa');
+
+    // Arrow and division sign
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '20px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u00f7 6 =', W * 0.35, rowY + 4);
+
+    // Box 2: 336 remainder 3
+    drawCalcBox(W * 0.55, rowY, boxW2, boxH2, '336 ost. 3', '#e2e8f0', '#a78bfa');
+
+    // Arrow
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '20px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2192', W * 0.74, rowY + 4);
+
+    // Box 3: result
+    drawCalcBox(W * 0.88, rowY, boxW2 * 0.9, boxH2, 'a\u2083 = 5', '#4ade80', '#4ade80');
+
+    // Explanation below
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2019 = 6 \u00d7 336 + 3, pa a\u2082\u2030\u2031\u2039 = a\u2083 = 5', W / 2, rowY + 50);
+
+    // Fix: let me use simpler unicode
+    // Clear and redraw the bottom text
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, rowY + 38, W, 24);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2019 = 6 x 336 + 3,  pa  a(2019) = a(3) = 5', W / 2, rowY + 54);
+  }
+
+  function drawCalcBox(x, y, w, h, text, textColor, borderColor) {
+    ctx.beginPath();
+    ctx.roundRect(x - w / 2, y - h / 2, w, h, 10);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    ctx.fill();
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = textColor;
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  // Step click interaction
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Rekurentni niz sa periodicnim ponavljanjem",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["rekurentni niz", "periodicnost niza", "rekurentna formula", "modularni racun", "nizovi"]
+}
+BRAINSPARK_META-->

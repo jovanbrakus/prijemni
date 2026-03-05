@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepeni imaginarne jedinice</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Izračunati i^(-35) / i^(-40)
+
+Korak 1: Pravilo deljenja stepena sa istom osnovom
+i^(-35) / i^(-40) = i^(-35 - (-40)) = i^(-35 + 40) = i^5
+
+Korak 2: Ciklus stepena imaginarne jedinice
+i^0 = 1
+i^1 = i
+i^2 = -1
+i^3 = -i
+i^4 = 1 (ciklus se ponavlja sa periodom 4)
+
+Korak 3: i^5 = i^(4+1) = i^4 * i^1 = 1 * i = i
+
+Alternativno: 5 mod 4 = 1, pa i^5 = i^1 = i
+
+Odgovor: (V) i
+
+Provera opcija:
+(A) 1 — to bi bilo i^0, i^4, i^8... tj. kad je eksponent deljiv sa 4
+(B) -1 — to bi bilo i^2, i^6, i^10... tj. kad je ostatak pri deljenju sa 4 jednak 2
+(V) i — TAČNO, jer je 5 mod 4 = 1
+(G) -i — to bi bilo i^3, i^7, i^11... tj. kad je ostatak pri deljenju sa 4 jednak 3
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 1.8rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 1rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement .problem-text {
+  font-size: 1.15rem;
+  margin-bottom: 1.2rem;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.8rem;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.8rem 1.2rem;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+details {
+  background: rgba(96, 165, 250, 0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+details[open] summary {
+  margin-bottom: 0.8rem;
+}
+
+.canvas-wrapper {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+canvas {
+  max-width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+}
+
+.step {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: flex-start;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-left: 3px solid transparent;
+  border-radius: 4px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #34d399;
+  background: rgba(52, 211, 153, 0.04);
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  margin-bottom: 0.4rem;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  margin: 0.6rem 0;
+  overflow-x: auto;
+}
+
+.key-insight {
+  border: 2px solid #a78bfa;
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.key-insight .card-title {
+  color: #a78bfa;
+}
+
+.final-answer {
+  border: 2px solid #34d399;
+  text-align: center;
+}
+
+.final-answer .card-title {
+  color: #34d399;
+}
+
+.answer-big {
+  font-size: 1.8rem;
+  color: #4ade80;
+  margin: 1rem 0;
+}
+
+.answer-options-final {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  margin: 1.2rem 0;
+}
+
+.answer-opt {
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: rgba(56, 189, 248, 0.05);
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+.answer-opt.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 0.8rem;
+}
+
+.pitfall-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-size: 1.2rem;
+}
+
+.cycle-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.cycle-table th, .cycle-table td {
+  padding: 0.5rem 0.8rem;
+  text-align: center;
+  border: 1px solid #334155;
+}
+
+.cycle-table th {
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.cycle-table td {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.cycle-table .highlight-cell {
+  background: rgba(52, 211, 153, 0.15);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.slider-container label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  min-width: 100px;
+}
+
+.slider-container input[type="range"] {
+  flex: 1;
+  min-width: 150px;
+  accent-color: #60a5fa;
+}
+
+.slider-value {
+  color: #60a5fa;
+  font-weight: 700;
+  min-width: 60px;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 1.2rem; }
+  .given-grid { grid-template-columns: 1fr 1fr; }
+  .answer-options-final { gap: 0.6rem; }
+  canvas { height: auto; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Stepeni imaginarne jedinice</h1>
+  <p class="subtitle">Kompleksni brojevi - ciklus stepena broja i</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title">Zadatak</div>
+    <p class="problem-text">Izračunati \( \dfrac{i^{-35}}{i^{-40}} \)</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( -1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">\( i \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\( -i \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title">Plan rešavanja</div>
+    <p class="plan-text">Primenićemo pravilo deljenja stepena sa istom osnovom da svedemo izraz na jedan stepen broja \( i \), a zatim koristiti cikličnost stepena imaginarne jedinice (period 4) da odredimo vrednost.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title">Teorijski podsetnik</div>
+    <details>
+      <summary>Ključne formule i svojstva</summary>
+      <div class="math-box">
+        <p><strong>Deljenje stepena sa istom osnovom:</strong></p>
+        \[ \frac{a^m}{a^n} = a^{m-n} \]
+      </div>
+      <div class="math-box">
+        <p><strong>Definicija imaginarne jedinice:</strong></p>
+        \[ i^2 = -1 \]
+      </div>
+      <div class="math-box">
+        <p><strong>Ciklus stepena broja \( i \) (period 4):</strong></p>
+        \[ i^0 = 1, \quad i^1 = i, \quad i^2 = -1, \quad i^3 = -i, \quad i^4 = 1, \quad \ldots \]
+        <p style="margin-top: 0.5rem; color: #94a3b8;">Stepen \( i^n \) zavisi samo od ostatka pri deljenju \( n \) sa 4:</p>
+        <table class="cycle-table">
+          <tr>
+            <th>\( n \bmod 4 \)</th>
+            <th>0</th>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+          </tr>
+          <tr>
+            <td>\( i^n \)</td>
+            <td>\( 1 \)</td>
+            <td class="highlight-cell">\( i \)</td>
+            <td>\( -1 \)</td>
+            <td>\( -i \)</td>
+          </tr>
+        </table>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid: Interactive Complex Plane -->
+  <div class="card">
+    <div class="card-title">Interaktivni dijagram - Ciklus stepena na kompleksnoj ravni</div>
+    <div class="canvas-wrapper">
+      <canvas id="complexPlane" width="520" height="520"></canvas>
+      <div class="slider-container">
+        <label for="powerSlider">Eksponent \( n \):</label>
+        <input type="range" id="powerSlider" min="-10" max="10" value="5" step="1">
+        <span class="slider-value" id="powerDisplay">n = 5</span>
+      </div>
+      <p class="canvas-hint">Pomeri klizač da vidiš kako se \( i^n \) kreće po jediničnom krugu u kompleksnoj ravni</p>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title">Rešenje korak po korak</div>
+
+    <div class="step" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Primenimo pravilo deljenja stepena</h3>
+        <p>Kada delimo dva stepena sa istom osnovom, oduzimamo eksponente. Ovde je osnova \( i \):</p>
+        <div class="math-box">
+          \[ \frac{i^{-35}}{i^{-40}} = i^{-35 - (-40)} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Sredimo eksponent</h3>
+        <p>Oduzimanje negativnog broja je isto što i sabiranje pozitivnog:</p>
+        <div class="math-box">
+          \[ i^{-35 - (-40)} = i^{-35 + 40} = i^5 \]
+        </div>
+        <details>
+          <summary>Proveri sebe</summary>
+          <p>Koliko je \( -35 - (-40) \)?</p>
+          <p style="margin-top: 0.5rem;"><strong>Odgovor:</strong> \( -35 + 40 = 5 \). Kada oduzimamo negativan broj, menjamo znak: minus puta minus daje plus!</p>
+        </details>
+      </div>
+    </div>
+
+    <div class="step" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Rastavimo stepen koristeći cikličnost</h3>
+        <p>Stepeni broja \( i \) se ponavljaju sa periodom 4. Zato delimo eksponent 5 sa 4:</p>
+        <div class="math-box">
+          \[ 5 = 4 \cdot 1 + 1 \quad \Rightarrow \quad 5 \bmod 4 = 1 \]
+        </div>
+        <p>Dakle, \( i^5 \) ima isti rezultat kao \( i^1 \).</p>
+        <details>
+          <summary>Proveri sebe</summary>
+          <p>Kako bismo rastavili \( i^5 \) koristeći \( i^4 = 1 \)?</p>
+          <p style="margin-top: 0.5rem;"><strong>Odgovor:</strong> \( i^5 = i^4 \cdot i^1 = 1 \cdot i = i \). Izdvajamo \( i^4 \) jer znamo da je jednako 1.</p>
+        </details>
+      </div>
+    </div>
+
+    <div class="step" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izračunamo konačnu vrednost</h3>
+        <p>Pošto je ostatak 1, primenjujemo pravilo iz tabele ciklusa:</p>
+        <div class="math-box">
+          \[ i^5 = i^{4 \cdot 1 + 1} = (i^4)^1 \cdot i^1 = 1 \cdot i = i \]
+        </div>
+        <details>
+          <summary>Proveri sebe</summary>
+          <p>Koliko je \( i^{13} \)?</p>
+          <p style="margin-top: 0.5rem;"><strong>Odgovor:</strong> \( 13 \bmod 4 = 1 \), pa je \( i^{13} = i \). Svaki put kada je ostatak 1, odgovor je \( i \)!</p>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card key-insight">
+    <div class="card-title">Ključni uvid</div>
+    <p>Bez obzira koliko je eksponent velik ili negativan, stepen imaginarne jedinice \( i^n \) ima samo 4 moguće vrednosti: \( 1, \, i, \, -1, \, -i \). Na kompleksnoj ravni, ove četiri tačke leže na jediničnom krugu i odgovaraju rotaciji za \( 90° \) u pozitivnom smeru. Dovoljno je samo izračunati ostatak pri deljenju eksponenta sa 4!</p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ \frac{i^{-35}}{i^{-40}} = i^5 = i \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <div class="card-title">Konačan odgovor</div>
+    <div class="answer-big">\( \dfrac{i^{-35}}{i^{-40}} = i \)</div>
+    <div class="answer-options-final">
+      <span class="answer-opt">(A) \( 1 \)</span>
+      <span class="answer-opt">(B) \( -1 \)</span>
+      <span class="answer-opt correct">(V) \( i \)</span>
+      <span class="answer-opt">(G) \( -i \)</span>
+    </div>
+    <p class="verification-note">Verifikacija: \( i^{-35} / i^{-40} = i^{-35+40} = i^5 = i^4 \cdot i = 1 \cdot i = i \). Možemo i direktno proveriti: \( i^{-40} = (i^4)^{-10} = 1^{-10} = 1 \) i \( i^{-35} = i^{-36} \cdot i = (i^4)^{-9} \cdot i = 1 \cdot i = i \), pa je \( i / 1 = i \). Tačan odgovor je (V).</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title">Česte greške</div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Pogrešan predznak u eksponentu:</strong> Prilikom deljenja stepena, česta greška je da se napiše \( i^{-35-40} = i^{-75} \) umesto \( i^{-35-(-40)} = i^{-35+40} = i^5 \). Obratite pažnju na dupli minus: oduzimanje negativnog eksponenta znači sabiranje!</p>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Pogrešan ostatak pri deljenju:</strong> Neki učenici zaborave da provere ostatak pri deljenju sa 4 i umesto toga koriste deljenje sa 2. Na primer, \( 5 \bmod 2 = 1 \) daje isti rezultat ovde, ali za \( i^6 \) bi to bilo pogrešno: \( 6 \bmod 2 = 0 \) sugeriše \( 1 \), dok je tačno \( 6 \bmod 4 = 2 \), dakle \( i^6 = -1 \).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title">Dodatni izazov</div>
+    <p>Izračunaj vrednost izraza \( i^{2023} + i^{2024} + i^{2025} + i^{2026} \).</p>
+    <details>
+      <summary>Nagovještaj</summary>
+      <p>Primeti da su eksponenti uzastopni: \( 2023, 2024, 2025, 2026 \). Svaka četiri uzastopna stepena broja \( i \) daju sumu \( i^n + i^{n+1} + i^{n+2} + i^{n+3} = i^n(1 + i + i^2 + i^3) \). Koliko je \( 1 + i + (-1) + (-i) \)?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Interactive Complex Plane Diagram
+  const canvas = document.getElementById('complexPlane');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const cx = W / 2;
+  const cy = H / 2;
+  const radius = 180;
+
+  const slider = document.getElementById('powerSlider');
+  const display = document.getElementById('powerDisplay');
+
+  // Positions on the unit circle for i^n based on n mod 4
+  // i^0 = 1 (right), i^1 = i (up), i^2 = -1 (left), i^3 = -i (down)
+  const cyclePositions = [
+    { x: 1, y: 0, label: '1', color: '#60a5fa' },
+    { x: 0, y: 1, label: 'i', color: '#4ade80' },
+    { x: -1, y: 0, label: '-1', color: '#f472b6' },
+    { x: 0, y: -1, label: '-i', color: '#a78bfa' }
+  ];
+
+  function mod(n, m) {
+    return ((n % m) + m) % m;
+  }
+
+  function draw(power) {
+    // Clear
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#293548';
+    ctx.lineWidth = 1;
+    for (let gx = -3; gx <= 3; gx++) {
+      const px = cx + gx * (radius / 2);
+      ctx.beginPath();
+      ctx.moveTo(px, 0);
+      ctx.lineTo(px, H);
+      ctx.stroke();
+    }
+    for (let gy = -3; gy <= 3; gy++) {
+      const py = cy - gy * (radius / 2);
+      ctx.beginPath();
+      ctx.moveTo(0, py);
+      ctx.lineTo(W, py);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, cy);
+    ctx.lineTo(W, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, 0);
+    ctx.lineTo(cx, H);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Re', W - 20, cy + 20);
+    ctx.fillText('Im', cx + 20, 18);
+
+    // Unit circle (dashed)
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.25)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw the 4 cycle positions
+    var posFont = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.font = posFont;
+
+    var remainder = mod(power, 4);
+
+    for (var idx = 0; idx < 4; idx++) {
+      var pos = cyclePositions[idx];
+      var px = cx + pos.x * radius;
+      var py = cy - pos.y * radius;
+      var isActive = (idx === remainder);
+
+      // Glow for active
+      if (isActive) {
+        var grd = ctx.createRadialGradient(px, py, 0, px, py, 35);
+        grd.addColorStop(0, 'rgba(74, 222, 128, 0.4)');
+        grd.addColorStop(1, 'rgba(74, 222, 128, 0)');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(px, py, 35, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      // Dot
+      ctx.fillStyle = isActive ? '#4ade80' : pos.color;
+      ctx.beginPath();
+      ctx.arc(px, py, isActive ? 10 : 7, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Outline
+      ctx.strokeStyle = isActive ? '#4ade80' : pos.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(px, py, isActive ? 10 : 7, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      // Label offset
+      var labelOffsetX = pos.x * 28;
+      var labelOffsetY = -pos.y * 28;
+      if (pos.x === 0 && pos.y === 1) { labelOffsetY = -24; }
+      if (pos.x === 0 && pos.y === -1) { labelOffsetY = 24; }
+      if (pos.x === 1 && pos.y === 0) { labelOffsetX = 28; }
+      if (pos.x === -1 && pos.y === 0) { labelOffsetX = -28; }
+
+      ctx.fillStyle = isActive ? '#4ade80' : pos.color;
+      ctx.font = isActive ? 'bold 20px Segoe UI, system-ui, sans-serif' : posFont;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pos.label, px + labelOffsetX, py + labelOffsetY);
+
+      // Remainder annotation
+      var remLabel = 'n mod 4 = ' + idx;
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = isActive ? 'rgba(74, 222, 128, 0.7)' : 'rgba(148, 163, 184, 0.5)';
+      var remOffsetX = pos.x * 55;
+      var remOffsetY = -pos.y * 55;
+      if (pos.x === 0 && pos.y === 1) { remOffsetY = -50; }
+      if (pos.x === 0 && pos.y === -1) { remOffsetY = 50; }
+      if (pos.x === 1 && pos.y === 0) { remOffsetX = 55; }
+      if (pos.x === -1 && pos.y === 0) { remOffsetX = -55; }
+      ctx.fillText(remLabel, px + remOffsetX, py + remOffsetY);
+    }
+
+    // Draw arrow from origin to active point
+    var activePos = cyclePositions[remainder];
+    var ax = cx + activePos.x * radius;
+    var ay = cy - activePos.y * radius;
+
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(ax, ay);
+    ctx.stroke();
+
+    // Arrowhead
+    var angle = Math.atan2(cy - ay, ax - cx);
+    var headLen = 14;
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(ax - headLen * Math.cos(angle - Math.PI / 6), ay + headLen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(ax - headLen * Math.cos(angle + Math.PI / 6), ay + headLen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw the arc showing rotation
+    if (Math.abs(power) > 0) {
+      var startAngle = 0;
+      var endAngle = -remainder * (Math.PI / 2);
+      if (endAngle === 0 && remainder === 0 && power !== 0) {
+        endAngle = -2 * Math.PI;
+      }
+      ctx.strokeStyle = 'rgba(74, 222, 128, 0.35)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      if (endAngle < startAngle) {
+        ctx.arc(cx, cy, radius * 0.4, startAngle, endAngle, true);
+      } else if (endAngle > startAngle) {
+        ctx.arc(cx, cy, radius * 0.4, startAngle, endAngle, false);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Origin dot
+    ctx.fillStyle = '#e2e8f0';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'left';
+    ctx.fillText('O', cx + 8, cy + 16);
+
+    // Result text
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    var resultLabel = activePos.label;
+    var resultText = 'i' + superscript(power) + ' = ' + resultLabel;
+    ctx.fillText(resultText, cx, H - 30);
+
+    // Calculation detail
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(power + ' mod 4 = ' + remainder, cx, H - 10);
+  }
+
+  function superscript(n) {
+    var superDigits = { '0': '\u2070', '1': '\u00B9', '2': '\u00B2', '3': '\u00B3',
+      '4': '\u2074', '5': '\u2075', '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079' };
+    var str = Math.abs(n).toString();
+    var result = n < 0 ? '\u207B' : '';
+    for (var i = 0; i < str.length; i++) {
+      result += superDigits[str[i]];
+    }
+    return result;
+  }
+
+  // Initial draw
+  draw(5);
+
+  // Slider event
+  slider.addEventListener('input', function() {
+    var val = parseInt(this.value, 10);
+    display.textContent = 'n = ' + val;
+    draw(val);
+  });
+
+  // Step click interactivity
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepeni imaginarne jedinice - deljenje sa negativnim eksponentima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni_brojevi", "imaginarna_jedinica", "stepeni", "cikličnost", "deljenje_stepena"]
+}
+BRAINSPARK_META-->

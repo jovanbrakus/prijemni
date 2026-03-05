@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Površina kruga opisanog oko kvadrata</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Površina kruga opisanog oko kvadrata stranice a.
+
+Krug opisan oko kvadrata = krug koji prolazi kroz sva četiri temena kvadrata.
+To je opisani krug (circumscribed circle).
+
+Korak 1: Naći dijagonalu kvadrata.
+Kvadrat stranice a ima dijagonalu d = a√2 (po Pitagorinoj teoremi).
+
+Korak 2: Naći poluprečnik opisanog kruga.
+Centar opisanog kruga je u preseku dijagonala kvadrata.
+Dijagonala je prečnik opisanog kruga jer prolazi kroz dva temena i centar.
+Dakle: prečnik = d = a√2
+Poluprečnik: r = d/2 = a√2/2
+
+Korak 3: Površina kruga.
+P = πr² = π(a√2/2)² = π · (a²·2)/4 = π · a²/2 = a²π/2
+
+Provera opcija:
+(A) aπ — dimenzija dužine puta π, nije površina
+(Б) a√2·π — dimenzija dužine puta π, nije površina
+(В) a²π/4 — ovo bi bilo da je r = a/2, tj. za upisani krug
+(Г) a²π/2 — TAČNO
+
+Odgovor: (Г) a²π/2
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 1.8rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 1rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement .problem-text {
+  font-size: 1.15rem;
+  margin-bottom: 1.2rem;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.8rem;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.8rem 1.2rem;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+details {
+  background: rgba(96, 165, 250, 0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+details[open] summary {
+  margin-bottom: 0.8rem;
+}
+
+.canvas-wrapper {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+canvas {
+  max-width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+}
+
+.step {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: flex-start;
+  padding: 0.5rem;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #34d399;
+  background: rgba(52, 211, 153, 0.04);
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  margin: 0.6rem 0;
+  overflow-x: auto;
+}
+
+.note-text {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.key-insight {
+  border: 2px solid #a78bfa;
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.key-insight .card-title {
+  color: #a78bfa;
+}
+
+.insight-formula {
+  text-align: center;
+  font-size: 1.5rem;
+  color: #4ade80;
+  margin: 1rem 0;
+}
+
+.final-answer {
+  border: 2px solid #34d399;
+  text-align: center;
+}
+
+.final-answer .card-title {
+  color: #34d399;
+}
+
+.answer-big {
+  font-size: 1.8rem;
+  color: #4ade80;
+  margin: 1rem 0;
+}
+
+.answer-options-final {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  margin: 1.2rem 0;
+}
+
+.answer-opt {
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: rgba(56, 189, 248, 0.05);
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+.answer-opt.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 0.8rem;
+}
+
+.pitfall-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.theory-formula {
+  margin-bottom: 0.8rem;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.slider-container label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.slider-container input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 200px;
+  height: 6px;
+  background: #334155;
+  border-radius: 3px;
+  outline: none;
+}
+
+.slider-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #60a5fa;
+  cursor: pointer;
+}
+
+.slider-container input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #60a5fa;
+  cursor: pointer;
+  border: none;
+}
+
+.slider-value {
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1rem;
+  min-width: 60px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 1.2rem; }
+  .given-grid { grid-template-columns: 1fr 1fr; }
+  .answer-options-final { gap: 0.6rem; }
+  .slider-container input[type="range"] { width: 140px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Površina kruga opisanog oko kvadrata</h1>
+  <p class="subtitle">Geometrija — veza opisanog kruga i kvadrata, dijagonala i poluprečnik</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title">Zadatak</div>
+    <p class="problem-text">Površina kruga opisanog oko kvadrata stranice \( a \) je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( a\pi \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(Б)</div>
+        <div class="value">\( a\sqrt{2}\,\pi \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(В)</div>
+        <div class="value">\( \dfrac{a^2\pi}{4} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(Г)</div>
+        <div class="value">\( \dfrac{a^2\pi}{2} \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title">Plan rešavanja</div>
+    <p class="plan-text">Najpre ćemo odrediti dijagonalu kvadrata pomoću Pitagorine teoreme, zatim uočiti da je dijagonala ujedno i prečnik opisanog kruga, pa izračunati poluprečnik i na kraju površinu kruga.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title">Teorijski podsetnik</div>
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="theory-formula">
+        <div class="math-box">
+          <p><strong>Pitagorina teorema:</strong> U pravouglom trouglu sa katetama \( a \) i \( b \) i hipotenuzom \( c \):</p>
+          \[ c^2 = a^2 + b^2 \]
+        </div>
+      </div>
+      <div class="theory-formula">
+        <div class="math-box">
+          <p><strong>Dijagonala kvadrata:</strong> Kvadrat stranice \( a \) ima dijagonalu:</p>
+          \[ d = a\sqrt{2} \]
+        </div>
+      </div>
+      <div class="theory-formula">
+        <div class="math-box">
+          <p><strong>Opisani krug oko kvadrata:</strong> Centar opisanog kruga je u preseku dijagonala. Dijagonala kvadrata je prečnik opisanog kruga, pa je poluprečnik:</p>
+          \[ r = \frac{d}{2} = \frac{a\sqrt{2}}{2} \]
+        </div>
+      </div>
+      <div class="theory-formula">
+        <div class="math-box">
+          <p><strong>Površina kruga:</strong></p>
+          \[ P = \pi r^2 \]
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title">Interaktivni dijagram</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="560" height="560"></canvas>
+      <div class="slider-container">
+        <label for="side-slider">Stranica \( a \):</label>
+        <input type="range" id="side-slider" min="60" max="180" value="130">
+        <span class="slider-value" id="side-value">130</span>
+      </div>
+      <p class="drag-hint">Pomeri klizač da vidiš kako se menja odnos kvadrata i opisanog kruga</p>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title">Rešenje korak po korak</div>
+
+    <div class="step" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Razumemo šta znači „opisani krug"</h3>
+        <p>Krug <em>opisan</em> oko kvadrata je onaj krug koji prolazi kroz <strong>sva četiri temena</strong> kvadrata. Kvadrat je upisan u taj krug. Centar opisanog kruga je tačka u kojoj se seku dijagonale kvadrata.</p>
+        <p class="note-text">Ovo je ključna razlika: opisani krug prolazi kroz temena, dok upisani krug dodiruje stranice.</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko tačaka kvadrata leži na opisanom krugu?</summary>
+      <p>Sva <strong>4 temena</strong> kvadrata leže na opisanom krugu. Presek dijagonala je centar kruga, a sva četiri temena su jednako udaljena od tog centra.</p>
+    </details>
+
+    <div class="step" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Izračunamo dijagonalu kvadrata</h3>
+        <p>Dijagonala kvadrata deli kvadrat na dva jednakokraka pravougla trougla. Primenjujemo Pitagorinu teoremu na trougao sa katetama \( a \) i \( a \):</p>
+        <div class="math-box">
+          \[ d^2 = a^2 + a^2 = 2a^2 \]
+        </div>
+        <p>Korenujemo obe strane:</p>
+        <div class="math-box">
+          \[ d = a\sqrt{2} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Odredimo poluprečnik opisanog kruga</h3>
+        <p>Dijagonala kvadrata je <strong>prečnik opisanog kruga</strong>, jer prolazi kroz centar kruga (presek dijagonala) i dva temena koja leže na krugu.</p>
+        <p>Poluprečnik je polovina prečnika:</p>
+        <div class="math-box">
+          \[ r = \frac{d}{2} = \frac{a\sqrt{2}}{2} \]
+        </div>
+        <p class="note-text">Možemo ovo zapisati i kao \( r = \dfrac{a}{\sqrt{2}} \), ali oblik \( \dfrac{a\sqrt{2}}{2} \) je pogodniji za dalje računanje.</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Ako je \( a = 4 \), koliki je poluprečnik opisanog kruga?</summary>
+      <p>\( r = \dfrac{4\sqrt{2}}{2} = 2\sqrt{2} \approx 2{,}83 \). Dijagonala je \( 4\sqrt{2} \approx 5{,}66 \), a njen polovina je zaista \( \approx 2{,}83 \).</p>
+    </details>
+
+    <div class="step" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izračunamo površinu kruga</h3>
+        <p>Uvrštavamo poluprečnik u formulu za površinu kruga:</p>
+        <div class="math-box">
+          \[ P = \pi r^2 = \pi \left(\frac{a\sqrt{2}}{2}\right)^2 \]
+        </div>
+        <p>Stepenujemo izraz u zagradi:</p>
+        <div class="math-box">
+          \[ P = \pi \cdot \frac{a^2 \cdot 2}{4} = \pi \cdot \frac{2a^2}{4} = \pi \cdot \frac{a^2}{2} \]
+        </div>
+        <p>Konačno:</p>
+        <div class="math-box">
+          \[ \boxed{P = \frac{a^2\pi}{2}} \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Ako je \( a = 2 \), kolika je površina opisanog kruga?</summary>
+      <p>\( P = \dfrac{2^2 \cdot \pi}{2} = \dfrac{4\pi}{2} = 2\pi \approx 6{,}28 \).</p>
+      <p>Kontrola: \( r = \dfrac{2\sqrt{2}}{2} = \sqrt{2} \), pa \( P = \pi (\sqrt{2})^2 = 2\pi \). Poklapa se!</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card key-insight">
+    <div class="card-title">Ključni uvid</div>
+    <p>Dijagonala kvadrata je ujedno i prečnik opisanog kruga. Čim to uočimo, ceo zadatak se svodi na dva jednostavna koraka: dijagonala \( \to \) poluprečnik \( \to \) površina.</p>
+    <div class="insight-formula">
+      \[ d = a\sqrt{2} \;\;\Longrightarrow\;\; r = \frac{a\sqrt{2}}{2} \;\;\Longrightarrow\;\; P = \frac{a^2\pi}{2} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <div class="card-title">Konačan odgovor</div>
+    <div class="answer-big">\( P = \dfrac{a^2\pi}{2} \)</div>
+    <div class="answer-options-final">
+      <span class="answer-opt">(А) \( a\pi \)</span>
+      <span class="answer-opt">(Б) \( a\sqrt{2}\,\pi \)</span>
+      <span class="answer-opt">(В) \( \dfrac{a^2\pi}{4} \)</span>
+      <span class="answer-opt correct">(Г) \( \dfrac{a^2\pi}{2} \)</span>
+    </div>
+    <p class="verification-note">Verifikacija: Za \( a = 2 \), poluprečnik opisanog kruga je \( r = \sqrt{2} \), a površina \( P = \pi \cdot 2 = 2\pi \). Formula \( \frac{a^2\pi}{2} = \frac{4\pi}{2} = 2\pi \) daje isti rezultat. Tačan odgovor je (Г).</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title">Česte greške</div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Mešanje opisanog i upisanog kruga:</strong> Opcija (В) \( \frac{a^2\pi}{4} \) je površina <em>upisanog</em> kruga (kruga koji dodiruje stranice kvadrata, sa \( r = \frac{a}{2} \)). Opisani krug ima veći poluprečnik jer prolazi kroz temena!</p>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Greška u dimenzijama:</strong> Opcije (А) i (Б) imaju dimenziju dužine puta \( \pi \), a ne dimenziju površine. Površina uvek mora imati \( a^2 \) (kvadrat dužine), pa se ove opcije mogu odmah eliminisati dimenzionom analizom.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title">Dodatni izazov</div>
+    <p>Koliki je odnos površine opisanog kruga i površine kvadrata \( a^2 \)? A koliki je odnos površine opisanog i upisanog kruga oko istog kvadrata?</p>
+    <details>
+      <summary>Pomoć</summary>
+      <p>Odnos površine opisanog kruga i kvadrata: \( \dfrac{P_{\text{krug}}}{P_{\text{kv}}} = \dfrac{\frac{a^2\pi}{2}}{a^2} = \dfrac{\pi}{2} \approx 1{,}57 \). Opisani krug ima oko 57% veću površinu od kvadrata.</p>
+      <p>Upisani krug ima površinu \( \dfrac{a^2\pi}{4} \). Odnos opisanog i upisanog: \( \dfrac{\frac{a^2\pi}{2}}{\frac{a^2\pi}{4}} = \dfrac{4}{2} = 2 \). Opisani krug ima tačno <strong>duplo veću površinu</strong> od upisanog!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const cx = W / 2;
+  const cy = H / 2;
+
+  const slider = document.getElementById('side-slider');
+  const valueDisplay = document.getElementById('side-value');
+
+  function draw(sideLen) {
+    const a = sideLen;
+    const half = a / 2;
+    const diag = a * Math.SQRT2;
+    const r = diag / 2;
+
+    // Clear
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= W; i += 40) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, H);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, i);
+      ctx.lineTo(W, i);
+      ctx.stroke();
+    }
+
+    // Glow effect for circle
+    const grd = ctx.createRadialGradient(cx, cy, r - 10, cx, cy, r + 30);
+    grd.addColorStop(0, 'rgba(96, 165, 250, 0)');
+    grd.addColorStop(0.5, 'rgba(96, 165, 250, 0.06)');
+    grd.addColorStop(1, 'rgba(96, 165, 250, 0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H);
+
+    // Fill circle area (subtle)
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.06)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Fill square area (subtle)
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.08)';
+    ctx.fillRect(cx - half, cy - half, a, a);
+
+    // Draw circle
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // Draw square
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(cx - half, cy - half, a, a);
+
+    // Draw diagonal (dashed)
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    ctx.moveTo(cx - half, cy - half);
+    ctx.lineTo(cx + half, cy + half);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw radius from center to top-right vertex
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + half, cy - half);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Mark vertices with dots
+    const vertices = [
+      [cx - half, cy - half],
+      [cx + half, cy - half],
+      [cx + half, cy + half],
+      [cx - half, cy + half]
+    ];
+
+    vertices.forEach(function(v) {
+      // Glow
+      ctx.fillStyle = 'rgba(167, 139, 250, 0.3)';
+      ctx.beginPath();
+      ctx.arc(v[0], v[1], 10, 0, 2 * Math.PI);
+      ctx.fill();
+      // Point
+      ctx.fillStyle = '#a78bfa';
+      ctx.beginPath();
+      ctx.arc(v[0], v[1], 5, 0, 2 * Math.PI);
+      ctx.fill();
+    });
+
+    // Center point
+    ctx.fillStyle = '#e2e8f0';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Right-angle mark at top-right vertex (to show the diagonal angle)
+    // Actually, let's mark the right angle of the triangle formed by side-side-diagonal
+    // at the top-right corner: between top side and right side
+    const markSize = 12;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx + half - markSize, cy - half);
+    ctx.lineTo(cx + half - markSize, cy - half + markSize);
+    ctx.lineTo(cx + half, cy - half + markSize);
+    ctx.stroke();
+
+    // Labels
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Label vertices: A, B, C, D
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('A', cx - half - 18, cy - half - 16);
+    ctx.fillText('B', cx + half + 18, cy - half - 16);
+    ctx.fillText('C', cx + half + 18, cy + half + 16);
+    ctx.fillText('D', cx - half - 18, cy + half + 16);
+
+    // Label 'O' at center
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('O', cx + 14, cy + 14);
+
+    // Label side 'a' on top
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold italic 20px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('a', cx, cy - half - 18);
+
+    // Label side 'a' on right
+    ctx.fillText('a', cx + half + 20, cy);
+
+    // Label radius 'r'
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    const rMidX = cx + (cx + half - cx) / 2 + 2;
+    const rMidY = cy + (cy - half - cy) / 2 - 2;
+    ctx.fillText('r = a\u221A2 / 2', rMidX + 10, rMidY - 14);
+
+    // Label diagonal 'd'
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    const dMidX = cx - 4;
+    const dMidY = cy + 4;
+    ctx.save();
+    ctx.translate(dMidX - 30, dMidY + 30);
+    ctx.rotate(-Math.PI / 4);
+    ctx.fillText('d = a\u221A2', 0, 0);
+    ctx.restore();
+
+    // Area formula at bottom
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.textAlign = 'center';
+    ctx.fillText('P = a\u00B2\u03C0 / 2', cx, cy + r + 40);
+
+    // Legend at top
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    const legY = 25;
+    const legX = 15;
+
+    // Circle legend
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(legX, legY);
+    ctx.lineTo(legX + 25, legY);
+    ctx.stroke();
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Opisani krug', legX + 32, legY + 4);
+
+    // Square legend
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(legX, legY + 22);
+    ctx.lineTo(legX + 25, legY + 22);
+    ctx.stroke();
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('Kvadrat (stranica a)', legX + 32, legY + 26);
+
+    // Radius legend
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(legX, legY + 44);
+    ctx.lineTo(legX + 25, legY + 44);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('Poluprečnik r', legX + 32, legY + 48);
+
+    // Diagonal legend
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    ctx.moveTo(legX, legY + 66);
+    ctx.lineTo(legX + 25, legY + 66);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('Dijagonala d', legX + 32, legY + 70);
+  }
+
+  // Initial draw
+  draw(parseInt(slider.value));
+
+  // Slider event
+  slider.addEventListener('input', function() {
+    const val = parseInt(slider.value);
+    valueDisplay.textContent = val;
+    draw(val);
+  });
+
+  // Step click interactivity
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Površina kruga opisanog oko kvadrata",
+  "subject": "math",
+  "unit": "geometry",
+  "topic_tags": ["opisani krug", "kvadrat", "dijagonala", "površina kruga", "Pitagorina teorema"]
+}
+BRAINSPARK_META-->

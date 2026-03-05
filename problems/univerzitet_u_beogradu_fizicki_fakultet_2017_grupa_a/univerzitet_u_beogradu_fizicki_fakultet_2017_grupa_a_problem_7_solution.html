@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Izračunavanje složenog razlomačkog izraza</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Naći x iz jednačine:
+(1,3125 : 0,375 + 0,5) / (3(19/45) : 8(5/9) + 0,6) = 15/x
+
+BROJILAC:
+1,3125 : 0,375 + 0,5
+
+Korak 1: Pretvaramo decimale u razlomke
+1,3125 = 13125/10000 = 21/16  (jer 1,3125 = 1 + 5/16 = 21/16)
+  Provera: 13125/10000 = 1,3125. Simplifikujemo: 13125/10000 = 2625/2000 = 525/400 = 105/80 = 21/16.
+0,375 = 375/1000 = 3/8
+0,5 = 1/2
+
+Korak 2: Deljenje
+21/16 : 3/8 = 21/16 * 8/3 = (21*8)/(16*3) = 168/48 = 7/2 = 3,5
+
+Korak 3: Sabiranje
+7/2 + 1/2 = 8/2 = 4
+
+BROJILAC = 4
+
+IMENILAC:
+3(19/45) : 8(5/9) + 0,6
+
+Korak 1: Pretvaramo mešovite brojeve u neprave razlomke
+3(19/45) = (3*45 + 19)/45 = (135 + 19)/45 = 154/45
+8(5/9) = (8*9 + 5)/9 = (72 + 5)/9 = 77/9
+0,6 = 3/5
+
+Korak 2: Deljenje
+154/45 : 77/9 = 154/45 * 9/77 = (154*9)/(45*77) = 1386/3465
+
+Simplifikujemo:
+154 = 2 * 7 * 11
+77 = 7 * 11
+154/77 = 2
+9/45 = 1/5
+Dakle: (154*9)/(45*77) = (154/77) * (9/45) = 2 * 1/5 = 2/5
+
+Korak 3: Sabiranje
+2/5 + 3/5 = 5/5 = 1
+
+IMENILAC = 1
+
+REZULTAT:
+4/1 = 15/x
+4 = 15/x
+x = 15/4 = 3,75
+
+Odgovor: (Б) x = 3,75 ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 1.8rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 1rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement .problem-text {
+  font-size: 1.15rem;
+  margin-bottom: 1.2rem;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.8rem 1.2rem;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+details {
+  background: rgba(96, 165, 250, 0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+details[open] summary {
+  margin-bottom: 0.8rem;
+}
+
+.canvas-wrapper {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+canvas {
+  max-width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+}
+
+.step {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: flex-start;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #34d399;
+  background: rgba(52, 211, 153, 0.04);
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  margin-bottom: 0.4rem;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  margin: 0.6rem 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 0.4rem;
+}
+
+.highlight-num {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-den {
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+.highlight-result {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.key-insight {
+  border: 2px solid #a78bfa;
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.key-insight .card-title {
+  color: #a78bfa;
+}
+
+.final-answer {
+  border: 2px solid #34d399;
+  text-align: center;
+}
+
+.final-answer .card-title {
+  color: #34d399;
+}
+
+.answer-big {
+  font-size: 1.8rem;
+  color: #4ade80;
+  margin: 1rem 0;
+}
+
+.answer-options-final {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  margin: 1.2rem 0;
+}
+
+.answer-opt {
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: rgba(56, 189, 248, 0.05);
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+.answer-opt.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 0.8rem;
+}
+
+.pitfall-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.fraction-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.fraction-flow .arrow {
+  color: #64748b;
+  font-size: 1.4rem;
+}
+
+.fraction-card {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  text-align: center;
+  min-width: 80px;
+}
+
+.fraction-card .fc-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+}
+
+.sub-step {
+  margin-left: 0.5rem;
+  padding-left: 1rem;
+  border-left: 2px solid #334155;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 1.2rem; }
+  .given-grid { grid-template-columns: 1fr 1fr; }
+  .answer-options-final { gap: 0.6rem; }
+  .step { flex-direction: column; gap: 0.5rem; }
+  .fraction-flow { gap: 0.5rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Složeni razlomački izraz</h1>
+  <p class="subtitle">Aritmetika - pretvaranje decimala u razlomke, mešoviti brojevi i redosled operacija</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title">Zadatak</div>
+    <p class="problem-text">Ako je</p>
+    <div class="math-box" style="text-align:center; font-size:1.15rem;">
+      \[ \frac{1{,}3125 : 0{,}375 + 0{,}5}{3\dfrac{19}{45} : 8\dfrac{5}{9} + 0{,}6} = \frac{15}{x} \]
+    </div>
+    <p class="problem-text" style="margin-top:1rem;">onda je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( x = 5 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(Б)</div>
+        <div class="value">\( x = 3{,}75 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(В)</div>
+        <div class="value">\( x = -0{,}75 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(Г)</div>
+        <div class="value">\( x = 60 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title">Plan rešavanja</div>
+    <p class="plan-text">Razdvojićemo izraz na <span class="highlight-num">brojilac</span> i <span class="highlight-den">imenilac</span> glavnog razlomka. Svaki deo ćemo izračunati posebno pretvaranjem decimala i mešovitih brojeva u obične razlomke, a zatim ćemo rešiti jednačinu po \( x \).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title">Teorijski podsetnik</div>
+    <details>
+      <summary>Ključne formule i pravila</summary>
+      <div class="math-box">
+        <p><strong>Pretvaranje decimale u razlomak:</strong> Decimalni broj zapisujemo kao razlomak sa imenilacem koji je stepen broja 10, pa skraćujemo.</p>
+        \[ 0{,}375 = \frac{375}{1000} = \frac{3}{8} \]
+      </div>
+      <div class="math-box">
+        <p><strong>Mešoviti broj u nepravi razlomak:</strong></p>
+        \[ a\frac{b}{c} = \frac{a \cdot c + b}{c} \]
+      </div>
+      <div class="math-box">
+        <p><strong>Deljenje razlomaka:</strong> Delimo tako što množimo prvim razlomkom recipročnu vrednost drugog.</p>
+        \[ \frac{a}{b} : \frac{c}{d} = \frac{a}{b} \cdot \frac{d}{c} \]
+      </div>
+      <div class="math-box">
+        <p><strong>Redosled operacija:</strong> Deljenje se izvršava pre sabiranja (osim ako zagrade ne nalažu drugačije).</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title">Vizuelni prikaz</div>
+    <p class="note" style="margin-bottom:0.8rem;">Dijagram prikazuje strukturu izraza i tok izračunavanja. Kliknite na dugmad ispod za prikaz po koracima.</p>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="800" height="520"></canvas>
+    </div>
+    <div style="text-align:center; margin-top:0.8rem;">
+      <button id="btn-prev" style="background:#334155;color:#e2e8f0;border:1px solid #475569;border-radius:8px;padding:0.5rem 1.2rem;cursor:pointer;font-size:0.95rem;margin:0 0.3rem;">Prethodno</button>
+      <span id="step-indicator" style="color:#94a3b8;font-size:0.9rem;margin:0 0.5rem;">Korak 1 / 5</span>
+      <button id="btn-next" style="background:#60a5fa;color:#0f172a;border:none;border-radius:8px;padding:0.5rem 1.2rem;cursor:pointer;font-size:0.95rem;font-weight:600;margin:0 0.3rem;">Sledeće</button>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title">Rešenje korak po korak</div>
+
+    <!-- NUMERATOR SECTION -->
+    <p style="color:#60a5fa; font-weight:700; font-size:1.15rem; margin-bottom:1rem; border-bottom:1px solid #334155; padding-bottom:0.5rem;">Deo I: Brojilac glavnog razlomka</p>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Pretvaramo decimale u razlomke</h3>
+        <p>Svaki decimalni broj zapisujemo kao razlomak:</p>
+
+        <div class="sub-step">
+          <p><strong>\(1{,}3125\)</strong> ima 4 decimale, pa:</p>
+          <div class="math-box">
+            \[ 1{,}3125 = \frac{13125}{10000} \]
+          </div>
+          <p>Skraćujemo. Nađemo NZD(13125, 10000). Oba broja delimo sa 625:</p>
+          <div class="math-box">
+            \[ \frac{13125}{10000} = \frac{13125 \div 625}{10000 \div 625} = \frac{21}{16} \]
+          </div>
+        </div>
+
+        <div class="sub-step">
+          <p><strong>\(0{,}375\)</strong> ima 3 decimale:</p>
+          <div class="math-box">
+            \[ 0{,}375 = \frac{375}{1000} = \frac{375 \div 125}{1000 \div 125} = \frac{3}{8} \]
+          </div>
+        </div>
+
+        <div class="sub-step">
+          <p><strong>\(0{,}5\)</strong> je jednostavno:</p>
+          <div class="math-box">
+            \[ 0{,}5 = \frac{1}{2} \]
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Izračunavamo deljenje u brojiocu</h3>
+        <p>Po redosledu operacija, <em>deljenje ide pre sabiranja</em>. Delimo tako što množimo recipročnom vrednošću:</p>
+        <div class="math-box">
+          \[ \frac{21}{16} : \frac{3}{8} = \frac{21}{16} \cdot \frac{8}{3} \]
+        </div>
+        <p>Pre množenja, skraćujemo unakrsno: \(16\) i \(8\) dele se sa \(8\), a \(21\) i \(3\) dele se sa \(3\):</p>
+        <div class="math-box">
+          \[ \frac{\cancel{21}^{\,7}}{\cancel{16}_{\,2}} \cdot \frac{\cancel{8}^{\,1}}{\cancel{3}_{\,1}} = \frac{7}{2} \]
+        </div>
+        <p class="note">Dakle, \(1{,}3125 : 0{,}375 = \frac{7}{2} = 3{,}5\)</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Dodajemo 0,5</h3>
+        <p>Sada saberemo rezultat deljenja sa \(\frac{1}{2}\):</p>
+        <div class="math-box">
+          \[ \frac{7}{2} + \frac{1}{2} = \frac{7 + 1}{2} = \frac{8}{2} = 4 \]
+        </div>
+        <p class="highlight-num" style="font-size:1.1rem; margin-top:0.5rem;">Brojilac = 4</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko je \(1{,}3125 : 0{,}375\)?</summary>
+      <p>Odgovor: \(\frac{21}{16} : \frac{3}{8} = \frac{21}{16} \cdot \frac{8}{3} = \frac{7}{2} = 3{,}5\). Ako si dobio/la \(3{,}5\), na pravom si putu!</p>
+    </details>
+
+    <!-- DENOMINATOR SECTION -->
+    <p style="color:#a78bfa; font-weight:700; font-size:1.15rem; margin-top:1.5rem; margin-bottom:1rem; border-bottom:1px solid #334155; padding-bottom:0.5rem;">Deo II: Imenilac glavnog razlomka</p>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Pretvaramo mešovite brojeve u razlomke</h3>
+
+        <div class="sub-step">
+          <p><strong>\(3\frac{19}{45}\)</strong> - množimo celi deo sa imenilacem i dodajemo brojilac:</p>
+          <div class="math-box">
+            \[ 3\frac{19}{45} = \frac{3 \cdot 45 + 19}{45} = \frac{135 + 19}{45} = \frac{154}{45} \]
+          </div>
+        </div>
+
+        <div class="sub-step">
+          <p><strong>\(8\frac{5}{9}\)</strong> - isto postupamo:</p>
+          <div class="math-box">
+            \[ 8\frac{5}{9} = \frac{8 \cdot 9 + 5}{9} = \frac{72 + 5}{9} = \frac{77}{9} \]
+          </div>
+        </div>
+
+        <div class="sub-step">
+          <p><strong>\(0{,}6\)</strong> pretvaramo u razlomak:</p>
+          <div class="math-box">
+            \[ 0{,}6 = \frac{6}{10} = \frac{3}{5} \]
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Izračunavamo deljenje u imeniocu</h3>
+        <p>Ponovo, deljenje ima prioritet nad sabiranjem:</p>
+        <div class="math-box">
+          \[ \frac{154}{45} : \frac{77}{9} = \frac{154}{45} \cdot \frac{9}{77} \]
+        </div>
+        <p>Skraćujemo pre množenja. Uočimo da:</p>
+        <ul style="margin:0.5rem 0 0.5rem 1.2rem; color:#94a3b8;">
+          <li>\(154 = 2 \cdot 77\), pa se \(154\) i \(77\) skraćuju: \(\frac{154}{77} = 2\)</li>
+          <li>\(9\) i \(45\) dele se sa \(9\): \(\frac{9}{45} = \frac{1}{5}\)</li>
+        </ul>
+        <div class="math-box">
+          \[ \frac{\cancel{154}^{\,2}}{\cancel{45}_{\,5}} \cdot \frac{\cancel{9}^{\,1}}{\cancel{77}_{\,1}} = \frac{2}{5} \]
+        </div>
+        <p class="note">Dakle, \(3\frac{19}{45} : 8\frac{5}{9} = \frac{2}{5} = 0{,}4\)</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Dodajemo 0,6</h3>
+        <p>Saberemo rezultat deljenja sa \(\frac{3}{5}\):</p>
+        <div class="math-box">
+          \[ \frac{2}{5} + \frac{3}{5} = \frac{2 + 3}{5} = \frac{5}{5} = 1 \]
+        </div>
+        <p class="highlight-den" style="font-size:1.1rem; margin-top:0.5rem;">Imenilac = 1</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko je \(\frac{154}{45} \cdot \frac{9}{77}\)?</summary>
+      <p>Odgovor: Skraćivanjem dobijamo \(\frac{2}{5}\). Ključ je uočiti da je \(154 = 2 \times 77\) i da se \(9\) i \(45\) kraće sa \(9\). Ako si dobio/la \(\frac{2}{5}\), odlično!</p>
+    </details>
+
+    <!-- FINAL CALCULATION -->
+    <p style="color:#4ade80; font-weight:700; font-size:1.15rem; margin-top:1.5rem; margin-bottom:1rem; border-bottom:1px solid #334155; padding-bottom:0.5rem;">Deo III: Rešavamo jednačinu</p>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Formiramo jednačinu</h3>
+        <p>Sada zamenjujemo izračunate vrednosti:</p>
+        <div class="math-box">
+          \[ \frac{4}{1} = \frac{15}{x} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3>Rešavamo po \(x\)</h3>
+        <p>Iz proporcije \(4 = \frac{15}{x}\) izrazimo \(x\):</p>
+        <div class="math-box">
+          \[ 4 \cdot x = 15 \]
+        </div>
+        <div class="math-box">
+          \[ x = \frac{15}{4} = 3{,}75 \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Da li je \(\frac{15}{3{,}75} = 4\)?</summary>
+      <p>Da! \(\frac{15}{3{,}75} = \frac{15}{\frac{15}{4}} = 15 \cdot \frac{4}{15} = 4\). Tačno se poklapa sa našim brojiocem.</p>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card key-insight">
+    <div class="card-title">Ključni uvid</div>
+    <p>Ovaj zadatak deluje zastrašujuće zbog mnoštva decimala i mešovitih brojeva, ali čim sve pretvorimo u obične razlomke, računica postaje elegantna. Brojilac i imenilac su pažljivo konstruisani da se lepo skrate:</p>
+    <div class="math-box" style="text-align:center; font-size:1.1rem;">
+      \[ \frac{\overbrace{3{,}5 + 0{,}5}^{4}}{\underbrace{0{,}4 + 0{,}6}_{1}} = \frac{4}{1} = 4 = \frac{15}{x} \implies x = \frac{15}{4} \]
+    </div>
+    <p style="margin-top:0.7rem;">Lekcija: <em>ne plašite se komplikovanih izraza</em> -- rastavljajte ih na delove i radite sistematski.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <div class="card-title">Konačan odgovor</div>
+    <div class="answer-big">\( x = \dfrac{15}{4} = 3{,}75 \)</div>
+    <div class="answer-options-final">
+      <span class="answer-opt">(A) \( x = 5 \)</span>
+      <span class="answer-opt correct">(Б) \( x = 3{,}75 \)</span>
+      <span class="answer-opt">(В) \( x = -0{,}75 \)</span>
+      <span class="answer-opt">(Г) \( x = 60 \)</span>
+    </div>
+    <p class="verification-note">Verifikacija: Brojilac \(= 4\), imenilac \(= 1\), pa je leva strana jednaka \(4\). Desna strana: \(\frac{15}{3{,}75} = \frac{15}{\frac{15}{4}} = 4\). Jednakost važi. Tačan odgovor je (Б).</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title">Česte greške</div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Pogrešno pretvaranje decimala u razlomke.</strong> Na primer, \(1{,}3125 \neq \frac{13125}{1000}\) (treba \(\frac{13125}{10000}\), jer ima 4 decimale). Uvek prebrojite decimalna mesta!</p>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Greška pri pretvaranju mešovitih brojeva.</strong> Česta greška: \(3\frac{19}{45} \neq \frac{3 \cdot 19}{45}\). Pravilo je: \(a\frac{b}{c} = \frac{a \cdot c + b}{c}\), dakle celi deo se množi sa <em>imenilacem</em>, pa se dodaje brojilac.</p>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Pogrešan redosled operacija.</strong> U izrazima oblika \(a : b + c\), deljenje se radi <em>pre</em> sabiranja. Ako se prvo sabere \(b + c\), dobija se pogrešan rezultat.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title">Dodatni izazov</div>
+    <p>Ako u istom izrazu zamenimo \(0{,}5\) sa \(1{,}5\) u brojiocu (a sve ostalo ostane isto), koliko bi tada bio \(x\)?</p>
+    <details>
+      <summary>Nagovještaj</summary>
+      <p>Brojilac bi bio: \(\frac{7}{2} + \frac{3}{2} = 5\). Imenilac ostaje \(1\). Dakle \(\frac{5}{1} = \frac{15}{x}\), pa \(x = \frac{15}{5} = 3\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  let currentStep = 0;
+  const totalSteps = 5;
+
+  function drawBackground() {
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawRoundedRect(x, y, w, h, r, fillColor, strokeColor) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (fillColor) {
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    if (strokeColor) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  function drawArrow(x1, y1, x2, y2, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    var headLen = 10;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.stroke();
+  }
+
+  function drawText(text, x, y, color, size, align) {
+    ctx.fillStyle = color || '#e2e8f0';
+    ctx.font = (size || 16) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = align || 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+  }
+
+  function drawBoldText(text, x, y, color, size, align) {
+    ctx.fillStyle = color || '#e2e8f0';
+    ctx.font = 'bold ' + (size || 16) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = align || 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+  }
+
+  function drawFractionLine(x, y, w, color) {
+    ctx.strokeStyle = color || '#e2e8f0';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2, y);
+    ctx.lineTo(x + w / 2, y);
+    ctx.stroke();
+  }
+
+  function draw(step) {
+    drawBackground();
+
+    // Title
+    drawBoldText('Struktura izraza', W / 2, 25, '#60a5fa', 18);
+
+    // Main fraction structure - always visible
+    // Big fraction line
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - 200, 250);
+    ctx.lineTo(W / 2 + 200, 250);
+    ctx.stroke();
+
+    // = 15/x on the right
+    drawBoldText('=', W / 2 + 230, 250, '#e2e8f0', 22);
+    drawBoldText('15', W / 2 + 280, 230, '#e2e8f0', 20);
+    drawFractionLine(W / 2 + 280, 250, 40, '#e2e8f0');
+    drawBoldText('x', W / 2 + 280, 270, '#f472b6', 20);
+
+    if (step >= 0) {
+      // Step 1: Show the original numerator and denominator
+      drawRoundedRect(W / 2 - 195, 60, 390, 80, 10, 'rgba(96,165,250,0.1)', '#60a5fa');
+      drawBoldText('BROJILAC', W / 2, 80, '#60a5fa', 14);
+      drawText('1,3125 : 0,375 + 0,5', W / 2, 110, '#e2e8f0', 18);
+
+      drawRoundedRect(W / 2 - 195, 280, 390, 80, 10, 'rgba(167,139,250,0.1)', '#a78bfa');
+      drawBoldText('IMENILAC', W / 2, 300, '#a78bfa', 14);
+      drawText('3(19/45) : 8(5/9) + 0,6', W / 2, 330, '#e2e8f0', 18);
+    }
+
+    if (step >= 1) {
+      // Step 2: Show numerator conversion
+      drawRoundedRect(30, 385, 350, 55, 8, 'rgba(96,165,250,0.08)', '#334155');
+      drawText('21/16 : 3/8 + 1/2', 205, 405, '#60a5fa', 16);
+      drawText('(decimale \u2192 razlomci)', 205, 425, '#64748b', 12);
+      drawArrow(W / 2, 140, 205, 385, '#60a5fa');
+    }
+
+    if (step >= 2) {
+      // Step 3: Show denominator conversion
+      drawRoundedRect(420, 385, 355, 55, 8, 'rgba(167,139,250,0.08)', '#334155');
+      drawText('154/45 : 77/9 + 3/5', 597, 405, '#a78bfa', 16);
+      drawText('(mešoviti \u2192 razlomci)', 597, 425, '#64748b', 12);
+      drawArrow(W / 2, 360, 597, 385, '#a78bfa');
+    }
+
+    if (step >= 3) {
+      // Step 4: Show intermediate results
+      drawRoundedRect(30, 455, 350, 45, 8, 'rgba(96,165,250,0.12)', '#60a5fa');
+      drawBoldText('7/2 + 1/2 = 4', 205, 478, '#60a5fa', 17);
+
+      drawRoundedRect(420, 455, 355, 45, 8, 'rgba(167,139,250,0.12)', '#a78bfa');
+      drawBoldText('2/5 + 3/5 = 1', 597, 478, '#a78bfa', 17);
+    }
+
+    if (step >= 4) {
+      // Step 5: Final result
+      drawRoundedRect(W / 2 - 150, 250 - 28, 120, 56, 10, 'rgba(52,211,153,0.15)', '#34d399');
+      drawBoldText('4 / 1 = 4', W / 2 - 90, 250, '#4ade80', 20);
+
+      // Arrow to answer
+      drawArrow(W / 2 + 10, 250, W / 2 + 215, 250, '#34d399');
+
+      // Answer box
+      drawRoundedRect(W / 2 + 250, 230, 130, 40, 8, 'rgba(52,211,153,0.2)', '#34d399');
+      drawBoldText('x = 3,75', W / 2 + 315, 250, '#4ade80', 18);
+    }
+  }
+
+  draw(currentStep);
+
+  function updateStep(newStep) {
+    currentStep = Math.max(0, Math.min(totalSteps - 1, newStep));
+    draw(currentStep);
+    document.getElementById('step-indicator').textContent = 'Korak ' + (currentStep + 1) + ' / ' + totalSteps;
+  }
+
+  document.getElementById('btn-next').addEventListener('click', function() {
+    updateStep(currentStep + 1);
+  });
+
+  document.getElementById('btn-prev').addEventListener('click', function() {
+    updateStep(currentStep - 1);
+  });
+
+  // Step click highlighting
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(s) {
+    s.addEventListener('click', function() {
+      steps.forEach(function(el) { el.classList.remove('active'); });
+      s.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Složeni razlomački izraz sa decimalama i mešovitim brojevima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["razlomci", "decimalni_brojevi", "mešoviti_brojevi", "deljenje_razlomaka", "redosled_operacija", "aritmetika"]
+}
+BRAINSPARK_META-->

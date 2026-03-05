@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Permutacije sa zadatim početkom</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Koliko permutacija elemenata skupa {1, 2, 3, 4, 5, 6} počinje sa 345?
+
+  Analiza: "Počinju sa 345" znači da su prva tri elementa fiksirana: pozicija 1 = 3, pozicija 2 = 4, pozicija 3 = 5.
+
+  Skup ima 6 elemenata: {1, 2, 3, 4, 5, 6}
+  Ako su 3, 4, 5 zauzeti na pozicijama 1, 2, 3, preostali elementi su: {1, 2, 6}
+  Ovi preostali elementi popunjavaju pozicije 4, 5, 6.
+
+  Broj načina da rasporedimo 3 elementa na 3 pozicije = 3! = 3 × 2 × 1 = 6
+
+  Eksplicitno nabrajanje svih permutacija:
+  1. (3, 4, 5, 1, 2, 6)
+  2. (3, 4, 5, 1, 6, 2)
+  3. (3, 4, 5, 2, 1, 6)
+  4. (3, 4, 5, 2, 6, 1)
+  5. (3, 4, 5, 6, 1, 2)
+  6. (3, 4, 5, 6, 2, 1)
+
+  Ukupno: 6 permutacija.
+
+  Odgovor: A) 6
+
+  Verifikacija: Ukupan broj permutacija od 6 elemenata je 6! = 720.
+  Permutacije koje počinju sa 345: fiksiramo 3 od 6 pozicija, preostale 3 popunjavamo na 3! = 6 načina.
+  Udeo: 6/720 = 1/120, što ima smisla jer je verovatnoća da tačno 3 specifična elementa
+  budu na tačno 3 specifične pozicije jednaka (1/6)(1/5)(1/4) = 1/120.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-text {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: #e2e8f0;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.plan-card .card-title {
+  color: #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  list-style: none;
+}
+
+.theory-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.theory-card summary::before {
+  content: "\25B6  ";
+  font-size: 0.8rem;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.theory-card details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.theory-content {
+  padding: 16px 0 8px 0;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 10px 16px;
+  margin-bottom: 8px;
+  background: rgba(56, 189, 248, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid #60a5fa;
+  line-height: 1.8;
+}
+
+.theory-content li strong {
+  color: #60a5fa;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  padding: 20px 24px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid #334155;
+  cursor: pointer;
+  transition: border-left 0.2s, background 0.2s;
+}
+
+.step-container:hover,
+.step-container.active {
+  border-left: 4px solid #4ade80;
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.step-header h3 {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+}
+
+.step-text {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+  line-height: 1.8;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+  line-height: 2;
+}
+
+.step-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  padding: 10px 16px;
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 8px;
+  list-style: none;
+}
+
+.checkpoint summary::-webkit-details-marker {
+  display: none;
+}
+
+.checkpoint summary::before {
+  content: "\2753 ";
+}
+
+.checkpoint .answer {
+  padding: 12px 16px;
+  margin-top: 8px;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 8px;
+  color: #34d399;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  text-align: center;
+  padding: 32px;
+}
+
+.insight-card .card-title {
+  justify-content: center;
+  color: #a78bfa;
+}
+
+.insight-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+  color: #e2e8f0;
+}
+
+.insight-result {
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.08), rgba(74, 222, 128, 0.12));
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  text-align: center;
+  padding: 36px;
+}
+
+.final-answer-card .card-title {
+  justify-content: center;
+  color: #4ade80;
+  font-size: 1.4rem;
+}
+
+.final-answer-value {
+  font-size: 2rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 20px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  padding: 12px 24px;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid #334155;
+  text-align: center;
+  min-width: 70px;
+  transition: all 0.2s;
+}
+
+.option-card.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.2);
+}
+
+.option-card .opt-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+
+.option-card .opt-value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification-note {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(56, 189, 248, 0.06);
+  border-radius: 10px;
+  border-left: 3px solid #60a5fa;
+  color: #94a3b8;
+  text-align: left;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.pitfalls-card {
+  border-left: 4px solid #e09468;
+}
+
+.pitfalls-card .card-title {
+  color: #e09468;
+}
+
+.pitfalls-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfalls-card li {
+  padding: 10px 16px;
+  margin-bottom: 8px;
+  background: rgba(224, 148, 104, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid #e09468;
+  color: #cbd5e1;
+  line-height: 1.7;
+}
+
+.pitfalls-card li::before {
+  content: "\26A0\FE0F ";
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-weight: 600;
+  padding: 10px 16px;
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.2);
+  border-radius: 8px;
+  list-style: none;
+}
+
+.challenge-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.challenge-card .hint-content {
+  padding: 12px 16px;
+  margin-top: 8px;
+  background: rgba(244, 114, 182, 0.06);
+  border-radius: 8px;
+  color: #cbd5e1;
+  line-height: 1.7;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.perm-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.perm-item {
+  font-family: 'Courier New', monospace;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  color: #e2e8f0;
+}
+
+.perm-item .fixed {
+  color: #f472b6;
+  font-weight: 700;
+}
+
+.perm-item .free {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .container { padding: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .options-row { gap: 8px; }
+  .option-card { min-width: 55px; padding: 10px 16px; }
+  .perm-list { gap: 6px; }
+  .perm-item { font-size: 0.85rem; padding: 6px 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Permutacije sa zadatim početkom</h1>
+  <p class="subtitle">Kombinatorika -- prebrojavanje permutacija sa fiksiranim pozicijama</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title"><span class="icon">📋</span> Tekst zadatka</h2>
+    <p class="problem-text">
+      Broj permutacija elemenata skupa \(\{1, 2, 3, 4, 5, 6\}\) koje <span class="highlight">počinju sa 345</span> jednak je:
+    </p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(6\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(24\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(120\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(240\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(0\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2 class="card-title"><span class="icon">🧭</span> Plan rešavanja</h2>
+    <p class="step-text">
+      Fiksiramo prve tri pozicije na \(3, 4, 5\), a zatim brojimo na koliko načina možemo rasporediti preostale elemente na preostale pozicije. Koristimo osnovno pravilo prebrojavanja (faktorijel).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>📐 Ključne formule i pojmovi</summary>
+      <div class="theory-content">
+        <ul>
+          <li>
+            <strong>Permutacija:</strong> Svaki raspored svih \(n\) elemenata nekog skupa u odredenom redosledu naziva se permutacija. Broj permutacija od \(n\) elemenata je \(n!\) (čitamo: "\(n\) faktorijel").
+          </li>
+          <li>
+            <strong>Faktorijel:</strong> \(n! = n \cdot (n-1) \cdot (n-2) \cdots 2 \cdot 1\). Na primer, \(3! = 3 \cdot 2 \cdot 1 = 6\), \(6! = 720\).
+          </li>
+          <li>
+            <strong>Princip množenja:</strong> Ako prvi izbor može da se napravi na \(a\) načina, drugi na \(b\) načina, itd., onda ukupan broj načina je \(a \cdot b \cdots\)
+          </li>
+          <li>
+            <strong>Fiksiranje pozicija:</strong> Ako je \(k\) pozicija fiksno zadato u permutaciji od \(n\) elemenata, preostalih \(n - k\) elemenata se rasporeduje na \((n - k)!\) načina.
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card canvas-card">
+    <h2 class="card-title"><span class="icon">🎨</span> Vizuelni prikaz</h2>
+    <canvas id="permCanvas" width="700" height="420"></canvas>
+    <p class="canvas-hint">Prikaz svih 6 permutacija sa fiksiranim početkom 3, 4, 5</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">📝</span> Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <h3>Razumevanje problema</h3>
+      </div>
+      <p class="step-text">
+        Imamo skup \(\{1, 2, 3, 4, 5, 6\}\) i tražimo permutacije (rasporede) koje <strong>počinju sa 345</strong>. To znači da su prva tri elementa fiksirana:
+      </p>
+      <div class="math-block">
+        \[\text{Pozicija 1} = 3, \quad \text{Pozicija 2} = 4, \quad \text{Pozicija 3} = 5\]
+      </div>
+      <p class="step-note">Ključna reč je "počinju sa" — to nedvosmisleno znači da su 3, 4, 5 na prvom, drugom i trećem mestu, redom.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <h3>Odredivanje preostalih elemenata</h3>
+      </div>
+      <p class="step-text">
+        Pošto su elementi 3, 4 i 5 već zauzeli prve tri pozicije, od polaznog skupa \(\{1, 2, 3, 4, 5, 6\}\) preostaju:
+      </p>
+      <div class="math-block">
+        \[\{1, 2, 3, 4, 5, 6\} \setminus \{3, 4, 5\} = \{1, 2, 6\}\]
+      </div>
+      <p class="step-text">
+        Ova tri elementa treba rasporediti na preostale tri pozicije (4, 5 i 6).
+      </p>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko elemenata treba rasporediti na preostale pozicije?</summary>
+      <div class="answer">Tri elementa: \(1, 2, 6\). Treba ih rasporediti na tri preostale pozicije (4, 5 i 6).</div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <h3>Prebrojavanje rasporeda</h3>
+      </div>
+      <p class="step-text">
+        Tri elementa se mogu rasporediti na tri pozicije na \(3!\) načina. Primenimo princip množenja:
+      </p>
+      <div class="math-block">
+        \[3! = 3 \cdot 2 \cdot 1 = 6\]
+      </div>
+      <p class="step-text">
+        Razmotrimo redom:
+      </p>
+      <ul style="margin: 8px 0 8px 24px; color: #cbd5e1; line-height: 2;">
+        <li>Za poziciju 4 imamo <strong>3 izbora</strong> (bilo koji od \(1, 2, 6\)).</li>
+        <li>Za poziciju 5 imamo <strong>2 izbora</strong> (preostala dva elementa).</li>
+        <li>Za poziciju 6 imamo <strong>1 izbor</strong> (poslednji preostali element).</li>
+      </ul>
+      <div class="math-block">
+        \[\text{Ukupno} = 3 \times 2 \times 1 = 6\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko je \(4!\)?</summary>
+      <div class="answer">\(4! = 4 \cdot 3 \cdot 2 \cdot 1 = 24\). To bi bio odgovor da su samo 2 pozicije fiksirane (ili ako bismo "345" tretirali kao blok, ali ovde to nije slučaj).</div>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container" tabindex="0">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <h3>Eksplicitno nabrajanje</h3>
+      </div>
+      <p class="step-text">
+        Za potpunu verifikaciju, nabrojmo sve permutacije koje počinju sa 3, 4, 5:
+      </p>
+      <div class="perm-list">
+        <div class="perm-item">(<span class="fixed">3, 4, 5</span>, <span class="free">1, 2, 6</span>)</div>
+        <div class="perm-item">(<span class="fixed">3, 4, 5</span>, <span class="free">1, 6, 2</span>)</div>
+        <div class="perm-item">(<span class="fixed">3, 4, 5</span>, <span class="free">2, 1, 6</span>)</div>
+        <div class="perm-item">(<span class="fixed">3, 4, 5</span>, <span class="free">2, 6, 1</span>)</div>
+        <div class="perm-item">(<span class="fixed">3, 4, 5</span>, <span class="free">6, 1, 2</span>)</div>
+        <div class="perm-item">(<span class="fixed">3, 4, 5</span>, <span class="free">6, 2, 1</span>)</div>
+      </div>
+      <p class="step-text">
+        Dobili smo tačno <strong>6 permutacija</strong>, što potvrdjuje naš račun.
+      </p>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koji deo ukupnog broja permutacija čini ovih 6?</summary>
+      <div class="answer">Ukupan broj permutacija od 6 elemenata je \(6! = 720\). Udeo je \(\frac{6}{720} = \frac{1}{120}\), što je jednako \(\frac{1}{6 \cdot 5 \cdot 4} = \frac{1}{P(6,3)}\). Ovo ima smisla jer je verovatnoća da baš 3, 4, 5 budu na prvom, drugom i trećem mestu ravna \(\frac{1}{6} \cdot \frac{1}{5} \cdot \frac{1}{4} = \frac{1}{120}\).</div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2 class="card-title"><span class="icon">💡</span> Ključni uvid</h2>
+    <p class="step-text" style="color: #cbd5e1;">
+      Kada su \(k\) od \(n\) pozicija u permutaciji fiksno zadato, preostali elementi se rasporeduju na:
+    </p>
+    <div class="insight-formula">
+      \[(n - k)! \text{ načina}\]
+    </div>
+    <p class="step-text" style="color: #cbd5e1;">
+      U našem slučaju: \(n = 6\), \(k = 3\), pa je broj permutacija:
+    </p>
+    <div class="insight-formula">
+      \[(6 - 3)! = 3! = \) <span class="insight-result">\(6\)</span>
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2 class="card-title"><span class="icon">🏆</span> Konačan odgovor</h2>
+    <div class="final-answer-value">\(\boxed{6}\)</div>
+    <div class="options-row">
+      <div class="option-card correct">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(6\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(24\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(120\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(240\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(0\)</div>
+      </div>
+    </div>
+    <p style="color: #4ade80; font-size: 1.15rem; margin-top: 12px;">Tačan odgovor je <strong>(A) 6</strong>.</p>
+
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> Nabrojali smo eksplicitno svih 6 permutacija i potvrdili da ih je tačno 6. Takodje, račun \(3! = 6\) daje isti rezultat. Odgovor B) 24 = 4! bi bio tačan samo ako bismo "345" tretirali kao jedan blok koji može da se pomera unutar permutacije (a ne da nužno bude na početku), ali tekst zadatka jasno kaže "počinju sa 345".
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls-card">
+    <h2 class="card-title"><span class="icon">⚠</span> Česte greške</h2>
+    <ul>
+      <li>
+        <strong>Mešanje "počinje sa" i "sadrži blok":</strong> Ako bismo "345" tretirali kao blok koji se može pojaviti na bilo kojoj poziciji (ne samo na početku), blok bi bio jedan element, pa bismo imali 4 elementa (blok + 1, 2, 6) i \(4! = 24\) rasporeda. Ali zadatak kaže "počinju sa 345", što znači da je blok fiksiran na početku.
+      </li>
+      <li>
+        <strong>Računanje permutacija cele grupe umesto ostatka:</strong> Studenti ponekad računaju \(6! = 720\) ili \(6!/3! = 120\), zaboravljajući da su prve tri pozicije potpuno fiksne.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2 class="card-title"><span class="icon">🚀</span> Dodatni izazov</h2>
+    <p class="step-text">
+      Koliko permutacija elemenata skupa \(\{1, 2, 3, 4, 5, 6\}\) <em>sadrži</em> podniz 345 (tj. 3, 4, 5 se pojavljuju uzastopno i tim redom, ali ne nužno na početku)?
+    </p>
+    <details>
+      <summary>Prikaži nagoveštaj</summary>
+      <div class="hint-content">
+        Posmatrajte blok (3, 4, 5) kao jedan element. Tada imate 4 "elementa" za raspored: blok, 1, 2 i 6. Koliko permutacija od 4 elementa postoji?
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Canvas visualization
+  const canvas = document.getElementById('permCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // High DPI support
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = 700 * dpr;
+  canvas.height = 420 * dpr;
+  canvas.style.width = '700px';
+  canvas.style.height = '420px';
+  ctx.scale(dpr, dpr);
+
+  const W = 700;
+  const H = 420;
+
+  const permutations = [
+    [3, 4, 5, 1, 2, 6],
+    [3, 4, 5, 1, 6, 2],
+    [3, 4, 5, 2, 1, 6],
+    [3, 4, 5, 2, 6, 1],
+    [3, 4, 5, 6, 1, 2],
+    [3, 4, 5, 6, 2, 1]
+  ];
+
+  function draw() {
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sve permutacije koje počinju sa 3, 4, 5', W / 2, 35);
+
+    // Column headers
+    const startX = 100;
+    const cellW = 80;
+    const startY = 70;
+    const rowH = 50;
+
+    ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    for (let j = 0; j < 6; j++) {
+      ctx.fillText('Poz. ' + (j + 1), startX + j * cellW + cellW / 2, startY);
+    }
+
+    // Draw separator line
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(startX - 10, startY + 12);
+    ctx.lineTo(startX + 6 * cellW + 10, startY + 12);
+    ctx.stroke();
+
+    // Row label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'right';
+
+    // Draw permutations
+    for (let i = 0; i < permutations.length; i++) {
+      const y = startY + 45 + i * rowH;
+      const perm = permutations[i];
+
+      // Row number
+      ctx.fillStyle = '#64748b';
+      ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('#' + (i + 1), startX - 20, y + 6);
+
+      for (let j = 0; j < 6; j++) {
+        const x = startX + j * cellW;
+        const isFixed = j < 3;
+
+        // Cell background
+        if (isFixed) {
+          ctx.fillStyle = 'rgba(244, 114, 182, 0.12)';
+          ctx.strokeStyle = 'rgba(244, 114, 182, 0.3)';
+        } else {
+          ctx.fillStyle = 'rgba(74, 222, 128, 0.08)';
+          ctx.strokeStyle = 'rgba(74, 222, 128, 0.2)';
+        }
+
+        const cw = cellW - 10;
+        const ch = 36;
+        const cx = x + 5;
+        const cy = y - 14;
+        const r = 8;
+
+        // Rounded rect
+        ctx.beginPath();
+        ctx.moveTo(cx + r, cy);
+        ctx.lineTo(cx + cw - r, cy);
+        ctx.quadraticCurveTo(cx + cw, cy, cx + cw, cy + r);
+        ctx.lineTo(cx + cw, cy + ch - r);
+        ctx.quadraticCurveTo(cx + cw, cy + ch, cx + cw - r, cy + ch);
+        ctx.lineTo(cx + r, cy + ch);
+        ctx.quadraticCurveTo(cx, cy + ch, cx, cy + ch - r);
+        ctx.lineTo(cx, cy + r);
+        ctx.quadraticCurveTo(cx, cy, cx + r, cy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Value
+        ctx.textAlign = 'center';
+        ctx.font = isFixed ? 'bold 20px "Courier New", monospace' : '20px "Courier New", monospace';
+        ctx.fillStyle = isFixed ? '#f472b6' : '#4ade80';
+        ctx.fillText(String(perm[j]), x + cellW / 2, y + 8);
+      }
+    }
+
+    // Legend
+    const legendY = H - 35;
+    ctx.textAlign = 'left';
+    ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+
+    // Fixed legend
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.12)';
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.3)';
+    ctx.fillRect(W / 2 - 180, legendY - 12, 20, 20);
+    ctx.strokeRect(W / 2 - 180, legendY - 12, 20, 20);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('Fiksirane pozicije (3, 4, 5)', W / 2 - 155, legendY + 3);
+
+    // Free legend
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.08)';
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.2)';
+    ctx.fillRect(W / 2 + 80, legendY - 12, 20, 20);
+    ctx.strokeRect(W / 2 + 80, legendY - 12, 20, 20);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('Slobodne pozicije', W / 2 + 105, legendY + 3);
+
+    // Count badge
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
+    ctx.beginPath();
+    ctx.arc(W - 55, H / 2, 40, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 32px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('6', W - 55, H / 2 + 5);
+    ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('ukupno', W - 55, H / 2 + 22);
+  }
+
+  draw();
+
+  // Step click highlight
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+
+<!--BRAINSPARK_META
+{
+  "title": "Permutacije sa zadatim početkom",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["permutacije", "faktorijel", "kombinatorika", "prebrojavanje"]
+}
+BRAINSPARK_META-->

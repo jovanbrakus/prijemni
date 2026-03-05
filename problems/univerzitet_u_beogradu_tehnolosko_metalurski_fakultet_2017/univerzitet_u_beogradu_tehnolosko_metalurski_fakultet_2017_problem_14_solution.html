@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binomni razvoj - odredjivanje eksponenta n</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: U razvoju (∛2 + 1/∛3)^n, sedmi član od početka i sedmi član od kraja
+se odnose kao 1:6. Naći n.
+
+Let a = 2^(1/3), b = 3^(-1/3).
+
+Binomni razvoj: (a + b)^n = Σ C(n,k) a^(n-k) b^k, k = 0..n
+
+7th term from beginning (k=6):
+T_7 = C(n,6) · a^(n-6) · b^6
+
+7th term from end: This is the (n+1-6)th = (n-5)th term from the beginning (k = n-6):
+T_{n-5} = C(n, n-6) · a^6 · b^(n-6)
+
+Note: C(n, n-6) = C(n, 6), so the binomial coefficients cancel.
+
+Ratio T_7 / T_{n-5} = [a^(n-6) · b^6] / [a^6 · b^(n-6)]
+                     = a^(n-12) · b^(12-n)
+                     = (a/b)^(n-12)
+
+Compute a/b:
+a/b = 2^(1/3) / 3^(-1/3) = 2^(1/3) · 3^(1/3) = (2·3)^(1/3) = 6^(1/3)
+
+So the ratio = (6^(1/3))^(n-12) = 6^((n-12)/3)
+
+Given ratio is 1:6, meaning T_7 / T_{n-5} = 1/6 = 6^(-1)
+
+Therefore: 6^((n-12)/3) = 6^(-1)
+=> (n-12)/3 = -1
+=> n - 12 = -3
+=> n = 9
+
+ANSWER: D) 9
+
+VERIFICATION:
+- For n=9: 7th term from beginning has k=6, 7th term from end has k=n-6=3
+- Ratio = 6^((9-12)/3) = 6^(-1) = 1/6 ✓
+- Also need n >= 6 for 7th term to exist: 9 >= 6 ✓ (both terms exist)
+- n+1 >= 7 means n >= 6, satisfied ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #c4b5fd;
+  font-size: 1.05rem;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  padding: 18px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.5);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 14px;
+  background: rgba(96, 165, 250, 0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  list-style: none;
+  user-select: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .details-content {
+  padding: 14px 18px;
+  margin-top: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 8px;
+  border: 1px solid #334155;
+}
+
+.checkpoint {
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.checkpoint summary {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(74, 222, 128, 0.2);
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box .insight-title {
+  color: #a78bfa;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.insight-box .insight-formula {
+  font-size: 1.3rem;
+  color: #e2e8f0;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  text-align: center;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+  justify-content: center;
+}
+
+.final-answer {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.verification {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 14px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfall-card {
+  border-left: 3px solid #f472b6;
+}
+
+.pitfall-card h2 {
+  color: #f472b6;
+}
+
+.pitfall-item {
+  padding: 8px 0;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+}
+
+.pitfall-item::before {
+  content: '\26A0';
+  margin-right: 8px;
+}
+
+.challenge-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.challenge-card h2 {
+  color: #a78bfa;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.option-card {
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 12px 20px;
+  min-width: 90px;
+  text-align: center;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.option-card .opt-letter {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.option-card .opt-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 10px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { padding: 12px; }
+  .final-answer { font-size: 1.4rem; }
+  .container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Binomni razvoj &mdash; odredjivanje eksponenta</h1>
+<p class="subtitle">Binomna formula, osobine članova binomnog razvoja, stepene jednačine</p>
+
+<!-- PROBLEM STATEMENT -->
+<div class="card problem-statement">
+  <h2>Tekst zadatka</h2>
+  <p>
+    Ako se u razvoju \(\displaystyle\left(\sqrt[3]{2} + \frac{1}{\sqrt[3]{3}}\right)^n\) sedmi član od početka i sedmi član od kraja odnose kao \(1 : 6\), onda je \(n\) jednako:
+  </p>
+  <div class="given-grid">
+    <div class="given-item">
+      <div class="label">Izraz</div>
+      <div class="value">\(\left(2^{1/3} + 3^{-1/3}\right)^n\)</div>
+    </div>
+    <div class="given-item">
+      <div class="label">Odnos</div>
+      <div class="value">\(T_7 : T'_7 = 1 : 6\)</div>
+    </div>
+  </div>
+  <div class="given-grid">
+    <div class="given-item answer-option" data-option="A">
+      <div class="label">(A)</div>
+      <div class="value">\(6\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="B">
+      <div class="label">(B)</div>
+      <div class="value">\(7\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="C">
+      <div class="label">(C)</div>
+      <div class="value">\(8\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="D">
+      <div class="label">(D)</div>
+      <div class="value">\(9\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="E">
+      <div class="label">(E)</div>
+      <div class="value">\(10\)</div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAN -->
+<div class="card plan-card">
+  <h2>Plan rešavanja</h2>
+  <p>
+    Iskoristićemo binomnu formulu za opšti član razvoja \((a+b)^n\). Zapišemo sedmi član od početka i sedmi član od kraja, podelimo ih, skratimo binomne koeficijente, i dobijemo stepensku jednačinu po \(n\) koju lako rešavamo.
+  </p>
+</div>
+
+<!-- THEORY REFRESHER -->
+<div class="card">
+  <details>
+    <summary>Ključne formule i teoreme</summary>
+    <div class="details-content">
+      <ul style="list-style: disc; padding-left: 20px;">
+        <li style="margin-bottom: 10px;">
+          <strong>Binomna formula:</strong>
+          \[\displaystyle (a+b)^n = \sum_{k=0}^{n}\binom{n}{k}\, a^{n-k}\, b^k\]
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Opšti član (od početka):</strong> \(k\)-ti član je \(\displaystyle T_{k+1} = \binom{n}{k}\, a^{n-k}\, b^k\), gde brojimo od \(k=0\).
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Član od kraja:</strong> Sedmi član od kraja je \((n+1-6)\)-ti, tj. \((n-5)\)-ti član od početka. Odgovara indeksu \(k = n-6\).
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Simetrija binomnih koeficijenata:</strong> \(\displaystyle\binom{n}{k} = \binom{n}{n-k}\), pa posebno \(\displaystyle\binom{n}{6} = \binom{n}{n-6}\).
+        </li>
+        <li>
+          <strong>Stepenovanje korena:</strong> \(\sqrt[3]{x} = x^{1/3}\), \(\;\frac{1}{\sqrt[3]{x}} = x^{-1/3}\).
+        </li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- VISUAL AID -->
+<div class="card">
+  <h2>Vizuelni prikaz binomnog razvoja</h2>
+  <canvas id="binomCanvas" width="800" height="420"></canvas>
+  <p class="canvas-hint">Koristite klizač ispod da menjate vrednost n i vidite kako se odnos članova menja</p>
+  <div style="text-align: center; margin-top: 14px;">
+    <label for="nSlider" style="color: #94a3b8; font-size: 0.95rem;">Vrednost n: </label>
+    <input type="range" id="nSlider" min="6" max="15" value="9" style="width: 200px; vertical-align: middle;">
+    <span id="nValue" style="color: #60a5fa; font-weight: 700; font-size: 1.1rem; margin-left: 8px;">9</span>
+  </div>
+</div>
+
+<!-- STEP-BY-STEP SOLUTION -->
+<div class="card">
+  <h2>Rešenje korak po korak</h2>
+
+  <!-- Step 1 -->
+  <div class="step-container" tabindex="0">
+    <div class="step-header">
+      <div class="step-badge">1</div>
+      <h3>Definišemo osnove</h3>
+    </div>
+    <p>Označimo:</p>
+    <div class="math-block">
+      \[a = \sqrt[3]{2} = 2^{1/3}, \qquad b = \frac{1}{\sqrt[3]{3}} = 3^{-1/3}\]
+    </div>
+    <p>Binomni razvoj je \((a + b)^n\).</p>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step-container" tabindex="0">
+    <div class="step-header">
+      <div class="step-badge">2</div>
+      <h3>Zapisujemo sedmi član od početka</h3>
+    </div>
+    <p>Sedmi član od početka (za \(k=6\)):</p>
+    <div class="math-block">
+      \[T_7 = \binom{n}{6}\, a^{n-6}\, b^{6}\]
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="step-container" tabindex="0">
+    <div class="step-header">
+      <div class="step-badge">3</div>
+      <h3>Zapisujemo sedmi član od kraja</h3>
+    </div>
+    <p>Razvoj ima \(n+1\) članova. Sedmi član od kraja je \((n+1-6)\)-ti = \((n-5)\)-ti član od početka, što odgovara indeksu \(k = n - 6\):</p>
+    <div class="math-block">
+      \[T'_7 = \binom{n}{n-6}\, a^{6}\, b^{n-6}\]
+    </div>
+    <p class="note">Koristimo \(\binom{n}{n-6} = \binom{n}{6}\), pa su binomni koeficijenti identični.</p>
+  </div>
+
+  <!-- Checkpoint 1 -->
+  <details class="checkpoint">
+    <summary>Proveri sebe: Šta se dešava sa binomnim koeficijentima u količniku?</summary>
+    <div class="details-content">
+      <p>Pošto je \(\binom{n}{6} = \binom{n}{n-6}\), binomni koeficijenti se <strong>skrate</strong> (ponište) kada delimo jedan član drugim. Ostaju samo stepeni od \(a\) i \(b\).</p>
+    </div>
+  </details>
+
+  <!-- Step 4 -->
+  <div class="step-container" tabindex="0">
+    <div class="step-header">
+      <div class="step-badge">4</div>
+      <h3>Formiramo količnik</h3>
+    </div>
+    <p>Delimo \(T_7\) sa \(T'_7\):</p>
+    <div class="math-block">
+      \[\frac{T_7}{T'_7} = \frac{\binom{n}{6}\, a^{n-6}\, b^{6}}{\binom{n}{6}\, a^{6}\, b^{n-6}} = \frac{a^{n-6}}{a^6} \cdot \frac{b^{6}}{b^{n-6}}\]
+    </div>
+    <p>Pojednostavljujemo stepene:</p>
+    <div class="math-block">
+      \[\frac{T_7}{T'_7} = a^{n-12} \cdot b^{12-n} = \left(\frac{a}{b}\right)^{n-12}\]
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div class="step-container" tabindex="0">
+    <div class="step-header">
+      <div class="step-badge">5</div>
+      <h3>Izračunavamo \(a/b\)</h3>
+    </div>
+    <p>Zamenjujemo vrednosti za \(a\) i \(b\):</p>
+    <div class="math-block">
+      \[\frac{a}{b} = \frac{2^{1/3}}{3^{-1/3}} = 2^{1/3} \cdot 3^{1/3} = (2 \cdot 3)^{1/3} = 6^{1/3} = \sqrt[3]{6}\]
+    </div>
+  </div>
+
+  <!-- Checkpoint 2 -->
+  <details class="checkpoint">
+    <summary>Proveri sebe: Koliko je \((6^{1/3})^3\)?</summary>
+    <div class="details-content">
+      <p>\((6^{1/3})^3 = 6^{3/3} = 6^1 = 6\). Ovo ćemo iskoristiti u sledećem koraku!</p>
+    </div>
+  </details>
+
+  <!-- Step 6 -->
+  <div class="step-container" tabindex="0">
+    <div class="step-header">
+      <div class="step-badge">6</div>
+      <h3>Postavljamo jednačinu</h3>
+    </div>
+    <p>Sada količnik glasi:</p>
+    <div class="math-block">
+      \[\frac{T_7}{T'_7} = \left(6^{1/3}\right)^{n-12} = 6^{\frac{n-12}{3}}\]
+    </div>
+    <p>Prema uslovu zadatka, ovaj odnos je \(1 : 6\), tj.:</p>
+    <div class="math-block">
+      \[6^{\frac{n-12}{3}} = \frac{1}{6} = 6^{-1}\]
+    </div>
+  </div>
+
+  <!-- Step 7 -->
+  <div class="step-container" tabindex="0">
+    <div class="step-header">
+      <div class="step-badge">7</div>
+      <h3>Rešavamo po \(n\)</h3>
+    </div>
+    <p>Izjednačavamo eksponente (jer su baze jednake i veće od 1):</p>
+    <div class="math-block">
+      \[\frac{n - 12}{3} = -1\]
+    </div>
+    <p>Množimo obe strane sa 3:</p>
+    <div class="math-block">
+      \[n - 12 = -3\]
+    </div>
+    <p>Dodajemo 12:</p>
+    <div class="math-block">
+      \[n = 9\]
+    </div>
+  </div>
+
+  <!-- Checkpoint 3 -->
+  <details class="checkpoint">
+    <summary>Proveri sebe: Da li za n = 9 postoji sedmi član od početka i od kraja?</summary>
+    <div class="details-content">
+      <p>Za \(n = 9\) razvoj ima \(n + 1 = 10\) članova. Sedmi član od početka je \(T_7\) (postoji jer \(10 \geq 7\)). Sedmi član od kraja je četvrti od početka \(T_4\) (takođe postoji). Sve je u redu!</p>
+    </div>
+  </details>
+</div>
+
+<!-- KEY INSIGHT -->
+<div class="insight-box">
+  <div class="insight-title">Ključni uvid</div>
+  <p style="color: #c4b5fd; margin-bottom: 12px;">
+    Kada delimo sedmi član od početka sa sedmim članom od kraja, binomni koeficijenti se skrate jer važi \(\binom{n}{6} = \binom{n}{n-6}\). Ceo problem se svodi na stepensku jednačinu sa bazom \(\sqrt[3]{6}\).
+  </p>
+  <div class="insight-formula">
+    \[\left(\sqrt[3]{6}\right)^{n-12} = \frac{1}{6} \;\;\Longrightarrow\;\; n = 9\]
+  </div>
+</div>
+
+<!-- FINAL ANSWER -->
+<div class="card final-answer-card">
+  <h2>Konačan odgovor</h2>
+  <div class="final-answer">\(n = 9\)</div>
+  <div class="options-row">
+    <div class="option-card">
+      <div class="opt-letter">(A)</div>
+      <div class="opt-value">\(6\)</div>
+    </div>
+    <div class="option-card">
+      <div class="opt-letter">(B)</div>
+      <div class="opt-value">\(7\)</div>
+    </div>
+    <div class="option-card">
+      <div class="opt-letter">(C)</div>
+      <div class="opt-value">\(8\)</div>
+    </div>
+    <div class="option-card correct">
+      <div class="opt-letter">(D)</div>
+      <div class="opt-value">\(9\)</div>
+    </div>
+    <div class="option-card">
+      <div class="opt-letter">(E)</div>
+      <div class="opt-value">\(10\)</div>
+    </div>
+  </div>
+  <div class="verification">
+    <strong>Verifikacija:</strong> Za \(n = 9\), količnik je \(6^{(9-12)/3} = 6^{-1} = \frac{1}{6}\). Ovo potvrdjuje da se sedmi članovi od početka i od kraja odnose upravo kao \(1 : 6\).
+  </div>
+</div>
+
+<!-- COMMON PITFALLS -->
+<div class="card pitfall-card">
+  <h2>Česte greške</h2>
+  <div class="pitfall-item">
+    Pogrešno odredjivanje sedmog člana od kraja &mdash; sedmi član od kraja je \((n-5)\)-ti od početka, ne \((n-7)\)-ti. Brojanje od kraja počinje od poslednjeg člana (koji je \((n+1)\)-vi od početka).
+  </div>
+  <div class="pitfall-item">
+    Greška u računanju \(a/b\) &mdash; ne zaboravite da je \(b = 3^{-1/3}\), pa deljenje sa \(b\) daje množenje sa \(3^{1/3}\), a ne deljenje.
+  </div>
+</div>
+
+<!-- OPTIONAL CHALLENGE -->
+<div class="card challenge-card">
+  <h2>Dodatni izazov</h2>
+  <p>Za isti razvoj \(\left(\sqrt[3]{2} + \frac{1}{\sqrt[3]{3}}\right)^9\), odredite koji je član racionalan (tj. ne sadrži korene).</p>
+  <details>
+    <summary>Nagovještaj</summary>
+    <div class="details-content">
+      <p>Opšti član je \(\binom{9}{k} \cdot 2^{(9-k)/3} \cdot 3^{-k/3}\). Član je racionalan kada su i \((9-k)/3\) i \(k/3\) celi brojevi. Za koja \(k \in \{0, 1, \ldots, 9\}\) su oba uslova ispunjena?</p>
+    </div>
+  </details>
+</div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interaction
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+
+  // Canvas visualization
+  const canvas = document.getElementById('binomCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('nSlider');
+  const nValueSpan = document.getElementById('nValue');
+
+  function factorial(n) {
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+  }
+
+  function binom(n, k) {
+    if (k < 0 || k > n) return 0;
+    if (k === 0 || k === n) return 1;
+    let r = 1;
+    for (let i = 0; i < k; i++) {
+      r = r * (n - i) / (i + 1);
+    }
+    return Math.round(r);
+  }
+
+  function drawBinomialExpansion(n) {
+    const W = canvas.width;
+    const H = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const a = Math.pow(2, 1/3);
+    const b = Math.pow(3, -1/3);
+
+    // Compute all terms
+    const terms = [];
+    let maxVal = 0;
+    for (let k = 0; k <= n; k++) {
+      const val = binom(n, k) * Math.pow(a, n - k) * Math.pow(b, k);
+      terms.push(val);
+      if (val > maxVal) maxVal = val;
+    }
+
+    const numTerms = n + 1;
+    const marginLeft = 70;
+    const marginRight = 30;
+    const marginTop = 60;
+    const marginBottom = 80;
+    const plotW = W - marginLeft - marginRight;
+    const plotH = H - marginTop - marginBottom;
+    const barW = Math.min(40, (plotW / numTerms) * 0.6);
+    const gap = plotW / numTerms;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Vrednosti članova binomnog razvoja za n = ' + n, W / 2, 28);
+
+    // Y-axis
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, marginTop);
+    ctx.lineTo(marginLeft, marginTop + plotH);
+    ctx.lineTo(W - marginRight, marginTop + plotH);
+    ctx.stroke();
+
+    // Y-axis gridlines and labels
+    const nGridLines = 5;
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#64748b';
+    for (let i = 0; i <= nGridLines; i++) {
+      const y = marginTop + plotH - (i / nGridLines) * plotH;
+      const val = (i / nGridLines) * maxVal;
+      ctx.strokeStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, y);
+      ctx.lineTo(W - marginRight, y);
+      ctx.stroke();
+      ctx.fillText(val.toFixed(1), marginLeft - 8, y + 4);
+    }
+
+    // Determine which terms are the 7th from start and 7th from end
+    const term7Start = 6; // k = 6
+    const term7End = n - 6; // k = n - 6
+
+    // Draw bars
+    for (let k = 0; k <= n; k++) {
+      const x = marginLeft + k * gap + gap / 2;
+      const barH = (terms[k] / maxVal) * plotH;
+      const y = marginTop + plotH - barH;
+
+      let color = '#60a5fa';
+      let highlight = false;
+
+      if (k === term7Start && term7Start >= 0 && term7Start <= n) {
+        color = '#f472b6';
+        highlight = true;
+      }
+      if (k === term7End && term7End >= 0 && term7End <= n) {
+        color = '#a78bfa';
+        highlight = true;
+      }
+      if (term7Start === term7End && k === term7Start) {
+        color = '#fbbf24';
+        highlight = true;
+      }
+
+      // Glow for highlighted
+      if (highlight) {
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 12;
+      }
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(x - barW / 2, y, barW, barH, [4, 4, 0, 0]);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+
+      // Term label
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('T' + (k + 1), x, marginTop + plotH + 16);
+
+      // Value on top
+      if (highlight) {
+        ctx.fillStyle = color;
+        ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+        ctx.fillText(terms[k].toFixed(2), x, y - 8);
+      }
+    }
+
+    // Ratio annotation
+    if (term7Start >= 0 && term7Start <= n && term7End >= 0 && term7End <= n) {
+      const ratio = terms[term7Start] / terms[term7End];
+      const ratioText = 'T\u2087(poč.) / T\u2087(kraj) = ' + ratio.toFixed(4);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(ratioText, W / 2, marginTop + plotH + 45);
+
+      if (Math.abs(ratio - 1/6) < 0.001) {
+        ctx.fillStyle = '#4ade80';
+        ctx.fillText('= 1/6  (uslov ispunjen!)', W / 2, marginTop + plotH + 65);
+      } else {
+        ctx.fillStyle = '#f87171';
+        ctx.fillText('\u2260 1/6  (uslov NIJE ispunjen)', W / 2, marginTop + plotH + 65);
+      }
+    }
+
+    // Legend
+    const legendY = marginTop - 10;
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#f472b6';
+    ctx.fillRect(W - 250, legendY - 10, 12, 12);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('T\u2087 od početka (k=6)', W - 234, legendY);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillRect(W - 250, legendY + 8, 12, 12);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('T\u2087 od kraja (k=n\u22126)', W - 234, legendY + 18);
+  }
+
+  drawBinomialExpansion(9);
+
+  slider.addEventListener('input', () => {
+    const n = parseInt(slider.value);
+    nValueSpan.textContent = n;
+    drawBinomialExpansion(n);
+  });
+
+  // Redraw on resize
+  window.addEventListener('resize', () => {
+    drawBinomialExpansion(parseInt(slider.value));
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Binomni razvoj - odredjivanje eksponenta n iz odnosa članova",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["binomna formula", "binomni razvoj", "stepene jednačine", "opšti član binomnog razvoja", "koreni"]
+}
+BRAINSPARK_META-->

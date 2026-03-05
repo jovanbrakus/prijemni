@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspored učenika na stolice sa ograničenjima</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Pet učenika treba rasporediti na 5 stolica u redu.
+Ograničenja:
+- Pera NE sedi na krajevima (pozicije 1 i 5)
+- Žika NE sedi na sredini (pozicija 3)
+
+PRISTUP: Princip uključenja-isključenja (komplementarno brojanje)
+
+Ukupno permutacija bez ograničenja: 5! = 120
+
+Neka je A = skup rasporeda u kojima Pera sedi na kraju (pozicija 1 ili 5)
+Neka je B = skup rasporeda u kojima Žika sedi na sredini (pozicija 3)
+
+Tražimo: |A' ∩ B'| = |U| - |A| - |B| + |A ∩ B|
+
+|A|: Pera ima 2 izbora (poz. 1 ili 5), preostala 4 učenika na 4 mesta: 2 × 4! = 2 × 24 = 48
+|B|: Žika na poziciji 3, preostala 4 učenika na 4 mesta: 1 × 4! = 24
+|A ∩ B|: Pera na kraju (2 izbora) I Žika na sredini: 2 × 3! = 2 × 6 = 12
+
+Odgovor = 120 - 48 - 24 + 12 = 60
+
+PROVERA DIREKTNIM BROJANJEM:
+Pera može da sedi na pozicijama 2, 3, ili 4.
+
+Slučaj 1: Pera na poziciji 3 (sredina)
+  Žika može na bilo koju od preostalih 4 pozicija (1, 2, 4, 5) — nema ograničenja jer poz. 3 je zauzeta.
+  Ostala 3 učenika: 3! = 6 načina
+  Ukupno: 1 × 4 × 6 = 24
+
+Slučaj 2: Pera na poziciji 2 ili 4 (2 izbora)
+  Žika ne sme na poziciju 3, i pozicija Pere je zauzeta.
+  Žika bira od preostalih pozicija osim pozicije 3 = 3 izbora.
+  Ostala 3 učenika: 3! = 6 načina
+  Ukupno: 2 × 3 × 6 = 36
+
+UKUPNO: 24 + 36 = 60
+
+Obe metode daju 60, što odgovara odgovoru C).
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card h2 { color: #a78bfa; }
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.theory-content {
+  padding: 14px;
+  background: rgba(96,165,250,0.06);
+  border-radius: 10px;
+}
+
+.theory-content ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.theory-content li {
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(96,165,250,0.05);
+  border-left: 3px solid #4ade80;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.final-answer {
+  text-align: center;
+  padding: 30px;
+  margin-bottom: 24px;
+}
+
+.final-answer h2 {
+  color: #4ade80;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.answer-opt {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.answer-opt.correct {
+  background: rgba(74,222,128,0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(52,211,153,0.08);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.pitfall-card {
+  border-left: 3px solid #f472b6;
+}
+
+.pitfall-card h2 { color: #f472b6; }
+
+.pitfall-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-card li {
+  padding: 8px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.pitfall-card li::before {
+  content: "!";
+  position: absolute;
+  left: 0;
+  color: #f472b6;
+  font-weight: 700;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Raspored učenika sa ograničenjima</h1>
+  <p class="subtitle">Kombinatorika - permutacije sa zabranjenim pozicijama</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Pet učenika treba rasporediti na pet stolica u jednom redu tako da <span style="color:#f472b6;font-weight:600;">Pera ne sedi na mestima koja su na krajevima reda</span>, a <span style="color:#60a5fa;font-weight:600;">Žika ne sedi na mestu koje je tačno u sredini</span>. Na koliko načina je to moguće učiniti?</p>
+
+    <div class="given-grid" style="margin-top:18px;">
+      <div class="given-item">
+        <div class="label">Učenika</div>
+        <div class="value">\(5\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Stolica</div>
+        <div class="value">\(5\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Pera</div>
+        <div class="value">ne na krajevima</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Žika</div>
+        <div class="value">ne u sredini</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top:18px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(42\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(48\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(60\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(72\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(120\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Primenićemo <strong>princip uključenja-isključenja</strong> (komplementarno brojanje). Od ukupnog broja permutacija (\(5!\)) oduzećemo slučajeve koji krše barem jedno ograničenje, pa ćemo dodati nazad slučajeve koji krše oba ograničenja istovremeno (jer su oduzeti dva puta).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Permutacije:</strong> Broj načina za raspored \(n\) različitih elemenata na \(n\) mesta je \(n!\) (en faktorijel). Na primer, \(5! = 120\).</li>
+          <li><strong>Princip uključenja-isključenja:</strong> Za dva događaja \(A\) i \(B\):
+            \[ |A' \cap B'| = |U| - |A| - |B| + |A \cap B| \]
+            gde \(A'\) i \(B'\) označavaju komplementarne događaje (tj. da se \(A\) i \(B\) ne dešavaju).</li>
+          <li><strong>Fiksiranje pozicija:</strong> Ako jedan element fiksiramo na određenu poziciju, preostali raspored ima \((n-1)!\) mogućnosti. Ako dva elementa fiksiramo na dve pozicije, ostaje \((n-2)!\) mogućnosti.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="seatingCanvas" width="700" height="380"></canvas>
+    <p class="canvas-hint">Prikaz stolica sa obeleženim ograničenjima i metodom uključenja-isključenja</p>
+  </div>
+
+  <!-- Step-by-Step -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Ukupan broj permutacija</h3>
+        <p>Bez ikakvih ograničenja, pet učenika se može rasporediti na pet stolica na:</p>
+        <div class="math-block">
+          \[ 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120 \text{ načina} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Definisanje "loših" događaja</h3>
+        <p>Označimo pozicije stolica sa \(1, 2, 3, 4, 5\) (sleva nadesno).</p>
+        <p>Neka je \(A\) = skup rasporeda gde <span style="color:#f472b6;">Pera sedi na kraju</span> (pozicija 1 ili 5).</p>
+        <p>Neka je \(B\) = skup rasporeda gde <span style="color:#60a5fa;">Žika sedi u sredini</span> (pozicija 3).</p>
+        <p class="note">Tražimo rasporede gde se ni \(A\) ni \(B\) ne dešavaju, tj. \(|A' \cap B'|\).</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Računamo \(|A|\) — Pera na kraju</h3>
+        <p>Pera bira jednu od 2 krajnje pozicije (pozicija 1 ili 5).</p>
+        <p>Preostalih 4 učenika se raspoređuje na 4 preostale stolice na \(4!\) načina.</p>
+        <div class="math-block">
+          \[ |A| = 2 \times 4! = 2 \times 24 = 48 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Računamo \(|B|\) — Žika u sredini</h3>
+        <p>Žika zauzima poziciju 3 (jedina srednja pozicija).</p>
+        <p>Preostalih 4 učenika se raspoređuju na 4 preostale stolice.</p>
+        <div class="math-block">
+          \[ |B| = 1 \times 4! = 24 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko iznosi \(|A| + |B|\)?</summary>
+      <p>\(|A| + |B| = 48 + 24 = 72\). Ali ne smemo samo oduzeti 72 od 120, jer bi neke rasporede prebrojali dva puta!</p>
+    </details>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Računamo \(|A \cap B|\) — Pera na kraju I Žika u sredini</h3>
+        <p>Pera bira jednu od 2 krajnje pozicije, a Žika je fiksiran na poziciju 3.</p>
+        <p>Preostala 3 učenika popunjavaju 3 preostale stolice.</p>
+        <div class="math-block">
+          \[ |A \cap B| = 2 \times 3! = 2 \times 6 = 12 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Primena principa uključenja-isključenja</h3>
+        <p>Broj rasporeda koji zadovoljavaju <em>oba</em> ograničenja:</p>
+        <div class="math-block">
+          \[ |A' \cap B'| = |U| - |A| - |B| + |A \cap B| \]
+          \[ = 120 - 48 - 24 + 12 \]
+          \[ = \boxed{60} \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto dodajemo \(|A \cap B|\) na kraju?</summary>
+      <p>Rasporedi gde Pera sedi na kraju <em>i</em> Žika sedi u sredini su prebrojani i u skupu \(A\) i u skupu \(B\). Kad oduzimamo \(|A|\) i \(|B|\), te rasporede smo oduzeli dva puta, pa ih moramo jednom vratiti.</p>
+    </details>
+
+    <div class="step" tabindex="0">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Alternativna provera — direktno brojanje</h3>
+        <p>Pera može sedeti samo na pozicijama 2, 3 ili 4. Razmatramo dva slučaja:</p>
+        <p><strong>Slučaj 1: Pera na poziciji 3 (sredina)</strong></p>
+        <p>Žika nema problem — poz. 3 je zauzeta, a on samo ne sme tu. Žika bira od 4 preostale pozicije. Ostala 3 učenika: \(3! = 6\).</p>
+        <div class="math-block">
+          \[ 1 \times 4 \times 3! = 1 \times 4 \times 6 = 24 \]
+        </div>
+        <p><strong>Slučaj 2: Pera na poziciji 2 ili 4</strong></p>
+        <p>Žika ne sme na poziciju 3 (zabrana) i ne može na Perinu poziciju (zauzeta) — ostaju mu 3 pozicije. Ostala 3 učenika: \(3! = 6\).</p>
+        <div class="math-block">
+          \[ 2 \times 3 \times 3! = 2 \times 3 \times 6 = 36 \]
+        </div>
+        <p>Ukupno: \(24 + 36 = 60\). Potvrđeno!</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto Žika u Slučaju 2 ima 3, a ne 4 izbora?</summary>
+      <p>Od 5 pozicija, jedna je zauzeta (Perina), a jedna je zabranjena (pozicija 3). Ostaje \(5 - 1 - 1 = 3\) pozicije za Žiku.</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Princip uključenja-isključenja nam omogućava da elegantno izbegnemo duplo brojanje:</p>
+    <div class="math-block" style="font-size:1.2rem;">
+      \[ |A' \cap B'| = 120 - 48 - 24 + 12 = 60 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\(60\) načina</div>
+    <div class="answer-options-final">
+      <div class="answer-opt">(A) 42</div>
+      <div class="answer-opt">(B) 48</div>
+      <div class="answer-opt correct">(C) 60</div>
+      <div class="answer-opt">(D) 72</div>
+      <div class="answer-opt">(E) 120</div>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Dobili smo isti rezultat (\(60\)) i principom uključenja-isključenja i direktnim brojanjem po slučajevima. Odgovor je logičan: manji je od \(120\) (jer imamo ograničenja), ali veći od \(42\) (ograničenja nisu previše stroga jer pogađaju samo 2 od 5 učenika).
+    </div>
+  </div>
+
+  <!-- Pitfalls -->
+  <div class="card pitfall-card">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Zaboravljanje korekcije \(|A \cap B|\):</strong> Ako samo oduzmemo \(|A| + |B| = 72\) od 120, dobijamo 48 — pogrešan odgovor (B), jer nismo korigovali duplo prebrojane rasporede.</li>
+      <li><strong>Pogrešan broj pozicija za Peru:</strong> Pera ne sme na krajeve, dakle ima 3 (ne 2) dozvoljena mesta. Paziti da se ovaj podatak ispravno koristi u direktnom brojanju.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2>Dodatni izazov</h2>
+    <p>Šta ako, pored dosadašnjih uslova, dodamo još jedan: Mika ne sme da sedi pored Pere? Na koliko načina je tada moguće rasporediti učenike?</p>
+    <details>
+      <summary>Pokazni nagoveštaj</summary>
+      <p>Pokušaj ponovo sa principom uključenja-isključenja, ali sada sa tri "loša" događaja: \(A\) (Pera na kraju), \(B\) (Žika u sredini), \(C\) (Mika pored Pere). Formule za tri skupa zahtevaju i popravke za parove i trojke: \(|A' \cap B' \cap C'| = |U| - |A| - |B| - |C| + |A \cap B| + |A \cap C| + |B \cap C| - |A \cap B \cap C|\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('seatingCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const chairW = 70;
+    const chairH = 60;
+    const gap = 20;
+    const totalW = 5 * chairW + 4 * gap;
+    const startX = (W - totalW) / 2;
+    const chairY = 60;
+
+    const positions = [];
+    for (let i = 0; i < 5; i++) {
+      positions.push(startX + i * (chairW + gap));
+    }
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Pozicije stolica', W / 2, 30);
+
+    // Draw chairs
+    for (let i = 0; i < 5; i++) {
+      const x = positions[i];
+      const isEnd = (i === 0 || i === 4);
+      const isMid = (i === 2);
+
+      // Chair background
+      if (isEnd) {
+        ctx.fillStyle = 'rgba(244, 114, 182, 0.15)';
+        ctx.strokeStyle = '#f472b6';
+      } else if (isMid) {
+        ctx.fillStyle = 'rgba(96, 165, 250, 0.15)';
+        ctx.strokeStyle = '#60a5fa';
+      } else {
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.1)';
+        ctx.strokeStyle = '#4ade80';
+      }
+
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, chairY, chairW, chairH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Position number
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(i + 1), x + chairW / 2, chairY + 35);
+
+      // Label
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      if (isEnd) {
+        ctx.fillStyle = '#f472b6';
+        ctx.fillText('KRAJ', x + chairW / 2, chairY + chairH + 18);
+      } else if (isMid) {
+        ctx.fillStyle = '#60a5fa';
+        ctx.fillText('SREDINA', x + chairW / 2, chairY + chairH + 18);
+      }
+    }
+
+    // Legend area
+    const legendY = 155;
+    ctx.fillStyle = '#f472b6';
+    ctx.fillRect(40, legendY, 14, 14);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Pera NE sme (krajevi: poz. 1 i 5)', 62, legendY + 12);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(40, legendY + 24, 14, 14);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('Žika NE sme (sredina: poz. 3)', 62, legendY + 36);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(40, legendY + 48, 14, 14);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('Bez ograničenja', 62, legendY + 60);
+
+    // Inclusion-exclusion diagram
+    const diagramY = 245;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Princip uključenja-isključenja', W / 2, diagramY);
+
+    // Draw formula steps
+    const steps = [
+      { text: '|U| = 120', color: '#e2e8f0', x: 100 },
+      { text: '- |A| = 48', color: '#f472b6', x: 240 },
+      { text: '- |B| = 24', color: '#60a5fa', x: 380 },
+      { text: '+ |A∩B| = 12', color: '#a78bfa', x: 530 },
+    ];
+
+    const stepY = diagramY + 30;
+    for (const s of steps) {
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.8)';
+      ctx.beginPath();
+      ctx.roundRect(s.x - 55, stepY - 5, 120, 35, 8);
+      ctx.fill();
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = s.color;
+      ctx.font = 'bold 14px Courier New, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.text, s.x + 5, stepY + 18);
+    }
+
+    // Arrows
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < steps.length - 1; i++) {
+      const fromX = steps[i].x + 65;
+      const toX = steps[i + 1].x - 55;
+      const arrowY = stepY + 12;
+      ctx.beginPath();
+      ctx.moveTo(fromX + 2, arrowY);
+      ctx.lineTo(toX - 2, arrowY);
+      ctx.stroke();
+      // Arrow head
+      ctx.beginPath();
+      ctx.moveTo(toX - 2, arrowY);
+      ctx.lineTo(toX - 8, arrowY - 4);
+      ctx.lineTo(toX - 8, arrowY + 4);
+      ctx.closePath();
+      ctx.fillStyle = '#94a3b8';
+      ctx.fill();
+    }
+
+    // Result
+    const resultY = stepY + 60;
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
+    ctx.beginPath();
+    ctx.roundRect(W / 2 - 80, resultY - 5, 160, 40, 10);
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 20px Courier New, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('= 60 načina', W / 2, resultY + 24);
+
+    // Equals arrow from formula to result
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(W / 2, stepY + 32);
+    ctx.lineTo(W / 2, resultY - 7);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(W / 2, resultY - 7);
+    ctx.lineTo(W / 2 - 5, resultY - 14);
+    ctx.lineTo(W / 2 + 5, resultY - 14);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  draw();
+
+  // Step click handler
+  document.querySelectorAll('.step').forEach(step => {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Raspored učenika sa ograničenjima — permutacije",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["permutacije", "princip uključenja-isključenja", "kombinatorika", "raspored sa ograničenjima"]
+}
+BRAINSPARK_META-->

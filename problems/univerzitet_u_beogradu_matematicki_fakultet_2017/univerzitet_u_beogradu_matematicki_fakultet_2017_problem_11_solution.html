@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poređenje vrednosti matematičkih izraza</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Među brojevima ln 3, sin 32°, √0,25, cos 63° i log₃ 2 najmanji je:
+A) ln 3   B) sin 32°   C) √0,25   D) cos 63°   E) log₃ 2
+
+KORAK 1: Izračunati (ili proceniti) svaku vrednost
+
+1) ln 3:
+   e ≈ 2,718, pa ln(e) = 1, a ln(3) > 1 jer je 3 > e? Ne, 3 > e ≈ 2,718, dakle ln 3 > 1.
+   Preciznije: ln 3 ≈ 1,0986
+
+2) sin 32°:
+   sin 30° = 0,5, sin 32° je malo veće od 0,5.
+   Preciznije: sin 32° ≈ 0,5299
+
+3) √0,25:
+   √0,25 = √(1/4) = 1/2 = 0,5
+
+4) cos 63°:
+   cos 60° = 0,5, cos 63° < cos 60° jer je kosinus opadajuća na (0°, 180°).
+   Preciznije: cos 63° ≈ 0,4540
+   Alternativno: cos 63° = sin 27° (komplementni ugao), a sin 27° < sin 30° = 0,5
+
+5) log₃ 2:
+   log₃ 2 = ln 2 / ln 3 ≈ 0,6931 / 1,0986 ≈ 0,6309
+   Alternativno: 3^(0,5) = √3 ≈ 1,732 > 2? Ne, 1,732 < 2, dakle log₃ 2 > 0,5.
+   3^(0,63) ≈ 2? Da, otprilike.
+
+KORAK 2: Uporediti vrednosti
+- cos 63° ≈ 0,454
+- √0,25 = 0,5
+- sin 32° ≈ 0,530
+- log₃ 2 ≈ 0,631
+- ln 3 ≈ 1,099
+
+Rastući redosled: cos 63° < √0,25 < sin 32° < log₃ 2 < ln 3
+
+KORAK 3: Zaključak
+Najmanji broj je cos 63° ≈ 0,454.
+
+VERIFIKACIJA: Odgovor je D) cos 63°. ✓ Poklapa se sa ključem odgovora.
+
+Ključni argumenti bez kalkulatora:
+- cos 63° = sin 27° (komplementni ugao)
+- sin 27° < sin 30° = 0,5 (jer je sinus rastuća na (0°, 90°))
+- Svi ostali su ≥ 0,5:
+  * √0,25 = 0,5 tačno
+  * sin 32° > sin 30° = 0,5
+  * log₃ 2 > 0,5 jer 3^(1/2) = √3 ≈ 1,732 < 2
+  * ln 3 > 1 jer 3 > e
+- Jedini broj strogo manji od 0,5 je cos 63°.
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 100px;
+  flex: 1;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.plan-card h2 {
+  color: #a78bfa;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+.theory-content {
+  padding: 16px;
+  margin-top: 8px;
+  background: rgba(96, 165, 250, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(96, 165, 250, 0.1);
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-left: 3px solid transparent;
+  padding-left: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 8px;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.03);
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content h3 {
+  color: #f472b6;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.final-answer {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.1));
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer h2 {
+  color: #34d399;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.final-option {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(51, 65, 85, 0.5);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.pitfall-card {
+  border-left: 4px solid #f472b6;
+}
+
+.pitfall-card h2 {
+  color: #f472b6;
+}
+
+.pitfall-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-card li {
+  padding: 8px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.pitfall-card li::before {
+  content: '!';
+  position: absolute;
+  left: 0;
+  color: #e09468;
+  font-weight: 700;
+}
+
+.challenge-card {
+  border: 1px dashed #334155;
+}
+
+canvas {
+  touch-action: none;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.canvas-container {
+  text-align: center;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .given-item { min-width: 80px; padding: 10px 12px; }
+  .step { flex-direction: column; gap: 8px; }
+  .container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Poređenje vrednosti matematičkih izraza</h1>
+  <p class="subtitle">Logaritmi, trigonometrija i koreni -- koji broj je najmanji?</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Među brojevima \(\ln 3\), \(\sin 32°\), \(\sqrt{0{,}25}\), \(\cos 63°\) i \(\log_3 2\) najmanji je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\ln 3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\sin 32°\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\sqrt{0{,}25}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\cos 63°\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\log_3 2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Odredićemo (približnu) vrednost svakog od pet brojeva koristeći poznate vrednosti trigonometrijskih funkcija, logaritama i korenovanja. Zatim ćemo ih uporediti i pronaći najmanji. Ključna ideja: broj \(0{,}5\) služi kao prirodna granica za poređenje.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i činjenice</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Komplementni uglovi:</strong> \(\cos \alpha = \sin(90° - \alpha)\). Dakle \(\cos 63° = \sin 27°\).</li>
+          <li><strong>Sinus rastuća funkcija:</strong> Na intervalu \((0°, 90°)\), funkcija \(\sin\) je strogo rastuća. Zato \(\sin 27° < \sin 30° = 0{,}5 < \sin 32°\).</li>
+          <li><strong>Prirodni logaritam:</strong> \(\ln e = 1\), a pošto je \(3 > e \approx 2{,}718\), sledi \(\ln 3 > 1\).</li>
+          <li><strong>Logaritam sa osnovom 3:</strong> \(\log_3 2 = \frac{\ln 2}{\ln 3}\). Pošto je \(3^{1/2} = \sqrt{3} \approx 1{,}732 < 2\), sledi \(\log_3 2 > \frac{1}{2}\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <div class="canvas-container">
+      <canvas id="compareCanvas" width="700" height="380"></canvas>
+    </div>
+    <p class="canvas-hint">Brojčana osa sa označenim vrednostima svih pet brojeva</p>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Izračunavanje \(\sqrt{0{,}25}\)</h3>
+        <p>Ovo je najjednostavniji od pet brojeva:</p>
+        <div class="math-block">
+          \[\sqrt{0{,}25} = \sqrt{\frac{1}{4}} = \frac{1}{2} = 0{,}5\]
+        </div>
+        <p class="note">Tačna vrednost, bez aproksimacija.</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Procena \(\ln 3\)</h3>
+        <p>Znamo da je \(e \approx 2{,}718\), pa je \(3 > e\). Pošto je \(\ln\) rastuća funkcija:</p>
+        <div class="math-block">
+          \[\ln 3 > \ln e = 1\]
+        </div>
+        <p>Preciznije, \(\ln 3 \approx 1{,}099\). Ovo je daleko najveći broj od pet ponuđenih.</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Procena \(\sin 32°\)</h3>
+        <p>Koristimo poznatu vrednost \(\sin 30° = 0{,}5\). Pošto je sinus rastuća funkcija na \((0°, 90°)\), a \(32° > 30°\):</p>
+        <div class="math-block">
+          \[\sin 32° > \sin 30° = 0{,}5\]
+        </div>
+        <p>Preciznije, \(\sin 32° \approx 0{,}530\). Ovaj broj je malo veći od \(0{,}5\).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko od dosad razmatranih brojeva je manje od 0,5?</summary>
+      <p>Nijedan! \(\sqrt{0{,}25} = 0{,}5\) (jednako), \(\ln 3 \approx 1{,}1 > 0{,}5\), \(\sin 32° \approx 0{,}53 > 0{,}5\).</p>
+    </details>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Procena \(\cos 63°\)</h3>
+        <p>Koristimo vezu komplementnih uglova:</p>
+        <div class="math-block">
+          \[\cos 63° = \sin(90° - 63°) = \sin 27°\]
+        </div>
+        <p>Pošto je sinus rastuća na \((0°, 90°)\), a \(27° < 30°\):</p>
+        <div class="math-block">
+          \[\sin 27° < \sin 30° = 0{,}5\]
+        </div>
+        <p>Dakle \(\cos 63° < 0{,}5\). Preciznije, \(\cos 63° \approx 0{,}454\).</p>
+        <p class="note">Ovo je jedini broj od pet koji je strogo manji od 0,5!</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Procena \(\log_3 2\)</h3>
+        <p>Proveravamo da li je veći ili manji od \(0{,}5\). Ako bi \(\log_3 2 = 0{,}5\), to bi značilo \(3^{0{,}5} = 2\), tj. \(\sqrt{3} = 2\).</p>
+        <div class="math-block">
+          \[\sqrt{3} \approx 1{,}732 < 2\]
+        </div>
+        <p>Pošto je \(3^{0{,}5} < 2\), a \(\log_3\) je rastuća, mora biti \(\log_3 2 > 0{,}5\).</p>
+        <p>Preciznije, \(\log_3 2 \approx 0{,}631\).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koji broj je jedini manji od 0,5?</summary>
+      <p>\(\cos 63° \approx 0{,}454\). Svi ostali su veći ili jednaki \(0{,}5\).</p>
+    </details>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Poređenje svih pet brojeva</h3>
+        <p>Sada možemo poredati sve brojeve od najmanjeg ka najvećem:</p>
+        <div class="math-block">
+          \[\cos 63° \;<\; \sqrt{0{,}25} \;<\; \sin 32° \;<\; \log_3 2 \;<\; \ln 3\]
+        </div>
+        <div class="math-block">
+          \[0{,}454 \;<\; 0{,}5 \;<\; 0{,}530 \;<\; 0{,}631 \;<\; 1{,}099\]
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Broj \(0{,}5\) je prirodna granica za poređenje. Četiri od pet brojeva su \(\geq 0{,}5\), a samo je \(\cos 63° = \sin 27° < \sin 30° = 0{,}5\).</p>
+    <div class="math-block" style="font-size:1.2rem; text-align:center;">
+      \[\cos 63° = \sin 27° < \frac{1}{2}\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="final-options">
+      <div class="final-option">(A) \(\ln 3\)</div>
+      <div class="final-option">(B) \(\sin 32°\)</div>
+      <div class="final-option">(C) \(\sqrt{0{,}25}\)</div>
+      <div class="final-option correct">(D) \(\cos 63°\)</div>
+      <div class="final-option">(E) \(\log_3 2\)</div>
+    </div>
+    <div class="answer-value">\(\cos 63° \approx 0{,}454\)</div>
+    <p>Najmanji među ponuđenim brojevima je \(\cos 63°\).</p>
+    <div class="verification">
+      <strong>Provera:</strong> \(\cos 63° = \sin 27°\). Pošto je \(27° < 30°\) i sinus raste na \((0°, 90°)\), važi \(\sin 27° < \sin 30° = 0{,}5\). Svi ostali brojevi su \(\geq 0{,}5\), pa je \(\cos 63°\) zaista najmanji.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>Mešanje \(\sin 32°\) i \(\cos 63°\): Studenti ponekad pomisle da je \(\sin 32° < 0{,}5\) jer je \(32\) "mali" broj. Međutim, \(32° > 30°\), pa je \(\sin 32° > \sin 30° = 0{,}5\).</li>
+      <li>Zaboravljanje da je \(\cos 63° = \sin 27°\): Veza komplementnih uglova \(\cos \alpha = \sin(90° - \alpha)\) je ključna. Bez nje, teško je direktno proceniti \(\cos 63°\) bez kalkulatora.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Izazov za razmišljanje</h2>
+    <p>Koji od sledećih brojeva je najveći: \(\log_2 3\), \(\cos 10°\), \(\sqrt{2{,}56}\)?</p>
+    <details>
+      <summary>Hint</summary>
+      <p>Izračunaj: \(\log_2 3\) je između 1 i 2 (jer \(2^1 = 2 < 3 < 4 = 2^2\)), \(\cos 10° \approx 0{,}985\), a \(\sqrt{2{,}56} = 1{,}6\). Koji je od ovih zapravo najveći?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('compareCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const values = [
+    { name: 'cos 63\u00B0', val: Math.cos(63 * Math.PI / 180), color: '#4ade80' },
+    { name: '\u221A0,25', val: 0.5, color: '#60a5fa' },
+    { name: 'sin 32\u00B0', val: Math.sin(32 * Math.PI / 180), color: '#a78bfa' },
+    { name: 'log\u2083 2', val: Math.log(2) / Math.log(3), color: '#f472b6' },
+    { name: 'ln 3', val: Math.log(3), color: '#fbbf24' }
+  ];
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const padLeft = 60;
+    const padRight = 40;
+    const axisY = H * 0.55;
+    const minVal = 0;
+    const maxVal = 1.2;
+    const axisWidth = W - padLeft - padRight;
+
+    function toX(v) {
+      return padLeft + ((v - minVal) / (maxVal - minVal)) * axisWidth;
+    }
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let v = 0; v <= 1.2; v += 0.1) {
+      const x = toX(v);
+      ctx.beginPath();
+      ctx.moveTo(x, 40);
+      ctx.lineTo(x, H - 30);
+      ctx.stroke();
+    }
+
+    // Axis
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padLeft, axisY);
+    ctx.lineTo(W - padRight, axisY);
+    ctx.stroke();
+
+    // Tick marks and labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    for (let v = 0; v <= 1.2; v += 0.2) {
+      const x = toX(v);
+      ctx.beginPath();
+      ctx.moveTo(x, axisY - 5);
+      ctx.lineTo(x, axisY + 5);
+      ctx.stroke();
+      ctx.fillText(v.toFixed(1).replace('.', ','), x, axisY + 22);
+    }
+
+    // Mark 0.5 line specially
+    const x05 = toX(0.5);
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x05, 50);
+    ctx.lineTo(x05, axisY - 8);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 11px Segoe UI, sans-serif';
+    ctx.fillText('0,5', x05, 45);
+
+    // Draw values
+    const yOffsets = [-75, -50, -75, -50, -75];
+    const alignments = [0, 0, 0, 0, 0];
+
+    values.forEach((item, i) => {
+      const x = toX(item.val);
+      const yOff = yOffsets[i];
+
+      // Vertical line from axis to label
+      ctx.strokeStyle = item.color;
+      ctx.globalAlpha = 0.4;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x, axisY);
+      ctx.lineTo(x, axisY + yOff + 18);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+
+      // Dot on axis
+      ctx.beginPath();
+      ctx.arc(x, axisY, 6, 0, Math.PI * 2);
+      ctx.fillStyle = item.color;
+      ctx.fill();
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(x, axisY, 10, 0, Math.PI * 2);
+      ctx.fillStyle = item.color;
+      ctx.globalAlpha = 0.2;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Name label
+      ctx.fillStyle = item.color;
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.name, x, axisY + yOff);
+
+      // Value label
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '11px Courier New, monospace';
+      const valStr = '\u2248 ' + item.val.toFixed(3).replace('.', ',');
+      ctx.fillText(item.val === 0.5 ? '= 0,500' : valStr, x, axisY + yOff + 16);
+    });
+
+    // Arrow pointing to smallest
+    const xMin = toX(values[0].val);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Najmanji!', xMin, axisY + 40);
+
+    // Small arrow
+    ctx.beginPath();
+    ctx.moveTo(xMin, axisY + 28);
+    ctx.lineTo(xMin - 5, axisY + 33);
+    ctx.lineTo(xMin + 5, axisY + 33);
+    ctx.closePath();
+    ctx.fill();
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Brojevi na brojčanoj osi', padLeft, 25);
+  }
+
+  draw();
+
+  // Step click handlers
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Poređenje vrednosti matematičkih izraza",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["logaritmi", "trigonometrija", "poređenje brojeva", "komplementni uglovi", "koren"]
+}
+BRAINSPARK_META-->

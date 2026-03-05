@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aritmeticki niz - odredjivanje clana</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Arithmetic sequence (a_n), given:
+  a_2 + a_5 = 8
+  a_3 + a_7 = 32
+Find a_4.
+
+Options: A) -16, B) -8, V) 0, G) 8, D) 16.
+
+General term of arithmetic sequence: a_n = a_1 + (n-1)d
+
+STEP 1: Express each term using a_1 and d.
+  a_2 = a_1 + d
+  a_3 = a_1 + 2d
+  a_5 = a_1 + 4d
+  a_7 = a_1 + 6d
+
+STEP 2: Set up the system of equations.
+  a_2 + a_5 = (a_1 + d) + (a_1 + 4d) = 2a_1 + 5d = 8   ... (1)
+  a_3 + a_7 = (a_1 + 2d) + (a_1 + 6d) = 2a_1 + 8d = 32  ... (2)
+
+STEP 3: Subtract (1) from (2):
+  (2a_1 + 8d) - (2a_1 + 5d) = 32 - 8
+  3d = 24
+  d = 8
+
+STEP 4: Substitute d = 8 into (1):
+  2a_1 + 5*8 = 8
+  2a_1 + 40 = 8
+  2a_1 = -32
+  a_1 = -16
+
+STEP 5: Calculate a_4:
+  a_4 = a_1 + 3d = -16 + 3*8 = -16 + 24 = 8
+
+VERIFICATION:
+  a_1 = -16, d = 8
+  a_2 = -16 + 8 = -8
+  a_3 = -16 + 16 = 0
+  a_4 = -16 + 24 = 8
+  a_5 = -16 + 32 = 16
+  a_7 = -16 + 48 = 32
+
+  Check: a_2 + a_5 = -8 + 16 = 8. OK.
+  Check: a_3 + a_7 = 0 + 32 = 32. OK.
+
+ANSWER: G) 8
+
+INTERESTING INSIGHT: Notice that a_4 is the midpoint between a_2 and a_5+1:
+Actually, more elegantly: in an arithmetic sequence, a_n = a_1 + (n-1)d.
+a_2 + a_5 = 2a_1 + 5d. But a_4 = a_1 + 3d.
+So a_2 + a_5 = 2(a_1 + 3d) - d = 2*a_4 - d. Not as clean.
+
+Alternative insight: a_2 + a_5 = (a_1+d) + (a_1+4d) and we can think of
+the "average index" approach. But the system method is the clearest.
+</script>
+
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  border: 2px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  text-align: center;
+}
+
+.given-item .label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+  font-weight: 600;
+}
+
+.given-item .value {
+  font-size: 1.05rem;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin: 15px 0 1.5rem 0;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  font-family: 'Courier New', monospace;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #a78bfa;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkpoint summary::-webkit-details-marker { display: none; }
+
+.checkpoint .detail-content {
+  padding: 0 1rem 0.75rem;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.final-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 0.75rem 0;
+  flex-wrap: wrap;
+}
+
+.slider-container label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.slider-container input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 180px;
+  height: 6px;
+  border-radius: 3px;
+  background: #334155;
+  outline: none;
+}
+
+.slider-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #60a5fa;
+  cursor: pointer;
+}
+
+.slider-container .slider-value {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1rem;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  body { padding: 0.5rem; }
+  .card, .problem-statement, details .detail-content, .final-answer,
+  .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: repeat(3, 1fr); }
+  .final-options { gap: 0.35rem; }
+  .slider-container { gap: 0.5rem; }
+  .slider-container input[type="range"] { width: 120px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Aritmeticki niz &mdash; odredjivanje clana</h1>
+  <p class="subtitle">Nizovi &mdash; sistem jednacina iz uslova za clanove aritmetickog niza</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Ako je \((a_n)\) aritmeticki niz, takav da je \(a_2 + a_5 = 8\) i \(a_3 + a_7 = 32\), onda je \(a_4\) jednako:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(-16\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(-8\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\(8\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(16\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan resavanja</div>
+    <ol class="plan-list">
+      <li>Izraziti svaki clan niza pomocu prvog clana \(a_1\) i razlike \(d\), pa formirati sistem od dve jednacine</li>
+      <li>Resiti sistem, odrediti \(a_1\) i \(d\), pa izracunati \(a_4 = a_1 + 3d\)</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>Kljucne formule i teoreme</summary>
+    <div class="detail-content">
+      <p><strong>Opsti clan aritmetickog niza:</strong></p>
+      \[a_n = a_1 + (n - 1) \cdot d\]
+      <p style="margin-top:0.5rem;">gde je \(a_1\) prvi clan, a \(d\) razlika niza (konstantan korak izmedju uzastopnih clanova).</p>
+      <ul style="margin:0.75rem 0 0.75rem 1.2rem;">
+        <li>\(a_2 = a_1 + d\), \(\;a_3 = a_1 + 2d\), \(\;a_4 = a_1 + 3d\), \(\;\ldots\)</li>
+        <li>Razlika niza: \(d = a_{n+1} - a_n\) za svako \(n\)</li>
+        <li>Srednji clan: \(a_n = \dfrac{a_{n-1} + a_{n+1}}{2}\) (svaki clan je aritmeticka sredina svojih suseda)</li>
+      </ul>
+      <p><strong>Korisno svojstvo:</strong> Za clanove aritmetickog niza ciji su indeksi simetricni u odnosu na neki srednji indeks, zbir je isti. Na primer, \(a_2 + a_6 = a_3 + a_5 = 2a_4\).</p>
+    </div>
+  </details>
+
+  <!-- VISUAL AID / INTERACTIVE DIAGRAM -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Brojni pravac &mdash; clanovi aritmetickog niza</div>
+    <p class="muted" style="margin-bottom:0.5rem;">Vizuelizacija clanova niza na brojnom pravcu. Pomeri klizac da promenis razliku \(d\) i posmatraj kako se clanovi rasporedjuju.</p>
+    <div class="slider-container">
+      <label>Razlika d =</label>
+      <input type="range" id="sliderD" min="1" max="15" value="8" step="1">
+      <span class="slider-value" id="sliderDValue">8</span>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="seqCanvas" width="800" height="320"></canvas>
+      <div class="canvas-hint">Pomeri klizac iznad da istrazis razlicite vrednosti razlike niza</div>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Zapisati opsti clan niza</div>
+      <p>Opsti clan aritmetickog niza je:</p>
+      \[a_n = a_1 + (n - 1) \cdot d\]
+      <p>gde je \(a_1\) prvi clan, a \(d\) razlika niza.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Izraziti konkretne clanove</div>
+      <p>Primenom formule za svaki clan koji se pojavljuje u uslovima:</p>
+      <div class="math-block">
+        \[a_2 = a_1 + d\]
+        \[a_3 = a_1 + 2d\]
+        \[a_5 = a_1 + 4d\]
+        \[a_7 = a_1 + 6d\]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Formirati sistem jednacina</div>
+      <p>Zamenimo u date uslove:</p>
+      <p>Iz uslova \(a_2 + a_5 = 8\):</p>
+      \[(a_1 + d) + (a_1 + 4d) = 8\]
+      \[2a_1 + 5d = 8 \quad \ldots (1)\]
+      <p>Iz uslova \(a_3 + a_7 = 32\):</p>
+      \[(a_1 + 2d) + (a_1 + 6d) = 32\]
+      \[2a_1 + 8d = 32 \quad \ldots (2)\]
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko jednacina imamo i koliko nepoznatih?</summary>
+      <div class="detail-content">
+        <p>Imamo <strong>2 jednacine</strong> sa <strong>2 nepoznate</strong> (\(a_1\) i \(d\)). To je dovoljno za jednoznacno resenje sistema!</p>
+      </div>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Odrediti razliku \(d\)</div>
+      <p>Oduzmimo jednacinu (1) od jednacine (2):</p>
+      \[(2a_1 + 8d) - (2a_1 + 5d) = 32 - 8\]
+      <p>Clanovi sa \(a_1\) se poniste:</p>
+      \[3d = 24\]
+      \[d = 8\]
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-title">Korak 5: Odrediti prvi clan \(a_1\)</div>
+      <p>Zamenimo \(d = 8\) u jednacinu (1):</p>
+      \[2a_1 + 5 \cdot 8 = 8\]
+      \[2a_1 + 40 = 8\]
+      \[2a_1 = 8 - 40 = -32\]
+      \[a_1 = -16\]
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko iznosi \(a_1\)?</summary>
+      <div class="detail-content">
+        <p>\(a_1 = -16\). Ako si dobio/la drugi rezultat, proveri da li si korektno oduzeo/la jednacine i zamenio/la \(d = 8\).</p>
+      </div>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-title">Korak 6: Izracunati \(a_4\)</div>
+      <p>Sada imamo sve sto nam treba:</p>
+      \[a_4 = a_1 + 3d = -16 + 3 \cdot 8 = -16 + 24 = 8\]
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-title">Korak 7: Verifikacija</div>
+      <p>Proverimo oba polazna uslova sa \(a_1 = -16\) i \(d = 8\):</p>
+      <div class="math-block">
+        \[a_2 = -16 + 8 = -8, \quad a_5 = -16 + 32 = 16\]
+        \[a_2 + a_5 = -8 + 16 = 8 \;\; \checkmark\]
+      </div>
+      <div class="math-block">
+        \[a_3 = -16 + 16 = 0, \quad a_7 = -16 + 48 = 32\]
+        \[a_3 + a_7 = 0 + 32 = 32 \;\; \checkmark\]
+      </div>
+      <p>Oba uslova su zadovoljena.</p>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koji je peti clan niza?</summary>
+      <div class="detail-content">
+        <p>\(a_5 = a_1 + 4d = -16 + 32 = 16\). Primetimo da je \(a_5\) tacno duplo vece od \(a_4 = 8\), sto ima smisla jer \(a_5 = a_4 + d = 8 + 8 = 16\).</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Kljucni uvid</div>
+    <p>Kada imate dva uslova oblika "zbir dva clana = nesto", uvek zapisite svaki clan pomocu \(a_1\) i \(d\). Dobicete sistem sa dve nepoznate koji se resava oduzimanjem jednacina &mdash; clanovi sa \(a_1\) se poniste, a ostaje samo \(d\).</p>
+    <p style="margin-top:0.5rem;">U ovom zadatku, kljucan korak je bio oduzimanje jednacina koje eliminise \(a_1\) i direktno daje:</p>
+    <div class="math-block" style="text-align:center;font-size:1.15rem;">
+      \[3d = 24 \quad \Rightarrow \quad d = 8\]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konacan odgovor</div>
+    <div class="value">\(a_4 = 8\)</div>
+    <div class="final-options">
+      <div class="final-option">A) \(-16\)</div>
+      <div class="final-option">B) \(-8\)</div>
+      <div class="final-option">V) \(0\)</div>
+      <div class="final-option correct">G) \(8\)</div>
+      <div class="final-option">D) \(16\)</div>
+    </div>
+    <p class="verification">Verifikacija: Niz glasi \(-16, -8, 0, \mathbf{8}, 16, 24, \ldots\) sa razlikom \(d = 8\). Uslovi \(a_2 + a_5 = -8 + 16 = 8\) i \(a_3 + a_7 = 0 + 32 = 32\) su oba zadovoljena.</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall">
+      <strong>Pogresan indeks u formuli:</strong> Cesta greska je pisati \(a_5 = a_1 + 5d\) umesto \(a_5 = a_1 + 4d\). Zapamtite: \(a_n = a_1 + (n-1)d\), pa za \(n = 5\) ide \((5-1)d = 4d\), ne \(5d\).
+    </div>
+    <div class="pitfall">
+      <strong>Greska u znaku pri oduzimanju:</strong> Kada oduzimate jednacine, pazite na znakove. Oduzimanje \((2a_1 + 5d)\) od \((2a_1 + 8d)\) daje \(3d\), a ne \(-3d\). Takodje, na desnoj strani: \(32 - 8 = 24\), ne obrnuto.
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Za isti aritmeticki niz, izracunaj zbir prvih 7 clanova, \(S_7 = a_1 + a_2 + \ldots + a_7\).</p>
+    <details style="background:transparent;border:1px solid #34d399;margin-top:0.75rem;">
+      <summary style="color:#34d399;">Prikazi nagovestaj</summary>
+      <div class="detail-content">
+        <p>Koristi formulu \(S_n = \dfrac{n}{2}(2a_1 + (n-1)d)\). Za \(n = 7\), \(a_1 = -16\), \(d = 8\):</p>
+        <p>\(S_7 = \dfrac{7}{2}(2 \cdot (-16) + 6 \cdot 8) = \dfrac{7}{2}(-32 + 48) = \dfrac{7}{2} \cdot 16 = 56\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('seqCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const slider = document.getElementById('sliderD');
+  const sliderValueEl = document.getElementById('sliderDValue');
+
+  function drawSequence(dVal) {
+    // Recalculate a1 from the first condition: 2a1 + 5d = 8
+    const a1 = (8 - 5 * dVal) / 2;
+
+    // Generate first 8 terms
+    const terms = [];
+    for (let i = 1; i <= 8; i++) {
+      terms.push({ n: i, val: a1 + (i - 1) * dVal });
+    }
+
+    // Determine drawing range
+    const allVals = terms.map(function(t) { return t.val; });
+    const minVal = Math.min.apply(null, allVals) - 8;
+    const maxVal = Math.max.apply(null, allVals) + 8;
+
+    const padL = 50, padR = 50, padT = 60, padB = 80;
+    const plotW = W - padL - padR;
+
+    function toX(v) {
+      return padL + ((v - minVal) / (maxVal - minVal)) * plotW;
+    }
+    const lineY = H * 0.45;
+
+    // Clear
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title info
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('a\u2081 = ' + a1.toFixed(0) + ',  d = ' + dVal, W / 2, 28);
+
+    // Draw number line
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padL - 10, lineY);
+    ctx.lineTo(W - padR + 10, lineY);
+    ctx.stroke();
+
+    // Arrow at right end
+    ctx.beginPath();
+    ctx.moveTo(W - padR + 10, lineY);
+    ctx.lineTo(W - padR + 2, lineY - 5);
+    ctx.moveTo(W - padR + 10, lineY);
+    ctx.lineTo(W - padR + 2, lineY + 5);
+    ctx.stroke();
+
+    // Tick marks on number line
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    var tickStep = Math.max(1, Math.round((maxVal - minVal) / 15));
+    var tickStart = Math.ceil(minVal / tickStep) * tickStep;
+    for (var tv = tickStart; tv <= maxVal; tv += tickStep) {
+      var tx = toX(tv);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(tx, lineY - 4);
+      ctx.lineTo(tx, lineY + 4);
+      ctx.stroke();
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(tv.toString(), tx, lineY + 18);
+    }
+
+    // Highlight "d" bracket between a_4 and a_5
+    if (terms.length >= 5) {
+      var x4 = toX(terms[3].val);
+      var x5 = toX(terms[4].val);
+      var bracketY = lineY + 40;
+      ctx.strokeStyle = '#a78bfa';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x4, lineY + 12);
+      ctx.lineTo(x4, bracketY);
+      ctx.lineTo(x5, bracketY);
+      ctx.lineTo(x5, lineY + 12);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#a78bfa';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('d = ' + dVal, (x4 + x5) / 2, bracketY + 16);
+    }
+
+    // Draw term points
+    var colors = {
+      1: '#94a3b8',
+      2: '#60a5fa',
+      3: '#60a5fa',
+      4: '#4ade80',
+      5: '#60a5fa',
+      6: '#94a3b8',
+      7: '#60a5fa',
+      8: '#94a3b8'
+    };
+
+    var specialTerms = [2, 3, 4, 5, 7]; // those from the problem
+
+    terms.forEach(function(t) {
+      var cx = toX(t.val);
+      var isSpecial = specialTerms.indexOf(t.n) !== -1;
+      var isAnswer = t.n === 4;
+      var radius = isAnswer ? 9 : (isSpecial ? 7 : 5);
+      var color = colors[t.n] || '#94a3b8';
+
+      // Glow for special terms
+      if (isSpecial) {
+        var grd = ctx.createRadialGradient(cx, lineY, 0, cx, lineY, 22);
+        grd.addColorStop(0, isAnswer ? 'rgba(74,222,128,0.45)' : 'rgba(96,165,250,0.3)');
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grd;
+        ctx.fillRect(cx - 22, lineY - 22, 44, 44);
+      }
+
+      // Dot
+      ctx.beginPath();
+      ctx.arc(cx, lineY, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label above
+      ctx.fillStyle = color;
+      ctx.font = isAnswer ? 'bold 14px Segoe UI, system-ui, sans-serif' : '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      var labelY = lineY - radius - 10;
+      ctx.fillText('a' + t.n, cx, labelY);
+
+      // Value below line
+      ctx.fillStyle = isAnswer ? '#4ade80' : '#94a3b8';
+      ctx.font = isAnswer ? 'bold 13px Segoe UI, system-ui, sans-serif' : '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(t.val.toFixed(0), cx, lineY + 30);
+    });
+
+    // Condition annotations at bottom
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    // a2 + a5 = 8 annotation
+    var x2 = toX(terms[1].val);
+    var x5b = toX(terms[4].val);
+    var annY1 = H - 38;
+    ctx.strokeStyle = 'rgba(96,165,250,0.5)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x2, lineY + 34);
+    ctx.lineTo(x2, annY1 - 8);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x5b, lineY + 34);
+    ctx.lineTo(x5b, annY1 - 8);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = 'rgba(96,165,250,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x2, annY1 - 4);
+    ctx.lineTo(x5b, annY1 - 4);
+    ctx.stroke();
+    ctx.fillStyle = '#60a5fa';
+    var sum1 = terms[1].val + terms[4].val;
+    ctx.fillText('a\u2082 + a\u2085 = ' + sum1.toFixed(0), (x2 + x5b) / 2, annY1 + 10);
+
+    // a3 + a7 annotation
+    if (terms.length >= 7) {
+      var x3 = toX(terms[2].val);
+      var x7 = toX(terms[6].val);
+      var annY2 = H - 14;
+      ctx.strokeStyle = 'rgba(167,139,250,0.5)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x3, annY1 + 14);
+      ctx.lineTo(x3, annY2 - 8);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x7, annY1 + 14);
+      ctx.lineTo(x7, annY2 - 8);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.strokeStyle = 'rgba(167,139,250,0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x3, annY2 - 4);
+      ctx.lineTo(x7, annY2 - 4);
+      ctx.stroke();
+      ctx.fillStyle = '#a78bfa';
+      var sum2 = terms[2].val + terms[6].val;
+      ctx.fillText('a\u2083 + a\u2087 = ' + sum2.toFixed(0), (x3 + x7) / 2, annY2 + 10);
+    }
+
+    // Mark a4 specially with a box label
+    var cx4 = toX(terms[3].val);
+    ctx.fillStyle = 'rgba(74,222,128,0.15)';
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    var boxW = 64, boxH = 24;
+    var boxY = lineY - 42;
+    ctx.beginPath();
+    ctx.roundRect(cx4 - boxW / 2, boxY - boxH / 2, boxW, boxH, 6);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('a\u2084 = ' + terms[3].val.toFixed(0), cx4, boxY + 5);
+  }
+
+  // Initial draw with correct d=8
+  drawSequence(8);
+
+  // Slider interaction
+  slider.addEventListener('input', function() {
+    var dVal = parseInt(slider.value, 10);
+    sliderValueEl.textContent = dVal;
+    drawSequence(dVal);
+  });
+
+  // Touch support for slider is native, but let's also handle canvas touch
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); });
+  canvas.addEventListener('touchmove', function(e) { e.preventDefault(); });
+
+  // Click interaction for steps
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(s) {
+    s.addEventListener('click', function() {
+      steps.forEach(function(el) { el.classList.remove('active'); });
+      s.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Aritmeticki niz - odredjivanje clana iz sistema jednacina","subject":"math","unit":"algebra","topic_tags":["aritmeticki niz","sistem jednacina","nizovi","opsti clan niza"]}
+BRAINSPARK_META-->

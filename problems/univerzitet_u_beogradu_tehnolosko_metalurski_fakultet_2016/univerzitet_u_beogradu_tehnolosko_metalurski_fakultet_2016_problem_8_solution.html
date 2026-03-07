@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logaritam u datoj bazi preko poznatih logaritama</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Ako je log 5 = a i log 3 = b, odrediti log_30(8).
+
+Korak 1: Izrazimo log 2 preko a.
+  log 5 = a
+  log 2 = log(10/5) = log 10 - log 5 = 1 - a
+
+Korak 2: Izračunamo log 8.
+  log 8 = log 2^3 = 3 * log 2 = 3(1 - a)
+
+Korak 3: Izračunamo log 30.
+  log 30 = log(2 * 3 * 5) = log 2 + log 3 + log 5
+         = (1 - a) + b + a
+         = 1 + b
+
+Korak 4: Primenimo formulu za promenu baze.
+  log_30(8) = log 8 / log 30 = 3(1 - a) / (1 + b) = 3(1 - a) / (b + 1)
+
+Tačan odgovor: (A) 3(1-a)/(b+1)
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(56,189,248,0.05);
+  border-radius: 10px;
+}
+
+details .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .theory-content li {
+  margin-bottom: 12px;
+  padding-left: 16px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+details .theory-content li::before {
+  content: '>';
+  color: #60a5fa;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+canvas {
+  border-radius: 10px;
+  width: 100%;
+  max-width: 600px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(56,189,248,0.05);
+  border-left: 3px solid #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+  padding: 14px;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .big-formula {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+}
+
+.final-answer {
+  font-size: 1.8rem;
+  color: #4ade80;
+  text-align: center;
+  margin: 20px 0;
+  font-weight: bold;
+}
+
+.options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-final {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.option-final.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(52,211,153,0.2);
+}
+
+.option-final .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.option-final .opt-value {
+  font-size: 1.15rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.option-final.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  background: rgba(52,211,153,0.08);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.verification strong {
+  color: #34d399;
+}
+
+.pitfall {
+  border-left: 3px solid #e09468;
+}
+
+.pitfall h2 {
+  color: #e09468 !important;
+}
+
+.pitfall ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall li {
+  margin-bottom: 10px;
+  padding-left: 20px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfall li::before {
+  content: '!';
+  color: #e09468;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.challenge-card details {
+  margin: 0;
+}
+
+.challenge-card summary {
+  color: #f472b6;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .final-answer { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Logaritam u datoj bazi preko poznatih logaritama</h1>
+  <p class="subtitle">Promena baze logaritma i izražavanje preko datih veličina</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako je \(\log 5 = a\) i \(\log 3 = b\), onda je \(\log_{30} 8\) jednak:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{3(1-a)}{b+1}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{3(1+a)}{b+1}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{3(1-a)}{b-1}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{2(1+a)}{b+1}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{3}{b+1}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Koristimo formulu za promenu baze logaritma: \(\log_{30} 8 = \frac{\log 8}{\log 30}\). Zatim izražavamo \(\log 8\) i \(\log 30\) preko datih veličina \(a = \log 5\) i \(b = \log 3\). Ključni trik je da iz \(\log 5 = a\) dobijemo \(\log 2 = 1 - a\).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i pojmovi</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Promena baze logaritma:</strong> \(\log_b x = \dfrac{\log x}{\log b}\), gde je \(\log\) dekadni (ili bilo koji drugi) logaritam.</li>
+          <li><strong>Logaritam proizvoda:</strong> \(\log(xy) = \log x + \log y\).</li>
+          <li><strong>Logaritam stepena:</strong> \(\log(x^n) = n \cdot \log x\).</li>
+          <li><strong>Logaritam količnika:</strong> \(\log\dfrac{x}{y} = \log x - \log y\).</li>
+          <li><strong>Dekadni logaritam baze:</strong> \(\log 10 = 1\), pa je \(\log 2 = \log\dfrac{10}{5} = 1 - \log 5\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="logCanvas" width="600" height="360"></canvas>
+    <p class="canvas-hint">Dijagram transformacije: od log 5 = a i log 3 = b do log_30(8)</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Izrazimo log 2 preko a</h3>
+        <p>Znamo da je \(\log 5 = a\). Pošto je \(2 = \dfrac{10}{5}\), važi:</p>
+        <div class="math-block">
+          \[\log 2 = \log \frac{10}{5} = \log 10 - \log 5 = 1 - a\]
+        </div>
+        <p class="note">Ovo je standardni trik: iz log 5 odmah dobijamo log 2, jer je 2 &middot; 5 = 10.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Izračunamo log 8</h3>
+        <p>Broj 8 je stepen dvojke: \(8 = 2^3\). Primenom pravila za logaritam stepena:</p>
+        <div class="math-block">
+          \[\log 8 = \log 2^3 = 3 \cdot \log 2 = 3(1 - a)\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je log 8 izražen preko a?</summary>
+      <div class="answer">
+        \(\log 8 = 3(1 - a)\)
+      </div>
+    </details>
+
+    <div class="step" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Izračunamo log 30</h3>
+        <p>Rastavimo 30 na proste činioce: \(30 = 2 \cdot 3 \cdot 5\). Primenom pravila za logaritam proizvoda:</p>
+        <div class="math-block">
+          \[\log 30 = \log(2 \cdot 3 \cdot 5) = \log 2 + \log 3 + \log 5\]
+        </div>
+        <p>Zamenjujemo poznate vrednosti:</p>
+        <div class="math-block">
+          \[\log 30 = (1 - a) + b + a = 1 + b\]
+        </div>
+        <p class="note">Primetimo da se \(-a\) i \(+a\) ponište, pa ostaje jednostavan izraz \(1 + b\).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je log 30 izražen preko a i b?</summary>
+      <div class="answer">
+        \(\log 30 = 1 + b\). Primetite da rezultat ne zavisi od \(a\)!
+      </div>
+    </details>
+
+    <div class="step" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Primenimo formulu za promenu baze</h3>
+        <p>Formula za promenu baze logaritma glasi:</p>
+        <div class="math-block">
+          \[\log_{30} 8 = \frac{\log 8}{\log 30}\]
+        </div>
+        <p>Zamenjujemo rezultate iz prethodnih koraka:</p>
+        <div class="math-block">
+          \[\log_{30} 8 = \frac{3(1 - a)}{1 + b} = \frac{3(1 - a)}{b + 1}\]
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Pošto je \(2 \cdot 5 = 10\) i \(\log 10 = 1\), iz \(\log 5 = a\) odmah sledi \(\log 2 = 1 - a\). Takođe, rastavljanje broja 30 na proste činioce \(30 = 2 \cdot 3 \cdot 5\) dovodi do poništavanja \(a\) u imeniocu, pa je \(\log 30 = 1 + b\).</p>
+    <div class="big-formula">
+      \[\log_{30} 8 = \frac{3(1 - a)}{b + 1}\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer">
+      \(\log_{30} 8 = \dfrac{3(1 - a)}{b + 1}\)
+    </div>
+    <div class="options-final">
+      <div class="option-final correct">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(\dfrac{3(1-a)}{b+1}\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(\dfrac{3(1+a)}{b+1}\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(\dfrac{3(1-a)}{b-1}\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(\dfrac{2(1+a)}{b+1}\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(\dfrac{3}{b+1}\)</div>
+      </div>
+    </div>
+    <div class="verification">
+      <strong>Provera:</strong> Za konkretne vrednosti: \(\log 5 \approx 0{,}699\), dakle \(a \approx 0{,}699\); \(\log 3 \approx 0{,}477\), dakle \(b \approx 0{,}477\). Tada: \(\frac{3(1-0{,}699)}{0{,}477+1} = \frac{3 \cdot 0{,}301}{1{,}477} = \frac{0{,}903}{1{,}477} \approx 0{,}611\). Direktno: \(\log_{30} 8 = \frac{\log 8}{\log 30} = \frac{0{,}903}{1{,}477} \approx 0{,}611\) &check;. Tačan odgovor je <strong>(A)</strong>.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Pogrešan znak ispred a:</strong> Mnogi studenti napišu \(\log 2 = 1 + a\) umesto \(1 - a\). Zapamtite: \(\log 2 = \log(10/5) = 1 - \log 5 = 1 - a\), ne \(1 + a\). To bi dovelo do odgovora (B).</li>
+      <li><strong>Zaboravljanje promene baze:</strong> Ne može se direktno izraziti \(\log_{30} 8\) bez konverzije u dekadne logaritme. Formula \(\log_b x = \frac{\log x}{\log b}\) je neophodna.</li>
+      <li><strong>Pogrešan imenilac:</strong> Ako se napravi greška u rastavljanju broja 30, npr. da se zaboravi \(\log 2\) u zbiru \(\log 2 + \log 3 + \log 5\), imenilac neće biti \(1 + b\), što vodi do odgovora (C) ili (E).</li>
+      <li><strong>Eksponent 8 = 2^3:</strong> Broj 8 je \(2^3\), ne \(2^2\). Pogrešan eksponent daje koeficijent 2 umesto 3 u brojiocu, što odgovara opciji (D).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Ako je \(\log 5 = a\) i \(\log 3 = b\), izrazite \(\log_{15} 12\) preko \(a\) i \(b\).</p>
+    <details>
+      <summary>Prikaži pomoć</summary>
+      <div class="theory-content">
+        <p>Koristite isti pristup: \(\log_{15} 12 = \frac{\log 12}{\log 15}\). Rastavite: \(12 = 2^2 \cdot 3\) i \(15 = 3 \cdot 5\). Izrazite \(\log 2 = 1 - a\) i zamenite. Trebalo bi da dobijete \(\frac{2(1-a)+b}{a+b}\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas: Visual diagram of logarithm transformation
+  const canvas = document.getElementById('logCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  function drawArrow(fromX, fromY, toX, toY, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.stroke();
+    var angle = Math.atan2(toY - fromY, toX - fromX);
+    var headLen = 10;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headLen * Math.cos(angle - 0.4), toY - headLen * Math.sin(angle - 0.4));
+    ctx.lineTo(toX - headLen * Math.cos(angle + 0.4), toY - headLen * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Transformacija: od datih logaritama do traženog', W / 2, 24);
+
+    // Given box: log 5 = a
+    var bx1 = 30, by1 = 48, bw = 160, bh = 50;
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    roundRect(bx1, by1, bw, bh, 10);
+    ctx.stroke();
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Dato: log 5 = a', bx1 + bw / 2, by1 + 30);
+
+    // Given box: log 3 = b
+    var bx2 = W - 30 - bw, by2 = 48;
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    roundRect(bx2, by2, bw, bh, 10);
+    ctx.stroke();
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Dato: log 3 = b', bx2 + bw / 2, by2 + 30);
+
+    // Derived: log 2 = 1 - a
+    var dx = 30, dy = 130, dw = 160, dh = 50;
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 3]);
+    roundRect(dx, dy, dw, dh, 10);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('log 2 = 1 - a', dx + dw / 2, dy + 30);
+
+    // Arrow from log5 to log2
+    drawArrow(bx1 + bw / 2, by1 + bh, dx + dw / 2, dy, '#38bdf8');
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('2 = 10/5', bx1 + bw / 2 + 8, by1 + bh + 18);
+
+    // Numerator box: log 8 = 3(1-a)
+    var nx = 30, ny = 210, nw = 200, nh = 55;
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    roundRect(nx, ny, nw, nh, 10);
+    ctx.stroke();
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BROJILAC', nx + nw / 2, ny + 20);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('log 8 = 3 \u00B7 log 2 = 3(1-a)', nx + nw / 2, ny + 42);
+
+    // Arrow from log2 to log8
+    drawArrow(dx + dw / 2, dy + dh, nx + nw / 2 - 30, ny, '#34d399');
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('8 = 2\u00B3', dx + dw / 2 + 5, dy + dh + 16);
+
+    // Denominator box: log 30 = 1 + b
+    var mx = W - 30 - 230, my = 210, mw = 230, mh = 55;
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    roundRect(mx, my, mw, mh, 10);
+    ctx.stroke();
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('IMENILAC', mx + mw / 2, my + 20);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('log 30 = log2+log3+log5 = 1+b', mx + mw / 2, my + 42);
+
+    // Arrows to denominator from both given boxes
+    drawArrow(bx1 + bw, by1 + bh / 2 + 30, mx + 30, my, '#f59e0b');
+    drawArrow(bx2 + bw / 2, by2 + bh, mx + mw / 2, my, '#f59e0b');
+
+    // Final result box
+    var fx = W / 2 - 130, fy = 295, fw = 260, fh = 50;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    roundRect(fx, fy, fw, fh, 12);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(74,222,128,0.08)';
+    roundRect(fx, fy, fw, fh, 12);
+    ctx.fill();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('log\u2083\u2080 8 = 3(1-a) / (b+1)', W / 2, fy + 32);
+
+    // Glow
+    ctx.shadowColor = '#4ade80';
+    ctx.shadowBlur = 12;
+    ctx.fillText('log\u2083\u2080 8 = 3(1-a) / (b+1)', W / 2, fy + 32);
+    ctx.shadowBlur = 0;
+
+    // Arrows to final
+    drawArrow(nx + nw / 2, ny + nh, fx + fw / 3, fy, '#4ade80');
+    drawArrow(mx + mw / 2, my + mh, fx + 2 * fw / 3, fy, '#4ade80');
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Logaritam u datoj bazi preko poznatih logaritama",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["logaritmi", "promena baze", "logaritamske jednačine", "dekadni logaritam"]
+}
+BRAINSPARK_META-->

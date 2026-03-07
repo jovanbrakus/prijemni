@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje algebarskog izraza</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Pojednostaviti algebarski izraz (x³ + 3x² - x - 3) / (x² + 2x - 3) za x ≠ 1 i x ≠ -3.
+
+Ponudjeni odgovori:
+(A) x - 3
+(B) x - 1
+(C) x + 3
+(D) x + 1
+
+KORAK 1: Faktorizacija brojioca x³ + 3x² - x - 3
+Grupisanje:
+  x³ + 3x² - x - 3 = (x³ + 3x²) + (-x - 3)
+                    = x²(x + 3) - 1(x + 3)
+                    = (x² - 1)(x + 3)
+
+Dalje, x² - 1 je razlika kvadrata:
+  x² - 1 = (x - 1)(x + 1)
+
+Dakle:
+  Brojilac = (x - 1)(x + 1)(x + 3)
+
+KORAK 2: Faktorizacija imenioca x² + 2x - 3
+Tražimo dva broja čiji je proizvod -3 a zbir 2: to su 3 i -1.
+  x² + 2x - 3 = (x + 3)(x - 1)
+
+KORAK 3: Skraćivanje
+  (x - 1)(x + 1)(x + 3) / ((x + 3)(x - 1))
+
+Za x ≠ 1 i x ≠ -3 (dato u uslovu), možemo skratiti (x - 1) i (x + 3):
+  = x + 1
+
+VERIFIKACIJA:
+Za x = 2:
+  Brojilac: 8 + 12 - 2 - 3 = 15
+  Imenilac: 4 + 4 - 3 = 5
+  15/5 = 3
+  x + 1 = 2 + 1 = 3 ✓
+
+Za x = 0:
+  Brojilac: 0 + 0 - 0 - 3 = -3
+  Imenilac: 0 + 0 - 3 = -3
+  -3/-3 = 1
+  x + 1 = 0 + 1 = 1 ✓
+
+Odgovor: (D) x + 1
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 1.8rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 1rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement .problem-text {
+  font-size: 1.15rem;
+  margin-bottom: 1.2rem;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.8rem;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.8rem 1.2rem;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+details {
+  background: rgba(96, 165, 250, 0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+details[open] summary {
+  margin-bottom: 0.8rem;
+}
+
+.canvas-wrapper {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+canvas {
+  max-width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+}
+
+.step {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: flex-start;
+  padding: 0.5rem;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #34d399;
+  background: rgba(52, 211, 153, 0.04);
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  margin: 0.6rem 0;
+  overflow-x: auto;
+}
+
+.note-text {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.key-insight {
+  border: 2px solid #a78bfa;
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.key-insight .card-title {
+  color: #a78bfa;
+}
+
+.insight-formula {
+  text-align: center;
+  font-size: 1.5rem;
+  color: #4ade80;
+  margin: 1rem 0;
+}
+
+.final-answer {
+  border: 2px solid #34d399;
+  text-align: center;
+}
+
+.final-answer .card-title {
+  color: #34d399;
+}
+
+.answer-big {
+  font-size: 1.8rem;
+  color: #4ade80;
+  margin: 1rem 0;
+}
+
+.answer-options-final {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  margin: 1.2rem 0;
+}
+
+.answer-opt {
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: rgba(56, 189, 248, 0.05);
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+.answer-opt.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 0.8rem;
+}
+
+.pitfall-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.theory-formula {
+  margin-bottom: 0.8rem;
+}
+
+.highlight-span {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.condition-text {
+  color: #f472b6;
+  font-size: 1rem;
+  margin-top: 0.6rem;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 1.2rem; }
+  .given-grid { grid-template-columns: 1fr 1fr; }
+  .answer-options-final { gap: 0.6rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Pojednostavljivanje algebarskog izraza</h1>
+  <p class="subtitle">Algebra — faktorizacija polinoma, grupisanje, razlika kvadrata, skracivanje razlomaka</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title">Zadatak</div>
+    <p class="problem-text">Algebarski izraz \( \dfrac{x^3 + 3x^2 - x - 3}{x^2 + 2x - 3} \), za \( x \neq 1 \) i \( x \neq -3 \), je jednak:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( x - 3 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( x - 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( x + 3 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( x + 1 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title">Plan resavanja</div>
+    <p class="plan-text">Faktorizovacemo i brojilac i imenilac razlomka, a zatim skratiti zajednicke faktore. Za brojilac (polinom treceg stepena) koristicemo metodu grupisanja, a za imenilac (kvadratni trinom) standardnu faktorizaciju.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title">Teorijski podsetnik</div>
+    <details>
+      <summary>Kljucne formule i tehnike</summary>
+      <div class="theory-formula">
+        <div class="math-box">
+          <p><strong>Faktorizacija grupisanjem:</strong> Polinom sa 4 clana mozemo grupisati u parove i izvuci zajednicki faktor iz svakog para:</p>
+          \[ ab + ac + db + dc = a(b + c) + d(b + c) = (a + d)(b + c) \]
+        </div>
+      </div>
+      <div class="theory-formula">
+        <div class="math-box">
+          <p><strong>Razlika kvadrata:</strong></p>
+          \[ a^2 - b^2 = (a - b)(a + b) \]
+        </div>
+      </div>
+      <div class="theory-formula">
+        <div class="math-box">
+          <p><strong>Faktorizacija kvadratnog trinoma:</strong> Za \( ax^2 + bx + c \), trazimo dva broja \( p \) i \( q \) takve da je \( p + q = b \) i \( p \cdot q = c \) (kada je \( a = 1 \)):</p>
+          \[ x^2 + (p+q)x + pq = (x + p)(x + q) \]
+        </div>
+      </div>
+      <div class="theory-formula">
+        <div class="math-box">
+          <p><strong>Skracivanje algebarskog razlomka:</strong> Ako je \( f \neq 0 \):</p>
+          \[ \frac{f \cdot g}{f \cdot h} = \frac{g}{h} \]
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title">Vizuelni prikaz faktorizacije</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="700" height="420"></canvas>
+      <p class="drag-hint">Dijagram prikazuje proces faktorizacije brojioca i imenioca, i skracivanje zajednickih faktora</p>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title">Resenje korak po korak</div>
+
+    <div class="step" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapisemo brojilac i uocimo strukturu</h3>
+        <p>Brojilac je polinom treceg stepena:</p>
+        <div class="math-box">
+          \[ x^3 + 3x^2 - x - 3 \]
+        </div>
+        <p>Ovaj polinom ima 4 clana. Pokusacemo da ga faktorizujemo metodom <strong>grupisanja</strong> — podelicemo ga na dva para clanova i iz svakog para izvucemo zajednicki faktor.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Grupisemo clanove brojioca</h3>
+        <p>Podelimo 4 clana u dva para:</p>
+        <div class="math-box">
+          \[ x^3 + 3x^2 - x - 3 = \underbrace{(x^3 + 3x^2)}_{\text{prvi par}} + \underbrace{(-x - 3)}_{\text{drugi par}} \]
+        </div>
+        <p>Iz prvog para izvlacimo \( x^2 \), a iz drugog \( -1 \):</p>
+        <div class="math-box">
+          \[ = x^2(x + 3) - 1 \cdot (x + 3) \]
+        </div>
+        <p class="note-text">Oba para sadrze zajednicki faktor \( (x + 3) \) — to je signal da smo dobro grupisali!</p>
+      </div>
+    </div>
+
+    <div class="step" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Izvucemo zajednicki faktor \( (x + 3) \)</h3>
+        <p>Sada izvlacimo \( (x + 3) \) ispred zagrade:</p>
+        <div class="math-box">
+          \[ x^2(x + 3) - 1 \cdot (x + 3) = (x^2 - 1)(x + 3) \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Sta je \( x^2 - 1 \)? Kako se dalje faktorizuje?</summary>
+      <p>Izraz \( x^2 - 1 \) je <strong>razlika kvadrata</strong>, jer \( x^2 - 1 = x^2 - 1^2 \). Po formuli \( a^2 - b^2 = (a-b)(a+b) \), dobijamo \( (x-1)(x+1) \).</p>
+    </details>
+
+    <div class="step" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Primenimo formulu za razliku kvadrata</h3>
+        <p>Faktor \( x^2 - 1 \) je razlika kvadrata:</p>
+        <div class="math-box">
+          \[ x^2 - 1 = x^2 - 1^2 = (x - 1)(x + 1) \]
+        </div>
+        <p>Dakle, kompletna faktorizacija brojioca je:</p>
+        <div class="math-box">
+          \[ x^3 + 3x^2 - x - 3 = (x - 1)(x + 1)(x + 3) \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Faktorizujemo imenilac</h3>
+        <p>Imenilac je kvadratni trinom:</p>
+        <div class="math-box">
+          \[ x^2 + 2x - 3 \]
+        </div>
+        <p>Trazimo dva broja ciji je <strong>zbir</strong> jednak \( 2 \) i <strong>proizvod</strong> jednak \( -3 \).</p>
+        <p>Probajmo: \( 3 \) i \( -1 \). Zaista: \( 3 + (-1) = 2 \) i \( 3 \cdot (-1) = -3 \).</p>
+        <div class="math-box">
+          \[ x^2 + 2x - 3 = (x + 3)(x - 1) \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko zajednickih faktora imaju brojilac i imenilac?</summary>
+      <p>Brojilac: \( (x-1)(x+1)(x+3) \). Imenilac: \( (x+3)(x-1) \). Zajednicki faktori su <strong>\( (x-1) \)</strong> i <strong>\( (x+3) \)</strong> — ukupno dva zajednicka faktora.</p>
+    </details>
+
+    <div class="step" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Zapisemo razlomak u faktorizovanom obliku</h3>
+        <p>Zamenjujemo brojilac i imenilac njihovim faktorizovanim oblicima:</p>
+        <div class="math-box">
+          \[ \frac{x^3 + 3x^2 - x - 3}{x^2 + 2x - 3} = \frac{(x - 1)(x + 1)(x + 3)}{(x + 3)(x - 1)} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Skratimo zajednicke faktore</h3>
+        <p>Posto je dato da \( x \neq 1 \) (pa je \( x - 1 \neq 0 \)) i \( x \neq -3 \) (pa je \( x + 3 \neq 0 \)), mozemo skratiti oba zajednicka faktora:</p>
+        <div class="math-box">
+          \[ \frac{\cancel{(x - 1)}(x + 1)\cancel{(x + 3)}}{\cancel{(x + 3)}\cancel{(x - 1)}} = x + 1 \]
+        </div>
+        <p class="note-text">Uslovi \( x \neq 1 \) i \( x \neq -3 \) su neophodni da bi skracivanje bilo dozvoljeno — ne smemo deliti nulom!</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko iznosi izraz za \( x = 2 \)?</summary>
+      <p>Direktno: \( \frac{8 + 12 - 2 - 3}{4 + 4 - 3} = \frac{15}{5} = 3 \). Po nasem rezultatu: \( x + 1 = 2 + 1 = 3 \). Poklapa se!</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card key-insight">
+    <div class="card-title">Kljucni uvid</div>
+    <p>Metoda grupisanja je kljuc za faktorizaciju polinoma treceg stepena sa 4 clana. Kada grupisemo clanove i iz oba para dobijemo isti zajednicki faktor, znamo da smo na dobrom putu. Potom, prepoznavanje razlike kvadrata \( x^2 - 1 = (x-1)(x+1) \) dovrsava posao.</p>
+    <div class="insight-formula">
+      \[ \frac{(x-1)(x+1)(x+3)}{(x+3)(x-1)} = x + 1 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <div class="card-title">Konacan odgovor</div>
+    <div class="answer-big">\( x + 1 \)</div>
+    <div class="answer-options-final">
+      <span class="answer-opt">(A) \( x - 3 \)</span>
+      <span class="answer-opt">(B) \( x - 1 \)</span>
+      <span class="answer-opt">(C) \( x + 3 \)</span>
+      <span class="answer-opt correct">(D) \( x + 1 \)</span>
+    </div>
+    <p class="verification-note">Verifikacija: Za \( x = 0 \): brojilac \( = 0 + 0 - 0 - 3 = -3 \), imenilac \( = 0 + 0 - 3 = -3 \), razlomak \( = \frac{-3}{-3} = 1 \). Formula: \( 0 + 1 = 1 \). Tacan odgovor je (D).</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title">Ceste greske</div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Pogresno grupisanje:</strong> Ako grupisemo clanove brojioca kao \( (x^3 - x) + (3x^2 - 3) \), dobijamo \( x(x^2-1) + 3(x^2-1) = (x+3)(x^2-1) \), sto je isti rezultat. Medjutim, ako pogresno grupisemo (npr. \( (x^3 + 3x^2 - x) - 3 \)), necemo moci da izvucemo zajednicki faktor.</p>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">!</span>
+      <p><strong>Zaboravljanje razlike kvadrata:</strong> Ako stanemo na \( (x^2 - 1)(x + 3) \) i ne faktorizujemo dalje \( x^2 - 1 \), necemo videti da se \( (x-1) \) pojavljuje i u brojiocu i u imeniocu, i necemo moci da skratimo razlomak do kraja.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title">Dodatni izazov</div>
+    <p>Sta ako u imeniocu umesto \( x^2 + 2x - 3 \) stoji \( x^2 - 1 \)? Koliko bi tada iznosio pojednostavljeni izraz (uz odgovarajuce uslove)?</p>
+    <details>
+      <summary>Pomoc</summary>
+      <p>Brojilac ostaje isti: \( (x-1)(x+1)(x+3) \). Imenilac: \( x^2 - 1 = (x-1)(x+1) \). Skracivanjem dobijamo \( x + 3 \) (za \( x \neq 1 \) i \( x \neq -1 \)).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= W; i += 40) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, H);
+      ctx.stroke();
+    }
+    for (let i = 0; i <= H; i += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, i);
+      ctx.lineTo(W, i);
+      ctx.stroke();
+    }
+
+    // Title
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Faktorizacija i skra\u0107ivanje', W / 2, 30);
+
+    // --- Numerator section ---
+    var numY = 65;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('BROJILAC:', 20, numY);
+
+    // Original numerator
+    ctx.font = '16px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('x\u00B3 + 3x\u00B2 \u2212 x \u2212 3', 130, numY);
+
+    // Arrow down
+    drawArrow(200, numY + 10, 200, numY + 35, '#60a5fa');
+
+    // Grouping step
+    var grpY = numY + 50;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('grupisanje:', 40, grpY);
+    ctx.font = '16px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('x\u00B2(x + 3) \u2212 1\u00B7(x + 3)', 150, grpY);
+
+    // Arrow down
+    drawArrow(200, grpY + 10, 200, grpY + 35, '#60a5fa');
+
+    // Common factor step
+    var cfY = grpY + 50;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('zajedni\u010Dki faktor:', 40, cfY);
+    ctx.font = '16px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('(x\u00B2 \u2212 1)(x + 3)', 195, cfY);
+
+    // Arrow down
+    drawArrow(200, cfY + 10, 200, cfY + 35, '#60a5fa');
+
+    // Difference of squares step
+    var dsY = cfY + 50;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('razlika kvadrata:', 40, dsY);
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+
+    // Draw each factor with color coding
+    var fx = 195;
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('(x \u2212 1)', fx, dsY);
+    fx += ctx.measureText('(x \u2212 1)').width + 3;
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('(x + 1)', fx, dsY);
+    fx += ctx.measureText('(x + 1)').width + 3;
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('(x + 3)', fx, dsY);
+
+    // --- Denominator section ---
+    var denStartX = 420;
+    var denY = 65;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('IMENILAC:', denStartX, denY);
+
+    // Original denominator
+    ctx.font = '16px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('x\u00B2 + 2x \u2212 3', denStartX + 110, denY);
+
+    // Arrow down
+    drawArrow(denStartX + 170, denY + 10, denStartX + 170, denY + 35, '#60a5fa');
+
+    // Factored denominator
+    var dfY = denY + 50;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('p + q = 2, p\u00B7q = \u22123:', denStartX + 20, dfY);
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+
+    var dx = denStartX + 195;
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('(x + 3)', dx, dfY);
+    dx += ctx.measureText('(x + 3)').width + 3;
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('(x \u2212 1)', dx, dfY);
+
+    // --- Fraction line and cancellation ---
+    var fracY = 290;
+
+    // Horizontal fraction line
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(100, fracY);
+    ctx.lineTo(600, fracY);
+    ctx.stroke();
+
+    // Numerator factors above line
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    var numFactX = 200;
+    var spacing = 130;
+
+    // (x - 1) crossed out
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.4)';
+    ctx.fillText('(x \u2212 1)', numFactX, fracY - 20);
+    drawCrossOut(numFactX, fracY - 20, 70, '#f472b6');
+
+    // (x + 1) stays
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('(x + 1)', numFactX + spacing, fracY - 20);
+
+    // (x + 3) crossed out
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.4)';
+    ctx.fillText('(x + 3)', numFactX + 2 * spacing, fracY - 20);
+    drawCrossOut(numFactX + 2 * spacing, fracY - 20, 70, '#60a5fa');
+
+    // Denominator factors below line
+    // (x + 3) crossed out
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.4)';
+    ctx.fillText('(x + 3)', numFactX + 50, fracY + 30);
+    drawCrossOut(numFactX + 50, fracY + 30, 70, '#60a5fa');
+
+    // (x - 1) crossed out
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.4)';
+    ctx.fillText('(x \u2212 1)', numFactX + 50 + spacing, fracY + 30);
+    drawCrossOut(numFactX + 50 + spacing, fracY + 30, 70, '#f472b6');
+
+    // Connection lines for matching factors
+    ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 1.5;
+
+    // (x-1) numerator to (x-1) denominator
+    ctx.strokeStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.moveTo(numFactX, fracY - 5);
+    ctx.lineTo(numFactX + 50 + spacing, fracY + 15);
+    ctx.stroke();
+
+    // (x+3) numerator to (x+3) denominator
+    ctx.strokeStyle = '#60a5fa';
+    ctx.beginPath();
+    ctx.moveTo(numFactX + 2 * spacing, fracY - 5);
+    ctx.lineTo(numFactX + 50, fracY + 15);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // Big arrow to result
+    drawArrow(350, fracY + 55, 350, fracY + 85, '#34d399');
+
+    // Final result
+    var resY = fracY + 110;
+    ctx.font = 'bold 28px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('x + 1', 350, resY);
+
+    // Result box
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    roundRect(ctx, 280, resY - 25, 140, 40, 10);
+    ctx.stroke();
+
+    // Legend
+    var legX = 15;
+    var legY = H - 40;
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#f472b6';
+    ctx.fillRect(legX, legY - 5, 14, 14);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('Faktor (x \u2212 1) — skra\u0107en', legX + 20, legY + 6);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(legX + 230, legY - 5, 14, 14);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Faktor (x + 3) — skra\u0107en', legX + 250, legY + 6);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(legX + 465, legY - 5, 14, 14);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('Faktor (x + 1) — ostaje', legX + 485, legY + 6);
+  }
+
+  function drawArrow(x1, y1, x2, y2, color) {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    var headLen = 8;
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawCrossOut(cx, cy, halfWidth, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(cx - halfWidth, cy + 8);
+    ctx.lineTo(cx + halfWidth, cy - 12);
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+  }
+
+  draw();
+
+  // Step click interactivity
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje algebarskog izraza sa polinomima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["faktorizacija polinoma", "grupisanje", "razlika kvadrata", "algebarski razlomci", "skracivanje razlomaka"]
+}
+BRAINSPARK_META-->

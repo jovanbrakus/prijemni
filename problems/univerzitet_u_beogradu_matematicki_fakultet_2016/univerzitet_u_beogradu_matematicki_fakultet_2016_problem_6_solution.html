@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broj resenja kompleksne jednacine u datom intervalu</title>
+<script>
+/*
+ * LOGIC SCRATCHPAD
+ * ================
+ * Problem: ((1+ix)/(1-ix))^2 = i, x real, find number of solutions in (0, 1/2).
+ *
+ * Key observations:
+ * 1) Let w = (1+ix)/(1-ix). Since x is real, |1+ix| = |1-ix| = sqrt(1+x^2),
+ *    so |w| = 1. Thus w lies on the unit circle.
+ *
+ * 2) We can write w = e^(i*theta) where:
+ *    w = (1-x^2)/(1+x^2) + i*(2x)/(1+x^2)
+ *    This is the Weierstrass substitution: cos(theta) = (1-x^2)/(1+x^2), sin(theta) = 2x/(1+x^2)
+ *    with theta = 2*arctan(x).
+ *
+ * 3) w^2 = i means e^(2i*theta) = e^(i*pi/2 + 2k*pi*i)
+ *    => 2*theta = pi/2 + 2k*pi
+ *    => theta = pi/4 + k*pi
+ *
+ * 4) Since theta = 2*arctan(x):
+ *    2*arctan(x) = pi/4 + k*pi
+ *    arctan(x) = pi/8 + k*pi/2
+ *    x = tan(pi/8 + k*pi/2)
+ *
+ * 5) Check which values fall in (0, 1/2):
+ *    k=0: x = tan(pi/8) = sqrt(2)-1 ≈ 0.4142 => IN (0, 0.5) ✓
+ *    k=1: x = tan(5pi/8) = -tan(3pi/8) ≈ -2.414 => NOT in (0, 0.5)
+ *    k=-1: x = tan(-3pi/8) ≈ -2.414 => NOT in (0, 0.5)
+ *    k=2: x = tan(9pi/8) = tan(pi/8) ≈ 0.4142 => same as k=0 (period of tan is pi)
+ *
+ *    Only k=0 gives a solution in (0, 1/2).
+ *
+ * 6) Verify: x = sqrt(2)-1, so ix = i(sqrt(2)-1)
+ *    1+ix = 1+i(sqrt(2)-1), 1-ix = 1-i(sqrt(2)-1)
+ *    w = (1+ix)/(1-ix) = e^(i*pi/4) = (1+i)/sqrt(2)
+ *    w^2 = ((1+i)/sqrt(2))^2 = (1+2i-1)/2 = 2i/2 = i ✓
+ *
+ * Answer: B) 1
+ */
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async>
+</script>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  startup: {
+    typeset: true
+  }
+};
+</script>
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.7;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.3;
+}
+
+h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+h3 {
+  color: #a78bfa;
+  font-size: 1.15rem;
+  margin-bottom: 0.75rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement p {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #334155;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-size: 1rem;
+  cursor: default;
+  transition: all 0.3s ease;
+}
+
+.answer-option {
+  cursor: pointer;
+}
+
+.answer-option:hover {
+  border-color: #60a5fa;
+  background: #2d3a4f;
+}
+
+.answer-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: bold;
+}
+
+.badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  margin-right: 0.5rem;
+}
+
+.step {
+  margin-bottom: 1.5rem;
+  padding-left: 0.5rem;
+  border-left: 3px solid #334155;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.step:hover {
+  border-left-color: #60a5fa;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  border-bottom: 1px solid #334155;
+  margin-bottom: 0;
+}
+
+details .card {
+  border: none;
+  border-radius: 0 0 12px 12px;
+  margin-bottom: 0;
+}
+
+.check-yourself {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px dashed #60a5fa;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+
+.final-answer {
+  border: 2px solid #34d399;
+  background: rgba(52, 211, 153, 0.08);
+  text-align: center;
+  padding: 2rem;
+}
+
+.final-answer .answer-value {
+  font-size: 1.5rem;
+  color: #4ade80;
+  margin-top: 0.75rem;
+}
+
+.insight-card {
+  border-left: 4px solid #f472b6;
+  background: rgba(244, 114, 182, 0.05);
+}
+
+.pitfall-card {
+  border-left: 4px solid #fbbf24;
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.challenge-card {
+  border-left: 4px solid #34d399;
+  background: rgba(52, 211, 153, 0.05);
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+canvas {
+  display: block;
+  margin: 1rem auto;
+  border-radius: 8px;
+  max-width: 100%;
+}
+
+ul, ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+li {
+  margin-bottom: 0.4rem;
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 1rem 1.25rem; }
+  body { padding: 1rem 0.5rem; }
+  .given-grid { gap: 0.5rem; }
+  .given-item { padding: 0.4rem 0.75rem; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Broj resenja kompleksne jednacine u datom intervalu</h1>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Zadatak</h2>
+    <p>Data je jednacina</p>
+    \[ \left(\frac{1 + ix}{1 - ix}\right)^2 = i, \]
+    <p>gde je \(x\) realna nepoznata. Broj resenja ove jednacine u intervalu \(\left(0,\; \dfrac{1}{2}\right)\) je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">A) 0</div>
+      <div class="given-item answer-option" data-option="B">B) 1</div>
+      <div class="given-item answer-option" data-option="C">C) 2</div>
+      <div class="given-item answer-option" data-option="D">D) 4</div>
+      <div class="given-item answer-option" data-option="E">E) beskonacan</div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <h2>Plan resavanja</h2>
+    <ol>
+      <li>Uvesti smenu \(w = \dfrac{1 + ix}{1 - ix}\) i pokazati da \(|w| = 1\).</li>
+      <li>Zapisati \(w\) u eksponencijalnom obliku koristeci Vajerstrasovu smenu.</li>
+      <li>Resiti jednacinu \(w^2 = i\) na jedinicnom krugu.</li>
+      <li>Naci sve vrednosti \(x\) i proveriti koje padaju u interval \(\left(0,\; \frac{1}{2}\right)\).</li>
+    </ol>
+  </div>
+
+  <!-- THEORY -->
+  <details>
+    <summary>Teorijska podloga</summary>
+    <div class="card">
+      <h3>Vajerstrasova (tangensna polovina) smena</h3>
+      <p>Za realno \(x\), transformacija</p>
+      \[ w = \frac{1 + ix}{1 - ix} \]
+      <p>daje kompleksni broj na jedinicnom krugu. Racunanjem se dobija:</p>
+      \[ w = \frac{1 - x^2}{1 + x^2} + i\,\frac{2x}{1 + x^2} \]
+      <p>Ovo je upravo parametrizacija jedinicnog kruga pomocu \(x = \tan\frac{\theta}{2}\), gde je:</p>
+      \[ \cos\theta = \frac{1 - x^2}{1 + x^2}, \quad \sin\theta = \frac{2x}{1 + x^2} \]
+      <p>Dakle \(w = e^{i\theta}\) gde je \(\theta = 2\arctan(x)\).</p>
+
+      <h3 style="margin-top:1rem;">Korenovanje na jedinicnom krugu</h3>
+      <p>Jednacina \(w^2 = i\) na jedinicnom krugu daje dva resenja. Posto je \(i = e^{i\pi/2}\), trazimo:</p>
+      \[ e^{2i\theta} = e^{i(\pi/2 + 2k\pi)}, \quad k \in \mathbb{Z} \]
+      <p>sto daje \(\theta = \frac{\pi}{4} + k\pi\), tj. dva razlicita ugla po modulu \(2\pi\).</p>
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p class="muted">Jedinicni krug u kompleksnoj ravni sa tackom \(w = e^{i\pi/4}\) i funkcija \(f(x) = \arg(w^2)\) u zavisnosti od \(x\).</p>
+    <canvas id="unitCircleCanvas" width="520" height="520"></canvas>
+  </div>
+
+  <!-- STEP BY STEP -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step">
+      <p><span class="badge">Korak 1</span> <strong>Smena i modul</strong></p>
+      <p>Neka je \(w = \dfrac{1 + ix}{1 - ix}\). Posto je \(x\) realan broj, vazi \(x \neq 0\) (inace \(w=1\) i \(w^2=1\neq i\)), a imenilac je \(1 - ix \neq 0\) za svako realno \(x\).</p>
+      <p>Izracunajmo modul:</p>
+      \[ |w| = \frac{|1 + ix|}{|1 - ix|} = \frac{\sqrt{1 + x^2}}{\sqrt{1 + x^2}} = 1 \]
+      <p>Dakle, \(w\) lezi na <strong>jedinicnom krugu</strong>.</p>
+      <div class="check-yourself">Proveri: za \(x = 1\), koliko je \(w\)? Odgovor: \(w = \frac{1+i}{1-i} = \frac{(1+i)^2}{2} = i\). Zaista \(|i| = 1\).</div>
+    </div>
+
+    <div class="step">
+      <p><span class="badge">Korak 2</span> <strong>Eksponencijalni oblik</strong></p>
+      <p>Pomnozimo brojilac i imenilac konjugatom imenioca:</p>
+      \[ w = \frac{(1 + ix)(1 + ix)}{(1 - ix)(1 + ix)} = \frac{(1 + ix)^2}{1 + x^2} = \frac{1 - x^2 + 2ix}{1 + x^2} \]
+      <p>Dakle:</p>
+      \[ \operatorname{Re}(w) = \frac{1 - x^2}{1 + x^2}, \quad \operatorname{Im}(w) = \frac{2x}{1 + x^2} \]
+      <p>Ovo prepoznajemo kao <strong>Vajerstrasovu smenu</strong> sa \(x = \tan\frac{\theta}{2}\):</p>
+      \[ w = e^{i\theta}, \quad \text{gde je } \theta = 2\arctan(x) \]
+    </div>
+
+    <div class="step">
+      <p><span class="badge">Korak 3</span> <strong>Resavanje \(w^2 = i\)</strong></p>
+      <p>Zapisemo \(i = e^{i\pi/2}\). Jednacina \(w^2 = i\) postaje:</p>
+      \[ e^{2i\theta} = e^{i(\pi/2 + 2k\pi)}, \quad k \in \mathbb{Z} \]
+      <p>Odavde:</p>
+      \[ 2\theta = \frac{\pi}{2} + 2k\pi \quad \Rightarrow \quad \theta = \frac{\pi}{4} + k\pi \]
+    </div>
+
+    <div class="step">
+      <p><span class="badge">Korak 4</span> <strong>Vracanje na \(x\)</strong></p>
+      <p>Posto je \(\theta = 2\arctan(x)\), dobijamo:</p>
+      \[ 2\arctan(x) = \frac{\pi}{4} + k\pi \quad \Rightarrow \quad \arctan(x) = \frac{\pi}{8} + \frac{k\pi}{2} \]
+      <p>Odavde:</p>
+      \[ x = \tan\!\left(\frac{\pi}{8} + \frac{k\pi}{2}\right) \]
+    </div>
+
+    <div class="step">
+      <p><span class="badge">Korak 5</span> <strong>Ispitivanje za razlicite vrednosti \(k\)</strong></p>
+      <p>Posto funkcija tangens ima period \(\pi\), dovoljno je razmotriti \(k = 0\) i \(k = 1\) (sva ostala resenja se ponavljaju):</p>
+      <ul>
+        <li><strong>\(k = 0\):</strong> \(\;x = \tan\frac{\pi}{8}\)</li>
+        <li><strong>\(k = 1\):</strong> \(\;x = \tan\frac{5\pi}{8} = \tan\!\left(\pi - \frac{3\pi}{8}\right) = -\tan\frac{3\pi}{8}\)</li>
+      </ul>
+      <p>Izracunajmo \(\tan\frac{\pi}{8}\). Koristimo formulu za polovinu ugla:</p>
+      \[ \tan\frac{\pi}{8} = \tan 22{,}5° = \frac{1 - \cos\frac{\pi}{4}}{\sin\frac{\pi}{4}} = \frac{1 - \frac{\sqrt{2}}{2}}{\frac{\sqrt{2}}{2}} = \frac{2 - \sqrt{2}}{\sqrt{2}} = \sqrt{2} - 1 \approx 0{,}4142 \]
+      <p>Za drugo resenje:</p>
+      \[ \tan\frac{3\pi}{8} = \sqrt{2} + 1 \approx 2{,}4142 \quad \Rightarrow \quad x = -(\sqrt{2} + 1) \approx -2{,}4142 \]
+    </div>
+
+    <div class="step">
+      <p><span class="badge">Korak 6</span> <strong>Provera pripadnosti intervalu \(\left(0,\; \frac{1}{2}\right)\)</strong></p>
+      <ul>
+        <li>\(x_1 = \sqrt{2} - 1 \approx 0{,}4142\). Vazi li \(0 < 0{,}4142 < 0{,}5\)? <strong>Da!</strong></li>
+        <li>\(x_2 = -(\sqrt{2} + 1) \approx -2{,}4142\). Ovo je negativan broj. <strong>Ne!</strong></li>
+      </ul>
+      <p>Dakle, <strong>tacno jedno resenje</strong> pripada intervalu \(\left(0,\; \frac{1}{2}\right)\).</p>
+    </div>
+
+    <div class="step">
+      <p><span class="badge">Korak 7</span> <strong>Verifikacija resenja</strong></p>
+      <p>Za \(x = \sqrt{2} - 1\):</p>
+      \[ w = e^{i\pi/4} = \frac{\sqrt{2}}{2} + i\,\frac{\sqrt{2}}{2} = \frac{1+i}{\sqrt{2}} \]
+      \[ w^2 = \left(\frac{1+i}{\sqrt{2}}\right)^2 = \frac{(1+i)^2}{2} = \frac{1 + 2i - 1}{2} = \frac{2i}{2} = i \;\; \checkmark \]
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="card insight-card">
+    <h2>Kljucni uvid</h2>
+    <p>Transformacija \(w = \frac{1+ix}{1-ix}\) preslikava realan broj \(x\) u tacku na jedinicnom krugu. To je upravo <strong>Vajerstrasova smena</strong> (tangensna polovina), koja nam omogucava da kompleksnu jednacinu prevedemo u trigonometrijsku. Jednacina \(w^2 = i\) ima tacno dva resenja na jedinicnom krugu, ali samo jedno od njih daje vrednost \(x\) u datom intervalu.</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="card final-answer">
+    <h2>Konacan odgovor</h2>
+    <p>Jednacina ima <strong>tacno jedno resenje</strong> u intervalu \(\left(0,\; \frac{1}{2}\right)\), a to je \(x = \sqrt{2} - 1\).</p>
+    <div class="answer-value">\[ \boxed{B) \; 1} \]</div>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card pitfall-card">
+    <h2>Ceste greske</h2>
+    <ul>
+      <li><strong>Zaboraviti da je \(|w| = 1\).</strong> Ako se to ne primeti, moze se upustiti u mnogo komplikovanije racunanje sa realnim i imaginarnim delovima.</li>
+      <li><strong>Preskociti analizu svih grana resenja.</strong> Jednacina \(w^2 = i\) ima dva razlicita korena; treba proveriti oba odgovarajuca \(x\).</li>
+      <li><strong>Pogresno izracunati \(\tan\frac{\pi}{8}\).</strong> Cesta greska je dobiti \(\sqrt{2} + 1\) umesto \(\sqrt{2} - 1\). Korisno je zapamtiti: \(\tan 22{,}5° < 1\), dok je \(\tan 67{,}5° > 1\).</li>
+      <li><strong>Pogresne granice intervala.</strong> Interval je otvoren: \(\left(0,\; \frac{1}{2}\right)\). Vrednost \(\sqrt{2} - 1 \approx 0{,}4142\) je strogo unutar intervala.</li>
+    </ul>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card challenge-card">
+    <h2>Izazov za razmisljanje</h2>
+    <p>Koliko resenja ima jednacina \(\left(\frac{1+ix}{1-ix}\right)^n = i\) u intervalu \(\left(0,\; 1\right)\) za proizvoljan prirodan broj \(n\)? Kako se broj resenja menja sa \(n\)?</p>
+    <p class="muted" style="margin-top: 0.5rem;">Naputak: Jednacina \(w^n = i\) ima \(n\) resenja na jedinicnom krugu, pa se odgovarajuca \(x\) nalaze iz \(\arctan(x) = \frac{\pi}{4n} + \frac{k\pi}{n}\). Broj resenja u \((0,1)\) zavisi od toga koliko se vrednosti \(\frac{\pi}{4n} + \frac{k\pi}{n}\) nalazi u intervalu \(\left(0,\; \frac{\pi}{4}\right)\).</p>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  // Unit circle canvas
+  const canvas = document.getElementById('unitCircleCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const cx = W / 2;
+  const cy = H / 2;
+  const R = 180;
+
+  function toCanvas(x, y) {
+    return [cx + x * R, cy - y * R];
+  }
+
+  function drawArrow(fromX, fromY, toX, toY, color, lineWidth) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth || 1.5;
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.stroke();
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    const headLen = 10;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headLen * Math.cos(angle - Math.PI / 6), toY - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(toX - headLen * Math.cos(angle + Math.PI / 6), toY - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Background
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  for (let i = -2; i <= 2; i++) {
+    const [gx1, gy1] = toCanvas(i, -2);
+    const [gx2, gy2] = toCanvas(i, 2);
+    ctx.beginPath();
+    ctx.moveTo(gx1, gy1);
+    ctx.lineTo(gx2, gy2);
+    ctx.stroke();
+    const [hx1, hy1] = toCanvas(-2, i);
+    const [hx2, hy2] = toCanvas(2, i);
+    ctx.beginPath();
+    ctx.moveTo(hx1, hy1);
+    ctx.lineTo(hx2, hy2);
+    ctx.stroke();
+  }
+
+  // Axes
+  const [axL, axLy] = toCanvas(-1.5, 0);
+  const [axR, axRy] = toCanvas(1.5, 0);
+  drawArrow(axL, axLy, axR, axRy, '#475569', 2);
+  const [ayB, ayBy] = toCanvas(0, -1.5);
+  const [ayT, ayTy] = toCanvas(0, 1.5);
+  drawArrow(ayB, ayBy, ayT, ayTy, '#475569', 2);
+
+  // Axis labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '14px Segoe UI, sans-serif';
+  ctx.fillText('Re', axR - 5, axRy - 10);
+  ctx.fillText('Im', ayT + 10, ayTy + 5);
+
+  // Unit circle
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+  ctx.stroke();
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px Segoe UI, sans-serif';
+  const [u1x, u1y] = toCanvas(1, 0);
+  ctx.fillText('1', u1x + 5, u1y + 15);
+  const [ui1x, ui1y] = toCanvas(0, 1);
+  ctx.fillText('i', ui1x + 8, ui1y + 5);
+
+  // Mark i on the unit circle (target)
+  const [ix, iy] = toCanvas(0, 1);
+  ctx.fillStyle = '#f472b6';
+  ctx.beginPath();
+  ctx.arc(ix, iy, 7, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.fillStyle = '#f472b6';
+  ctx.font = 'bold 14px Segoe UI, sans-serif';
+  ctx.fillText('w\u00B2 = i', ix + 12, iy + 5);
+
+  // Mark w1 = e^(i*pi/4) = (sqrt(2)/2, sqrt(2)/2)
+  const w1re = Math.SQRT2 / 2;
+  const w1im = Math.SQRT2 / 2;
+  const [w1x, w1y] = toCanvas(w1re, w1im);
+  ctx.fillStyle = '#4ade80';
+  ctx.beginPath();
+  ctx.arc(w1x, w1y, 7, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 13px Segoe UI, sans-serif';
+  ctx.fillText('w\u2081 = e^(i\u03C0/4)', w1x + 10, w1y - 8);
+
+  // Draw angle arc for theta = pi/4
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  ctx.arc(cx, cy, 45, 0, -Math.PI / 4, true);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#4ade80';
+  ctx.font = '12px Segoe UI, sans-serif';
+  ctx.fillText('\u03B8 = \u03C0/4', cx + 50, cy - 18);
+
+  // Draw radius to w1
+  ctx.strokeStyle = '#4ade8088';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(w1x, w1y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Mark w2 = e^(i*5pi/4)
+  const w2re = Math.cos(5 * Math.PI / 4);
+  const w2im = Math.sin(5 * Math.PI / 4);
+  const [w2x, w2y] = toCanvas(w2re, w2im);
+  ctx.fillStyle = '#60a5fa';
+  ctx.beginPath();
+  ctx.arc(w2x, w2y, 7, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.fillStyle = '#60a5fa';
+  ctx.font = 'bold 13px Segoe UI, sans-serif';
+  ctx.fillText('w\u2082 = e^(i5\u03C0/4)', w2x - 120, w2y + 20);
+
+  // Draw radius to w2
+  ctx.strokeStyle = '#60a5fa88';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(w2x, w2y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Annotation box
+  ctx.fillStyle = '#1e293b';
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  const boxX = 10, boxY = H - 100, boxW = 260, boxH = 85;
+  ctx.beginPath();
+  ctx.roundRect(boxX, boxY, boxW, boxH, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = '13px Segoe UI, sans-serif';
+  ctx.fillStyle = '#4ade80';
+  ctx.fillText('w\u2081: x = \u221A2 \u2212 1 \u2248 0,414', boxX + 12, boxY + 22);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('   \u2192 x \u2208 (0; 0,5) \u2714', boxX + 12, boxY + 40);
+  ctx.fillStyle = '#60a5fa';
+  ctx.fillText('w\u2082: x = \u2212(\u221A2 + 1) \u2248 \u22122,414', boxX + 12, boxY + 60);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('   \u2192 x \u2209 (0; 0,5) \u2718', boxX + 12, boxY + 78);
+
+  // Answer option highlighting
+  document.querySelectorAll('.answer-option').forEach(function(el) {
+    if (el.getAttribute('data-option') === 'B') {
+      el.classList.add('correct');
+    }
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META {"title":"Broj resenja kompleksne jednacine u datom intervalu","subject":"math","unit":"complex_numbers","topic_tags":["complex_numbers","trigonometric_substitution","unit_circle","equation_solving"]} BRAINSPARK_META-->

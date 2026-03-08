@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broj utakmica na Svetskom prvenstvu</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Na Svetskom prvenstvu u fudbalu 32 ekipe podeljene su u 8 grupa od po 4 ekipe.
+U prvom krugu svaka ekipa igra protiv svake ekipe iz svoje grupe.
+Ukupan broj odigranih utakmica u prvom krugu jednak je:
+
+=== ANALIZA ===
+
+Ovo je klasican kombinatorni problem - broj nacina da se izaberu 2 ekipe iz grupe od 4 (tj. broj parova).
+
+U jednoj grupi od 4 ekipe:
+  Svaka ekipa igra protiv svake druge ekipe iz grupe.
+  Broj utakmica = broj parova = C(4,2) = 4!/(2!*2!) = (4*3)/(2*1) = 6
+
+  Alternativno, mozemo nabrojati parove:
+  Ekipe: A, B, C, D
+  Utakmice: AB, AC, AD, BC, BD, CD = 6 utakmica
+
+Ukupno 8 grupa:
+  Ukupan broj utakmica = 8 * 6 = 48
+
+=== VERIFIKACIJA ===
+Mozemo proveriti i drugacijim pristupom:
+  Svaka ekipa igra 3 utakmice (protiv ostale 3 ekipe u grupi).
+  Ukupno ekipa: 32
+  Ukupno "pojedinacnih ucestvovanja": 32 * 3 = 96
+  Ali svaka utakmica ima 2 ucesnika, pa: 96 / 2 = 48
+
+Oba pristupa daju 48. Odgovor je tacan.
+
+Takodje intuitivno: 6 utakmica po grupi * 8 grupa = 48 utakmica ukupno.
+
+Odgovor: 48
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+}
+
+details .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+}
+
+details .theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(96, 165, 250, 0.06);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 1rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .big-formula {
+  font-size: 1.4rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.final-option {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(56,189,248,0.08);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.final-option.correct {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-list li::before {
+  content: "\26A0  ";
+  color: #e09468;
+}
+
+.challenge-box {
+  border-left: 3px solid #f472b6;
+}
+
+.challenge-box h2 {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.group-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.group-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.group-legend-item .swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { padding: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Broj utakmica u grupnoj fazi turnira</h1>
+  <p class="subtitle">Kombinatorika &mdash; Binomni koeficijent i brojanje parova</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Na Svetskom prvenstvu u fudbalu <strong>32 ekipe</strong> podeljene su u <strong>8 grupa</strong> od po <strong>4 ekipe</strong>. U prvom krugu svaka ekipa igra protiv svake ekipe iz svoje grupe. Ukupan broj odigranih utakmica u prvom krugu jednak je:</p>
+
+    <div class="given-grid" style="margin-bottom: 18px;">
+      <div class="given-item">
+        <div class="label">Ukupno ekipa</div>
+        <div class="value">\(32\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Broj grupa</div>
+        <div class="value">\(8\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Ekipa po grupi</div>
+        <div class="value">\(4\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(48\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(56\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">\(64\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\(96\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(192\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>U svakoj grupi od 4 ekipe odredimo broj razlicitih parova koristeci <strong>binomni koeficijent</strong> \(\binom{4}{2}\). Zatim pomnozimo sa 8 (broj grupa) da dobijemo ukupan broj utakmica.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Kljucne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Binomni koeficijent (kombinacija):</strong> Broj nacina da se izabere \(k\) elemenata iz skupa od \(n\) elemenata, bez ponavljanja i bez obzira na redosled: \[\binom{n}{k} = \frac{n!}{k!(n-k)!}\]</li>
+          <li><strong>Specijalan slucaj &mdash; parovi:</strong> Broj nacina da se izaberu 2 elementa iz \(n\) elemenata je: \[\binom{n}{2} = \frac{n(n-1)}{2}\] Ovo je upravo broj utakmica u grupi gde svako igra protiv svakog.</li>
+          <li><strong>Princip mnozenja:</strong> Ako imamo \(m\) nezavisnih grupa, od kojih svaka doprinosi \(k\) utakmica, ukupan broj je \(m \cdot k\).</li>
+          <li><strong>Princip dvostrukog brojanja:</strong> Svaka utakmica ukljucuje 2 ekipe. Ako svaka od \(n\) ekipa igra \(r\) utakmica, ukupan broj utakmica je \(\frac{n \cdot r}{2}\) (jer se svaka utakmica broji dva puta).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz grupa i utakmica</h2>
+    <canvas id="mainCanvas" width="760" height="520"></canvas>
+    <p class="canvas-hint">Kliknite na grupu da vidite sve utakmice unutar nje</p>
+    <div class="group-legend" id="groupLegend"></div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Razumemo strukturu turnira</h3>
+        <p>Na turniru ima <strong>32 ekipe</strong> podeljene u <strong>8 grupa</strong>, sa po <strong>4 ekipe</strong> u svakoj grupi.</p>
+        <p>Unutar svake grupe, svaka ekipa igra tacno jednu utakmicu protiv svake druge ekipe iz svoje grupe. Nijedna ekipa ne igra protiv ekipa iz drugih grupa (u prvom krugu).</p>
+        <p class="note">Kljucna rec je "svaka ekipa igra protiv svake" &mdash; to znaci da brojimo sve moguce parove ekipa unutar jedne grupe.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Koliko utakmica se odigra u jednoj grupi?</h3>
+        <p>U jednoj grupi ima 4 ekipe. Oznacimo ih sa \(A\), \(B\), \(C\) i \(D\).</p>
+        <p>Utakmica je <strong>par ekipa</strong> &mdash; biramo 2 ekipe iz 4 bez obzira na redosled (utakmica \(A\) vs \(B\) je ista kao \(B\) vs \(A\)).</p>
+        <p>Koristimo formulu za binomni koeficijent:</p>
+        <div class="math-block">
+          \[\binom{4}{2} = \frac{4!}{2! \cdot 2!} = \frac{4 \cdot 3}{2 \cdot 1} = \frac{12}{2} = 6\]
+        </div>
+        <p class="note">U jednoj grupi od 4 ekipe odigra se tacno 6 utakmica.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>&#128269; Proveri sebe: Nabrojite svih 6 utakmica u grupi sa ekipama A, B, C, D.</summary>
+      <div class="answer">
+        1) A &ndash; B, &ensp; 2) A &ndash; C, &ensp; 3) A &ndash; D, &ensp; 4) B &ndash; C, &ensp; 5) B &ndash; D, &ensp; 6) C &ndash; D. <br>Ukupno: 6 utakmica. Svaka ekipa igra tacno 3 utakmice (protiv ostale 3 ekipe).
+      </div>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Mnozimo sa brojem grupa</h3>
+        <p>Posto ima <strong>8 identično strukturiranih grupa</strong>, i posto se utakmice igraju samo unutar grupa (nikada izmedju grupa), ukupan broj utakmica je:</p>
+        <div class="math-block">
+          \[\text{Ukupno utakmica} = 8 \cdot \binom{4}{2} = 8 \cdot 6 = 48\]
+        </div>
+        <p class="note">Svaka grupa doprinosi 6 utakmica, a grupa ima 8.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>&#128269; Proveri sebe: Koliko utakmica ukupno odigra jedna ekipa u grupnoj fazi?</summary>
+      <div class="answer">
+        Svaka ekipa igra protiv ostale 3 ekipe iz svoje grupe, dakle odigra tacno <strong>3 utakmice</strong>. To vazi za svih 32 ekipa.
+      </div>
+    </details>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Alternativna verifikacija &mdash; dvostruko brojanje</h3>
+        <p>Mozemo proveriti rezultat i drugim pristupom. Svaka od 32 ekipe igra po 3 utakmice:</p>
+        <div class="math-block">
+          \[32 \cdot 3 = 96 \text{ (ukupno "ucestvovanja")}\]
+        </div>
+        <p>Ali svaka utakmica ukljucuje <strong>2 ekipe</strong>, pa se svaka utakmica broji dva puta. Delimo sa 2:</p>
+        <div class="math-block">
+          \[\text{Ukupno utakmica} = \frac{32 \cdot 3}{2} = \frac{96}{2} = 48\]
+        </div>
+        <p class="note">Oba pristupa daju isti rezultat &mdash; to znaci da smo sigurni u odgovor!</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>&#128269; Proveri sebe: Zasto delimo sa 2 u drugom pristupu?</summary>
+      <div class="answer">
+        Zato sto kad prebrojimo koliko utakmica odigra svaka ekipa i saberemo, svaku utakmicu smo prebrojali <strong>dva puta</strong> &mdash; jednom iz ugla jedne ekipe, jednom iz ugla druge. Na primer, utakmicu A&ndash;B smo prebrojali i kao utakmicu ekipe A i kao utakmicu ekipe B. Deljenje sa 2 ispravlja to dvostruko brojanje.
+      </div>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>Svaka utakmica je zapravo <strong>par ekipa</strong> &mdash; izbor 2 ekipe iz grupe. Formula \(\binom{n}{2}\) direktno daje broj utakmica u sistemu "svako sa svakim". Sa nezavisnim grupama, prosto pomnozimo!</p>
+    <div class="big-formula">
+      \[8 \times \binom{4}{2} = 8 \times 6 = 48\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konacan odgovor</h2>
+    <div class="answer-value">\(48\)</div>
+    <div class="final-options">
+      <div class="final-option correct">(A) \(48\)</div>
+      <div class="final-option">(B) \(56\)</div>
+      <div class="final-option">(V) \(64\)</div>
+      <div class="final-option">(G) \(96\)</div>
+      <div class="final-option">(D) \(192\)</div>
+    </div>
+    <p class="verification"><strong>Provera:</strong> Prvi pristup: \(8 \times \binom{4}{2} = 8 \times 6 = 48\). Drugi pristup (dvostruko brojanje): \(\frac{32 \times 3}{2} = 48\). Intuitivno: 6 utakmica po grupi je logicno za 4 ekipe (mozemo ih nabrojati), a sa 8 grupa to daje 48 &mdash; odgovor je (A).</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <ul class="pitfall-list">
+      <li><strong>Mnozenje umesto kombinacija:</strong> Cesta greska je da se za jednu grupu izracuna \(4 \times 3 = 12\) umesto \(\binom{4}{2} = 6\). Broj 12 broji uredjene parove (A vs B i B vs A kao dve razlicite utakmice), ali utakmica je <em>neuredjen</em> par &mdash; mora se podeliti sa 2. Sa ovom greskom bi se dobilo \(8 \times 12 = 96\), sto je odgovor (G).</li>
+      <li><strong>Racunanje utakmica izmedju grupa:</strong> U grupnoj fazi ekipe igraju <em>samo unutar svoje grupe</em>. Ako bismo racunali utakmice izmedju svih 32 ekipa, dobili bismo \(\binom{32}{2} = 496\) &mdash; ali to nije ono sto se trazi.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Da je umesto 4, u svakoj grupi bilo <strong>5 ekipa</strong> (i dalje 8 grupa, znaci ukupno 40 ekipa), koliki bi bio ukupan broj utakmica u grupnoj fazi?</p>
+    <details>
+      <summary>&#128161; Nagovestaj</summary>
+      <p style="margin-top: 10px; color: #e2e8f0;">Koristite istu formulu: \(\binom{5}{2} = \frac{5 \cdot 4}{2} = 10\) utakmica po grupi. Pomnozite sa 8 grupa. Koliko dobijete?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const groupColors = [
+    '#60a5fa', '#a78bfa', '#34d399', '#f472b6',
+    '#38bdf8', '#c084fc', '#4ade80', '#fb7185'
+  ];
+
+  const groupNames = [
+    'Grupa A', 'Grupa B', 'Grupa C', 'Grupa D',
+    'Grupa E', 'Grupa F', 'Grupa G', 'Grupa H'
+  ];
+
+  let selectedGroup = 0;
+
+  // Build legend
+  const legendEl = document.getElementById('groupLegend');
+  groupNames.forEach(function(name, i) {
+    const item = document.createElement('div');
+    item.className = 'group-legend-item';
+    const swatch = document.createElement('div');
+    swatch.className = 'swatch';
+    swatch.style.background = groupColors[i];
+    const label = document.createElement('span');
+    label.textContent = name;
+    item.appendChild(swatch);
+    item.appendChild(label);
+    legendEl.appendChild(item);
+  });
+
+  // Group layout: 2 rows of 4 groups
+  function getGroupCenter(idx) {
+    const col = idx % 4;
+    const row = Math.floor(idx / 4);
+    const marginX = 95;
+    const marginY = 70;
+    const spacingX = (W - 2 * marginX) / 3;
+    const spacingY = 210;
+    return {
+      x: marginX + col * spacingX,
+      y: marginY + row * spacingY + 100
+    };
+  }
+
+  // Team positions within a group (diamond layout)
+  function getTeamPositions(cx, cy) {
+    const r = 45;
+    return [
+      { x: cx, y: cy - r },       // top
+      { x: cx + r, y: cy },       // right
+      { x: cx, y: cy + r },       // bottom
+      { x: cx - r, y: cy }        // left
+    ];
+  }
+
+  // All pairs in a group of 4
+  const pairs = [
+    [0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]
+  ];
+
+  function drawGroup(idx, isSelected) {
+    const center = getGroupCenter(idx);
+    const teams = getTeamPositions(center.x, center.y);
+    const color = groupColors[idx];
+
+    // Background circle for group
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, 68, 0, Math.PI * 2);
+    if (isSelected) {
+      ctx.fillStyle = color.replace(')', ', 0.12)').replace('rgb', 'rgba').replace('#', '');
+      // Manual hex to rgba
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',0.12)';
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.6)';
+      ctx.fill();
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Draw match lines if selected
+    if (isSelected) {
+      pairs.forEach(function(pair, pIdx) {
+        const t1 = teams[pair[0]];
+        const t2 = teams[pair[1]];
+        ctx.beginPath();
+        ctx.moveTo(t1.x, t1.y);
+        ctx.lineTo(t2.x, t2.y);
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = 0.5;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.globalAlpha = 1.0;
+
+        // Match number in the middle of each line
+        const mx = (t1.x + t2.x) / 2;
+        const my = (t1.y + t2.y) / 2;
+        ctx.beginPath();
+        ctx.arc(mx, my, 9, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fill();
+        ctx.fillStyle = color;
+        ctx.font = 'bold 10px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(pIdx + 1), mx, my);
+      });
+    }
+
+    // Draw team dots
+    const teamLabels = ['1', '2', '3', '4'];
+    teams.forEach(function(t, ti) {
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, 12, 0, Math.PI * 2);
+
+      if (isSelected) {
+        ctx.fillStyle = color;
+        ctx.fill();
+        // Glow
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, 16, 0, Math.PI * 2);
+        const r2 = parseInt(color.slice(1, 3), 16);
+        const g2 = parseInt(color.slice(3, 5), 16);
+        const b2 = parseInt(color.slice(5, 7), 16);
+        ctx.strokeStyle = 'rgba(' + r2 + ',' + g2 + ',' + b2 + ',0.4)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = '#475569';
+        ctx.fill();
+      }
+
+      ctx.fillStyle = isSelected ? '#0f172a' : '#e2e8f0';
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(teamLabels[ti], t.x, t.y);
+    });
+
+    // Group label
+    ctx.fillStyle = isSelected ? color : '#94a3b8';
+    ctx.font = (isSelected ? 'bold ' : '') + '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(groupNames[idx], center.x, center.y + 82);
+
+    // Match count
+    if (isSelected) {
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('6 utakmica', center.x, center.y + 96);
+    }
+  }
+
+  function drawSummary() {
+    // Summary at top
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Svetsko prvenstvo: 8 grupa \u00D7 4 ekipe', W / 2, 14);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Kliknite na grupu da vidite svih 6 utakmica', W / 2, 36);
+
+    // Total at bottom
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ukupno: 8 \u00D7 6 = 48 utakmica', W / 2, H - 30);
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    drawSummary();
+
+    for (let i = 0; i < 8; i++) {
+      drawGroup(i, i === selectedGroup);
+    }
+  }
+
+  draw();
+
+  // Click interaction
+  function handleClick(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const clientX = e.touches ? e.changedTouches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.changedTouches[0].clientY : e.clientY;
+    const mx = (clientX - rect.left) * scaleX;
+    const my = (clientY - rect.top) * scaleY;
+
+    for (let i = 0; i < 8; i++) {
+      const center = getGroupCenter(i);
+      const dist = Math.sqrt((mx - center.x) * (mx - center.x) + (my - center.y) * (my - center.y));
+      if (dist < 75) {
+        selectedGroup = i;
+        draw();
+        return;
+      }
+    }
+  }
+
+  canvas.addEventListener('click', handleClick);
+  canvas.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    handleClick(e);
+  });
+
+  // Step click interaction
+  document.querySelectorAll('.step-container').forEach(function(el) {
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Broj utakmica u grupnoj fazi Svetskog prvenstva",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "binomni koeficijent", "brojanje parova", "princip mnozenja", "dvostruko brojanje"]
+}
+BRAINSPARK_META-->

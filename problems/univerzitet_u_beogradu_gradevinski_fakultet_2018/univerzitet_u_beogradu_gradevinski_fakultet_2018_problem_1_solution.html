@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teleskopski zbir razlomaka</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Vrednost izraza 1/(1·3) + 1/(3·5) + 1/(5·7) + 1/(7·9) jednaka je:
+
+Method 1: Direct computation
+1/(1·3) = 1/3
+1/(3·5) = 1/15
+1/(5·7) = 1/35
+1/(7·9) = 1/63
+
+Common denominator: LCM(3, 15, 35, 63)
+3 = 3
+15 = 3·5
+35 = 5·7
+63 = 7·9
+LCM = 3·5·7·9 = 315? No, let's think:
+LCM(3,15) = 15
+LCM(15,35) = 105
+LCM(105,63) = 315
+
+1/3 = 105/315
+1/15 = 21/315
+1/35 = 9/315
+1/63 = 5/315
+
+Sum = (105 + 21 + 9 + 5)/315 = 140/315 = 4/9
+
+Check: 140/315 = 140/315, GCD(140,315) = 35, so 140/35 = 4, 315/35 = 9. Yes, 4/9. ✓
+
+Method 2: Partial fractions (telescoping series)
+Key identity: 1/((2k-1)(2k+1)) = (1/2)(1/(2k-1) - 1/(2k+1))
+
+Proof: 1/(2k-1) - 1/(2k+1) = [(2k+1) - (2k-1)] / [(2k-1)(2k+1)]
+= 2 / [(2k-1)(2k+1)]
+So 1/[(2k-1)(2k+1)] = (1/2)[1/(2k-1) - 1/(2k+1)]
+
+Applying to each term:
+k=1: 1/(1·3) = (1/2)(1/1 - 1/3)
+k=2: 1/(3·5) = (1/2)(1/3 - 1/5)
+k=3: 1/(5·7) = (1/2)(1/5 - 1/7)
+k=4: 1/(7·9) = (1/2)(1/7 - 1/9)
+
+Sum = (1/2)[(1 - 1/3) + (1/3 - 1/5) + (1/5 - 1/7) + (1/7 - 1/9)]
+
+Telescoping: most terms cancel in pairs:
+-1/3 + 1/3 = 0
+-1/5 + 1/5 = 0
+-1/7 + 1/7 = 0
+
+Only 1 and -1/9 survive:
+Sum = (1/2)(1 - 1/9) = (1/2)(8/9) = 8/18 = 4/9
+
+Verification:
+4/9 ≈ 0.4444...
+1/3 ≈ 0.3333
+1/15 ≈ 0.0667
+1/35 ≈ 0.0286
+1/63 ≈ 0.0159
+Total ≈ 0.4444 ✓
+
+General formula for n terms:
+Sum_{k=1}^{n} 1/((2k-1)(2k+1)) = (1/2)(1 - 1/(2n+1)) = n/(2n+1)
+
+For n=4: 4/(2·4+1) = 4/9 ✓
+
+Answer: 4/9
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+}
+
+details .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .theory-content li {
+  padding: 10px 0;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+}
+
+details .theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(96, 165, 250, 0.06);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 1rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .big-formula {
+  font-size: 1.4rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #334155;
+  color: #e2e8f0;
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-list li::before {
+  content: "\26A0  ";
+  color: #e09468;
+}
+
+.challenge-box {
+  border-left: 3px solid #f472b6;
+}
+
+.challenge-box h2 {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.canvas-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.canvas-btn {
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 8px;
+  color: #60a5fa;
+  padding: 8px 18px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.canvas-btn:hover {
+  background: rgba(96, 165, 250, 0.22);
+  border-color: #60a5fa;
+}
+
+.canvas-btn.active {
+  background: rgba(96, 165, 250, 0.25);
+  border-color: #60a5fa;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { padding: 12px; }
+  .canvas-controls { gap: 8px; }
+  .canvas-btn { padding: 6px 12px; font-size: 0.85rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Teleskopski zbir razlomaka</h1>
+  <p class="subtitle">Algebra &mdash; Parcijalni razlomci i teleskopski nizovi</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Vrednost izraza:</p>
+    <div class="math-block">
+      \[\frac{1}{1 \cdot 3} + \frac{1}{3 \cdot 5} + \frac{1}{5 \cdot 7} + \frac{1}{7 \cdot 9}\]
+    </div>
+    <p>jednaka je:</p>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Sabirak 1</div>
+        <div class="value">\(\frac{1}{1 \cdot 3}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Sabirak 2</div>
+        <div class="value">\(\frac{1}{3 \cdot 5}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Sabirak 3</div>
+        <div class="value">\(\frac{1}{5 \cdot 7}\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Sabirak 4</div>
+        <div class="value">\(\frac{1}{7 \cdot 9}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Svaki razlomak oblika \(\frac{1}{(2k-1)(2k+1)}\) razložićemo na parcijalne razlomke koristeći identitet \(\frac{1}{a \cdot b} = \frac{1}{b - a}\left(\frac{1}{a} - \frac{1}{b}\right)\). Kada saberemo sve članove, srednji se medusobno poništavaju (teleskopski zbir), pa ostaju samo prvi i poslednji član.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Razlaganje na parcijalne razlomke:</strong> Za proizvod dva uzastopna neparna broja važi:
+            \[\frac{1}{a \cdot b} = \frac{1}{b - a}\left(\frac{1}{a} - \frac{1}{b}\right)\]
+            Specijalno, kada je \(b - a = 2\):
+            \[\frac{1}{(2k-1)(2k+1)} = \frac{1}{2}\left(\frac{1}{2k-1} - \frac{1}{2k+1}\right)\]
+          </li>
+          <li><strong>Teleskopski zbir:</strong> Zbir oblika \(\sum_{k=1}^{n}(a_k - a_{k+1})\) se „teleskopski" skraćuje jer se susedni članovi poništavaju:
+            \[(a_1 - a_2) + (a_2 - a_3) + \cdots + (a_n - a_{n+1}) = a_1 - a_{n+1}\]
+            Od svih članova preživljavaju samo prvi i poslednji.
+          </li>
+          <li><strong>Opšta formula:</strong> Za \(n\) članova ovog zbira:
+            \[\sum_{k=1}^{n} \frac{1}{(2k-1)(2k+1)} = \frac{n}{2n+1}\]
+            Za \(n = 4\): \(\frac{4}{2 \cdot 4 + 1} = \frac{4}{9}\).
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid — Interactive Telescoping Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz teleskopskog poništavanja</h2>
+    <canvas id="telescopeCanvas" width="760" height="520"></canvas>
+    <p class="canvas-hint">Pritisnite dugmad ispod da pratite poništavanje korak po korak</p>
+    <div class="canvas-controls">
+      <button class="canvas-btn active" id="btnStep0">Svi članovi</button>
+      <button class="canvas-btn" id="btnStep1">Korak 1</button>
+      <button class="canvas-btn" id="btnStep2">Korak 2</button>
+      <button class="canvas-btn" id="btnStep3">Korak 3</button>
+      <button class="canvas-btn" id="btnStep4">Rezultat</button>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapišimo imenioce eksplicitno</h3>
+        <p>Svaki imenilac je proizvod dva uzastopna neparna broja. Zapišimo ih jasno:</p>
+        <div class="math-block">
+          \[S = \frac{1}{1 \cdot 3} + \frac{1}{3 \cdot 5} + \frac{1}{5 \cdot 7} + \frac{1}{7 \cdot 9}\]
+        </div>
+        <p class="note">Primetimo obrazac: imenilac svakog razlomka je oblika \((2k-1)(2k+1)\) za \(k = 1, 2, 3, 4\).</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Uvedimo ključni identitet za parcijalne razlomke</h3>
+        <p>Za svaki sabirak koristimo razlaganje:</p>
+        <div class="math-block">
+          \[\frac{1}{(2k-1)(2k+1)} = \frac{1}{2}\left(\frac{1}{2k-1} - \frac{1}{2k+1}\right)\]
+        </div>
+        <p>Proverimo ovo za \(k = 1\):</p>
+        <div class="math-block">
+          \[\frac{1}{2}\left(\frac{1}{1} - \frac{1}{3}\right) = \frac{1}{2} \cdot \frac{2}{3} = \frac{1}{3} = \frac{1}{1 \cdot 3} \; \checkmark\]
+        </div>
+        <p class="note">Ovaj identitet funkcioniše jer je razlika uzastopnih neparnih brojeva uvek 2: \((2k+1) - (2k-1) = 2\).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Kako glasi razlaganje za \(\frac{1}{3 \cdot 5}\)?</summary>
+      <div class="answer">\(\frac{1}{3 \cdot 5} = \frac{1}{2}\left(\frac{1}{3} - \frac{1}{5}\right) = \frac{1}{2} \cdot \frac{2}{15} = \frac{1}{15}\) &checkmark;</div>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Razložimo svaki sabirak</h3>
+        <p>Primenimo identitet na svaki od četiri sabirka:</p>
+        <div class="math-block">
+          \[\frac{1}{1 \cdot 3} = \frac{1}{2}\left(\frac{1}{1} - \frac{1}{3}\right)\]
+        </div>
+        <div class="math-block">
+          \[\frac{1}{3 \cdot 5} = \frac{1}{2}\left(\frac{1}{3} - \frac{1}{5}\right)\]
+        </div>
+        <div class="math-block">
+          \[\frac{1}{5 \cdot 7} = \frac{1}{2}\left(\frac{1}{5} - \frac{1}{7}\right)\]
+        </div>
+        <div class="math-block">
+          \[\frac{1}{7 \cdot 9} = \frac{1}{2}\left(\frac{1}{7} - \frac{1}{9}\right)\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Saberimo sve razlomke</h3>
+        <p>Iznesemo zajednički faktor \(\frac{1}{2}\) i saberemo članove u zagradi:</p>
+        <div class="math-block">
+          \[S = \frac{1}{2}\left[\left(\frac{1}{1} - \frac{1}{3}\right) + \left(\frac{1}{3} - \frac{1}{5}\right) + \left(\frac{1}{5} - \frac{1}{7}\right) + \left(\frac{1}{7} - \frac{1}{9}\right)\right]\]
+        </div>
+        <p class="note">Ovo je ključni momenat &mdash; sada uočavamo teleskopsko poništavanje.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Teleskopsko poništavanje</h3>
+        <p>Zapišimo sve članove u zagradi redom i uočimo parove koji se poništavaju:</p>
+        <div class="math-block">
+          \[\frac{1}{1} \underbrace{- \frac{1}{3} + \frac{1}{3}}_{= \, 0} \underbrace{- \frac{1}{5} + \frac{1}{5}}_{= \, 0} \underbrace{- \frac{1}{7} + \frac{1}{7}}_{= \, 0} - \frac{1}{9}\]
+        </div>
+        <p>Tri para se medusobno poništavaju! Ostaju samo krajnji članovi:</p>
+        <div class="math-block">
+          \[= \frac{1}{1} - \frac{1}{9}\]
+        </div>
+        <p class="note">Baš kao teleskop koji se „sklapa" &mdash; srednji segmenti nestaju, ostaju samo krajevi.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri sebe: Koliko je \(1 - \frac{1}{9}\)?</summary>
+      <div class="answer">\(1 - \frac{1}{9} = \frac{9}{9} - \frac{1}{9} = \frac{8}{9}\)</div>
+    </details>
+
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Izračunajmo konačnu vrednost</h3>
+        <p>Vratimo se na ceo izraz sa faktorom \(\frac{1}{2}\):</p>
+        <div class="math-block">
+          \[S = \frac{1}{2} \cdot \left(1 - \frac{1}{9}\right)\]
+        </div>
+        <p>Izračunamo razliku u zagradi:</p>
+        <div class="math-block">
+          \[S = \frac{1}{2} \cdot \frac{8}{9}\]
+        </div>
+        <p>Pomnožimo:</p>
+        <div class="math-block">
+          \[S = \frac{8}{18} = \frac{4}{9}\]
+        </div>
+        <p class="note">Skratili smo razlomak \(\frac{8}{18}\) sa 2 i dobili \(\frac{4}{9}\).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Numerička provera: Da li se poklapaju vrednosti?</summary>
+      <div class="answer">Direktan račun: \(\frac{1}{3} + \frac{1}{15} + \frac{1}{35} + \frac{1}{63} = \frac{105 + 21 + 9 + 5}{315} = \frac{140}{315} = \frac{4}{9} \approx 0{,}4444\). Tačno! &checkmark;</div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Svaki razlomak \(\frac{1}{(2k-1)(2k+1)}\) se raspadne na razliku dva jednostavnija razlomka. Kada ih saberemo, srednji članovi se poništavaju &mdash; od ukupno 8 razlomaka u zagradi, 6 nestaje, a preostala dva daju rezultat.</p>
+    <div class="big-formula">
+      \[\frac{1}{1 \cdot 3} + \frac{1}{3 \cdot 5} + \frac{1}{5 \cdot 7} + \frac{1}{7 \cdot 9} = \frac{1}{2}\left(1 - \frac{1}{9}\right) = \frac{4}{9}\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\(\dfrac{4}{9}\)</div>
+    <p class="verification"><strong>Provera:</strong> \(\frac{4}{9} \approx 0{,}4444\). Direktnim sabiranjem: \(\frac{1}{3} \approx 0{,}3333\), \(\frac{1}{15} \approx 0{,}0667\), \(\frac{1}{35} \approx 0{,}0286\), \(\frac{1}{63} \approx 0{,}0159\). Ukupno: \(0{,}3333 + 0{,}0667 + 0{,}0286 + 0{,}0159 \approx 0{,}4444 = \frac{4}{9}\) &checkmark;</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li>Pogrešno razlaganje na parcijalne razlomke: studenti ponekad zaborave faktor \(\frac{1}{2}\) ispred razlike. Zapamtite: \(\frac{1}{a \cdot b} = \frac{1}{b-a}\left(\frac{1}{a} - \frac{1}{b}\right)\), a ovde je \(b - a = 2\), pa je faktor \(\frac{1}{2}\).</li>
+      <li>Greška u svođenju na zajednički imenilac: ako se koristi direktan račun, NZS brojeva 3, 15, 35 i 63 je 315 (ne 63 i ne 945). Preporučujemo teleskopski pristup kao sigurniji.</li>
+      <li>Nepravilno kraćenje na kraju: \(\frac{1}{2} \cdot \frac{8}{9} = \frac{8}{18}\), pa se deli sa 2 da bi se dobilo \(\frac{4}{9}\). Neki studenti naprave grešku i dobiju \(\frac{8}{9}\) tako što zaborave da pomnože sa \(\frac{1}{2}\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Kolika je vrednost sume sa \(n\) sabiraka?</p>
+    <div class="math-block">
+      \[\frac{1}{1 \cdot 3} + \frac{1}{3 \cdot 5} + \frac{1}{5 \cdot 7} + \cdots + \frac{1}{(2n-1)(2n+1)}\]
+    </div>
+    <details>
+      <summary>💡 Nagovešaj</summary>
+      <p style="margin-top: 10px; color: #e2e8f0;">Primeni isti teleskopski postupak. Svi srednji članovi se poništavaju, pa ostaje samo \(\frac{1}{2}\left(1 - \frac{1}{2n+1}\right) = \frac{1}{2} \cdot \frac{2n}{2n+1} = \frac{n}{2n+1}\). Za \(n = 4\): \(\frac{4}{9}\). Za \(n = 100\): \(\frac{100}{201}\). Šta se dešava kada \(n \to \infty\)?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('telescopeCanvas');
+  const ctx = canvas.getContext('2d');
+  let currentStep = 0;
+
+  // Fraction terms after partial fraction decomposition:
+  // S = (1/2)[ (1/1 - 1/3) + (1/3 - 1/5) + (1/5 - 1/7) + (1/7 - 1/9) ]
+  // Positive terms: 1/1, 1/3, 1/5, 1/7
+  // Negative terms: -1/3, -1/5, -1/7, -1/9
+
+  const fractions = [
+    { num: '+1', den: '1',  sign: '+', cancelStep: -1 },
+    { num: '-1', den: '3',  sign: '-', cancelStep: 1 },
+    { num: '+1', den: '3',  sign: '+', cancelStep: 1 },
+    { num: '-1', den: '5',  sign: '-', cancelStep: 2 },
+    { num: '+1', den: '5',  sign: '+', cancelStep: 2 },
+    { num: '-1', den: '7',  sign: '-', cancelStep: 3 },
+    { num: '+1', den: '7',  sign: '+', cancelStep: 3 },
+    { num: '-1', den: '9',  sign: '-', cancelStep: -1 }
+  ];
+
+  // Group labels for each pair
+  const pairLabels = [
+    '1/(1\u00B73)',
+    '1/(3\u00B75)',
+    '1/(5\u00B77)',
+    '1/(7\u00B79)'
+  ];
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function draw() {
+    var W = canvas.width;
+    var H = canvas.height;
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    var titles = [
+      'Svi članovi nakon razlaganja na parcijalne razlomke',
+      'Poništavanje: -1/3 i +1/3',
+      'Poništavanje: -1/5 i +1/5',
+      'Poništavanje: -1/7 i +1/7',
+      'Preostali članovi: +1/1 i -1/9'
+    ];
+    ctx.fillText(titles[currentStep], W / 2, 16);
+
+    // Factor label
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('S = \u00BD \u00D7', 30, 80);
+
+    // Draw brackets
+    var bracketLeft = 110;
+    var bracketRight = W - 40;
+    var bracketTop = 50;
+    var bracketBottom = 280;
+
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(bracketLeft + 8, bracketTop);
+    ctx.lineTo(bracketLeft, bracketTop);
+    ctx.lineTo(bracketLeft, bracketBottom);
+    ctx.lineTo(bracketLeft + 8, bracketBottom);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(bracketRight - 8, bracketTop);
+    ctx.lineTo(bracketRight, bracketTop);
+    ctx.lineTo(bracketRight, bracketBottom);
+    ctx.lineTo(bracketRight - 8, bracketBottom);
+    ctx.stroke();
+
+    // Draw fraction boxes in 4 pairs (rows), 2 per row
+    var pairGapX = 30;
+    var boxW = 70;
+    var boxH = 50;
+    var pairW = boxW * 2 + pairGapX;
+    var totalPairW = pairW;
+
+    var startY = 65;
+    var rowGap = 58;
+
+    for (var pair = 0; pair < 4; pair++) {
+      var rowY = startY + pair * rowGap;
+      var rowCenterX = (bracketLeft + bracketRight) / 2;
+      var pairStartX = rowCenterX - totalPairW / 2;
+
+      // Pair label on the left
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pairLabels[pair] + ' =', bracketLeft - 8, rowY + boxH / 2);
+
+      for (var j = 0; j < 2; j++) {
+        var idx = pair * 2 + j;
+        var frac = fractions[idx];
+        var x = pairStartX + j * (boxW + pairGapX);
+
+        var isCancelled = (frac.cancelStep > 0 && frac.cancelStep <= currentStep);
+        var isCancelling = (frac.cancelStep > 0 && frac.cancelStep === currentStep);
+        var isSurvivor = (frac.cancelStep === -1 && currentStep === 4);
+
+        var alpha = isCancelled ? 0.2 : 1.0;
+
+        // Box background
+        if (isCancelling) {
+          ctx.fillStyle = 'rgba(244, 114, 182, 0.2)';
+          ctx.strokeStyle = '#f472b6';
+        } else if (isSurvivor) {
+          ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
+          ctx.strokeStyle = '#4ade80';
+        } else if (isCancelled) {
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.03)';
+          ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+        } else {
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
+        }
+
+        ctx.lineWidth = isCancelling || isSurvivor ? 2 : 1;
+        roundRect(x, rowY, boxW, boxH, 8);
+        ctx.fill();
+        ctx.stroke();
+
+        // Sign
+        var signColor = frac.sign === '+' ? '#4ade80' : '#f472b6';
+        if (isCancelled && !isCancelling) {
+          signColor = 'rgba(148, 163, 184, 0.3)';
+        }
+
+        ctx.fillStyle = signColor;
+        ctx.font = 'bold 16px Courier New, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.globalAlpha = alpha;
+        ctx.fillText(frac.sign, x + 18, rowY + boxH / 2);
+
+        // Fraction: numerator / denominator
+        var fracColor = isCancelled && !isCancelling ? 'rgba(226, 232, 240, 0.25)' : '#e2e8f0';
+        if (isSurvivor) fracColor = '#4ade80';
+
+        ctx.fillStyle = fracColor;
+        ctx.font = 'bold 18px Courier New, monospace';
+        ctx.fillText('1', x + 50, rowY + 15);
+
+        // Fraction line
+        ctx.strokeStyle = fracColor;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x + 36, rowY + boxH / 2);
+        ctx.lineTo(x + 64, rowY + boxH / 2);
+        ctx.stroke();
+
+        ctx.fillStyle = fracColor;
+        ctx.font = 'bold 18px Courier New, monospace';
+        ctx.fillText(frac.den, x + 50, rowY + boxH - 12);
+
+        ctx.globalAlpha = 1.0;
+
+        // Cancellation X
+        if (isCancelled) {
+          ctx.strokeStyle = isCancelling ? '#f472b6' : 'rgba(244, 114, 182, 0.5)';
+          ctx.lineWidth = isCancelling ? 2.5 : 1.5;
+          ctx.beginPath();
+          ctx.moveTo(x + 6, rowY + 6);
+          ctx.lineTo(x + boxW - 6, rowY + boxH - 6);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x + boxW - 6, rowY + 6);
+          ctx.lineTo(x + 6, rowY + boxH - 6);
+          ctx.stroke();
+        }
+
+        // Draw connecting curved lines for cancelling pairs
+        if (isCancelling && j === 0 && idx > 0) {
+          // This negative term cancels with the positive in the previous pair's second slot
+          // We need to draw a line from fractions[idx] to fractions[idx+1] (but idx+1 is next)
+          // Actually cancelling pairs are: (-1/3, +1/3), (-1/5, +1/5), (-1/7, +1/7)
+          // -1/3 is at pair 0 idx 1, +1/3 is at pair 1 idx 0
+        }
+      }
+
+      // Draw cancellation arcs between adjacent pairs
+      if (currentStep >= 1 && pair < 3) {
+        var cancelIdx = pair + 1;
+        if (cancelIdx <= currentStep) {
+          // Draw arc from negative term (pair, j=1) to positive term (pair+1, j=0)
+          var negX = pairStartX + 1 * (boxW + pairGapX) + boxW / 2;
+          var negY = rowY + boxH;
+          var posRowY = startY + (pair + 1) * rowGap;
+
+          var nextRowCenterX = (bracketLeft + bracketRight) / 2;
+          var nextPairStartX = nextRowCenterX - totalPairW / 2;
+          var posX = nextPairStartX + boxW / 2;
+          var posY = posRowY;
+
+          var arcColor = cancelIdx === currentStep ? '#f472b6' : 'rgba(244, 114, 182, 0.35)';
+          ctx.strokeStyle = arcColor;
+          ctx.lineWidth = cancelIdx === currentStep ? 2 : 1;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+
+          var midX = Math.max(negX, posX) + 50;
+          var midY = (negY + posY) / 2;
+          ctx.moveTo(negX, negY + 2);
+          ctx.quadraticCurveTo(midX, midY, posX, posY - 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // "= 0" label
+          ctx.fillStyle = arcColor;
+          ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('= 0', midX + 4, midY);
+        }
+      }
+    }
+
+    // Result section at bottom
+    var resultY = startY + 4 * rowGap + 20;
+
+    if (currentStep === 4) {
+      // Draw result
+      ctx.fillStyle = 'rgba(74, 222, 128, 0.08)';
+      ctx.strokeStyle = 'rgba(74, 222, 128, 0.3)';
+      ctx.lineWidth = 2;
+      roundRect(80, resultY, W - 160, 70, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('S  =  \u00BD \u00D7 (1 - 1/9)  =  \u00BD \u00D7 8/9  =  4/9', W / 2, resultY + 35);
+    } else if (currentStep > 0) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      var cancelledCount = currentStep;
+      var cancelledLabel = cancelledCount === 1 ? '1 par poništen' : cancelledCount + ' para poništena';
+      ctx.fillText(cancelledLabel + ', preostaje još ' + (3 - cancelledCount), W / 2, resultY + 20);
+    }
+
+    // Legend at bottom
+    var legendY = resultY + 80;
+    var legendX = 80;
+
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    // Survivor
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    roundRect(legendX, legendY, 16, 16, 4);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Preostaje', legendX + 24, legendY + 8);
+
+    // Cancelled
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.15)';
+    ctx.strokeStyle = '#f472b6';
+    roundRect(legendX + 130, legendY, 16, 16, 4);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Poništeno', legendX + 154, legendY + 8);
+
+    // Uncancelled
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
+    roundRect(legendX + 270, legendY, 16, 16, 4);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Čeka red', legendX + 294, legendY + 8);
+  }
+
+  function setStep(step) {
+    currentStep = step;
+    draw();
+
+    var buttons = document.querySelectorAll('.canvas-btn');
+    buttons.forEach(function(btn, i) {
+      if (i === step) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  // Button event listeners
+  document.getElementById('btnStep0').addEventListener('click', function() { setStep(0); });
+  document.getElementById('btnStep1').addEventListener('click', function() { setStep(1); });
+  document.getElementById('btnStep2').addEventListener('click', function() { setStep(2); });
+  document.getElementById('btnStep3').addEventListener('click', function() { setStep(3); });
+  document.getElementById('btnStep4').addEventListener('click', function() { setStep(4); });
+
+  // Touch support for canvas
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+
+  draw();
+
+  // Step click interaction
+  document.querySelectorAll('.step-container').forEach(function(el) {
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Teleskopski zbir razlomaka",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["parcijalni razlomci", "teleskopski zbir", "nizovi", "razlaganje razlomaka", "sabiranje razlomaka"]
+}
+BRAINSPARK_META-->

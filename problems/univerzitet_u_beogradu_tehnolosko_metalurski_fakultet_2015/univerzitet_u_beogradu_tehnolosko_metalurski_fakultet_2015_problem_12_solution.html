@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uzastopno poskupljenje i pojeftinjenje - Procenti</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Cena sveske je 64 dinara. Posle poskupljenja od 20% došlo je i do pojeftinjenja za 20%.
+  Koja je nova cena sveske?
+
+  Početna cena: 64 din
+
+  Korak 1: Poskupljenje od 20%
+    Nova cena = 64 * (1 + 20/100) = 64 * 1,2 = 76,8 din
+
+  Korak 2: Pojeftinjenje od 20%
+    Nova cena = 76,8 * (1 - 20/100) = 76,8 * 0,8 = 61,44 din
+
+  Alternativni pristup:
+    Ukupni faktor = 1,2 * 0,8 = 0,96
+    Nova cena = 64 * 0,96 = 61,44 din
+
+  Ključni uvid: Poskupljenje od p% praćeno pojeftinjenjem od p% NE vraća
+  cenu na početnu vrednost. Rezultat je uvek manji od početne cene jer:
+    (1 + p/100) * (1 - p/100) = 1 - (p/100)^2 < 1
+
+  U ovom slučaju: 1 - (20/100)^2 = 1 - 0,04 = 0,96
+  Dakle cena se smanjila za 4%.
+
+  Odgovor: A) 61,44
+
+  Verifikacija:
+    64 * 1,2 = 76,8 ✓
+    76,8 * 0,8 = 61,44 ✓
+    Tačan odgovor je A.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #a78bfa;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+.theory-card ul {
+  margin: 12px 0 12px 20px;
+  list-style: disc;
+}
+
+.theory-card li {
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 12px;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(96,165,250,0.06);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.checkpoint {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.3);
+  text-align: center;
+}
+
+.insight-formula {
+  font-family: 'Courier New', monospace;
+  font-size: 1.3rem;
+  color: #a78bfa;
+  margin: 16px 0;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid #4ade80;
+  background: rgba(52,211,153,0.08);
+}
+
+.final-answer .big-answer {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.answer-options-final .option {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 90px;
+  color: #94a3b8;
+}
+
+.answer-options-final .option.correct {
+  border-color: #4ade80;
+  background: rgba(52,211,153,0.15);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  text-align: left;
+  padding: 12px;
+  background: rgba(52,211,153,0.05);
+  border-radius: 8px;
+}
+
+.pitfalls {
+  border-left: 4px solid #f472b6;
+}
+
+.pitfalls ul {
+  margin: 12px 0 0 20px;
+  list-style: disc;
+}
+
+.pitfalls li {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { flex-direction: column; }
+  .step { flex-direction: column; gap: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Uzastopno poskupljenje i pojeftinjenje</h1>
+  <p class="subtitle">Procentni racun - uticaj uzastopnih procentualnih promena na cenu</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Cena sveske je <span style="color:#60a5fa;font-weight:600">64 dinara</span>. Posle <span style="color:#f472b6;font-weight:600">poskupljenja od 20%</span> doslo je i do <span style="color:#a78bfa;font-weight:600">pojeftinjenja za 20%</span>. Nova cena sveske (u dinarima) je:</p>
+
+    <div class="given-grid" style="margin-bottom: 16px;">
+      <div class="given-item">
+        <div class="label">Pocetna cena</div>
+        <div class="value">\(64\) din</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Poskupljenje</div>
+        <div class="value">\(20\%\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Pojeftinjenje</div>
+        <div class="value">\(20\%\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(61{,}44\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(63{,}4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(64\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(64{,}44\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(66\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Primenjujemo dva uzastopna procentualna racuna: prvo povecavamo cenu za 20%, a zatim rezultat smanjujemo za 20%. Koristicemo mnozenje odgovarajucim koeficijentima da dobijemo konacnu cenu.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Kljucne formule i pojmovi</summary>
+      <ul>
+        <li><strong>Povecanje za \(p\%\):</strong> Nova vrednost \(= \) Stara vrednost \(\cdot \left(1 + \dfrac{p}{100}\right)\)</li>
+        <li><strong>Smanjenje za \(p\%\):</strong> Nova vrednost \(= \) Stara vrednost \(\cdot \left(1 - \dfrac{p}{100}\right)\)</li>
+        <li><strong>Uzastopne promene:</strong> Ukupni koeficijent je proizvod pojedinacnih koeficijenata. Ako se cena prvo poveca za \(p\%\), pa smanji za \(p\%\):
+          \[ \left(1 + \frac{p}{100}\right)\left(1 - \frac{p}{100}\right) = 1 - \left(\frac{p}{100}\right)^2 \]
+          Rezultat je uvek manji od 1, sto znaci da se cena <em>ne vraca</em> na pocetnu vrednost.</li>
+        <li><strong>Razlika kvadrata:</strong> \((a+b)(a-b) = a^2 - b^2\) - formula koja objasnjava zasto je rezultat uvek manji od pocetne cene.</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid: Price Change Diagram -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz promene cene</h2>
+    <canvas id="priceCanvas" width="700" height="380"></canvas>
+    <p class="drag-hint">Dijagram prikazuje kretanje cene sveske kroz dve uzastopne promene</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Odredjujemo koeficijent poskupljenja</h3>
+        <p>Kada se cena poveca za \(20\%\), to znaci da nova cena iznosi \(100\% + 20\% = 120\%\) stare cene.</p>
+        <div class="math-block">
+          \[ \text{Koeficijent poskupljenja} = 1 + \frac{20}{100} = 1{,}2 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Racunamo cenu posle poskupljenja</h3>
+        <p>Mnozimo pocetnu cenu koeficijentom poskupljenja:</p>
+        <div class="math-block">
+          \[ \text{Cena posle poskupljenja} = 64 \cdot 1{,}2 = 76{,}8 \text{ din} \]
+        </div>
+        <p class="step-note">Cena sveske je porasla sa 64 na 76,8 dinara.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko iznosi cena posle poskupljenja od 20%?</summary>
+      <p class="answer">\(76{,}8\) dinara. To je \(64 \cdot 1{,}2 = 76{,}8\).</p>
+    </details>
+
+    <div class="step" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Odredjujemo koeficijent pojeftinjenja</h3>
+        <p>Kada se cena smanji za \(20\%\), to znaci da nova cena iznosi \(100\% - 20\% = 80\%\) prethodne cene.</p>
+        <div class="math-block">
+          \[ \text{Koeficijent pojeftinjenja} = 1 - \frac{20}{100} = 0{,}8 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Racunamo cenu posle pojeftinjenja</h3>
+        <p>Mnozimo cenu posle poskupljenja koeficijentom pojeftinjenja:</p>
+        <div class="math-block">
+          \[ \text{Nova cena} = 76{,}8 \cdot 0{,}8 = 61{,}44 \text{ din} \]
+        </div>
+        <p class="step-note">Cena sveske je sa 76,8 pala na 61,44 dinara.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Da li se cena vratila na pocetnih 64 dinara?</summary>
+      <p class="answer">Ne! Nova cena je \(61{,}44\) dinara, sto je manje od pocetnih \(64\) dinara. Cena se nikada ne vraca na pocetnu vrednost kada se primene jednaki procenti poskupljenja i pojeftinjenja.</p>
+    </details>
+
+    <div class="step" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Alternativni pristup: ukupni koeficijent</h3>
+        <p>Mozemo direktno izracunati ukupni koeficijent promene mnozeci pojedinacne koeficijente:</p>
+        <div class="math-block">
+          \[ \text{Ukupni koeficijent} = 1{,}2 \cdot 0{,}8 = 0{,}96 \]
+        </div>
+        <p>Zatim mnozimo pocetnu cenu ovim koeficijentom:</p>
+        <div class="math-block">
+          \[ \text{Nova cena} = 64 \cdot 0{,}96 = 61{,}44 \text{ din} \]
+        </div>
+        <p class="step-note">Koeficijent \(0{,}96\) znaci da je ukupno smanjenje \(4\%\) od pocetne cene.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko procenata iznosi ukupno smanjenje cene?</summary>
+      <p class="answer">\(4\%\). Razlika je \(64 - 61{,}44 = 2{,}56\) dinara, a \(\frac{2{,}56}{64} \cdot 100\% = 4\%\).</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2>Kljucni uvid</h2>
+    <p>Poskupljenje za \(p\%\) praceno pojeftinjenjem za \(p\%\) nikada ne vraca cenu na pocetnu vrednost!</p>
+    <div class="insight-formula">
+      \[ \left(1 + \frac{p}{100}\right)\left(1 - \frac{p}{100}\right) = 1 - \left(\frac{p}{100}\right)^2 < 1 \]
+    </div>
+    <p>Za \(p = 20\): \(1 - (0{,}2)^2 = 1 - 0{,}04 = 0{,}96\), tj. cena se ukupno smanjila za <span style="color:#4ade80;font-weight:700">4%</span>.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konacni odgovor</h2>
+    <div class="big-answer">\( \text{Nova cena} = 61{,}44 \text{ din} \)</div>
+    <div class="answer-options-final">
+      <div class="option correct">
+        <div style="font-weight:700">(A)</div>
+        <div>\(61{,}44\)</div>
+      </div>
+      <div class="option">
+        <div>(B)</div>
+        <div>\(63{,}4\)</div>
+      </div>
+      <div class="option">
+        <div>(C)</div>
+        <div>\(64\)</div>
+      </div>
+      <div class="option">
+        <div>(D)</div>
+        <div>\(64{,}44\)</div>
+      </div>
+      <div class="option">
+        <div>(E)</div>
+        <div>\(66\)</div>
+      </div>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Pocetna cena \(64 \times 1{,}2 = 76{,}8\), zatim \(76{,}8 \times 0{,}8 = 61{,}44\). Takodje, \(64 \times 0{,}96 = 61{,}44\). Rezultat je manji od pocetne cene, sto je u skladu sa teorijskim uvidom da je \((1+p)(1-p) < 1\).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls">
+    <h2>Ceste greske</h2>
+    <ul>
+      <li><strong>Odgovor (C) - 64 dinara:</strong> Mnogi ucenici misle da se poskupljenje i pojeftinjenje od istog procenta poniste. To je pogresno jer se pojeftinjenje racuna od <em>vece</em> (poskupljene) cene, ne od originalne.</li>
+      <li><strong>Mesanje baze za procenat:</strong> Poskupljenje od 20% se racuna od 64 din (\(+12{,}8\) din), ali pojeftinjenje od 20% se racuna od 76,8 din (\(-15{,}36\) din). Zato se ove promene ne ponistaju.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Za koji procenat bi trebalo <em>pojeftiniti</em> svesku posle poskupljenja od 20% da bi se cena vratila na tacno 64 dinara?</p>
+    <details>
+      <summary>Prikazi nagovesta</summary>
+      <p style="margin-top:10px;color:#94a3b8;">Posle poskupljenja, cena je 76,8 din. Potrebno je da pojeftinjenje vrati cenu na 64 din. Koliko procenata od 76,8 iznosi razlika \(76{,}8 - 64 = 12{,}8\)? Izracunaj \(\frac{12{,}8}{76{,}8} \cdot 100\%\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('priceCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Prices
+    const prices = [64, 76.8, 61.44];
+    const labels = ['Pocetna cena', 'Posle poskupljenja (+20%)', 'Posle pojeftinjenja (-20%)'];
+    const colors = ['#60a5fa', '#f472b6', '#4ade80'];
+
+    // Bar chart settings
+    const barWidth = 120;
+    const maxPrice = 85;
+    const chartLeft = 100;
+    const chartRight = W - 40;
+    const chartBottom = H - 70;
+    const chartTop = 50;
+    const chartHeight = chartBottom - chartTop;
+
+    const barSpacing = (chartRight - chartLeft - 3 * barWidth) / 4;
+
+    // Draw subtle grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let p = 0; p <= maxPrice; p += 10) {
+      const y = chartBottom - (p / maxPrice) * chartHeight;
+      ctx.beginPath();
+      ctx.moveTo(chartLeft, y);
+      ctx.lineTo(chartRight, y);
+      ctx.stroke();
+
+      // Y-axis labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(p + ' din', chartLeft - 10, y + 4);
+    }
+
+    // Draw axis
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(chartLeft, chartTop);
+    ctx.lineTo(chartLeft, chartBottom);
+    ctx.lineTo(chartRight, chartBottom);
+    ctx.stroke();
+
+    // Draw bars
+    for (let i = 0; i < 3; i++) {
+      const x = chartLeft + barSpacing + i * (barWidth + barSpacing);
+      const barH = (prices[i] / maxPrice) * chartHeight;
+      const y = chartBottom - barH;
+
+      // Bar gradient
+      const grad = ctx.createLinearGradient(x, y, x, chartBottom);
+      grad.addColorStop(0, colors[i]);
+      grad.addColorStop(1, colors[i] + '44');
+      ctx.fillStyle = grad;
+
+      // Rounded top corners
+      const r = 8;
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + barWidth - r, y);
+      ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + r);
+      ctx.lineTo(x + barWidth, chartBottom);
+      ctx.lineTo(x, chartBottom);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.fill();
+
+      // Bar glow
+      ctx.shadowColor = colors[i];
+      ctx.shadowBlur = 15;
+      ctx.fillStyle = colors[i] + '22';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Price value on top of bar
+      ctx.fillStyle = colors[i];
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(prices[i].toFixed(2).replace('.', ',') + ' din', x + barWidth / 2, y - 12);
+
+      // Label below bar
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+
+      // Split label into lines
+      const parts = labels[i].split(' ');
+      let line1, line2;
+      if (i === 0) {
+        line1 = parts[0];
+        line2 = parts[1];
+      } else if (i === 1) {
+        line1 = 'Posle poskupljenja';
+        line2 = '(+20%)';
+      } else {
+        line1 = 'Posle pojeftinjenja';
+        line2 = '(-20%)';
+      }
+
+      ctx.fillText(line1, x + barWidth / 2, chartBottom + 20);
+      ctx.fillStyle = colors[i];
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(line2, x + barWidth / 2, chartBottom + 38);
+    }
+
+    // Draw arrows between bars
+    const arrowY1 = chartBottom - (prices[0] / maxPrice) * chartHeight - 5;
+    const arrowY2 = chartBottom - (prices[1] / maxPrice) * chartHeight - 5;
+    const arrowY3 = chartBottom - (prices[2] / maxPrice) * chartHeight - 5;
+
+    const x1center = chartLeft + barSpacing + barWidth;
+    const x2left = chartLeft + barSpacing + barWidth + barSpacing;
+    const x2center = x2left + barWidth;
+    const x3left = x2left + barWidth + barSpacing;
+
+    // Arrow 1: first bar -> second bar (up arrow, +20%)
+    drawArrow(ctx, x1center + 10, arrowY1 - 15, x2left - 10, arrowY2 - 15, '#f472b6');
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u00D7 1,2', (x1center + x2left) / 2, Math.min(arrowY1, arrowY2) - 30);
+
+    // Arrow 2: second bar -> third bar (down arrow, -20%)
+    drawArrow(ctx, x2center + 10, arrowY2 - 15, x3left - 10, arrowY3 - 15, '#a78bfa');
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u00D7 0,8', (x2center + x3left) / 2, Math.min(arrowY2, arrowY3) - 30);
+
+    // Draw dashed line at original price level
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = '#60a5fa44';
+    ctx.lineWidth = 2;
+    const origY = chartBottom - (64 / maxPrice) * chartHeight;
+    ctx.beginPath();
+    ctx.moveTo(chartLeft, origY);
+    ctx.lineTo(chartRight, origY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Kretanje cene sveske', W / 2, 30);
+  }
+
+  function drawArrow(ctx, x1, y1, x2, y2, color) {
+    const headLen = 10;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Arrowhead
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  draw();
+
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Uzastopno poskupljenje i pojeftinjenje - procentni racun",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["procenti", "procentualne promene", "koeficijent promene", "razlika kvadrata"]
+}
+BRAINSPARK_META-->

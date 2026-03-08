@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Numeracija stranica knjige - Brojanje cifara</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Stranice knjige su numerisane prirodnim brojevima 1, 2, 3, ... u decimalnom zapisu.
+  Koliko stranica ima knjiga, ako je za njihovu numeraciju upotrebljeno 1500 cifara?
+
+  Options: (A) 500, (B) 512, (C) 536, (D) 550, (E) 555
+
+  Approach: Count digits used in each "tier" of page numbers by number of digits.
+
+  Tier 1: 1-digit numbers (1 through 9)
+    Count of numbers: 9
+    Digits per number: 1
+    Total digits: 9 * 1 = 9
+
+  Tier 2: 2-digit numbers (10 through 99)
+    Count of numbers: 90
+    Digits per number: 2
+    Total digits: 90 * 2 = 180
+
+  Tier 3: 3-digit numbers (100 through 999)
+    Count of numbers: 900
+    Digits per number: 3
+    Total digits: 900 * 3 = 2700
+
+  Cumulative digits after Tier 1: 9
+  Cumulative digits after Tier 2: 9 + 180 = 189
+
+  We need 1500 digits total. After pages 1-99, we've used 189 digits.
+  Remaining digits: 1500 - 189 = 1311
+
+  Each 3-digit number uses 3 digits.
+  Number of 3-digit pages: 1311 / 3 = 437 (exact division, no remainder)
+
+  Total pages: 99 + 437 = 536
+
+  Verification:
+    Pages 1-9: 9 digits
+    Pages 10-99: 180 digits
+    Pages 100-536: (536 - 100 + 1) = 437 pages, 437 * 3 = 1311 digits
+    Total: 9 + 180 + 1311 = 1500 digits ✓
+
+  Answer: (C) 536
+
+  Additional check: 1311 / 3 = 437 exactly, no fractional pages.
+  Last page number: 99 + 437 = 536. This is a 3-digit number (100 <= 536 <= 999). ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-text {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+  padding: 8px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step:hover {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.final-option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: default;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #334155;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+.tier-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.tier-table th,
+.tier-table td {
+  padding: 10px 14px;
+  text-align: center;
+  border-bottom: 1px solid #334155;
+}
+
+.tier-table th {
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: rgba(96, 165, 250, 0.08);
+}
+
+.tier-table td {
+  font-size: 0.95rem;
+}
+
+.tier-table .highlight-row {
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.tier-table .highlight-row td {
+  color: #34d399;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid {
+    justify-content: center;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+  .final-options {
+    flex-direction: column;
+    align-items: center;
+  }
+  .tier-table {
+    font-size: 0.85rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Numeracija stranica knjige</h1>
+  <p class="subtitle">Kombinatorika i teorija brojeva — brojanje cifara u decimalnom zapisu</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <div class="problem-text">
+      <p>Stranice knjige su numerisane prirodnim brojevima \( 1, 2, 3, \ldots \) u decimalnom zapisu. Koliko stranica ima knjiga, ako je za njihovu numeraciju upotrebljeno <span style="color: #60a5fa; font-weight: 600;">1500 cifara</span>?</p>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(500\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(512\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(536\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(550\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(555\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan resavanja</div>
+    <p class="plan-text">
+      Razvrstacemo brojeve stranica po broju cifara koje imaju (jednocifreni, dvocifreni, trocifreni...) i za svaku grupu izracunati koliko ukupno cifara koristi. Kada saberemo cifre iz prvih grupa, odredimo koliko trocifrenih stranica staje u preostalih cifara.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Kljucne formule za brojanje cifara</summary>
+      <div class="detail-content">
+        <p><strong>Jednocifreni brojevi:</strong> od 1 do 9 — ima ih \( 9 \) komada, svaki koristi \( 1 \) cifru.</p>
+        <p style="margin-top: 10px;"><strong>Dvocifreni brojevi:</strong> od 10 do 99 — ima ih \( 90 \) komada, svaki koristi \( 2 \) cifre.</p>
+        <p style="margin-top: 10px;"><strong>Trocifreni brojevi:</strong> od 100 do 999 — ima ih \( 900 \) komada, svaki koristi \( 3 \) cifre.</p>
+        <p style="margin-top: 10px;"><strong>Opsta formula:</strong> \( k \)-cifrenih brojeva ima:</p>
+        <div class="step-math">
+          \[ 9 \cdot 10^{k-1} \text{ komada, svaki koristi } k \text{ cifara} \]
+        </div>
+        <p style="margin-top: 10px;"><strong>Ukupan broj cifara za sve \( k \)-cifrene brojeve:</strong></p>
+        <div class="step-math">
+          \[ k \cdot 9 \cdot 10^{k-1} \]
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Vizuelni prikaz</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="750" height="420"></canvas>
+    </div>
+    <p class="canvas-caption">Raspodela 1500 cifara po grupama stranica: jednocifrene, dvocifrene i trocifrene</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Jednocifreni brojevi (stranice 1 — 9)</div>
+        <p>Brojevi od 1 do 9 imaju po jednu cifru. Koliko ih ima?</p>
+        <div class="step-math">
+          \[ \text{Brojeva: } 9 \]
+        </div>
+        <div class="step-math">
+          \[ \text{Cifara: } 9 \times 1 = 9 \]
+        </div>
+        <p>Za prvih 9 stranica potrosili smo <strong>9 cifara</strong>.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Dvocifreni brojevi (stranice 10 — 99)</div>
+        <p>Brojevi od 10 do 99 imaju po dve cifre. Koliko takvih brojeva ima?</p>
+        <div class="step-math">
+          \[ \text{Brojeva: } 99 - 10 + 1 = 90 \]
+        </div>
+        <div class="step-math">
+          \[ \text{Cifara: } 90 \times 2 = 180 \]
+        </div>
+        <p>Za stranice 10 do 99 potrosili smo <strong>180 cifara</strong>.</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Zbir cifara za stranice 1 — 99</div>
+        <p>Saberimo ukupan broj cifara upotrebljenih za prve dve grupe:</p>
+        <div class="step-math">
+          \[ 9 + 180 = 189 \text{ cifara} \]
+        </div>
+        <p>Za numerisanje prvih 99 stranica potrebno je <strong>189 cifara</strong>.</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Koliko cifara ostaje za trocifrene stranice?</summary>
+            <div class="detail-content">
+              <p>Ukupno imamo 1500 cifara. Za stranice 1-99 smo potrosili 189 cifara.</p>
+              <p>Preostaje: \( 1500 - 189 = 1311 \) cifara.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Preostale cifre za trocifrene stranice</div>
+        <p>Od ukupno 1500 cifara, oduzimamo one koje su vec iskoriscene:</p>
+        <div class="step-math">
+          \[ 1500 - 189 = 1311 \text{ cifara} \]
+        </div>
+        <p>Ovih <strong>1311 cifara</strong> odlazi na trocifrene stranice (od 100 pa nadalje).</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Broj trocifrenih stranica</div>
+        <p>Svaka trocifrena stranica koristi tacno 3 cifre. Delimo preostale cifre sa 3:</p>
+        <div class="step-math">
+          \[ \frac{1311}{3} = 437 \]
+        </div>
+        <p>Deljenje je tacno (bez ostatka), sto znaci da imamo <strong>437 trocifrenih stranica</strong>.</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Da li se 1311 deli sa 3 bez ostatka?</summary>
+            <div class="detail-content">
+              <p>Zbir cifara broja 1311: \( 1 + 3 + 1 + 1 = 6 \), sto je deljivo sa 3.</p>
+              <p>Provera: \( 437 \times 3 = 1311 \). Tacno!</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <div class="step-title">Ukupan broj stranica</div>
+        <p>Saberimo stranice iz svih grupa:</p>
+        <div class="step-math">
+          \[ \underbrace{99}_{\text{1- i 2-cifrene}} + \underbrace{437}_{\text{3-cifrene}} = 536 \]
+        </div>
+        <p>Poslednja stranica ima broj <strong>536</strong>, sto je zaista trocifren broj (\( 100 \leq 536 \leq 999 \)).</p>
+      </div>
+    </div>
+
+    <!-- Summary Table -->
+    <table class="tier-table">
+      <thead>
+        <tr>
+          <th>Grupa</th>
+          <th>Stranice</th>
+          <th>Broj stranica</th>
+          <th>Cifre po stranici</th>
+          <th>Ukupno cifara</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Jednocifrene</td>
+          <td>\( 1 - 9 \)</td>
+          <td>\( 9 \)</td>
+          <td>\( 1 \)</td>
+          <td>\( 9 \)</td>
+        </tr>
+        <tr>
+          <td>Dvocifrene</td>
+          <td>\( 10 - 99 \)</td>
+          <td>\( 90 \)</td>
+          <td>\( 2 \)</td>
+          <td>\( 180 \)</td>
+        </tr>
+        <tr class="highlight-row">
+          <td>Trocifrene</td>
+          <td>\( 100 - 536 \)</td>
+          <td>\( 437 \)</td>
+          <td>\( 3 \)</td>
+          <td>\( 1311 \)</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr style="border-top: 2px solid #60a5fa;">
+          <td colspan="2" style="color: #60a5fa; font-weight: 600;">Ukupno</td>
+          <td style="color: #4ade80; font-weight: 700;">\( 536 \)</td>
+          <td></td>
+          <td style="color: #4ade80; font-weight: 700;">\( 1500 \)</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Verifikacija rezultata</summary>
+        <div class="detail-content">
+          <p>Proverimo: \( 9 + 180 + 1311 = 1500 \).</p>
+          <p>\( 9 + 180 = 189 \), a \( 189 + 1311 = 1500 \). Tacno!</p>
+          <p>Poslednja stranica: \( 99 + 437 = 536 \). Potvrdjeno.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Kljucni uvid</div>
+    <p>Trik je u tome da se ne pokusava brojati cifre jednu po jednu za svih 1500 cifara. Umesto toga, grupisu se brojevi po broju cifara koje zauzimaju. Svaka takva grupa ima pravilan obrazac: jednocifrenih je 9, dvocifrenih 90, trocifrenih 900. Ovo omogucava brzo izracunavanje oduzimanjem — prvo odredimo koliko cifara "potrose" nize grupe, a onda podelimo ostatak sa brojem cifara u trenutnoj grupi.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( 536 \) stranica</div>
+    <div class="final-options">
+      <div class="final-option">(A) 500</div>
+      <div class="final-option">(B) 512</div>
+      <div class="final-option correct">(C) 536</div>
+      <div class="final-option">(D) 550</div>
+      <div class="final-option">(E) 555</div>
+    </div>
+    <div class="verification-note">
+      <strong>Provera:</strong> Stranice 1-9 daju 9 cifara, stranice 10-99 daju 180 cifara, stranice 100-536 daju \( 437 \times 3 = 1311 \) cifara. Ukupno: \( 9 + 180 + 1311 = 1500 \). Rezultat se slaze sa datim brojem cifara.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Ceste greske</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Deljenje 1500 sa 3 direktno:</strong> Cesta greska je podeliti 1500 sa 3 i dobiti 500 (opcija A). Ovo bi bilo tacno samo kada bi svaka stranica imala tacno 3 cifre, ali stranice 1-9 imaju 1 cifru, a stranice 10-99 imaju 2 cifre.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Zaboravljanje da stranica 100 pocinje novu grupu:</strong> Treba paziti da se pri prelasku sa dvocifrenih na trocifrene stranice pravilno izracuna granica — trocifrene stranice pocinju od 100, ne od 99.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Koliko cifara bi bilo potrebno za numerisanje knjige sa 2000 stranica?</p>
+    <details>
+      <summary>Pogledaj nagovestaj</summary>
+      <div class="detail-content">
+        <p>Primeni istu tehniku: cifre za jednocifrene (9), dvocifrene (180), trocifrene (2700)... ali sada se prelazi i u cetvorocifrene brojeve (1000-2000). Koliko cetvorocifrenih stranica ima i po koliko cifara svaka koristi?</p>
+        <p style="margin-top: 8px;">Odgovor: \( 9 + 180 + 2700 + 1001 \times 4 = 6893 \) cifre.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Data for the visualization
+    const tiers = [
+      { label: '1-cifrene', pages: '1 - 9', count: 9, digits: 9, color: '#60a5fa', colorAlpha: 'rgba(96, 165, 250, 0.3)' },
+      { label: '2-cifrene', pages: '10 - 99', count: 90, digits: 180, color: '#a78bfa', colorAlpha: 'rgba(167, 139, 250, 0.3)' },
+      { label: '3-cifrene', pages: '100 - 536', count: 437, digits: 1311, color: '#34d399', colorAlpha: 'rgba(52, 211, 153, 0.3)' }
+    ];
+
+    const totalDigits = 1500;
+    const barAreaLeft = 100;
+    const barAreaRight = W - 50;
+    const barAreaWidth = barAreaRight - barAreaLeft;
+    const barHeight = 50;
+    const barY = 60;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Raspodela 1500 cifara po grupama', W / 2, 30);
+
+    // Draw stacked bar
+    let currentX = barAreaLeft;
+    tiers.forEach((tier, i) => {
+      const segW = (tier.digits / totalDigits) * barAreaWidth;
+
+      // Bar segment
+      ctx.fillStyle = tier.colorAlpha;
+      ctx.strokeStyle = tier.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (i === 0) {
+        ctx.roundRect(currentX, barY, segW, barHeight, [8, 0, 0, 8]);
+      } else if (i === tiers.length - 1) {
+        ctx.roundRect(currentX, barY, segW, barHeight, [0, 8, 8, 0]);
+      } else {
+        ctx.rect(currentX, barY, segW, barHeight);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      // Label inside bar
+      ctx.fillStyle = tier.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      const midX = currentX + segW / 2;
+      ctx.fillText(tier.digits + ' cifara', midX, barY + barHeight / 2 + 5);
+
+      // Label above bar
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(tier.label, midX, barY - 8);
+
+      currentX += segW;
+    });
+
+    // Draw detailed breakdown cards below
+    const cardY = 150;
+    const cardWidth = 200;
+    const cardHeight = 220;
+    const gap = 30;
+    const totalCardsWidth = 3 * cardWidth + 2 * gap;
+    const startX = (W - totalCardsWidth) / 2;
+
+    tiers.forEach((tier, i) => {
+      const cx = startX + i * (cardWidth + gap);
+      const cy = cardY;
+
+      // Card background
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.8)';
+      ctx.strokeStyle = tier.color;
+      ctx.lineWidth = i === 2 ? 2.5 : 1.5;
+      ctx.beginPath();
+      ctx.roundRect(cx, cy, cardWidth, cardHeight, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      // Glow for the third card (answer)
+      if (i === 2) {
+        ctx.shadowColor = tier.color;
+        ctx.shadowBlur = 15;
+        ctx.strokeStyle = tier.color;
+        ctx.beginPath();
+        ctx.roundRect(cx, cy, cardWidth, cardHeight, 12);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      // Tier label
+      ctx.fillStyle = tier.color;
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(tier.label, cx + cardWidth / 2, cy + 30);
+
+      // Pages range
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Stranice: ' + tier.pages, cx + cardWidth / 2, cy + 55);
+
+      // Divider
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx + 20, cy + 70);
+      ctx.lineTo(cx + cardWidth - 20, cy + 70);
+      ctx.stroke();
+
+      // Count
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Broj stranica:', cx + 16, cy + 95);
+      ctx.fillStyle = tier.color;
+      ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(tier.count.toString(), cx + cardWidth - 16, cy + 95);
+
+      // Digits per page
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Cifara po str.:', cx + 16, cy + 125);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText((i + 1).toString(), cx + cardWidth - 16, cy + 125);
+
+      // Total digits
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Ukupno cifara:', cx + 16, cy + 155);
+      ctx.fillStyle = tier.color;
+      ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(tier.digits.toString(), cx + cardWidth - 16, cy + 155);
+
+      // Calculation
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(tier.count + ' x ' + (i + 1) + ' = ' + tier.digits, cx + cardWidth / 2, cy + 185);
+    });
+
+    // Total sum at bottom
+    const sumY = cardY + cardHeight + 40;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('9 + 180 + 1311 = ', W / 2 - 40, sumY);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('1500 cifara', W / 2 + 60, sumY);
+
+    // Arrow pointing to total pages
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ukupno stranica: 9 + 90 + 437 = ', W / 2 - 30, sumY + 28);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('536', W / 2 + 100, sumY + 28);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Numeracija stranica knjige - Brojanje cifara",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["brojanje cifara", "decimalni zapis", "numeracija stranica", "aritmetika", "kombinatorika"]
+}
+BRAINSPARK_META-->

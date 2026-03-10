@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir ekstrema funkcije na segmentu</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Find the sum of the maximum and minimum values of f(x) = -x^2 + 6x + 5 on [2, 5].
+
+Step 1: Identify the type of function.
+f(x) = -x^2 + 6x + 5 is a quadratic function with a = -1 < 0, so the parabola opens downward.
+
+Step 2: Find the vertex.
+x_v = -b/(2a) = -6/(2*(-1)) = -6/(-2) = 3
+The vertex is at x = 3, which IS inside the interval [2, 5].
+
+Step 3: Compute f at critical point and endpoints.
+f(2) = -(2)^2 + 6(2) + 5 = -4 + 12 + 5 = 13
+f(3) = -(3)^2 + 6(3) + 5 = -9 + 18 + 5 = 14
+f(5) = -(5)^2 + 6(5) + 5 = -25 + 30 + 5 = 10
+
+Step 4: Determine max and min.
+Since the parabola opens downward, the vertex at x=3 gives the MAXIMUM: f(3) = 14.
+For the minimum, compare endpoints: f(2) = 13 vs f(5) = 10.
+Minimum is f(5) = 10.
+
+Step 5: Sum of max and min.
+14 + 10 = 24
+
+Answer: (D) 24 ✓ matches official answer.
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 70px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+.theory-content {
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: rgba(96,165,250,0.05);
+  border-radius: 8px;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.canvas-container {
+  text-align: center;
+}
+
+canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(52,211,153,0.08);
+  border-radius: 6px;
+  color: #4ade80;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .formula {
+  font-size: 1.3rem;
+  color: #e2e8f0;
+  margin: 12px 0;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid rgba(52,211,153,0.3);
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 800;
+  margin: 16px 0;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.final-option {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(51,65,85,0.5);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+.final-option.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  margin-top: 14px;
+  padding: 12px;
+  background: rgba(52,211,153,0.05);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.pitfall {
+  border-left: 3px solid #e09468;
+}
+
+.pitfall h2 {
+  color: #e09468;
+}
+
+.pitfall ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall li {
+  padding: 8px 0;
+  padding-left: 20px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfall li::before {
+  content: "⚠";
+  position: absolute;
+  left: 0;
+}
+
+.challenge {
+  border-left: 3px solid #f472b6;
+}
+
+.challenge h2 {
+  color: #f472b6;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 55px; padding: 8px 12px; }
+  .step { flex-direction: column; gap: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Ekstremi kvadratne funkcije na segmentu</h1>
+  <p class="subtitle">Analiza funkcije — najveća i najmanja vrednost na zatvorenom intervalu</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Zbir najveće i najmanje vrednosti funkcije \(f(x) = -x^2 + 6x + 5\) na segmentu \([2,\, 5]\) jednak je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(22\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(23\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(24\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(25\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Funkcija \(f(x) = -x^2 + 6x + 5\) je kvadratna sa negativnim koeficijentom uz \(x^2\), pa je njena parabola okrenuta nadole. Naći ćemo teme parabole, proveriti da li pripada segmentu \([2, 5]\), zatim izračunati vrednosti na temenu i na krajevima segmenta, i na kraju sabrati najveću i najmanju vrednost.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Teme parabole:</strong> Za funkciju \(f(x) = ax^2 + bx + c\), x-koordinata temena je \(x_v = -\dfrac{b}{2a}\).</li>
+          <li><strong>Smer otvaranja:</strong> Ako je \(a < 0\), parabola je okrenuta nadole — teme je tačka maksimuma.</li>
+          <li><strong>Vajerstrasova teorema:</strong> Neprekidna funkcija na zatvorenom segmentu \([a, b]\) dostiže svoju najveću i najmanju vrednost. Ekstremi se nalaze ili u kritičnim tačkama (teme) ili na krajevima segmenta.</li>
+          <li><strong>Postupak:</strong> Izračunaj \(f\) u temenu (ako pripada segmentu) i na oba kraja, pa uporedi vrednosti.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Grafik funkcije na segmentu \([2, 5]\)</h2>
+    <div class="canvas-container">
+      <canvas id="graph-canvas" width="700" height="420"></canvas>
+      <p class="drag-hint">Pomerajte miša preko grafika da vidite vrednosti funkcije</p>
+    </div>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Odredimo tip funkcije</h3>
+        <p>Data funkcija je:</p>
+        <div class="math-block">
+          \[f(x) = -x^2 + 6x + 5\]
+        </div>
+        <p>Ovo je kvadratna funkcija oblika \(f(x) = ax^2 + bx + c\), gde je:</p>
+        <div class="math-block">
+          \[a = -1, \quad b = 6, \quad c = 5\]
+        </div>
+        <p class="note">Pošto je \(a = -1 < 0\), parabola je okrenuta nadole — teme je tačka maksimuma.</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Nađimo x-koordinatu temena</h3>
+        <p>Koristimo formulu za x-koordinatu temena parabole:</p>
+        <div class="math-block">
+          \[x_v = -\frac{b}{2a} = -\frac{6}{2 \cdot (-1)} = -\frac{6}{-2} = 3\]
+        </div>
+        <p class="note">Teme se nalazi u tački \(x = 3\), što pripada segmentu \([2, 5]\). Dakle, maksimum funkcije na ovom segmentu je u temenu.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🧠 Proveri se: Koliko iznosi \(f(3)\)?</summary>
+      <div class="answer">
+        \(f(3) = -(3)^2 + 6 \cdot 3 + 5 = -9 + 18 + 5 = 14\)
+      </div>
+    </details>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Izračunajmo vrednost u temenu</h3>
+        <p>Uvrstimo \(x = 3\) u funkciju:</p>
+        <div class="math-block">
+          \[f(3) = -(3)^2 + 6 \cdot 3 + 5\]
+        </div>
+        <div class="math-block">
+          \[f(3) = -9 + 18 + 5 = 14\]
+        </div>
+        <p>Najveća vrednost na segmentu je \(f(3) = 14\).</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Izračunajmo vrednosti na krajevima segmenta</h3>
+        <p>Za levi kraj, \(x = 2\):</p>
+        <div class="math-block">
+          \[f(2) = -(2)^2 + 6 \cdot 2 + 5 = -4 + 12 + 5 = 13\]
+        </div>
+        <p>Za desni kraj, \(x = 5\):</p>
+        <div class="math-block">
+          \[f(5) = -(5)^2 + 6 \cdot 5 + 5 = -25 + 30 + 5 = 10\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🧠 Proveri se: Koja je od tri vrednosti najmanja?</summary>
+      <div class="answer">
+        Imamo \(f(2) = 13\), \(f(3) = 14\) i \(f(5) = 10\). Najmanja je \(f(5) = 10\).
+      </div>
+    </details>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Odredimo minimum i maksimum</h3>
+        <p>Poredimo sve tri dobijene vrednosti:</p>
+        <div class="math-block">
+          \[f(2) = 13, \quad f(3) = 14, \quad f(5) = 10\]
+        </div>
+        <p>Najveća vrednost: \(f_{\max} = f(3) = 14\) (u temenu parabole).</p>
+        <p>Najmanja vrednost: \(f_{\min} = f(5) = 10\) (na desnom kraju segmenta).</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Izračunajmo traženi zbir</h3>
+        <div class="math-block">
+          \[f_{\max} + f_{\min} = 14 + 10 = 24\]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Pošto je parabola okrenuta nadole, a teme \(x = 3\) pripada segmentu \([2, 5]\), maksimum je u temenu. Minimum se traži na krajevima — i to na onom koji je <em>dalji</em> od temena, jer se funkcija brže smanjuje u tom pravcu.</p>
+    <div class="formula">
+      \[f_{\max} + f_{\min} = 14 + 10 = 24\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\(f_{\max} + f_{\min} = 14 + 10 = 24\)</div>
+    <div class="final-options">
+      <div class="final-option">(A) \(0\)</div>
+      <div class="final-option">(B) \(22\)</div>
+      <div class="final-option">(C) \(23\)</div>
+      <div class="final-option correct">(D) \(24\)</div>
+      <div class="final-option">(E) \(25\)</div>
+    </div>
+    <div class="verification">
+      <strong>Provera:</strong> Teme parabole \(f(x) = -x^2 + 6x + 5\) je u \(x = 3\), gde je \(f(3) = 14\). Funkcija opada sa obe strane temena. Na segmentu \([2, 5]\), krajnja tačka \(x = 5\) je udaljenija od temena nego \(x = 2\), pa je tu vrednost manja: \(f(5) = 10 < f(2) = 13\). Zbir \(14 + 10 = 24\). ✓
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>Traženje minimuma samo u temenu parabole — pošto je parabola okrenuta nadole, teme daje maksimum, a minimum se mora tražiti na krajevima segmenta.</li>
+      <li>Zaboravljanje da se provere <em>oba</em> kraja segmenta. Neki učenici pogledaju samo \(f(2)\) ili samo \(f(5)\) i uzmu pogrešnu vrednost za minimum. Uvek treba izračunati sve kandidate pa onda porediti.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge">
+    <h2>Dodatni izazov</h2>
+    <p>Za koju vrednost parametra \(k\) zbir najveće i najmanje vrednosti funkcije \(f(x) = -x^2 + 6x + 5\) na segmentu \([2, k]\) iznosi \(23\)?</p>
+    <details>
+      <summary>Pokaži nagoveštaj</summary>
+      <div class="theory-content">
+        <p>Maksimum je i dalje \(f(3) = 14\) dok god je \(k \geq 3\). Dakle, tražiš \(k\) takvo da je \(f(k) = 9\) (jer \(14 + 9 = 23\)). Reši jednačinu \(-k^2 + 6k + 5 = 9\) i proveri koji koren pripada odgovarajućem opsegu.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('graph-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Coordinate system setup
+  const xMin = 0.5, xMax = 6.5;
+  const yMin = -1, yMax = 18;
+  const padL = 55, padR = 20, padT = 25, padB = 40;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  function toCanvasX(x) { return padL + (x - xMin) / (xMax - xMin) * plotW; }
+  function toCanvasY(y) { return padT + (1 - (y - yMin) / (yMax - yMin)) * plotH; }
+  function f(x) { return -x * x + 6 * x + 5; }
+
+  let hoverX = null;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let x = 1; x <= 6; x++) {
+      const cx = toCanvasX(x);
+      ctx.beginPath(); ctx.moveTo(cx, padT); ctx.lineTo(cx, H - padB); ctx.stroke();
+    }
+    for (let y = 0; y <= 16; y += 2) {
+      const cy = toCanvasY(y);
+      ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(W - padR, cy); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    // x-axis at y=0
+    const y0 = toCanvasY(0);
+    ctx.beginPath(); ctx.moveTo(padL, y0); ctx.lineTo(W - padR, y0); ctx.stroke();
+    // y-axis at x=0 (off screen, so draw at left edge)
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let x = 1; x <= 6; x++) {
+      ctx.fillText(x.toString(), toCanvasX(x), H - padB + 18);
+    }
+    ctx.textAlign = 'right';
+    for (let y = 0; y <= 16; y += 2) {
+      ctx.fillText(y.toString(), padL - 8, toCanvasY(y) + 4);
+    }
+    ctx.textAlign = 'center';
+    ctx.fillText('x', W - padR + 10, y0 + 4);
+    ctx.fillText('y', padL, padT - 10);
+
+    // Full parabola (dimmed, outside the interval)
+    ctx.strokeStyle = 'rgba(96,165,250,0.2)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    for (let px = 0; px <= plotW; px++) {
+      const x = xMin + px / plotW * (xMax - xMin);
+      if (x >= 2 && x <= 5) continue;
+      const y = f(x);
+      const cx = toCanvasX(x), cy = toCanvasY(y);
+      if (px === 0 || (x >= 2 - 0.01 && x <= 2 + 0.01) || (x >= 5 - 0.01 && x <= 5 + 0.01)) {
+        ctx.moveTo(cx, cy);
+      } else {
+        ctx.lineTo(cx, cy);
+      }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Parabola on [2, 5] - highlighted
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    let first = true;
+    for (let px = 0; px <= plotW; px++) {
+      const x = xMin + px / plotW * (xMax - xMin);
+      if (x < 2 || x > 5) continue;
+      const y = f(x);
+      const cx = toCanvasX(x), cy = toCanvasY(y);
+      if (first) { ctx.moveTo(cx, cy); first = false; }
+      else ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+
+    // Shaded region under curve on [2,5]
+    ctx.fillStyle = 'rgba(96,165,250,0.06)';
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(2), toCanvasY(0));
+    for (let px = 0; px <= plotW; px++) {
+      const x = xMin + px / plotW * (xMax - xMin);
+      if (x < 2 || x > 5) continue;
+      ctx.lineTo(toCanvasX(x), toCanvasY(f(x)));
+    }
+    ctx.lineTo(toCanvasX(5), toCanvasY(0));
+    ctx.closePath();
+    ctx.fill();
+
+    // Dashed lines from key points to axes
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(52,211,153,0.3)';
+    ctx.lineWidth = 1;
+
+    // From max (3, 14)
+    ctx.beginPath(); ctx.moveTo(toCanvasX(3), toCanvasY(14)); ctx.lineTo(toCanvasX(3), toCanvasY(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(toCanvasX(3), toCanvasY(14)); ctx.lineTo(padL, toCanvasY(14)); ctx.stroke();
+
+    // From min (5, 10)
+    ctx.beginPath(); ctx.moveTo(toCanvasX(5), toCanvasY(10)); ctx.lineTo(padL, toCanvasY(10)); ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // Key points
+    const points = [
+      { x: 2, y: 13, label: 'f(2) = 13', color: '#60a5fa' },
+      { x: 3, y: 14, label: 'f(3) = 14  (max)', color: '#4ade80' },
+      { x: 5, y: 10, label: 'f(5) = 10  (min)', color: '#f472b6' },
+    ];
+
+    points.forEach(p => {
+      const cx = toCanvasX(p.x);
+      const cy = toCanvasY(p.y);
+
+      // Glow
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18);
+      grad.addColorStop(0, p.color + '44');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(cx, cy, 18, 0, Math.PI * 2); ctx.fill();
+
+      // Point
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = p.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = p.x >= 4 ? 'right' : 'left';
+      const offsetX = p.x >= 4 ? -12 : 12;
+      ctx.fillText(p.label, cx + offsetX, cy - 14);
+    });
+
+    // Hover crosshair
+    if (hoverX !== null && hoverX >= 2 && hoverX <= 5) {
+      const hy = f(hoverX);
+      const cx = toCanvasX(hoverX);
+      const cy = toCanvasY(hy);
+
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = 'rgba(226,232,240,0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, padT); ctx.lineTo(cx, H - padB); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(W - padR, cy); ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(cx - 55, cy - 32, 110, 22);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('f(' + hoverX.toFixed(2).replace('.', ',') + ') = ' + hy.toFixed(2).replace('.', ','), cx, cy - 16);
+    }
+
+    // Segment boundary markers
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('[2', toCanvasX(2), toCanvasY(0) + 32);
+    ctx.fillText('5]', toCanvasX(5), toCanvasY(0) + 32);
+  }
+
+  function getMouseX(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const px = (clientX - rect.left) * scaleX;
+    return xMin + (px - padL) / plotW * (xMax - xMin);
+  }
+
+  canvas.addEventListener('mousemove', (e) => {
+    hoverX = getMouseX(e);
+    draw();
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    hoverX = null;
+    draw();
+  });
+
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    hoverX = getMouseX(e);
+    draw();
+  });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    hoverX = getMouseX(e);
+    draw();
+  });
+
+  canvas.addEventListener('touchend', () => {
+    hoverX = null;
+    draw();
+  });
+
+  // Click on steps
+  document.querySelectorAll('.step').forEach(step => {
+    step.addEventListener('click', () => {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir ekstrema kvadratne funkcije na segmentu",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kvadratna funkcija", "ekstremi na segmentu", "teme parabole", "najveća i najmanja vrednost"]
+}
+BRAINSPARK_META-->

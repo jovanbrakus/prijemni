@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formiranje komisije sa uslovom - Kombinatorika</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Na koliko načina se može formirati petočlana komisija od dva matematičara
+  i osam inženjera tako da u njoj bude bar jedan matematičar?
+
+  Given:
+  - 2 matematičara
+  - 8 inženjera
+  - Ukupno 10 osoba
+  - Treba formirati komisiju od 5 članova
+  - Uslov: bar jedan matematičar
+
+  Approach 1: Complement counting (indirectan pristup)
+  Ukupan broj komisija od 5 članova iz 10 osoba: C(10,5) = 252
+  Broj komisija BEZ matematičara (svih 5 iz 8 inženjera): C(8,5) = 56
+  Broj komisija sa BAR JEDNIM matematičarem: 252 - 56 = 196
+
+  Approach 2: Direct counting (direktan pristup) - za verifikaciju
+  Tačno 1 matematičar: C(2,1) * C(8,4) = 2 * 70 = 140
+  Tačno 2 matematičara: C(2,2) * C(8,3) = 1 * 56 = 56
+  Ukupno: 140 + 56 = 196
+
+  Both approaches give 196. Answer: (E) 196 ✓
+
+  Verification against options:
+  (A) 56 = C(8,5) — ovo je broj komisija BEZ matematičara
+  (B) 70 = C(8,4) — broj načina da se izaberu 4 inženjera od 8
+  (C) 129 — ne odgovara ničemu
+  (D) 182 — ne odgovara ničemu
+  (E) 196 = 252 - 56 ✓ Tačan odgovor
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 12px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option .value {
+  font-family: 'Courier New', monospace;
+}
+
+.plan-text {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+.theory-content {
+  padding: 16px;
+  background: rgba(167, 139, 250, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(167, 139, 250, 0.15);
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  color: #e2e8f0;
+  line-height: 1.8;
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step-container:hover,
+.step-container.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content h3 {
+  color: #60a5fa;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #e2e8f0;
+  margin-bottom: 8px;
+  line-height: 1.7;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint p {
+  color: #e2e8f0;
+  margin-top: 8px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 16px;
+  font-size: 1.3rem;
+}
+
+.insight-formula {
+  font-family: 'Courier New', monospace;
+  font-size: 1.4rem;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  display: inline-block;
+  margin: 12px 0;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.1));
+  border: 2px solid rgba(74, 222, 128, 0.3);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.final-answer-value {
+  font-size: 2rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.answer-opt {
+  background: rgba(51, 65, 85, 0.5);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-family: 'Courier New', monospace;
+}
+
+.answer-opt.correct {
+  background: rgba(74, 222, 128, 0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(74, 222, 128, 0.2);
+  text-align: left;
+}
+
+.pitfall-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  color: #e2e8f0;
+  line-height: 1.7;
+}
+
+.pitfall-item:last-child {
+  border-bottom: none;
+}
+
+.pitfall-icon {
+  color: #e09468;
+  font-size: 1.1rem;
+  min-width: 24px;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.05);
+  border: 1px solid rgba(244, 114, 182, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.challenge-box h3 {
+  color: #f472b6;
+  margin-bottom: 10px;
+}
+
+canvas {
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .given-grid {
+    gap: 8px;
+  }
+
+  .given-item {
+    min-width: 65px;
+    padding: 10px 12px;
+  }
+
+  .step-container {
+    padding: 12px;
+  }
+
+  .final-answer-value {
+    font-size: 1.5rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Formiranje komisije sa uslovom</h1>
+  <p class="subtitle">Kombinatorika — binomni koeficijenti i komplement</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title">Postavka zadatka</h2>
+    <p>
+      Na koliko načina se može formirati petočlana komisija od
+      <span style="color: #60a5fa; font-weight: 600;">dva matematičara</span> i
+      <span style="color: #a78bfa; font-weight: 600;">osam inženjera</span> tako da u njoj bude
+      <span style="color: #4ade80; font-weight: 600;">bar jedan matematičar</span>?
+    </p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Matematičari</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Inženjeri</div>
+        <div class="value">\(8\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Veličina komisije</div>
+        <div class="value">\(5\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Uslov</div>
+        <div class="value" style="font-size: 0.95rem;">\(\geq 1\) mat.</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top: 20px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(56\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(70\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(129\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(182\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(196\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2 class="card-title">Plan rešavanja</h2>
+    <p class="plan-text">
+      Koristićemo <strong>metod komplementa</strong>: umesto da direktno brojimo komisije sa bar jednim
+      matematičarem, izračunaćemo ukupan broj komisija i od njega oduzeti broj komisija koje ne sadrže
+      nijednog matematičara. Zatim ćemo rezultat potvrditi direktnim prebrojavanjem.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li>
+            <strong>Binomni koeficijent (kombinacija):</strong>
+            \[\binom{n}{k} = \frac{n!}{k!(n-k)!}\]
+            Broj načina da se iz \(n\) elemenata izabere \(k\) bez ponavljanja i bez obzira na redosled.
+          </li>
+          <li>
+            <strong>Princip komplementa:</strong>
+            \[|A| = |U| - |\overline{A}|\]
+            Broj elemenata koji zadovoljavaju uslov = Ukupan broj - Broj elemenata koji NE zadovoljavaju uslov.
+          </li>
+          <li>
+            <strong>Pravilo proizvoda:</strong> Ako se prvi izbor može napraviti na \(m\) načina,
+            a drugi (nezavisno) na \(n\) načina, ukupan broj kombinovanih izbora je \(m \cdot n\).
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2 class="card-title">Vizuelni prikaz</h2>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="700" height="420"></canvas>
+    </div>
+    <p class="drag-hint">Dijagram prikazuje razlaganje komisija po broju matematičara</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title">Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Identifikujemo ukupan broj osoba</h3>
+        <p>
+          Imamo <strong>2 matematičara</strong> i <strong>8 inženjera</strong>, što je ukupno:
+        </p>
+        <div class="math-block">
+          \[2 + 8 = 10 \text{ osoba}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Izračunamo ukupan broj komisija (bez uslova)</h3>
+        <p>
+          Koliko petočlanih komisija možemo sastaviti od 10 osoba, bez ikakvih ograničenja?
+          To je kombinacija \(\binom{10}{5}\):
+        </p>
+        <div class="math-block">
+          \[\binom{10}{5} = \frac{10!}{5! \cdot 5!}\]
+        </div>
+        <p>Račun:</p>
+        <div class="math-block">
+          \[\binom{10}{5} = \frac{10 \cdot 9 \cdot 8 \cdot 7 \cdot 6}{5 \cdot 4 \cdot 3 \cdot 2 \cdot 1} = \frac{30240}{120} = 252\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko iznosi \(\binom{10}{5}\)?</summary>
+      <p>
+        \(\binom{10}{5} = 252\). Podsetnik: \(\binom{10}{5} = \binom{10}{5}\) jer je
+        \(10 - 5 = 5\), pa možemo koristiti i gornji i donji put za proveru.
+      </p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Izbrojimo komisije BEZ matematičara</h3>
+        <p>
+          Ako u komisiji nema nijednog matematičara, svih 5 članova moraju biti inženjeri.
+          Biramo 5 od 8 inženjera:
+        </p>
+        <div class="math-block">
+          \[\binom{8}{5} = \frac{8!}{5! \cdot 3!} = \frac{8 \cdot 7 \cdot 6}{3 \cdot 2 \cdot 1} = \frac{336}{6} = 56\]
+        </div>
+        <p class="note">
+          Dakle, postoji tačno 56 komisija u kojima nema nijednog matematičara.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Primenimo princip komplementa</h3>
+        <p>
+          Broj komisija sa <strong>bar jednim matematičarem</strong> dobijamo oduzimanjem:
+        </p>
+        <div class="math-block">
+          \[\text{Bar 1 mat.} = \text{Ukupno} - \text{Bez mat.}\]
+        </div>
+        <div class="math-block">
+          \[= \binom{10}{5} - \binom{8}{5} = 252 - 56 = 196\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Potvrdi direktnim prebrojavanjem</summary>
+      <p>Razmotrimo dva slučaja:</p>
+      <p>
+        <strong>Tačno 1 matematičar:</strong> Biramo 1 od 2 matematičara i 4 od 8 inženjera:<br>
+        \(\binom{2}{1} \cdot \binom{8}{4} = 2 \cdot 70 = 140\)
+      </p>
+      <p>
+        <strong>Tačno 2 matematičara:</strong> Biramo oba matematičara i 3 od 8 inženjera:<br>
+        \(\binom{2}{2} \cdot \binom{8}{3} = 1 \cdot 56 = 56\)
+      </p>
+      <p>
+        <strong>Ukupno:</strong> \(140 + 56 = 196\) — poklapanje!
+      </p>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Verifikacija direktnim prebrojavanjem</h3>
+        <p>
+          Da potvrdimo rezultat, rastavimo na slučajeve po broju matematičara u komisiji:
+        </p>
+        <div class="math-block">
+          \[\underbrace{\binom{2}{1} \cdot \binom{8}{4}}_{1 \text{ mat., } 4 \text{ inž.}} + \underbrace{\binom{2}{2} \cdot \binom{8}{3}}_{2 \text{ mat., } 3 \text{ inž.}}\]
+        </div>
+        <div class="math-block">
+          \[= 2 \cdot 70 + 1 \cdot 56 = 140 + 56 = 196 \checkmark\]
+        </div>
+        <p class="note">
+          Oba pristupa daju isti rezultat, što potvrđuje tačnost rešenja.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p style="color: #e2e8f0; margin-bottom: 16px;">
+      Uslov „bar jedan" je signal za metod komplementa — uvek je lakše odbrojati ono što <em>ne</em> želimo!
+    </p>
+    <div class="insight-formula">
+      \(252 - 56 = 196\)
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\(196\)</div>
+    <div class="answer-options-final">
+      <div class="answer-opt">(A) 56</div>
+      <div class="answer-opt">(B) 70</div>
+      <div class="answer-opt">(C) 129</div>
+      <div class="answer-opt">(D) 182</div>
+      <div class="answer-opt correct">(E) 196</div>
+    </div>
+    <div class="verification">
+      <strong>Provera smislenosti:</strong> Rezultat 196 je manji od ukupnog broja komisija (252),
+      što je logično jer smo isključili 56 komisija bez matematičara. Takođe, 196/252 &asymp; 77,8%,
+      što znači da velika većina komisija prirodno sadrži bar jednog matematičara — i to ima smisla jer
+      se iz samo 8 inženjera teže sastavlja cela petočlana komisija.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2 class="card-title" style="color: #e09468;">Česte greške</h2>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">1.</span>
+      <span>
+        <strong>Zaboraviti metod komplementa</strong> i pokušati direktno brojati slučajeve
+        „bar jedan", a zatim zaboraviti neki slučaj. Komplementom je jednostavnije: ukupno minus
+        „nijedan matematičar".
+      </span>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">2.</span>
+      <span>
+        <strong>Pomešati „bar jedan" sa „tačno jedan":</strong> „Bar jedan" znači 1 ili 2 matematičara.
+        Ako se računa samo \(\binom{2}{1} \cdot \binom{8}{4} = 140\), propušta se slučaj sa
+        oba matematičara (dodatnih 56 komisija).
+      </span>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="challenge-box">
+      <h3>Izazov za razmišljanje</h3>
+      <p style="color: #e2e8f0; margin-bottom: 12px;">
+        Ako se grupi pridruži još jedan matematičar (dakle 3 matematičara i 8 inženjera),
+        na koliko načina se može formirati šestočlana komisija sa bar dva matematičara?
+      </p>
+      <details>
+        <summary style="color: #f472b6;">Nagoveštaj</summary>
+        <p style="color: #e2e8f0; margin-top: 8px;">
+          Ponovo koristi komplement: od ukupnog broja \(\binom{11}{6}\)
+          oduzmi komisije sa 0 i sa 1 matematičarem. Komisija sa 0 matematičara:
+          \(\binom{8}{6}\). Sa tačno 1: \(\binom{3}{1}\cdot\binom{8}{5}\).
+        </p>
+      </details>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Razlaganje komisija po broju matematičara', W / 2, 28);
+
+    // Data for bars
+    const data = [
+      { label: '0 mat., 5 inž.', count: 56, color: '#475569', formula: 'C(8,5) = 56', highlight: false },
+      { label: '1 mat., 4 inž.', count: 140, color: '#60a5fa', formula: 'C(2,1)·C(8,4) = 140', highlight: true },
+      { label: '2 mat., 3 inž.', count: 56, color: '#a78bfa', formula: 'C(2,2)·C(8,3) = 56', highlight: true }
+    ];
+
+    const maxVal = 252;
+    const barAreaTop = 60;
+    const barAreaBottom = H - 100;
+    const barAreaHeight = barAreaBottom - barAreaTop;
+    const barWidth = 120;
+    const gap = 80;
+    const totalWidth = data.length * barWidth + (data.length - 1) * gap;
+    const startX = (W - totalWidth) / 2;
+
+    // Draw grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 5; i++) {
+      const y = barAreaTop + (barAreaHeight * i) / 5;
+      ctx.beginPath();
+      ctx.moveTo(startX - 30, y);
+      ctx.lineTo(startX + totalWidth + 30, y);
+      ctx.stroke();
+
+      // Grid labels
+      const val = Math.round(maxVal * (1 - i / 5));
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(val.toString(), startX - 35, y + 4);
+    }
+
+    // Draw bars
+    data.forEach((d, i) => {
+      const x = startX + i * (barWidth + gap);
+      const barH = (d.count / maxVal) * barAreaHeight;
+      const y = barAreaBottom - barH;
+
+      // Bar shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath();
+      ctx.roundRect(x + 4, y + 4, barWidth, barH, [8, 8, 0, 0]);
+      ctx.fill();
+
+      // Bar
+      ctx.fillStyle = d.color;
+      ctx.beginPath();
+      ctx.roundRect(x, y, barWidth, barH, [8, 8, 0, 0]);
+      ctx.fill();
+
+      // Glow for highlighted bars
+      if (d.highlight) {
+        ctx.shadowColor = d.color;
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = d.color;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, barH, [8, 8, 0, 0]);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Count label on top of bar
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(d.count.toString(), x + barWidth / 2, y - 12);
+
+      // Formula below count
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Courier New, monospace';
+      ctx.fillText(d.formula, x + barWidth / 2, y - 0);
+
+      // Label below bar
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(d.label, x + barWidth / 2, barAreaBottom + 20);
+    });
+
+    // Brace and sum for highlighted bars
+    const x1 = startX + (barWidth + gap);
+    const x2 = startX + 2 * (barWidth + gap) + barWidth;
+    const braceY = barAreaBottom + 42;
+
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, braceY);
+    ctx.lineTo(x1, braceY + 10);
+    ctx.lineTo((x1 + x2) / 2 - 5, braceY + 10);
+    ctx.moveTo((x1 + x2) / 2 + 5, braceY + 10);
+    ctx.lineTo(x2, braceY + 10);
+    ctx.lineTo(x2, braceY);
+    ctx.stroke();
+
+    // Down arrow at center
+    const cx = (x1 + x2) / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, braceY + 10);
+    ctx.lineTo(cx, braceY + 22);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - 5, braceY + 18);
+    ctx.lineTo(cx, braceY + 24);
+    ctx.lineTo(cx + 5, braceY + 18);
+    ctx.fillStyle = '#4ade80';
+    ctx.fill();
+
+    // Sum label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('140 + 56 = 196', cx, braceY + 42);
+
+    // Cross out label for 0 mat. bar
+    const crossX = startX + barWidth / 2;
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('isključeno', crossX, braceY + 42);
+
+    // Strike-through line
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 1;
+    const textW = ctx.measureText('isključeno').width;
+    ctx.beginPath();
+    ctx.moveTo(crossX - textW / 2 - 2, braceY + 38);
+    ctx.lineTo(crossX + textW / 2 + 2, braceY + 38);
+    ctx.stroke();
+
+    // Total label at top right
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Ukupno: C(10,5) = 252', W - 30, 25);
+  }
+
+  draw();
+
+  // Step click interaction
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', function() {
+      steps.forEach(s => s.classList.remove('active'));
+      this.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Formiranje petočlane komisije sa uslovom — kombinatorika",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinacije", "binomni koeficijent", "princip komplementa", "formiranje komisije"]
+}
+BRAINSPARK_META-->

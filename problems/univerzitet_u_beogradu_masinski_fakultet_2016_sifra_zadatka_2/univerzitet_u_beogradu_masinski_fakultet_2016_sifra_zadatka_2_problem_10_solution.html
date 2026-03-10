@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepen kompleksnog broja</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Ako je z = (i*sqrt(3) + 1) / (i - sqrt(3)), onda je z^30 jednako?
+Options: (A) -1/2^30, (B) -2^30, (C) -i, (D) 1, (E) -1
+Official answer: (E) -1
+
+Step 1: Convert numerator to polar form.
+  Numerator: 1 + i*sqrt(3)
+  |1 + i*sqrt(3)| = sqrt(1^2 + (sqrt(3))^2) = sqrt(1+3) = sqrt(4) = 2
+  arg(1 + i*sqrt(3)) = arctan(sqrt(3)/1) = pi/3
+  So numerator = 2 * e^(i*pi/3)
+
+Step 2: Convert denominator to polar form.
+  Denominator: -sqrt(3) + i = i - sqrt(3)
+  |-sqrt(3) + i| = sqrt(3 + 1) = sqrt(4) = 2
+  arg(-sqrt(3) + i): x = -sqrt(3), y = 1
+  This is in the second quadrant.
+  Reference angle = arctan(1/sqrt(3)) = pi/6
+  arg = pi - pi/6 = 5*pi/6
+  So denominator = 2 * e^(i*5*pi/6)
+
+Step 3: Divide.
+  z = 2*e^(i*pi/3) / (2*e^(i*5*pi/6))
+  z = e^(i*(pi/3 - 5*pi/6))
+  z = e^(i*(2*pi/6 - 5*pi/6))
+  z = e^(i*(-3*pi/6))
+  z = e^(-i*pi/2)
+  z = cos(-pi/2) + i*sin(-pi/2) = 0 - i = -i
+
+Step 4: Compute z^30.
+  z^30 = (-i)^30
+  (-i)^1 = -i
+  (-i)^2 = i^2 = -1  ... wait let me be precise:
+  (-i)^2 = (-i)*(-i) = i^2 = -1
+  (-i)^4 = ((-i)^2)^2 = (-1)^2 = 1
+  30 = 4*7 + 2
+  (-i)^30 = ((-i)^4)^7 * (-i)^2 = 1^7 * (-1) = -1
+
+Answer: z^30 = -1, which is option (E). Confirmed!
+
+Alternative check via exponent:
+  z^30 = e^(-i*pi/2 * 30) = e^(-i*15*pi)
+  -15*pi mod 2*pi: -15*pi = -8*2*pi + pi, so e^(-i*15*pi) = e^(i*pi) = cos(pi) + i*sin(pi) = -1
+  Confirmed: z^30 = -1
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.muted {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Stepen kompleksnog broja \(z^{30}\)</h1>
+  <p class="subtitle">Kompleksni brojevi, polarni oblik i stepenovanje</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Ako je
+      <div class="math-box">
+        \[ z = \frac{i\sqrt{3} + 1}{i - \sqrt{3}} \]
+      </div>
+      onda je \(z^{30}\) jednako:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(-\dfrac{1}{2^{30}}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(-2^{30}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(-i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Prebacićemo i brojilac i imenilac u polarni (trigonometrijski) oblik, podeliti ih, dobiti \(z\) u polarnom obliku, a zatim primeniti De Moavrov (De Moivre) obrazac za stepenovanje: \(z^n = r^n(\cos n\varphi + i\sin n\varphi)\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Polarni oblik kompleksnog broja</summary>
+      <p>Svaki kompleksni broj \(z = x + iy\) može se zapisati kao:</p>
+      <div class="math-box">
+        \[ z = r(\cos\varphi + i\sin\varphi) = r \cdot e^{i\varphi} \]
+      </div>
+      <p>gde je \(r = |z| = \sqrt{x^2 + y^2}\) moduo, a \(\varphi = \arg(z)\) argument (ugao u odnosu na pozitivnu realnu osu).</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>De Moavrov obrazac</summary>
+      <div class="math-box">
+        \[ z^n = r^n \cdot (\cos n\varphi + i\sin n\varphi) \]
+      </div>
+      <p>Ako je \(r = 1\), onda je \(z^n = \cos n\varphi + i\sin n\varphi\). Moduo se stepenuje, a argument se množi sa \(n\).</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Deljenje kompleksnih brojeva u polarnom obliku</summary>
+      <div class="math-box">
+        \[ \frac{r_1 e^{i\varphi_1}}{r_2 e^{i\varphi_2}} = \frac{r_1}{r_2} \cdot e^{i(\varphi_1 - \varphi_2)} \]
+      </div>
+      <p>Moduli se dele, a argumenti se oduzimaju.</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Kompleksna ravan &mdash; vizuelizacija</div>
+    <canvas id="complexCanvas" width="900" height="520"></canvas>
+    <p class="muted" style="text-align: center; margin-top: 8px;">Prikaz brojioca, imenioca i rezultata \(z = -i\) na kompleksnoj ravni</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Identifikuj brojilac i imenilac</div>
+      <p class="step-explanation">
+        Zapišimo brojilac i imenilac kao kompleksne brojeve u obliku \(x + iy\):
+      </p>
+      <div class="math-box">
+        \[ \text{Brojilac: } 1 + i\sqrt{3} \]
+        \[ \text{Imenilac: } -\sqrt{3} + i \]
+      </div>
+      <p class="step-explanation">
+        Primetimo da smo brojilac preuredili kao \(1 + i\sqrt{3}\) (realni deo je \(1\), imaginarni deo je \(\sqrt{3}\)), a imenilac kao \(-\sqrt{3} + i\) (realni deo je \(-\sqrt{3}\), imaginarni deo je \(1\)).
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Polarni oblik brojioca</div>
+      <p class="step-explanation">
+        Izračunajmo moduo brojioca \(1 + i\sqrt{3}\):
+      </p>
+      <div class="math-box">
+        \[ |1 + i\sqrt{3}| = \sqrt{1^2 + (\sqrt{3})^2} = \sqrt{1 + 3} = \sqrt{4} = 2 \]
+      </div>
+      <p class="step-explanation">
+        Argument brojioca: realni deo je \(1 > 0\), imaginarni deo je \(\sqrt{3} > 0\), pa se tačka nalazi u prvom kvadrantu.
+      </p>
+      <div class="math-box">
+        \[ \varphi_1 = \arctan\frac{\sqrt{3}}{1} = \arctan\sqrt{3} = \frac{\pi}{3} \]
+      </div>
+      <p class="step-explanation">
+        Dakle, brojilac u polarnom obliku:
+      </p>
+      <div class="math-box">
+        \[ 1 + i\sqrt{3} = 2 \cdot e^{i\pi/3} \]
+      </div>
+      <details>
+        <summary>Proveri sebe: Koliko je \(\cos\frac{\pi}{3}\) i \(\sin\frac{\pi}{3}\)?</summary>
+        <p>\(\cos\frac{\pi}{3} = \frac{1}{2}\) i \(\sin\frac{\pi}{3} = \frac{\sqrt{3}}{2}\). Zaista: \(2\left(\frac{1}{2} + i\frac{\sqrt{3}}{2}\right) = 1 + i\sqrt{3}\). Tačno!</p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Polarni oblik imenioca</div>
+      <p class="step-explanation">
+        Izračunajmo moduo imenioca \(-\sqrt{3} + i\):
+      </p>
+      <div class="math-box">
+        \[ |-\sqrt{3} + i| = \sqrt{(-\sqrt{3})^2 + 1^2} = \sqrt{3 + 1} = \sqrt{4} = 2 \]
+      </div>
+      <p class="step-explanation">
+        Za argument: realni deo je \(-\sqrt{3} < 0\), imaginarni deo je \(1 > 0\), pa se tačka nalazi u drugom kvadrantu. Referentni ugao je:
+      </p>
+      <div class="math-box">
+        \[ \alpha = \arctan\frac{1}{\sqrt{3}} = \frac{\pi}{6} \]
+      </div>
+      <p class="step-explanation">
+        Pošto je u drugom kvadrantu:
+      </p>
+      <div class="math-box">
+        \[ \varphi_2 = \pi - \frac{\pi}{6} = \frac{5\pi}{6} \]
+      </div>
+      <p class="step-explanation">
+        Dakle, imenilac u polarnom obliku:
+      </p>
+      <div class="math-box">
+        \[ -\sqrt{3} + i = 2 \cdot e^{i \cdot 5\pi/6} \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Podeli &mdash; nađi \(z\)</div>
+      <p class="step-explanation">
+        Primenjujemo pravilo za deljenje kompleksnih brojeva u polarnom obliku:
+      </p>
+      <div class="math-box">
+        \[ z = \frac{2 \cdot e^{i\pi/3}}{2 \cdot e^{i \cdot 5\pi/6}} = \frac{2}{2} \cdot e^{i(\pi/3 - 5\pi/6)} \]
+      </div>
+      <p class="step-explanation">
+        Moduli se pokrate (\(2/2 = 1\)), a za razliku argumenata:
+      </p>
+      <div class="math-box">
+        \[ \frac{\pi}{3} - \frac{5\pi}{6} = \frac{2\pi}{6} - \frac{5\pi}{6} = -\frac{3\pi}{6} = -\frac{\pi}{2} \]
+      </div>
+      <p class="step-explanation">
+        Prema tome:
+      </p>
+      <div class="math-box">
+        \[ z = e^{-i\pi/2} = \cos\!\left(-\frac{\pi}{2}\right) + i\sin\!\left(-\frac{\pi}{2}\right) = 0 - i = -i \]
+      </div>
+      <details>
+        <summary>Proveri sebe: Da li \(z = -i\) zadovoljava polaznu jednakost?</summary>
+        <p>Proverimo: \(z \cdot (i - \sqrt{3}) = -i(i - \sqrt{3}) = -i^2 + i\sqrt{3} = 1 + i\sqrt{3}\). To je upravo brojilac. Tačno!</p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Izračunaj \(z^{30}\)</div>
+      <p class="step-explanation">
+        Sada treba da izračunamo \((-i)^{30}\). Koristimo De Moavrov obrazac. Pošto je \(z = e^{-i\pi/2}\) i \(|z| = 1\):
+      </p>
+      <div class="math-box">
+        \[ z^{30} = e^{-i \cdot 30\pi/2} = e^{-i \cdot 15\pi} \]
+      </div>
+      <p class="step-explanation">
+        Svedimo eksponent na interval \([0, 2\pi)\). Pošto je \(-15\pi = -8 \cdot 2\pi + \pi\), imamo:
+      </p>
+      <div class="math-box">
+        \[ e^{-i \cdot 15\pi} = e^{i\pi} = \cos\pi + i\sin\pi = -1 \]
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">6</span> Alternativna provera &mdash; stepeni od \(-i\)</div>
+      <p class="step-explanation">
+        Možemo i direktno da pratimo stepene broja \(-i\), koji se ciklično ponavljaju sa periodom 4:
+      </p>
+      <div class="math-box">
+        \[ (-i)^1 = -i, \quad (-i)^2 = -1, \quad (-i)^3 = i, \quad (-i)^4 = 1 \]
+      </div>
+      <p class="step-explanation">
+        Pošto je \(30 = 4 \cdot 7 + 2\), ostatak pri deljenju sa 4 je \(2\), pa:
+      </p>
+      <div class="math-box">
+        \[ (-i)^{30} = (-i)^{4 \cdot 7 + 2} = \bigl((-i)^4\bigr)^7 \cdot (-i)^2 = 1^7 \cdot (-1) = -1 \]
+      </div>
+      <details>
+        <summary>Proveri sebe: Koliko je \((-i)^{100}\)?</summary>
+        <p>\(100 = 4 \cdot 25\), pa je \((-i)^{100} = ((-i)^4)^{25} = 1^{25} = 1\).</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Kada se i brojilac i imenilac prevedu u polarni oblik, ispostavi se da im je moduo jednak (\(r_1 = r_2 = 2\)), pa se pokrate! Rezultat \(z\) ima moduo \(1\), što znači da leži na jediničnom krugu. Stepenovanje broja sa moduo 1 se svodi na množenje argumenta &mdash; i ciklično se vraća u poznate vrednosti. Upravo zato odgovor nije neka velika potencija broja 2, nego prosto \(-1\).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(z^{30} = -1\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(-\dfrac{1}{2^{30}}\)</div>
+      <div class="final-option" data-option="B">(B) \(-2^{30}\)</div>
+      <div class="final-option" data-option="C">(C) \(-i\)</div>
+      <div class="final-option" data-option="D">(D) \(1\)</div>
+      <div class="final-option correct" data-option="E">(E) \(-1\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(z = -i\), pa je \((-i)^{30} = (-i)^{4 \cdot 7 + 2} = 1^7 \cdot (-1) = -1\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešan argument u drugom kvadrantu</div>
+      <p>Kod imenioca \(-\sqrt{3} + i\), mnogi učenici zaborave da je realni deo negativan i koriste \(\arctan\frac{1}{\sqrt{3}} = \frac{\pi}{6}\) kao argument, umesto \(\pi - \frac{\pi}{6} = \frac{5\pi}{6}\). To dovodi do potpuno pogrešnog rezultata za \(z\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Množenje umesto deljenja u polarnom obliku</div>
+      <p>Pri deljenju kompleksnih brojeva argumenti se oduzimaju (\(\varphi_1 - \varphi_2\)), a ne sabiraju. Zamena operacije vodi do \(z = e^{i \cdot 7\pi/6}\) umesto ispravnog \(z = e^{-i\pi/2}\).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Izračunaj \(z^{2026}\) za isti kompleksni broj \(z = \dfrac{i\sqrt{3} + 1}{i - \sqrt{3}}\).
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Već znamo da je \(z = -i\) i da stepeni od \(-i\) imaju period 4. Koliki je ostatak pri deljenju broja \(2026\) sa \(4\)?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('complexCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 520;
+    const cx = W / 2;
+    const cy = H / 2;
+    const scale = Math.min(W, H) * 0.18;
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Kompleksna ravan', cx, 28);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = -4; i <= 4; i++) {
+      // Vertical
+      ctx.beginPath();
+      ctx.moveTo(cx + i * scale, 40);
+      ctx.lineTo(cx + i * scale, H - 20);
+      ctx.stroke();
+      // Horizontal
+      ctx.beginPath();
+      ctx.moveTo(40, cy + i * scale);
+      ctx.lineTo(W - 40, cy + i * scale);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    // Real axis
+    ctx.beginPath();
+    ctx.moveTo(40, cy);
+    ctx.lineTo(W - 40, cy);
+    ctx.stroke();
+    // Imaginary axis
+    ctx.beginPath();
+    ctx.moveTo(cx, 40);
+    ctx.lineTo(cx, H - 20);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', W - 30, cy - 8);
+    ctx.fillText('Im', cx + 14, 48);
+
+    // Axis tick labels
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    for (let i = -3; i <= 3; i++) {
+      if (i === 0) continue;
+      // Real axis ticks
+      ctx.fillText(String(i), cx + i * scale, cy + 18);
+      // Imaginary axis ticks
+      ctx.fillText(i + 'i', cx + 16, cy - i * scale + 4);
+    }
+
+    // Unit circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, scale, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label unit circle
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.5)';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('|z|=1', cx + scale + 4, cy - 4);
+
+    // Helper: draw a point with label
+    function drawPoint(re, im, color, label, labelDx, labelDy) {
+      const px = cx + re * scale;
+      const py = cy - im * scale;
+
+      // Glow
+      const gradient = ctx.createRadialGradient(px, py, 0, px, py, 14);
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(px - 14, py - 14, 28, 28);
+
+      // Dot
+      ctx.beginPath();
+      ctx.arc(px, py, 5, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(label, px + (labelDx || 10), py + (labelDy || -10));
+    }
+
+    // Helper: draw a vector from origin to point
+    function drawVector(re, im, color) {
+      const px = cx + re * scale;
+      const py = cy - im * scale;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(px, py);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Arrowhead
+      const angle = Math.atan2(cy - py, px - cx);
+      const size = 10;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px - size * Math.cos(angle - 0.35), py + size * Math.sin(angle - 0.35));
+      ctx.lineTo(px - size * Math.cos(angle + 0.35), py + size * Math.sin(angle + 0.35));
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    // Helper: draw arc for angle
+    function drawArc(angle1, angle2, radius, color, label) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, -angle2, -angle1);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label at midpoint of arc
+      const midAngle = (angle1 + angle2) / 2;
+      const lx = cx + (radius + 14) * Math.cos(midAngle);
+      const ly = cy - (radius + 14) * Math.sin(midAngle);
+      ctx.fillStyle = color;
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, lx, ly + 4);
+    }
+
+    // Numerator: 1 + i*sqrt(3) => (1, sqrt(3))
+    const numRe = 1;
+    const numIm = Math.sqrt(3);
+    drawVector(numRe, numIm, '#a78bfa');
+    drawPoint(numRe, numIm, '#a78bfa', 'Brojilac: 1+i\u221A3', 10, -10);
+    drawArc(0, Math.PI / 3, scale * 0.35, '#a78bfa', '\u03C0/3');
+
+    // Denominator: -sqrt(3) + i => (-sqrt(3), 1)
+    const denRe = -Math.sqrt(3);
+    const denIm = 1;
+    drawVector(denRe, denIm, '#f472b6');
+    drawPoint(denRe, denIm, '#f472b6', 'Imenilac: -\u221A3+i', -130, -10);
+    drawArc(0, 5 * Math.PI / 6, scale * 0.5, '#f472b6', '5\u03C0/6');
+
+    // Result: z = -i => (0, -1)
+    const resRe = 0;
+    const resIm = -1;
+    drawVector(resRe, resIm, '#4ade80');
+    drawPoint(resRe, resIm, '#4ade80', 'z = -i', 10, 20);
+    drawArc(-Math.PI / 2, 0, scale * 0.65, '#4ade80', '-\u03C0/2');
+
+    // Legend
+    const legendX = 20;
+    const legendY = H - 90;
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(legendX, legendY, 240, 75, 10);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillRect(legendX + 10, legendY + 12, 12, 12);
+    ctx.fillText('Brojilac: |z| = 2, arg = \u03C0/3', legendX + 28, legendY + 22);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.fillRect(legendX + 10, legendY + 32, 12, 12);
+    ctx.fillText('Imenilac: |z| = 2, arg = 5\u03C0/6', legendX + 28, legendY + 42);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(legendX + 10, legendY + 52, 12, 12);
+    ctx.fillText('z = -i: |z| = 1, arg = -\u03C0/2', legendX + 28, legendY + 62);
+
+    // Info box: z^30
+    const infoX = W - 260;
+    const infoY = H - 70;
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(infoX, infoY, 240, 50, 10);
+    ctx.fill();
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('z\u00B3\u2070 = (-i)\u00B3\u2070 = -1', infoX + 120, infoY + 31);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje kompleksnog broja z^30 pomoću polarnog oblika",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "polarni oblik", "De Moavrov obrazac", "stepenovanje", "argument kompleksnog broja"]
+}
+BRAINSPARK_META-->

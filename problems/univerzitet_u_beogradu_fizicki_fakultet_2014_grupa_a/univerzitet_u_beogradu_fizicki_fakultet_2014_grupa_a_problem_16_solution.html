@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teorija igara - Podela jabuka</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Na tanjiru se nalaze 4 jabuke: 600g, 400g, 300g, 250g.
+Pera bira prvi, Nikola drugi. Jedu istovremeno, istom brzinom.
+Sledeću jabuku mogu uzeti tek kad pojedu prethodnu.
+Oba igrača biraju optimalno da bi pojeli što više.
+Pitanje: Koliko grama pojede Pera?
+
+ANALYSIS (Game Theory - Backward Induction):
+
+Scenario 1: Pera uzima 600g
+- Nikola (optimalno) uzima 400g
+- Nikola završava u t=400, uzima 300g (jedinu preostalu veću jabuku)
+- Pera završava u t=600, uzima 250g (jedinu preostalu)
+- Pera: 600+250 = 850g, Nikola: 400+300 = 700g
+
+- Alternativno, Nikola uzima 300g:
+  - Nikola završava u t=300, uzima 400g
+  - Pera završava u t=600, uzima 250g
+  - Pera: 600+250 = 850g, Nikola: 300+400 = 700g
+  (Isti rezultat za Peru)
+
+- Nikola uzima 250g:
+  - Nikola završava u t=250, uzima 400g
+  - Pera završava u t=600, uzima 300g
+  - Pera: 600+300 = 900g, Nikola: 250+400 = 650g
+  Nikola neće izabrati ovo jer dobija manje (650 < 700)
+
+Scenario 2: Pera uzima 400g
+- Nikola uzima 600g
+- Pera završava u t=400, uzima 300g
+- Nikola završava u t=600, uzima 250g
+- Pera: 400+300 = 700g, Nikola: 600+250 = 850g
+
+Scenario 3: Pera uzima 300g
+- Nikola uzima 600g
+- Pera završava u t=300, uzima 400g
+- Nikola završava u t=600, uzima 250g
+- Pera: 300+400 = 700g, Nikola: 600+250 = 850g
+
+Scenario 4: Pera uzima 250g
+- Nikola uzima 600g
+- Pera završava u t=250, uzima 400g
+- Nikola završava u t=600, uzima 300g
+- Pera: 250+400 = 650g, Nikola: 600+300 = 900g
+
+Summary of Pera's outcomes:
+- Takes 600 first → 850g (best!)
+- Takes 400 first → 700g
+- Takes 300 first → 700g
+- Takes 250 first → 650g
+
+ANSWER: Pera pojede 850g → odgovor a)
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #a78bfa;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 90px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  cursor: default;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.theory-content li {
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: rgba(96,165,250,0.06);
+  border-radius: 8px;
+  border-left: 3px solid #60a5fa;
+}
+
+.canvas-container {
+  text-align: center;
+  position: relative;
+}
+
+.canvas-container canvas {
+  width: 100%;
+  max-width: 900px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96,165,250,0.06);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  min-width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.insight-box h3 {
+  color: #a78bfa;
+  margin-bottom: 10px;
+}
+
+.final-answer {
+  text-align: center;
+  padding: 30px;
+}
+
+.final-answer .answer-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  background: #1e293b;
+  border: 2px solid #334155;
+  border-radius: 12px;
+  padding: 14px 24px;
+  text-align: center;
+  min-width: 110px;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.08);
+  box-shadow: 0 0 20px rgba(74,222,128,0.15);
+}
+
+.option-card .opt-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+
+.option-card .opt-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(52,211,153,0.08);
+  border-radius: 10px;
+  border-left: 3px solid #34d399;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.pitfall-list {
+  list-style: none;
+}
+
+.pitfall-list li {
+  padding: 10px 14px;
+  background: rgba(224,148,104,0.06);
+  border-left: 3px solid #e09468;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.scenario-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+}
+
+.scenario-table th, .scenario-table td {
+  padding: 10px 14px;
+  text-align: center;
+  border-bottom: 1px solid #334155;
+}
+
+.scenario-table th {
+  background: rgba(96,165,250,0.1);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.scenario-table tr.best td {
+  background: rgba(74,222,128,0.08);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.ctrl-btn {
+  background: rgba(96,165,250,0.15);
+  border: 1px solid rgba(96,165,250,0.3);
+  border-radius: 8px;
+  padding: 8px 18px;
+  color: #60a5fa;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ctrl-btn:hover {
+  background: rgba(96,165,250,0.25);
+}
+
+.ctrl-btn.active {
+  background: rgba(96,165,250,0.3);
+  border-color: #60a5fa;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .scenario-table { font-size: 0.85rem; }
+  .scenario-table th, .scenario-table td { padding: 6px 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Teorija igara: Podela jabuka</h1>
+  <p class="subtitle">Optimalna strategija u igri sa dva igrača i ograničenim resursima</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Na tanjiru se nalaze <span class="highlight">4 jabuke</span>: od 600, 400, 300, 250 grama. Pera prvi uzima jabuku, a Nikola uzima drugi. Oni počinju da jedu istovremeno. Sledeću jabuku svaki od njih može uzeti samo kad pojede prethodnu. Oni jedu <span class="highlight">istom brzinom</span> (koja se izražava gramima u sekundi). Ako obojica prave <span class="highlight">najbolji mogući izbor</span> da bi pojeli što veću količinu jabuka, odredi koliko grama će pojesti Pera.</p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Jabuka 1</div>
+        <div class="value">600 g</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Jabuka 2</div>
+        <div class="value">400 g</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Jabuka 3</div>
+        <div class="value">300 g</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Jabuka 4</div>
+        <div class="value">250 g</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top: 18px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">850 g</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">700 g</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">900 g</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Ovo je problem iz <span class="highlight">teorije igara</span>. Koristićemo metodu <strong>unazadne indukcije</strong> (backward induction): razmotrićemo sve moguće poteze Pere na početku, zatim odrediti Nikolin optimalan odgovor u svakom slučaju, i na kraju izabrati strategiju koja Peri donosi najviše grama.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključni koncepti teorije igara</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Igra sa potpunom informacijom:</strong> Oba igrača vide sve jabuke i znaju težine. Nema skrivenih informacija.</li>
+          <li><strong>Unazadna indukcija:</strong> Da bismo našli optimalan prvi potez, moramo prvo razmotriti šta se dešava u kasnijim potezima — razmišljamo „od kraja ka početku".</li>
+          <li><strong>Ključno ograničenje:</strong> Igrač ne može uzeti novu jabuku dok ne pojede trenutnu. Pošto jedu istom brzinom \(v\) (g/s), vreme jedenja jabuke mase \(m\) je \(t = \frac{m}{v}\).</li>
+          <li><strong>Vremenska trka:</strong> Ko pre završi svoju jabuku, taj prvi bira sledeću sa tanjira. To je suština strategije.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Interactive Canvas -->
+  <div class="card">
+    <h2>Vizuelizacija scenarija</h2>
+    <p style="margin-bottom: 12px; color: #94a3b8;">Izaberite Perin prvi potez da vidite kako se odvija igra:</p>
+    <div class="controls-row" id="scenario-buttons"></div>
+    <div class="canvas-container" style="margin-top: 18px;">
+      <canvas id="timeline-canvas" width="900" height="420"></canvas>
+    </div>
+    <p class="canvas-hint">Kliknite na dugmad iznad da uporedite različite strategije</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Modelovanje problema</h3>
+        <p>Neka je brzina jedenja \(v\) grama u sekundi (ista za oba igrača). Vreme da se pojede jabuka mase \(m\) je:</p>
+        <div class="math-block">
+          \[ t = \frac{m}{v} \]
+        </div>
+        <p>Pošto nas zanima samo <em>redosled</em> završavanja, možemo uzeti \(v = 1\) g/s. Tada jabuka od 600 g traje 600 „vremenskih jedinica".</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Scenarijo 1: Pera uzima 600 g</h3>
+        <p>Pera bira najveću jabuku (600 g). Sada Nikola bira iz preostalih: 400, 300, 250 g.</p>
+        <p><strong>Nikola uzima 400 g:</strong></p>
+        <div class="math-block">
+          <p>Nikola završava u \(t = 400\), uzima 300 g (jedinu preostalu osim 250 g)</p>
+          <p>Pera završava u \(t = 600\), uzima 250 g (jedinu preostalu)</p>
+          <p>Rezultat: Pera = \(600 + 250 = 850\) g, Nikola = \(400 + 300 = 700\) g</p>
+        </div>
+        <p><strong>Nikola uzima 300 g:</strong></p>
+        <div class="math-block">
+          <p>Nikola završava u \(t = 300\), uzima 400 g</p>
+          <p>Pera završava u \(t = 600\), uzima 250 g</p>
+          <p>Rezultat: Pera = \(600 + 250 = 850\) g, Nikola = \(300 + 400 = 700\) g</p>
+        </div>
+        <p><strong>Nikola uzima 250 g:</strong></p>
+        <div class="math-block">
+          <p>Nikola završava u \(t = 250\), uzima 400 g</p>
+          <p>Pera završava u \(t = 600\), uzima 300 g</p>
+          <p>Rezultat: Pera = \(600 + 300 = 900\) g, Nikola = \(250 + 400 = 650\) g</p>
+        </div>
+        <p class="note">Nikola racionalno bira 400 g (ili 300 g) jer dobija 700 g, umesto 650 g sa jabuke od 250 g.</p>
+      </div>
+    </div>
+
+    <details style="margin: 15px 0; padding: 0 16px;">
+      <summary>Proveri se: Zašto Nikola ne bira jabuku od 250 g?</summary>
+      <p style="padding: 8px 0; color: #94a3b8;">Ako Nikola uzme 250 g, dobija ukupno 650 g. Ako uzme 400 g (ili 300 g), dobija 700 g. Pošto Nikola igra optimalno, on bira opciju koja mu donosi najviše — dakle 400 g ili 300 g.</p>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Scenarijo 2: Pera uzima 400 g</h3>
+        <p>Nikola, igrajući optimalno, uzima <strong>600 g</strong> (najveću preostalu).</p>
+        <div class="math-block">
+          <p>Pera završava u \(t = 400\), uzima 300 g</p>
+          <p>Nikola završava u \(t = 600\), uzima 250 g</p>
+          <p>Rezultat: Pera = \(400 + 300 = 700\) g, Nikola = \(600 + 250 = 850\) g</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Scenarijo 3: Pera uzima 300 g</h3>
+        <p>Nikola uzima 600 g.</p>
+        <div class="math-block">
+          <p>Pera završava u \(t = 300\), uzima 400 g</p>
+          <p>Nikola završava u \(t = 600\), uzima 250 g</p>
+          <p>Rezultat: Pera = \(300 + 400 = 700\) g, Nikola = \(600 + 250 = 850\) g</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Scenarijo 4: Pera uzima 250 g</h3>
+        <p>Nikola uzima 600 g.</p>
+        <div class="math-block">
+          <p>Pera završava u \(t = 250\), uzima 400 g</p>
+          <p>Nikola završava u \(t = 600\), uzima 300 g</p>
+          <p>Rezultat: Pera = \(250 + 400 = 650\) g, Nikola = \(600 + 300 = 900\) g</p>
+        </div>
+      </div>
+    </div>
+
+    <details style="margin: 15px 0; padding: 0 16px;">
+      <summary>Proveri se: Zašto u scenarijima 2-4 Nikola uzima 600 g?</summary>
+      <p style="padding: 8px 0; color: #94a3b8;">Nikola bira optimalno — želi da pojede što više. Jabuka od 600 g je najveća preostala u tim slučajevima, pa je logično da je on uzme.</p>
+    </details>
+
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Uporedna tabela svih scenarija</h3>
+        <table class="scenario-table">
+          <thead>
+            <tr>
+              <th>Pera uzima prvo</th>
+              <th>Nikola uzima prvo</th>
+              <th>Pera ukupno</th>
+              <th>Nikola ukupno</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="best">
+              <td>600 g</td>
+              <td>400 g (ili 300 g)</td>
+              <td>850 g</td>
+              <td>700 g</td>
+            </tr>
+            <tr>
+              <td>400 g</td>
+              <td>600 g</td>
+              <td>700 g</td>
+              <td>850 g</td>
+            </tr>
+            <tr>
+              <td>300 g</td>
+              <td>600 g</td>
+              <td>700 g</td>
+              <td>850 g</td>
+            </tr>
+            <tr>
+              <td>250 g</td>
+              <td>600 g</td>
+              <td>650 g</td>
+              <td>900 g</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note">Pera maksimizuje svoj rezultat birajući jabuku od 600 g na početku.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Zaključak</h3>
+        <p>Perina optimalna strategija je da uzme jabuku od <span class="highlight">600 g</span>. Nikola tada uzima 400 g (ili 300 g), a Pera na kraju dobija preostalu manju jabuku.</p>
+        <div class="math-block">
+          \[ \text{Pera} = 600 + 250 = 850 \text{ g} \]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h3>Ključni uvid</h3>
+    <p>Prednost prvog poteza je ogromna! Uzimanjem najveće jabuke, Pera osigurava da će dugo jesti — ali to mu zapravo <em>ne škodi</em>, jer niko ne može preoteti jabuku koju već jede. Dok Pera jede veliku jabuku, Nikola završava svoju manju i uzima drugu, ali Peri na kraju ipak ostaje dovoljno. Paradoksalno, <span class="highlight">uzimanje najveće jabuke ne znači da ćete završiti poslednji — to znači da ćete pojesti najviše!</span></p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\( \text{Pera pojede } 850 \text{ g} \)</div>
+    <div class="options-row">
+      <div class="option-card correct">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">850 g</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">700 g</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(V)</div>
+        <div class="opt-value">900 g</div>
+      </div>
+    </div>
+    <div class="verification">
+      <strong>Provera:</strong> 600 + 400 + 300 + 250 = 1550 g ukupno. Pera 850 g + Nikola 700 g = 1550 g. Sve jabuke su raspodeljene.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li><strong>Ignorisanje Nikolinog optimalnog izbora:</strong> Ako pretpostavimo da Nikola uzima 250 g kad Pera uzme 600 g, dobijamo 900 g — ali to bi bio Nikolin loš potez (dobio bi samo 650 g umesto 700 g). Oba igrača igraju optimalno!</li>
+      <li><strong>Mišljenje da je bolje uzeti manju jabuku da bi se brže završilo:</strong> Iako brže jedenje znači raniji izbor druge jabuke, ukupna suma je manja. Pera koji uzme 400 g završava u t=400, ali dobija samo 700 g ukupno.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2>Dodatni izazov</h2>
+    <p>Šta bi se desilo kada bi na tanjiru bile 5 jabuka: 600, 400, 300, 250 i 200 grama? Koliko bi Pera pojeo uz optimalan izbor oba igrača?</p>
+    <details>
+      <summary>Nagovještaj</summary>
+      <p style="padding: 8px 0; color: #94a3b8;">Razmislite: ako Pera uzme 600 g, Nikola uzme 400 g. Nikola završava u t=400 i uzima 300 g. Pera završava u t=600 i uzima 250 g. Nikola završava u t=700 i uzima 200 g. Pera: 850 g, Nikola: 900 g. Da li postoji bolji izbor za Peru?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Scenario data
+  const scenarios = [
+    {
+      label: 'Pera: 600 g',
+      peraFirst: 600,
+      nikolaFirst: 400,
+      timeline: [
+        { player: 'Pera', apple: 600, start: 0, end: 600, color: '#60a5fa' },
+        { player: 'Nikola', apple: 400, start: 0, end: 400, color: '#a78bfa' },
+        { player: 'Nikola', apple: 300, start: 400, end: 700, color: '#a78bfa' },
+        { player: 'Pera', apple: 250, start: 600, end: 850, color: '#60a5fa' }
+      ],
+      peraTotal: 850,
+      nikolaTotal: 700,
+      best: true
+    },
+    {
+      label: 'Pera: 400 g',
+      peraFirst: 400,
+      nikolaFirst: 600,
+      timeline: [
+        { player: 'Pera', apple: 400, start: 0, end: 400, color: '#60a5fa' },
+        { player: 'Nikola', apple: 600, start: 0, end: 600, color: '#a78bfa' },
+        { player: 'Pera', apple: 300, start: 400, end: 700, color: '#60a5fa' },
+        { player: 'Nikola', apple: 250, start: 600, end: 850, color: '#a78bfa' }
+      ],
+      peraTotal: 700,
+      nikolaTotal: 850,
+      best: false
+    },
+    {
+      label: 'Pera: 300 g',
+      peraFirst: 300,
+      nikolaFirst: 600,
+      timeline: [
+        { player: 'Pera', apple: 300, start: 0, end: 300, color: '#60a5fa' },
+        { player: 'Nikola', apple: 600, start: 0, end: 600, color: '#a78bfa' },
+        { player: 'Pera', apple: 400, start: 300, end: 700, color: '#60a5fa' },
+        { player: 'Nikola', apple: 250, start: 600, end: 850, color: '#a78bfa' }
+      ],
+      peraTotal: 700,
+      nikolaTotal: 850,
+      best: false
+    },
+    {
+      label: 'Pera: 250 g',
+      peraFirst: 250,
+      nikolaFirst: 600,
+      timeline: [
+        { player: 'Pera', apple: 250, start: 0, end: 250, color: '#60a5fa' },
+        { player: 'Nikola', apple: 600, start: 0, end: 600, color: '#a78bfa' },
+        { player: 'Pera', apple: 400, start: 250, end: 650, color: '#60a5fa' },
+        { player: 'Nikola', apple: 300, start: 600, end: 900, color: '#a78bfa' }
+      ],
+      peraTotal: 650,
+      nikolaTotal: 900,
+      best: false
+    }
+  ];
+
+  let currentScenario = 0;
+
+  // Create buttons
+  const btnContainer = document.getElementById('scenario-buttons');
+  scenarios.forEach((sc, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'ctrl-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = sc.label + (sc.best ? ' (optimalno)' : '');
+    btn.addEventListener('click', () => {
+      currentScenario = i;
+      btnContainer.querySelectorAll('.ctrl-btn').forEach((b, j) => {
+        b.className = 'ctrl-btn' + (j === i ? ' active' : '');
+      });
+      drawTimeline();
+    });
+    btnContainer.appendChild(btn);
+  });
+
+  const canvas = document.getElementById('timeline-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function drawTimeline() {
+    const W = canvas.width;
+    const H = canvas.height;
+    const sc = scenarios[currentScenario];
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const marginLeft = 110;
+    const marginRight = 60;
+    const marginTop = 60;
+    const barHeight = 50;
+    const rowGap = 30;
+    const chartWidth = W - marginLeft - marginRight;
+
+    // Find max time
+    let maxTime = 0;
+    sc.timeline.forEach(e => { if (e.end > maxTime) maxTime = e.end; });
+    maxTime = Math.ceil(maxTime / 100) * 100;
+
+    const scale = chartWidth / maxTime;
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const titleText = sc.best
+      ? 'Optimalan scenarijo: Pera uzima ' + sc.peraFirst + ' g'
+      : 'Scenarijo: Pera uzima ' + sc.peraFirst + ' g';
+    ctx.fillText(titleText, W / 2, 30);
+
+    // Time axis
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    for (let t = 0; t <= maxTime; t += 100) {
+      const x = marginLeft + t * scale;
+      ctx.beginPath();
+      ctx.moveTo(x, marginTop - 10);
+      ctx.lineTo(x, H - 60);
+      ctx.stroke();
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('t=' + t, x, H - 42);
+    }
+
+    // Player labels
+    const peraY = marginTop + 15;
+    const nikolaY = marginTop + 15 + barHeight + rowGap;
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Pera', marginLeft - 15, peraY + barHeight / 2 + 5);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('Nikola', marginLeft - 15, nikolaY + barHeight / 2 + 5);
+
+    // Draw bars
+    sc.timeline.forEach(e => {
+      const y = e.player === 'Pera' ? peraY : nikolaY;
+      const x = marginLeft + e.start * scale;
+      const w = (e.end - e.start) * scale;
+      const baseColor = e.player === 'Pera' ? '#60a5fa' : '#a78bfa';
+
+      // Bar glow
+      ctx.shadowColor = baseColor;
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = baseColor + '33';
+      roundRect(ctx, x, y, w, barHeight, 8);
+      ctx.fill();
+
+      // Bar
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = baseColor + '88';
+      roundRect(ctx, x, y, w, barHeight, 8);
+      ctx.fill();
+
+      ctx.strokeStyle = baseColor;
+      ctx.lineWidth = 2;
+      roundRect(ctx, x, y, w, barHeight, 8);
+      ctx.stroke();
+
+      // Apple weight label
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (w > 50) {
+        ctx.fillText(e.apple + ' g', x + w / 2, y + barHeight / 2);
+      }
+    });
+
+    // Totals
+    const totalsY = H - 22;
+    ctx.textBaseline = 'alphabetic';
+
+    ctx.fillStyle = sc.best ? '#4ade80' : '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Pera ukupno: ' + sc.peraTotal + ' g' + (sc.best ? ' \u2713' : ''), W / 2 - 150, totalsY);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('Nikola ukupno: ' + sc.nikolaTotal + ' g', W / 2 + 150, totalsY);
+
+    // Arrow showing when player finishes first apple
+    sc.timeline.forEach(e => {
+      if (e === sc.timeline[0] || e === sc.timeline[1]) {
+        const x = marginLeft + e.end * scale;
+        const y = e.player === 'Pera' ? peraY : nikolaY;
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = '#4ade80';
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(x, y + barHeight + 3);
+        ctx.lineTo(x, y + barHeight + 18);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#4ade80';
+        ctx.font = '11px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('bira sledeću', x, y + barHeight + 30);
+      }
+    });
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  // Step click interaction
+  document.querySelectorAll('.step-container').forEach(step => {
+    step.addEventListener('click', () => {
+      document.querySelectorAll('.step-container').forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+
+  drawTimeline();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Teorija igara: Optimalna podela jabuka između dva igrača",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["teorija igara", "optimalna strategija", "unazadna indukcija", "kombinatorika", "logičko razmišljanje"]
+}
+BRAINSPARK_META-->

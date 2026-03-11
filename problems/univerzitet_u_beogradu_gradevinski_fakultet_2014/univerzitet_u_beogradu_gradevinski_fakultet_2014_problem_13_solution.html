@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir stepena imaginarne jedinice</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Find the value of 1 + i + i^2 + ... + i^2014, where i^2 = -1.
+
+OPTIONS: (A) 1, (B) i, (V) -1, (G) -i, (D) 1+i
+CORRECT ANSWER FROM KEY: (B) i
+
+SOLUTION:
+The powers of i cycle with period 4:
+  i^0 = 1
+  i^1 = i
+  i^2 = -1
+  i^3 = -i
+  i^4 = 1 (back to start)
+
+Sum of one complete cycle: 1 + i + (-1) + (-i) = 0
+
+The sum is S = i^0 + i^1 + i^2 + ... + i^2014
+This has 2015 terms (from exponent 0 to exponent 2014).
+
+2015 / 4 = 503 remainder 3
+
+So we have 503 complete cycles (each summing to 0) plus 3 remaining terms.
+The remaining terms are: i^2012 + i^2013 + i^2014
+
+2012 = 4 * 503, so i^2012 = i^0 = 1
+2013 = 4 * 503 + 1, so i^2013 = i^1 = i
+2014 = 4 * 503 + 2, so i^2014 = i^2 = -1
+
+Remaining sum = 1 + i + (-1) = i
+
+Total sum S = 503 * 0 + (1 + i - 1) = i
+
+VERIFICATION: The answer is i, which matches option (B). Confirmed with answer key.
+
+ALTERNATIVE METHOD (geometric series):
+S = (i^2015 - 1) / (i - 1)
+i^2015 = i^(4*503 + 3) = i^3 = -i
+S = (-i - 1) / (i - 1) = -(i + 1) / (i - 1)
+Multiply numerator and denominator by conjugate of denominator:
+= -(i+1)(i+1) / ((i-1)(i+1))  ... wait, conjugate of (i-1) is (-i-1)
+Let me use (−i−1) as conjugate:
+= -(i+1)(-i-1) / ((i-1)(-i-1))
+Denominator: (i-1)(-i-1) = -i^2 - i + i + 1 = 1 + 1 = 2
+Numerator: -(i+1)(-i-1) = (i+1)(i+1) = (i+1)^2 = i^2 + 2i + 1 = -1 + 2i + 1 = 2i
+S = 2i / 2 = i ✓
+
+Both methods give i. Answer is (B).
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+.plan-card h2 { color: #a78bfa; }
+details {
+  margin: 15px 0;
+}
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+}
+details summary:hover { color: #93c5fd; }
+.theory-content {
+  padding: 16px 0 0 8px;
+}
+.theory-content li {
+  margin-bottom: 10px;
+  list-style: none;
+  padding-left: 20px;
+  position: relative;
+}
+.theory-content li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: #a78bfa;
+}
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+.step:hover, .step.active {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+.step-number {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+.step-content { flex: 1; }
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+.checkpoint .answer {
+  padding-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.insight-box h2 { color: #a78bfa; margin-bottom: 12px; }
+.insight-formula {
+  font-size: 1.3rem;
+  color: #e2e8f0;
+  margin: 12px 0;
+}
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.final-answer-box h2 {
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 12px 0;
+}
+.options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+.option-final {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+.option-final.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(52,211,153,0.2);
+}
+.option-final.correct .opt-label {
+  color: #4ade80;
+}
+.opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+.opt-value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.verification {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 16px;
+  font-style: italic;
+}
+.pitfalls li {
+  color: #cbd5e1;
+  margin-bottom: 10px;
+  padding-left: 24px;
+  position: relative;
+  list-style: none;
+}
+.pitfalls li::before {
+  content: '⚠';
+  position: absolute;
+  left: 0;
+  color: #e09468;
+}
+.challenge-card {
+  border-left: 3px solid #f472b6;
+}
+.challenge-card h2 { color: #f472b6; }
+.canvas-card {
+  text-align: center;
+}
+.canvas-card canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { padding: 12px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Zbir stepena imaginarne jedinice</h1>
+  <p class="subtitle">Kompleksni brojevi — ciklično ponašanje stepena broja \(i\)</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Vrednost izraza \(1 + i + i^2 + \cdots + i^{2014}\), gde je \(i^2 = -1\), jednaka je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\(-i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(1 + i\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Iskoristićemo činjenicu da se stepeni broja \(i\) ponavljaju sa periodom 4, pa je zbir svakog kompletnog ciklusa od 4 uzastopna stepena jednak nuli. Podelićemo ukupan broj sabiraka sa 4 i izračunati ostatak.</p>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Imaginarna jedinica:</strong> \(i = \sqrt{-1}\), pa važi \(i^2 = -1\).</li>
+          <li><strong>Ciklus stepena broja \(i\):</strong>
+            \[ i^0 = 1,\quad i^1 = i,\quad i^2 = -1,\quad i^3 = -i,\quad i^4 = 1,\quad \ldots \]
+            Stepeni se ponavljaju sa periodom 4: \(i^n = i^{n \bmod 4}\).
+          </li>
+          <li><strong>Zbir jednog ciklusa:</strong> \(i^0 + i^1 + i^2 + i^3 = 1 + i - 1 - i = 0\).</li>
+          <li><strong>Formula za zbir geometrijskog niza:</strong>
+            \[ S = \frac{q^{n+1} - 1}{q - 1}, \quad q \neq 1 \]
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card canvas-card">
+    <h2>Stepeni broja \(i\) na kompleksnoj ravni</h2>
+    <canvas id="complexCanvas" width="500" height="500"></canvas>
+    <p class="canvas-hint">Stepeni broja \(i\) se kreću kružno: 1 → i → −1 → −i → 1 → ...</p>
+  </div>
+
+  <!-- STEP BY STEP -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Odredimo ciklus stepena broja \(i\)</h3>
+        <p>Izračunajmo prvih nekoliko stepena broja \(i\):</p>
+        <div class="math-block">
+          \[ i^0 = 1, \quad i^1 = i, \quad i^2 = -1, \quad i^3 = -i \]
+        </div>
+        <div class="math-block">
+          \[ i^4 = i^2 \cdot i^2 = (-1)(-1) = 1 \]
+        </div>
+        <p>Dakle, stepeni broja \(i\) se ponavljaju sa <span class="highlight">periodom 4</span>.</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Zbir jednog kompletnog ciklusa</h3>
+        <p>Saberemo četiri uzastopna stepena (jedan kompletan ciklus):</p>
+        <div class="math-block">
+          \[ i^0 + i^1 + i^2 + i^3 = 1 + i + (-1) + (-i) = 0 \]
+        </div>
+        <p>Svaka grupa od 4 uzastopna stepena daje zbir <span class="highlight">nula</span>.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri se: Koliko iznosi \(i^5 + i^6 + i^7 + i^8\)?</summary>
+      <div class="answer">\(i^5 + i^6 + i^7 + i^8 = i + (-1) + (-i) + 1 = 0\). Ponovo nula!</div>
+    </details>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Prebrojimo sabirke</h3>
+        <p>Naš zbir je:</p>
+        <div class="math-block">
+          \[ S = i^0 + i^1 + i^2 + \cdots + i^{2014} \]
+        </div>
+        <p>Eksponenti idu od 0 do 2014, što znači da imamo ukupno <span class="highlight">2015 sabiraka</span>.</p>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Podelimo sa 4</h3>
+        <p>Podelimo 2015 sa 4 da vidimo koliko kompletnih ciklusa imamo:</p>
+        <div class="math-block">
+          \[ 2015 = 4 \cdot 503 + 3 \]
+        </div>
+        <p>Imamo <strong>503 kompletna ciklusa</strong> (svaki daje zbir 0) i <strong>3 preostala sabirka</strong>.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri se: Koji su ti preostali sabirci?</summary>
+      <div class="answer">Prvih \(503 \times 4 = 2012\) sabiraka čine kompletne cikluse (od \(i^0\) do \(i^{2011}\)). Preostali su: \(i^{2012}\), \(i^{2013}\) i \(i^{2014}\).</div>
+    </details>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Izračunamo preostale sabirke</h3>
+        <p>Odredimo ostatke pri deljenju sa 4:</p>
+        <div class="math-block">
+          \[ 2012 = 4 \cdot 503 + 0 \implies i^{2012} = i^0 = 1 \]
+        </div>
+        <div class="math-block">
+          \[ 2013 = 4 \cdot 503 + 1 \implies i^{2013} = i^1 = i \]
+        </div>
+        <div class="math-block">
+          \[ 2014 = 4 \cdot 503 + 2 \implies i^{2014} = i^2 = -1 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" tabindex="0">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Izračunamo konačan zbir</h3>
+        <p>Zbir kompletnih ciklusa je 0, pa ostaje samo zbir preostalih sabiraka:</p>
+        <div class="math-block">
+          \[ S = \underbrace{0}_{503 \text{ ciklusa}} + i^{2012} + i^{2013} + i^{2014} \]
+        </div>
+        <div class="math-block">
+          \[ S = 1 + i + (-1) = \boxed{i} \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri se: Proverimo formulom geometrijskog niza</summary>
+      <div class="answer">
+        \(S = \dfrac{i^{2015} - 1}{i - 1}\). Pošto je \(2015 = 4 \cdot 503 + 3\), važi \(i^{2015} = i^3 = -i\). Dakle:
+        \(S = \dfrac{-i - 1}{i - 1} = \dfrac{-(i+1)}{i-1}\). Pomnožimo sa \(\dfrac{-i-1}{-i-1}\):
+        brojilac: \(-(i+1)(-i-1) = (i+1)^2 = 2i\), imenilac: \((i-1)(-i-1) = 2\).
+        Dakle \(S = \dfrac{2i}{2} = i\). ✓
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Zbir bilo koja 4 uzastopna stepena broja \(i\) je uvek 0. Zato ceo problem svodi se na ostatak pri deljenju broja sabiraka sa 4.</p>
+    <div class="insight-formula">
+      \[ 1 + i + i^2 + \cdots + i^{2014} = i^{2012} + i^{2013} + i^{2014} = 1 + i - 1 = i \]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\( S = i \)</div>
+    <div class="options-final">
+      <div class="option-final">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(1\)</div>
+      </div>
+      <div class="option-final correct">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(i\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(V)</div>
+        <div class="opt-value">\(-1\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(G)</div>
+        <div class="opt-value">\(-i\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(1+i\)</div>
+      </div>
+    </div>
+    <p class="verification">Provera: Formulom geometrijskog niza dobijamo isti rezultat \(S = \frac{i^{2015}-1}{i-1} = \frac{-i-1}{i-1} = i\). Odgovor je tačan.</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfalls">
+      <li><strong>Pogrešno brojanje sabiraka:</strong> Zbir od \(i^0\) do \(i^{2014}\) ima 2015 sabiraka (ne 2014!). Lako je zaboraviti da se broji i nulti stepen.</li>
+      <li><strong>Pogrešan ostatak pri deljenju:</strong> Delimo <em>broj sabiraka</em> (2015) sa 4, ne eksponent 2014. Ostatak 3 znači da imamo 3 sabirka van kompletnih ciklusa: \(i^{2012}, i^{2013}, i^{2014}\).</li>
+    </ul>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Koliko iznosi \(1 + i + i^2 + \cdots + i^{2025}\)?</p>
+    <details>
+      <summary>💡 Nagoveštaj</summary>
+      <p style="color:#cbd5e1; padding-top:8px;">Zbir ima 2026 sabiraka. Podeli 2026 sa 4 — koliki je ostatak? Koliko preostalih sabiraka imaš i koliki je njihov zbir?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Complex plane canvas — showing powers of i
+  const canvas = document.getElementById('complexCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const cx = W / 2;
+  const cy = H / 2;
+  const R = 160; // radius of unit circle in pixels
+
+  function toCanvas(x, y) {
+    return { x: cx + x * R, y: cy - y * R };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = -2; i <= 2; i++) {
+      const p1 = toCanvas(i, -2);
+      const p2 = toCanvas(i, 2);
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+      const p3 = toCanvas(-2, i);
+      const p4 = toCanvas(2, i);
+      ctx.beginPath();
+      ctx.moveTo(p3.x, p3.y);
+      ctx.lineTo(p4.x, p4.y);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, cy);
+    ctx.lineTo(W, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, 0);
+    ctx.lineTo(cx, H);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', W - 25, cy - 10);
+    ctx.fillText('Im', cx + 18, 20);
+
+    // Unit circle
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Powers of i
+    const powers = [
+      { x: 1, y: 0, label: 'i⁰ = 1', color: '#60a5fa' },
+      { x: 0, y: 1, label: 'i¹ = i', color: '#a78bfa' },
+      { x: -1, y: 0, label: 'i² = −1', color: '#f472b6' },
+      { x: 0, y: -1, label: 'i³ = −i', color: '#34d399' }
+    ];
+
+    // Draw arrows between powers (cycle)
+    ctx.strokeStyle = 'rgba(96,165,250,0.3)';
+    ctx.lineWidth = 2;
+    for (let idx = 0; idx < powers.length; idx++) {
+      const from = powers[idx];
+      const to = powers[(idx + 1) % powers.length];
+      const p1 = toCanvas(from.x, from.y);
+      const p2 = toCanvas(to.x, to.y);
+      // Draw arc arrow
+      const midAngle = Math.atan2(from.y + to.y, from.x + to.x);
+      const midR = R * 1.15;
+      const midX = cx + Math.cos(midAngle) * midR;
+      const midY = cy - Math.sin(midAngle) * midR;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.quadraticCurveTo(midX, midY, p2.x, p2.y);
+      ctx.stroke();
+
+      // Arrowhead
+      const t = 0.85;
+      const qx = (1-t)*(1-t)*p1.x + 2*(1-t)*t*midX + t*t*p2.x;
+      const qy = (1-t)*(1-t)*p1.y + 2*(1-t)*t*midY + t*t*p2.y;
+      const angle = Math.atan2(p2.y - qy, p2.x - qx);
+      ctx.fillStyle = 'rgba(96,165,250,0.4)';
+      ctx.beginPath();
+      ctx.moveTo(p2.x, p2.y);
+      ctx.lineTo(p2.x - 10 * Math.cos(angle - 0.3), p2.y - 10 * Math.sin(angle - 0.3));
+      ctx.lineTo(p2.x - 10 * Math.cos(angle + 0.3), p2.y - 10 * Math.sin(angle + 0.3));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Draw points and labels
+    powers.forEach((p) => {
+      const pt = toCanvas(p.x, p.y);
+
+      // Glow
+      const grd = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, 20);
+      grd.addColorStop(0, p.color + '55');
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label
+      ctx.fillStyle = p.color;
+      ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      let lx = pt.x;
+      let ly = pt.y;
+      if (p.x === 1) { lx += 55; ly += 5; }
+      else if (p.x === -1) { lx -= 55; ly += 5; }
+      else if (p.y === 1) { ly -= 20; }
+      else { ly += 30; }
+      ctx.fillText(p.label, lx, ly);
+    });
+
+    // Draw the sum visualization: highlight the 3 remaining terms
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.textAlign = 'center';
+    ctx.fillText('Preostali sabirci: 1 + i + (−1) = i', cx, H - 30);
+
+    // Cycle label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Ciklus perioda 4: zbir = 0', cx, H - 55);
+
+    // "×4" in center
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('period = 4', cx, cy + 5);
+  }
+
+  draw();
+
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step');
+  steps.forEach((step) => {
+    step.addEventListener('click', () => {
+      steps.forEach((s) => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir stepena imaginarne jedinice 1 + i + i² + ... + i²⁰¹⁴",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "imaginarna jedinica", "stepeni broja i", "geometrijski niz", "ciklično ponavljanje"]
+}
+BRAINSPARK_META-->

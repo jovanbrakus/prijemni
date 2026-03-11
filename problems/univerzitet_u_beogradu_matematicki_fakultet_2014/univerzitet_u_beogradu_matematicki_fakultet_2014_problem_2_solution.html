@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raspoređivanje u bioskopu — Kombinatorika</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+4 mladića i 4 devojke sede u redu od 8 stolica.
+Dve od devojaka NE žele da sede ni na prvom ni na poslednjem mestu.
+Koliko rasporeda postoji?
+
+APPROACH:
+Koristimo princip razbijanja na faze (rule of product / multiplication principle).
+
+Označimo dve "izbirljive" devojke sa D1 i D2.
+One odbijaju mesta 1 i 8, dakle mogu sesti samo na mesta 2, 3, 4, 5, 6, 7 (6 mesta).
+
+FAZA 1: Rasporedimo D1 i D2 na dozvoljenim mestima
+- D1 bira jedno od 6 mesta (mesta 2-7)
+- D2 bira jedno od preostalih 5 mesta (mesta 2-7 minus ono gde je D1)
+- Broj načina = 6 × 5 = 30
+- Alternativno: P(6,2) = 6!/(6-2)! = 6!/4! = 30
+
+FAZA 2: Rasporedimo preostalih 6 osoba na preostalih 6 mesta
+- Preostale osobe: 4 mladića + 2 preostale devojke = 6 osoba
+- Preostala mesta: 8 - 2 = 6 mesta
+- Broj načina = 6!
+
+UKUPNO = 30 × 6!
+
+VERIFICATION:
+Odgovor B) 30 · 6! — TAČNO ✓
+
+Let's also verify the other options don't match:
+A) 8!/4! = 8·7·6·5 = 1680. While 30·6! = 30·720 = 21600. Different.
+C) 15·6! = 15·720 = 10800. Different from 21600.
+D) (4!)^2/2 = 576/2 = 288. Much smaller.
+E) 2·6! = 1440. Different.
+
+Only B) = 30 · 6! = 21600 is correct.
+
+Why not other approaches?
+- If we tried complement (total - forbidden), total = 8!.
+  Forbidden = at least one of D1, D2 on seat 1 or 8.
+  This gets messy with inclusion-exclusion. Direct approach is cleaner.
+
+ALTERNATIVE VERIFICATION:
+Think of it differently. Seats 1 and 8 are "edge" seats.
+The 2 picky girls must avoid these. So first place everyone BUT the picky girls isn't as clean.
+Better: place the restricted people first (D1, D2), then fill the rest.
+
+D1 and D2 into seats {2,3,4,5,6,7}: permutation P(6,2) = 30.
+Remaining 6 people into remaining 6 seats: 6! = 720.
+Total = 30 · 720 = 21600 = 30 · 6!. ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.problem-text {
+  font-size: 1.08rem;
+  line-height: 1.8;
+  color: #e2e8f0;
+  margin-bottom: 20px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-width: 120px;
+  text-align: center;
+  flex: 1;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 10px 0;
+  list-style: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+details summary::before {
+  content: '▶ ';
+  font-size: 0.8rem;
+  transition: transform 0.2s;
+  display: inline-block;
+  margin-right: 6px;
+}
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .details-content {
+  padding: 14px 0 6px 0;
+  color: #e2e8f0;
+}
+
+details .details-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .details-content ul li {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: rgba(56, 189, 248, 0.06);
+  border-left: 3px solid #60a5fa;
+  border-radius: 6px;
+  line-height: 1.8;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border-radius: 10px;
+  border-left: 4px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.checkpoint {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.98rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  justify-content: center;
+  color: #a78bfa;
+}
+
+.insight-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+  color: #e2e8f0;
+}
+
+.final-answer {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.1));
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 14px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer h2 {
+  color: #34d399;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.answer-opt {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: rgba(30, 41, 59, 0.6);
+  color: #94a3b8;
+  font-size: 1rem;
+  min-width: 130px;
+  text-align: center;
+}
+
+.answer-opt.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  font-style: italic;
+}
+
+.pitfalls {
+  border-left: 4px solid #e09468;
+}
+
+.pitfalls h2 {
+  color: #e09468;
+}
+
+.pitfalls ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfalls ul li {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: rgba(224, 148, 104, 0.08);
+  border-radius: 8px;
+  line-height: 1.7;
+  color: #e2e8f0;
+}
+
+.pitfalls ul li::before {
+  content: '⚠ ';
+}
+
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+canvas {
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+  border-radius: 10px;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-item { min-width: 90px; font-size: 0.9rem; }
+  .answer-opt { min-width: 100px; font-size: 0.9rem; }
+  .step-container { padding: 14px; }
+  .final-answer .answer-value { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Raspoređivanje u bioskopu</h1>
+  <p class="subtitle">Kombinatorika — prebrojavanje sa ograničenjima</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>📋 Tekst zadatka</h2>
+    <p class="problem-text">
+      Četiri mladića i četiri devojke idu u bioskop. Imaju karte za mesta u istom redu koji ima tačno <span class="highlight-blue">8 stolica</span>. Na koliko načina se mogu rasporediti ako je poznato da <span class="highlight">dve od devojaka ne žele da sede ni na prvom ni na poslednjem mestu</span>?
+    </p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{8!}{4!}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(30 \cdot 6!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(15 \cdot 6!\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{(4!)^2}{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(2 \cdot 6!\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <h2>🎯 Plan rešavanja</h2>
+    <p>
+      Prvo raspoređujemo dve „izbirljive" devojke na dozvoljena mesta (mesta 2–7), a zatim preostalih šest osoba na preostalih šest mesta. Koristimo <strong>princip proizvoda</strong> (pravilo množenja).
+    </p>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i principi</summary>
+      <div class="details-content">
+        <ul>
+          <li>
+            <strong>Princip proizvoda (pravilo množenja):</strong> Ako se prvi izbor može izvršiti na \(m\) načina, a drugi na \(n\) načina, ukupan broj kombinovanih ishoda je \(m \cdot n\).
+          </li>
+          <li>
+            <strong>Permutacije bez ponavljanja:</strong> Broj načina da se rasporedi \(n\) različitih objekata na \(n\) mesta je \[ n! = n \cdot (n-1) \cdot (n-2) \cdots 2 \cdot 1 \]
+          </li>
+          <li>
+            <strong>Varijacije bez ponavljanja:</strong> Broj načina da se od \(n\) objekata izabere i rasporedi \(k\) na \(k\) različitih mesta je \[ V(n, k) = \frac{n!}{(n-k)!} = n \cdot (n-1) \cdots (n-k+1) \]
+          </li>
+          <li>
+            <strong>Strategija za ograničenja:</strong> Kada postoje ograničenja, uvek prvo raspoređujemo osobe sa ograničenjima, pa tek onda slobodne osobe.
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <h2>🎬 Vizuelni prikaz rasporeda</h2>
+    <canvas id="seatingCanvas" width="800" height="420"></canvas>
+    <p class="canvas-hint">Animirani prikaz — crvena mesta (1 i 8) su zabranjena za dve izbirljive devojke</p>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <h2>📝 Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <h3>Identifikujemo ograničenja</h3>
+      </div>
+      <p>
+        Imamo <span class="highlight-blue">8 osoba</span> (4 mladića + 4 devojke) i <span class="highlight-blue">8 stolica</span> u nizu.
+      </p>
+      <p style="margin-top:8px;">
+        Dve od devojaka (nazovimo ih \(D_1\) i \(D_2\)) <span class="highlight">ne žele da sede na mestu 1 niti na mestu 8</span>. To znači da \(D_1\) i \(D_2\) mogu sesti samo na mesta 2, 3, 4, 5, 6 ili 7.
+      </p>
+      <p class="note">Ključna ideja: uvek prvo raspoređujemo osobe koje imaju ograničenja!</p>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <h3>Faza 1 — Rasporedimo \(D_1\) i \(D_2\)</h3>
+      </div>
+      <p>
+        Devojka \(D_1\) može da sedne na bilo koje od <span class="highlight-blue">6 dozvoljenih mesta</span> (mesta 2–7).
+      </p>
+      <p style="margin-top: 8px;">
+        Nakon što \(D_1\) zauzme jedno mesto, devojka \(D_2\) bira između preostalih <span class="highlight-blue">5 dozvoljenih mesta</span>.
+      </p>
+      <div class="math-block">
+        \[ \text{Broj načina za } D_1 \text{ i } D_2 = 6 \cdot 5 = 30 \]
+      </div>
+      <p class="note">
+        Ovo je varijacija bez ponavljanja \(V(6, 2) = \frac{6!}{4!} = 30\).
+      </p>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🧠 Proveri sebe: Zašto \(D_2\) ima 5 izbora, a ne 6?</summary>
+      <div class="details-content">
+        <p>Zato što je \(D_1\) već zauzela jedno od 6 dozvoljenih mesta (2–7), pa za \(D_2\) ostaje \(6 - 1 = 5\) slobodnih dozvoljenih mesta.</p>
+      </div>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <h3>Faza 2 — Rasporedimo preostalih 6 osoba</h3>
+      </div>
+      <p>
+        Kada su \(D_1\) i \(D_2\) sele, ostaje nam:
+      </p>
+      <ul style="margin: 10px 0 10px 20px; color: #e2e8f0;">
+        <li>4 mladića + 2 preostale devojke = <span class="highlight-blue">6 osoba</span></li>
+        <li>\(8 - 2 = \) <span class="highlight-blue">6 slobodnih mesta</span></li>
+      </ul>
+      <p>
+        Ovih 6 osoba nemaju nikakva ograničenja — mogu sesti na bilo koje od preostalih 6 mesta.
+      </p>
+      <div class="math-block">
+        \[ \text{Broj načina za preostalih 6 osoba} = 6! = 720 \]
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <h3>Primenimo princip proizvoda</h3>
+      </div>
+      <p>
+        Faze su nezavisne (izbor u Fazi 1 ne utiče na <em>broj</em> mogućnosti u Fazi 2 — uvek ostaje 6 osoba za 6 mesta). Prema principu proizvoda:
+      </p>
+      <div class="math-block">
+        \[ \text{Ukupan broj rasporeda} = \underbrace{30}_{\text{Faza 1}} \times \underbrace{6!}_{\text{Faza 2}} = 30 \cdot 6! \]
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🧠 Proveri sebe: Koliko je \(30 \cdot 6!\) numerički?</summary>
+      <div class="details-content">
+        <p>\(30 \cdot 720 = 21\,600\) rasporeda.</p>
+      </div>
+    </details>
+
+    <div class="step-container" id="step5">
+      <div class="step-header">
+        <div class="step-badge">5</div>
+        <h3>Proverimo ostale ponuđene odgovore</h3>
+      </div>
+      <p>Da bismo se uverili, izračunajmo numeričke vrednosti svih opcija:</p>
+      <div class="math-block">
+        \[ \begin{align}
+        &\text{A)} \quad \frac{8!}{4!} = \frac{40\,320}{24} = 1\,680 \\[6pt]
+        &\text{B)} \quad 30 \cdot 6! = 30 \cdot 720 = 21\,600 \quad ✓ \\[6pt]
+        &\text{C)} \quad 15 \cdot 6! = 15 \cdot 720 = 10\,800 \\[6pt]
+        &\text{D)} \quad \frac{(4!)^2}{2} = \frac{576}{2} = 288 \\[6pt]
+        &\text{E)} \quad 2 \cdot 6! = 2 \cdot 720 = 1\,440
+        \end{align} \]
+      </div>
+      <p class="note">
+        Opcija C) daje \(15 \cdot 6!\), što bi odgovaralo kombinaciji \(\binom{6}{2} = 15\) bez obzira na redosled \(D_1\) i \(D_2\). Međutim, redosled JE bitan jer su \(D_1\) i \(D_2\) različite osobe, pa je ispravno \(V(6,2) = 30\), a ne \(\binom{6}{2} = 15\).
+      </p>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🧠 Proveri sebe: Zašto koristimo varijacije, a ne kombinacije za \(D_1\) i \(D_2\)?</summary>
+      <div class="details-content">
+        <p>Zato što su \(D_1\) i \(D_2\) <strong>različite osobe</strong>. Raspored u kome \(D_1\) sedi na mestu 3, a \(D_2\) na mestu 5 je drugačiji od rasporeda u kome \(D_1\) sedi na mestu 5, a \(D_2\) na mestu 3. Dakle, redosled je bitan → koristimo varijacije \(V(6,2) = 30\), a ne kombinacije \(\binom{6}{2} = 15\).</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <h2>💡 Ključni uvid</h2>
+    <p style="color: #94a3b8; margin-bottom: 12px;">
+      Rasporedimo prvo osobe sa ograničenjima, pa tek onda slobodne osobe.
+    </p>
+    <div class="insight-formula">
+      \[ \underbrace{V(6,2)}_{D_1, D_2 \text{ na mesta } 2\text{–}7} \times \underbrace{6!}_{\text{preostalih 6 osoba}} = 30 \cdot 6! \]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <h2>✅ Konačan odgovor</h2>
+
+    <div class="answer-options-final">
+      <div class="answer-opt">(A) \(\dfrac{8!}{4!}\)</div>
+      <div class="answer-opt correct">(B) \(30 \cdot 6!\)</div>
+      <div class="answer-opt">(C) \(15 \cdot 6!\)</div>
+      <div class="answer-opt">(D) \(\dfrac{(4!)^2}{2}\)</div>
+      <div class="answer-opt">(E) \(2 \cdot 6!\)</div>
+    </div>
+
+    <div class="answer-value">\(30 \cdot 6! = 21\,600\)</div>
+
+    <p class="verification-note">
+      Verifikacija: Rezultat je razuman — manji je od \(8! = 40\,320\) (ukupan broj rasporeda bez ograničenja), a veći od \(6! = 720\) (jer ograničenja smanjuju, ali ne drastično eliminišu mogućnosti). Vrednost \(21\,600\) je otprilike polovina od \(8!\), što ima smisla jer ograničavamo samo 2 od 8 osoba.
+    </p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card pitfalls">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>
+        <strong>Kombinacije umesto varijacija:</strong> Greška je koristiti \(\binom{6}{2} = 15\) umesto \(V(6,2) = 30\). To bi značilo da nam je svejedno koja devojka sedi gde, ali \(D_1\) i \(D_2\) su različite osobe — raspored u kome zamene mesta je DRUGI raspored. Ovo vodi na pogrešan odgovor C).
+      </li>
+      <li>
+        <strong>Zaboraviti da prvo rasporedimo ograničene osobe:</strong> Ako počnemo sa raspoređivanjem mladića ili slobodnih devojaka, račun postaje komplikovaniji jer broj dozvoljenih mesta za \(D_1\) i \(D_2\) zavisi od toga ko je već seo.
+      </li>
+    </ul>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card challenge-card">
+    <h2>🚀 Dodatni izazov</h2>
+    <p>Šta ako je uslov da <strong>sve četiri devojke</strong> ne žele da sede ni na prvom ni na poslednjem mestu? Koliko rasporeda tada postoji?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="details-content">
+        <p>
+          Primenite istu strategiju: prvo rasporedite 4 devojke na mesta 2–7 (varijacije \(V(6,4)\)), pa 4 mladića na preostala 4 mesta. Koliko je \(V(6,4) \cdot 4!\)?
+        </p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<!-- CANVAS DRAWING SCRIPT -->
+<script>
+(() => {
+  const canvas = document.getElementById('seatingCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const seatW = 70;
+  const seatH = 60;
+  const seatGap = 14;
+  const totalSeatsW = 8 * seatW + 7 * seatGap;
+  const startX = (W - totalSeatsW) / 2;
+  const seatY = 100;
+
+  const forbiddenColor = 'rgba(244, 114, 182, 0.25)';
+  const forbiddenBorder = '#f472b6';
+  const allowedColor = 'rgba(96, 165, 250, 0.15)';
+  const allowedBorder = '#60a5fa';
+  const seatTextColor = '#e2e8f0';
+
+  const boyColor = '#60a5fa';
+  const girlColor = '#f472b6';
+  const pickyGirlColor = '#a78bfa';
+
+  let animFrame = 0;
+  let animPhase = 0;
+  let phaseTimer = 0;
+
+  const arrangement = [null, null, null, null, null, null, null, null];
+  const pickyPositions = [2, 4];
+  const labels = ['M1', 'D3', 'D1*', 'M2', 'D2*', 'M3', 'D4', 'M4'];
+  const colors = [boyColor, girlColor, pickyGirlColor, boyColor, pickyGirlColor, boyColor, girlColor, boyColor];
+
+  function drawRoundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function drawSeat(i, highlight) {
+    const x = startX + i * (seatW + seatGap);
+    const isForbidden = (i === 0 || i === 7);
+    const bg = isForbidden ? forbiddenColor : allowedColor;
+    const border = isForbidden ? forbiddenBorder : allowedBorder;
+
+    drawRoundRect(x, seatY, seatW, seatH, 8);
+    ctx.fillStyle = bg;
+    ctx.fill();
+
+    if (highlight) {
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2.5;
+    } else {
+      ctx.strokeStyle = border;
+      ctx.lineWidth = 1.5;
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = isForbidden ? '#f472b6' : '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Mesto ' + (i + 1), x + seatW / 2, seatY + seatH / 2);
+  }
+
+  function drawPerson(seatIndex, label, color, alpha) {
+    const x = startX + seatIndex * (seatW + seatGap) + seatW / 2;
+    const y = seatY - 35;
+
+    ctx.globalAlpha = alpha;
+
+    ctx.beginPath();
+    ctx.arc(x, y - 8, 14, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y - 8);
+
+    ctx.globalAlpha = 1;
+  }
+
+  function drawForbiddenX(seatIndex) {
+    const x = startX + seatIndex * (seatW + seatGap);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(x + 10, seatY + 10);
+    ctx.lineTo(x + seatW - 10, seatY + seatH - 10);
+    ctx.moveTo(x + seatW - 10, seatY + 10);
+    ctx.lineTo(x + 10, seatY + seatH - 10);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawLegend() {
+    const lx = startX;
+    const ly = seatY + seatH + 60;
+
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    const items = [
+      { color: forbiddenColor, border: forbiddenBorder, text: 'Zabranjeno za D1*, D2*' },
+      { color: allowedColor, border: allowedBorder, text: 'Dozvoljeno za D1*, D2*' },
+      { color: pickyGirlColor, border: null, text: 'Izbirljive devojke (D1*, D2*)' },
+      { color: boyColor, border: null, text: 'Mladići / Ostale devojke' },
+    ];
+
+    items.forEach((item, idx) => {
+      const ix = lx + (idx < 2 ? 0 : 370);
+      const iy = ly + (idx % 2) * 28;
+
+      if (item.border) {
+        drawRoundRect(ix, iy - 8, 20, 16, 3);
+        ctx.fillStyle = item.color;
+        ctx.fill();
+        ctx.strokeStyle = item.border;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(ix + 10, iy, 8, 0, Math.PI * 2);
+        ctx.fillStyle = item.color;
+        ctx.fill();
+      }
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(item.text, ix + 28, iy);
+    });
+  }
+
+  function drawTitle() {
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    if (animPhase === 0) {
+      ctx.fillText('Red u bioskopu — 8 stolica', W / 2, 12);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Mesta 1 i 8 su zabranjena za izbirljive devojke', W / 2, 36);
+    } else if (animPhase === 1) {
+      ctx.fillText('Faza 1: D1* i D2* biraju mesta (6 × 5 = 30 načina)', W / 2, 12);
+    } else if (animPhase === 2) {
+      ctx.fillText('Faza 2: Preostalih 6 osoba zauzima 6 mesta (6! = 720 načina)', W / 2, 12);
+    } else {
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText('Ukupno: 30 × 6! = 21 600 načina', W / 2, 12);
+    }
+  }
+
+  function drawCountFormula() {
+    const fy = seatY + seatH + 24;
+    ctx.font = 'bold 14px Courier New, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    if (animPhase >= 1) {
+      ctx.fillStyle = '#a78bfa';
+      ctx.fillText('V(6, 2) = 6 × 5 = 30', W / 2 - 150, fy);
+    }
+    if (animPhase >= 2) {
+      ctx.fillStyle = '#60a5fa';
+      ctx.fillText('×', W / 2, fy);
+      ctx.fillText('6! = 720', W / 2 + 120, fy);
+    }
+    if (animPhase >= 3) {
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText('= 30 × 6! = 21 600', W / 2, fy + 24);
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+
+    drawTitle();
+
+    for (let i = 0; i < 8; i++) {
+      const highlight = (animPhase === 1 && i !== 0 && i !== 7) ||
+                         (animPhase >= 2 && arrangement[i] !== null);
+      drawSeat(i, highlight);
+    }
+
+    if (animPhase === 0) {
+      drawForbiddenX(0);
+      drawForbiddenX(7);
+
+      const pulse = 0.5 + 0.3 * Math.sin(animFrame * 0.05);
+      drawPerson(0, 'D1*', pickyGirlColor, pulse);
+      drawPerson(7, 'D2*', pickyGirlColor, pulse);
+
+      ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#f472b6';
+      ctx.textAlign = 'center';
+      ctx.fillText('✗', startX + seatW / 2, seatY + seatH + 22);
+      ctx.fillText('✗', startX + 7 * (seatW + seatGap) + seatW / 2, seatY + seatH + 22);
+    }
+
+    if (animPhase >= 1) {
+      drawPerson(pickyPositions[0], 'D1*', pickyGirlColor, 1);
+      drawPerson(pickyPositions[1], 'D2*', pickyGirlColor, 1);
+    }
+
+    if (animPhase >= 2) {
+      const othersOrder = [0, 1, 3, 5, 6, 7];
+      const otherLabels = ['M1', 'D3', 'M2', 'M3', 'D4', 'M4'];
+      const otherColors = [boyColor, girlColor, boyColor, boyColor, girlColor, boyColor];
+      const showCount = animPhase === 2 ? Math.min(Math.floor((phaseTimer - 0) / 20), 6) : 6;
+
+      for (let j = 0; j < showCount; j++) {
+        drawPerson(othersOrder[j], otherLabels[j], otherColors[j], 1);
+      }
+    }
+
+    drawCountFormula();
+    drawLegend();
+
+    animFrame++;
+    phaseTimer++;
+
+    if (animPhase === 0 && phaseTimer > 120) {
+      animPhase = 1;
+      phaseTimer = 0;
+    } else if (animPhase === 1 && phaseTimer > 100) {
+      animPhase = 2;
+      phaseTimer = 0;
+    } else if (animPhase === 2 && phaseTimer > 150) {
+      animPhase = 3;
+      phaseTimer = 0;
+    } else if (animPhase === 3 && phaseTimer > 200) {
+      animPhase = 0;
+      phaseTimer = 0;
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  // Step click highlighting
+  document.querySelectorAll('.step-container').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Raspoređivanje u bioskopu sa ograničenjima",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "varijacije", "permutacije", "princip proizvoda", "prebrojavanje sa ograničenjima"]
+}
+BRAINSPARK_META-->

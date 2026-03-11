@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uzastopna procentualna povećanja - određivanje početne cene</title>
+
+  <script type="text/info" id="logic-scratchpad">
+    Problem: Cena artikla je najpre povećana za 12%, a zatim je nova cena povećana za još 5%
+    i sada iznosi 9408 din. Početna cena artikla bila je:
+    А) 7600 din   Б) 8000 din   В) 8204 din   Г) 8400 din
+
+    Rešenje:
+    Neka je početna cena = x dinara.
+
+    Korak 1: Posle povećanja od 12%:
+      x * (1 + 12/100) = x * 1,12
+
+    Korak 2: Posle povećanja od 5% (na novu cenu):
+      x * 1,12 * (1 + 5/100) = x * 1,12 * 1,05
+
+    Korak 3: Konačna cena je 9408 din:
+      x * 1,12 * 1,05 = 9408
+
+    Korak 4: Izračunavamo proizvod množilaca:
+      1,12 * 1,05 = 1,176
+
+    Korak 5: Delimo:
+      x = 9408 / 1,176 = 8000
+
+    Odgovor: x = 8000 din => opcija Б)
+
+    Verifikacija:
+      8000 * 1,12 = 8960
+      8960 * 1,05 = 9408 ✓
+
+    Verifikacija sa datim tačnim odgovorom: Б) 8000 din. TAČNO!
+
+    Provera ostalih opcija:
+      A) 7600 * 1,176 = 8937,6 ≠ 9408
+      B) 8000 * 1,176 = 9408 ✓
+      C) 8204 * 1,176 ≈ 9647,9 ≠ 9408
+      D) 8400 * 1,176 = 9878,4 ≠ 9408
+  </script>
+
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)'], ['$', '$']],
+        displayMath: [['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1.05rem;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    .card h2 {
+      color: #60a5fa;
+      font-size: 1.35rem;
+      margin-bottom: 16px;
+    }
+
+    .card h3 {
+      color: #e2e8f0;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .given-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .given-item {
+      background: rgba(56, 189, 248, 0.06);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 10px;
+      padding: 12px 18px;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .given-item .label {
+      color: #94a3b8;
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+    }
+
+    .given-item .value {
+      color: #e2e8f0;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .answer-option {
+      cursor: default;
+    }
+
+    .highlight {
+      color: #60a5fa;
+      font-weight: 600;
+    }
+
+    .highlight-pink {
+      color: #f472b6;
+      font-weight: 600;
+    }
+
+    /* Plan card */
+    .plan-card {
+      border-left: 3px solid #a78bfa;
+    }
+
+    .plan-card h2 {
+      color: #a78bfa;
+    }
+
+    /* Theory refresher */
+    details {
+      margin: 15px 0;
+    }
+
+    details summary {
+      cursor: pointer;
+      color: #60a5fa;
+      font-weight: 600;
+      font-size: 1.05rem;
+      padding: 6px 0;
+    }
+
+    details summary:hover {
+      color: #93c5fd;
+    }
+
+    .theory-content {
+      margin-top: 12px;
+      padding-left: 8px;
+    }
+
+    .theory-content li {
+      margin-bottom: 10px;
+      list-style: none;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .theory-content li::before {
+      content: '\25B8';
+      color: #a78bfa;
+      position: absolute;
+      left: 0;
+    }
+
+    /* Canvas card */
+    .canvas-card {
+      text-align: center;
+    }
+
+    .canvas-card canvas {
+      border-radius: 10px;
+      border: 1px solid #334155;
+      touch-action: none;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .canvas-hint {
+      color: #94a3b8;
+      font-size: 0.82rem;
+      margin-top: 8px;
+    }
+
+    /* Steps */
+    .step {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .step:hover, .step.active {
+      background: rgba(96, 165, 250, 0.05);
+      border-left: 3px solid #4ade80;
+      padding-left: 13px;
+    }
+
+    .step-badge {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-top: 2px;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .math-block {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      overflow-x: auto;
+    }
+
+    .note {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* Checkpoint */
+    .checkpoint {
+      margin: 15px 0;
+      background: rgba(167, 139, 250, 0.06);
+      border: 1px solid rgba(167, 139, 250, 0.2);
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+
+    .checkpoint summary {
+      color: #a78bfa;
+      font-size: 0.95rem;
+    }
+
+    .checkpoint .answer {
+      margin-top: 10px;
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    /* Key Insight */
+    .insight-card {
+      background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      text-align: center;
+    }
+
+    .insight-card h2 {
+      color: #a78bfa;
+    }
+
+    .insight-formula {
+      font-size: 1.3rem;
+      margin: 16px 0;
+    }
+
+    /* Final Answer */
+    .final-answer-card {
+      border: 2px solid #4ade80;
+      text-align: center;
+    }
+
+    .final-answer-card h2 {
+      color: #4ade80;
+    }
+
+    .final-answer-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #4ade80;
+      margin: 16px 0;
+    }
+
+    .answer-options-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 16px 0;
+    }
+
+    .answer-options-row .option-card {
+      background: rgba(56, 189, 248, 0.06);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px 20px;
+      min-width: 110px;
+      text-align: center;
+    }
+
+    .answer-options-row .option-card.correct {
+      border-color: #4ade80;
+      background: rgba(52, 211, 153, 0.12);
+    }
+
+    .answer-options-row .option-card .opt-label {
+      color: #94a3b8;
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+    }
+
+    .answer-options-row .option-card .opt-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .answer-options-row .option-card.correct .opt-value {
+      color: #4ade80;
+    }
+
+    .verification {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-top: 14px;
+      font-style: italic;
+    }
+
+    /* Pitfalls */
+    .pitfall-card {
+      border-left: 3px solid #e09468;
+    }
+
+    .pitfall-card h2 {
+      color: #e09468;
+    }
+
+    .pitfall-card li {
+      margin-bottom: 8px;
+      list-style: none;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .pitfall-card li::before {
+      content: '\26A0';
+      position: absolute;
+      left: 0;
+    }
+
+    /* Challenge */
+    .challenge-card {
+      border-left: 3px solid #f472b6;
+    }
+
+    .challenge-card h2 {
+      color: #f472b6;
+    }
+
+    /* Slider */
+    .slider-container {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    .slider-container label {
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+
+    .slider-container input[type="range"] {
+      width: 200px;
+      accent-color: #60a5fa;
+    }
+
+    .slider-value {
+      color: #60a5fa;
+      font-weight: 700;
+      font-size: 1rem;
+      min-width: 80px;
+    }
+
+    @media (max-width: 700px) {
+      h1 { font-size: 1.5rem; }
+      .card { padding: 16px; }
+      .given-grid { gap: 8px; }
+      .given-item { min-width: 80px; padding: 10px 12px; }
+      .step { flex-direction: column; gap: 8px; }
+      .final-answer-value { font-size: 1.4rem; }
+      .slider-container { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Title -->
+    <h1>Određivanje početne cene artikla</h1>
+    <p class="subtitle">Uzastopna procentualna povećanja cene - inverzni procentni račun</p>
+
+    <!-- Problem Statement -->
+    <div class="card problem-statement">
+      <h2>Postavka zadatka</h2>
+      <p>
+        Cena artikla je najpre povećana za <span class="highlight-pink">12%</span>, a zatim je nova cena
+        povećana za još <span class="highlight-pink">5%</span> i sada iznosi
+        <span class="highlight">9408 din</span>. Početna cena artikla bila je:
+      </p>
+
+      <div class="given-grid">
+        <div class="given-item">
+          <div class="label">Prvo povećanje</div>
+          <div class="value">\(12\%\)</div>
+        </div>
+        <div class="given-item">
+          <div class="label">Drugo povećanje</div>
+          <div class="value">\(5\%\)</div>
+        </div>
+        <div class="given-item">
+          <div class="label">Konačna cena</div>
+          <div class="value">\(9408\) din</div>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 20px;">Ponuđeni odgovori:</h3>
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">
+          <div class="label">(A)</div>
+          <div class="value">\(7600\) din</div>
+        </div>
+        <div class="given-item answer-option" data-option="B">
+          <div class="label">(B)</div>
+          <div class="value">\(8000\) din</div>
+        </div>
+        <div class="given-item answer-option" data-option="C">
+          <div class="label">(C)</div>
+          <div class="value">\(8204\) din</div>
+        </div>
+        <div class="given-item answer-option" data-option="D">
+          <div class="label">(D)</div>
+          <div class="value">\(8400\) din</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan -->
+    <div class="card plan-card">
+      <h2>Plan rešavanja</h2>
+      <p>
+        Postavićemo jednačinu u kojoj je nepoznata početna cena \(x\). Dva uzastopna procentualna
+        povećanja ćemo predstaviti množenjem odgovarajućim množiocima (\(1{,}12\) i \(1{,}05\)),
+        a zatim ćemo podeliti konačnu cenu kombinovanim množiocem da dobijemo početnu cenu.
+      </p>
+    </div>
+
+    <!-- Theory Refresher -->
+    <div class="card">
+      <details>
+        <summary>Ključne formule i pojmovi</summary>
+        <ul class="theory-content">
+          <li>
+            <strong>Procentualno povećanje:</strong> Ako cena \(C\) poraste za \(p\%\), nova cena je:
+            \[ C_{\text{nova}} = C \cdot \left(1 + \frac{p}{100}\right) \]
+          </li>
+          <li>
+            <strong>Uzastopna procentualna povećanja:</strong> Kada se primene dva povećanja jedno za drugim:
+            \[ C_{\text{konačna}} = C_0 \cdot k_1 \cdot k_2 \]
+            gde su \(k_1\) i \(k_2\) odgovarajući množioci (npr. \(1{,}12\) za +12%, \(1{,}05\) za +5%).
+          </li>
+          <li>
+            <strong>Inverzni problem:</strong> Ako je poznata konačna cena i procenti povećanja, početna cena se dobija deljenjem:
+            \[ C_0 = \frac{C_{\text{konačna}}}{k_1 \cdot k_2} \]
+          </li>
+          <li>
+            <strong>Važno:</strong> Dva uzastopna povećanja od \(p_1\%\) i \(p_2\%\) <em>nisu</em> isto što i
+            jedno povećanje od \((p_1 + p_2)\%\), jer se drugo povećanje primenjuje na već uvećanu cenu.
+          </li>
+        </ul>
+      </details>
+    </div>
+
+    <!-- Visual Aid - Canvas -->
+    <div class="card canvas-card">
+      <h2>Vizuelni prikaz</h2>
+      <canvas id="priceCanvas" width="700" height="400"></canvas>
+      <div class="slider-container">
+        <label for="priceSlider">Početna cena:</label>
+        <input type="range" id="priceSlider" min="6000" max="10000" value="8000" step="100">
+        <span class="slider-value" id="sliderLabel">8000 din</span>
+      </div>
+      <p class="canvas-hint">Pomeri klizač da vidiš kako početna cena utiče na konačnu cenu</p>
+    </div>
+
+    <!-- Step-by-Step Solution -->
+    <div class="card">
+      <h2>Rešenje korak po korak</h2>
+
+      <div class="step" id="step1">
+        <div class="step-badge">1</div>
+        <div class="step-content">
+          <h3>Uvođenje nepoznate</h3>
+          <p>Neka je \(x\) početna cena artikla u dinarima. To je vrednost koju tražimo.</p>
+          <div class="math-block">
+            \[ x = \;? \text{ din} \]
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="step2">
+        <div class="step-badge">2</div>
+        <div class="step-content">
+          <h3>Prvo povećanje - za 12%</h3>
+          <p>
+            Cena se najpre poveća za 12%. To znači da se na početnu cenu doda 12% od nje.
+            Množilac za povećanje od 12% je \(1 + 0{,}12 = 1{,}12\).
+          </p>
+          <div class="math-block">
+            \[ C_1 = x \cdot 1{,}12 \]
+          </div>
+          <p class="note">Posle prvog povećanja cena iznosi \(1{,}12 \cdot x\) dinara.</p>
+        </div>
+      </div>
+
+      <div class="step" id="step3">
+        <div class="step-badge">3</div>
+        <div class="step-content">
+          <h3>Drugo povećanje - za 5%</h3>
+          <p>
+            Zatim se <strong>nova cena</strong> (ne početna!) poveća za još 5%.
+            Množilac za povećanje od 5% je \(1 + 0{,}05 = 1{,}05\).
+          </p>
+          <div class="math-block">
+            \[ C_2 = C_1 \cdot 1{,}05 = x \cdot 1{,}12 \cdot 1{,}05 \]
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkpoint 1 -->
+      <details class="checkpoint">
+        <summary>Proveri sebe: Koliko iznosi kombinovani množilac \(1{,}12 \cdot 1{,}05\)?</summary>
+        <p class="answer">\(1{,}12 \cdot 1{,}05 = 1{,}176\). Dakle, dva uzastopna povećanja su ekvivalentna jednom povećanju od 17,6%.</p>
+      </details>
+
+      <div class="step" id="step4">
+        <div class="step-badge">4</div>
+        <div class="step-content">
+          <h3>Izračunavanje kombinovanog množioca</h3>
+          <p>Pomnožimo dva množioca:</p>
+          <div class="math-block">
+            \[ 1{,}12 \cdot 1{,}05 = 1{,}176 \]
+          </div>
+          <p class="note">Ukupno povećanje iznosi 17,6% (ne 17% koliko bi bilo da samo saberemo procente).</p>
+        </div>
+      </div>
+
+      <div class="step" id="step5">
+        <div class="step-badge">5</div>
+        <div class="step-content">
+          <h3>Postavljanje jednačine</h3>
+          <p>Znamo da konačna cena iznosi 9408 din, pa imamo:</p>
+          <div class="math-block">
+            \[ x \cdot 1{,}176 = 9408 \]
+          </div>
+        </div>
+      </div>
+
+      <div class="step" id="step6">
+        <div class="step-badge">6</div>
+        <div class="step-content">
+          <h3>Rešavanje po \(x\)</h3>
+          <p>Delimo obe strane jednačine sa \(1{,}176\):</p>
+          <div class="math-block">
+            \[ x = \frac{9408}{1{,}176} \]
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkpoint 2 -->
+      <details class="checkpoint">
+        <summary>Proveri sebe: Kako najlakše izračunati \(9408 \div 1{,}176\)?</summary>
+        <p class="answer">
+          Pomnožimo brojilac i imenilac sa 1000:
+          \(\frac{9408}{1{,}176} = \frac{9408000}{1176}\).
+          Ili, primetimo da \(1{,}176 = \frac{1176}{1000} = \frac{147}{125}\),
+          pa je \(x = 9408 \cdot \frac{125}{147} = 8000\).
+        </p>
+      </details>
+
+      <div class="step" id="step7">
+        <div class="step-badge">7</div>
+        <div class="step-content">
+          <h3>Izračunavanje rezultata</h3>
+          <p>Izvršimo deljenje:</p>
+          <div class="math-block">
+            \[ x = \frac{9408}{1{,}176} = 8000 \text{ din} \]
+          </div>
+          <p class="note">Početna cena artikla iznosi 8000 dinara.</p>
+        </div>
+      </div>
+
+      <div class="step" id="step8">
+        <div class="step-badge">8</div>
+        <div class="step-content">
+          <h3>Provera rešenja</h3>
+          <p>Verifikujmo krenuvši od početne cene:</p>
+          <div class="math-block">
+            \[ \begin{align}
+            8000 \cdot 1{,}12 &= 8960 \text{ din (posle +12\%)} \\
+            8960 \cdot 1{,}05 &= 9408 \text{ din (posle +5\%)}
+            \end{align} \]
+          </div>
+          <p class="note">Dobijamo tačno 9408 din, što se poklapa sa datom konačnom cenom.</p>
+        </div>
+      </div>
+
+      <!-- Checkpoint 3 -->
+      <details class="checkpoint">
+        <summary>Proveri sebe: Koliko iznosi 12% od 8000?</summary>
+        <p class="answer">\(12\% \cdot 8000 = 0{,}12 \cdot 8000 = 960\) dinara. Nova cena: \(8000 + 960 = 8960\) din. Zatim, \(5\% \cdot 8960 = 448\) din, pa konačna cena: \(8960 + 448 = 9408\) din.</p>
+      </details>
+    </div>
+
+    <!-- Key Insight -->
+    <div class="card insight-card">
+      <h2>Ključni uvid</h2>
+      <p>Kod inverznog procentnog problema, konačnu cenu <strong>delimo</strong> kombinovanim množiocem:</p>
+      <div class="insight-formula">
+        \[ x = \frac{9408}{\underbrace{1{,}12}_{\text{+12\%}} \times \underbrace{1{,}05}_{\text{+5\%}}} = \frac{9408}{1{,}176} = 8000 \text{ din} \]
+      </div>
+      <p>
+        Nikad ne oduzimajte procente od konačne cene - to ne daje tačan rezultat jer se
+        procenat primenjivao na <em>manju</em> osnovicu.
+      </p>
+    </div>
+
+    <!-- Final Answer -->
+    <div class="card final-answer-card">
+      <h2>Konačan odgovor</h2>
+      <div class="final-answer-value">\(8000\) dinara</div>
+      <div class="answer-options-row">
+        <div class="option-card">
+          <div class="opt-label">(A)</div>
+          <div class="opt-value">7600 din</div>
+        </div>
+        <div class="option-card correct">
+          <div class="opt-label">(B)</div>
+          <div class="opt-value">8000 din</div>
+        </div>
+        <div class="option-card">
+          <div class="opt-label">(V)</div>
+          <div class="opt-value">8204 din</div>
+        </div>
+        <div class="option-card">
+          <div class="opt-label">(G)</div>
+          <div class="opt-value">8400 din</div>
+        </div>
+      </div>
+      <p class="verification">
+        Provera: \(8000 \cdot 1{,}12 = 8960\), zatim \(8960 \cdot 1{,}05 = 9408\) din. Rezultat se tačno poklapa sa datom konačnom cenom.
+      </p>
+    </div>
+
+    <!-- Common Pitfalls -->
+    <div class="card pitfall-card">
+      <h2>Česte greške</h2>
+      <ul>
+        <li>
+          <strong>Oduzimanje procenata od konačne cene:</strong> Pogrešno je računati \(9408 - 12\% - 5\% = 9408 \cdot 0{,}88 \cdot 0{,}95 = 7865{,}86\).
+          Procenti su bili <em>dodati</em> na manje cene, pa se za inverzni račun mora <em>deliti</em>, a ne oduzimati.
+        </li>
+        <li>
+          <strong>Sabiranje procenata:</strong> Pogrešno je zaključiti da je ukupno povećanje tačno 17% (\(12 + 5\)),
+          jer \(9408 \div 1{,}17 \approx 8041{,}03\) - to nije celobrojna vrednost i ne odgovara nijednom ponuđenom odgovoru.
+          Tačan kombinovani množilac je \(1{,}12 \cdot 1{,}05 = 1{,}176\), što daje povećanje od 17,6%.
+        </li>
+      </ul>
+    </div>
+
+    <!-- Optional Challenge -->
+    <div class="card challenge-card">
+      <h2>Izazov za razmišljanje</h2>
+      <p>
+        Ako bi se cena artikla od 8000 dinara najpre povećala za 5%, pa zatim za 12%
+        (obrnut redosled), da li bi konačna cena bila ista?
+      </p>
+      <details>
+        <summary>Pogledaj nagoveštaj</summary>
+        <p style="margin-top: 10px; color: #94a3b8;">
+          Razmisli o komutativnosti množenja: \(1{,}05 \cdot 1{,}12 = 1{,}12 \cdot 1{,}05\).
+          Dakle, \(8000 \cdot 1{,}05 \cdot 1{,}12 = 8000 \cdot 1{,}12 \cdot 1{,}05 = 9408\) din.
+          Redosled povećanja ne utiče na konačnu cenu!
+        </p>
+      </details>
+    </div>
+
+  </div>
+
+  <script>
+    (() => {
+      // Step click interactivity
+      const steps = document.querySelectorAll('.step');
+      steps.forEach(step => {
+        step.addEventListener('click', () => {
+          steps.forEach(s => s.classList.remove('active'));
+          step.classList.toggle('active');
+        });
+      });
+
+      // Canvas visualization
+      const canvas = document.getElementById('priceCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+
+      const slider = document.getElementById('priceSlider');
+      const sliderLabel = document.getElementById('sliderLabel');
+
+      function draw(startPrice) {
+        const price1 = startPrice * 1.12;
+        const price2 = price1 * 1.05;
+
+        // Background
+        ctx.fillStyle = '#0c1222';
+        ctx.fillRect(0, 0, W, H);
+
+        // Title
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Promena cene artikla kroz dva povecanja', W / 2, 30);
+
+        const prices = [
+          { label: 'Pocetna cena', value: startPrice, color: '#60a5fa' },
+          { label: 'Posle +12%', value: price1, color: '#a78bfa' },
+          { label: 'Posle +5%', value: price2, color: price2 === 9408 ? '#4ade80' : '#e2e8f0' }
+        ];
+
+        const maxPrice = 12000;
+        const barAreaLeft = 150;
+        const barAreaRight = W - 80;
+        const barAreaWidth = barAreaRight - barAreaLeft;
+        const barHeight = 50;
+        const barGap = 35;
+        const startY = 60;
+
+        prices.forEach(function(item, i) {
+          var y = startY + i * (barHeight + barGap);
+          var barW = (item.value / maxPrice) * barAreaWidth;
+
+          // Label
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '14px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(item.label, barAreaLeft - 14, y + barHeight / 2 + 5);
+
+          // Bar background
+          ctx.fillStyle = 'rgba(255,255,255,0.03)';
+          ctx.beginPath();
+          ctx.roundRect(barAreaLeft, y, barAreaWidth, barHeight, 8);
+          ctx.fill();
+
+          // Bar
+          var grad = ctx.createLinearGradient(barAreaLeft, y, barAreaLeft + barW, y);
+          grad.addColorStop(0, item.color + '88');
+          grad.addColorStop(1, item.color);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.roundRect(barAreaLeft, y, barW, barHeight, 8);
+          ctx.fill();
+
+          // Glow
+          ctx.shadowColor = item.color;
+          ctx.shadowBlur = 15;
+          ctx.fillStyle = item.color + '22';
+          ctx.beginPath();
+          ctx.roundRect(barAreaLeft, y, barW, barHeight, 8);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Value text
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(Math.round(item.value) + ' din', barAreaLeft + barW + 12, y + barHeight / 2 + 6);
+        });
+
+        // Arrows and percentage labels
+        var arrowX = barAreaLeft - 2;
+
+        // Arrow 1: +12%
+        var y1mid = startY + barHeight;
+        var y2start = startY + barHeight + barGap;
+        drawArrow(ctx, arrowX - 110, y1mid + 2, arrowX - 110, y2start - 2, '#f472b6');
+        ctx.fillStyle = '#f472b6';
+        ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('+12%', arrowX - 133, y1mid + barGap / 2 + 4);
+
+        // Arrow 2: +5%
+        var y3mid = startY + barHeight + barGap + barHeight;
+        var y4start = startY + 2 * (barHeight + barGap);
+        drawArrow(ctx, arrowX - 110, y3mid + 2, arrowX - 110, y4start - 2, '#f472b6');
+        ctx.fillStyle = '#f472b6';
+        ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('+5%', arrowX - 133, y3mid + barGap / 2 + 4);
+
+        // Bottom summary
+        var summaryY = startY + 3 * (barHeight + barGap) + 5;
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '14px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(
+          Math.round(startPrice) + ' \u00D7 1,12 \u00D7 1,05 = ' +
+          Math.round(startPrice) + ' \u00D7 1,176 = ' + Math.round(price2) + ' din',
+          W / 2, summaryY
+        );
+
+        // Target comparison
+        if (Math.round(price2) === 9408) {
+          ctx.fillStyle = '#4ade80';
+          ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+          ctx.fillText('Konacna cena = 9408 din \u2714', W / 2, summaryY + 26);
+        } else {
+          var diff = Math.round(price2) - 9408;
+          var sign = diff > 0 ? '+' : '';
+          ctx.fillStyle = '#f472b6';
+          ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+          ctx.fillText(
+            'Konacna cena: ' + Math.round(price2) + ' din (treba 9408, razlika: ' + sign + diff + ')',
+            W / 2, summaryY + 26
+          );
+        }
+      }
+
+      function drawArrow(ctx, x1, y1, x2, y2, color) {
+        var headLen = 8;
+        var angle = Math.atan2(y2 - y1, x2 - x1);
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      draw(8000);
+
+      slider.addEventListener('input', function() {
+        var val = parseInt(slider.value);
+        sliderLabel.textContent = val + ' din';
+        draw(val);
+      });
+    })();
+  </script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Određivanje početne cene artikla posle dva uzastopna procentualna povećanja",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["procenti", "procentualna povećanja", "inverzni procentni račun", "cena artikla"]
+}
+BRAINSPARK_META-->

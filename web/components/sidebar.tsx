@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ChevronRight, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -87,29 +88,49 @@ export function Sidebar({
   return (
     <ScrollArea className="h-full">
       <div className="p-3">
+        {/* Logo & title */}
+        <div className="flex items-center gap-3 px-3 py-2">
+          <Image
+            src="/logo-56.png"
+            alt="Logo"
+            width={28}
+            height={26}
+            unoptimized
+          />
+          <h1 className="text-sm font-semibold text-foreground">
+            Prijemni - Arhiva Rešenja
+          </h1>
+        </div>
+
+        <div className="my-2 border-t border-white/10" />
+
         {/* Filter toggle */}
         {reports.length > 0 && (
-          <button
-            onClick={() => onFilterReportedChange(!filterReported)}
-            className={cn(
-              "mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors",
-              filterReported
-                ? "bg-amber-500/15 text-amber-400 hover:bg-amber-500/20"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground"
-            )}
-          >
-            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-            <span>Reported problems</span>
-            <Badge
-              variant="secondary"
+          <>
+            <button
+              onClick={() => onFilterReportedChange(!filterReported)}
               className={cn(
-                "ml-auto shrink-0 text-[10px]",
-                filterReported && "bg-amber-500/20 text-amber-400"
+                "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium transition-colors",
+                filterReported
+                  ? "bg-amber-500/15 text-amber-400 hover:bg-amber-500/20"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
               )}
             >
-              {reports.length}
-            </Badge>
-          </button>
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              <span>Reported problems</span>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-auto shrink-0 text-[10px]",
+                  filterReported && "bg-amber-500/20 text-amber-400"
+                )}
+              >
+                {reports.length}
+              </Badge>
+            </button>
+
+            <div className="my-2 border-t border-white/10" />
+          </>
         )}
 
         {visibleFaculties.map((faculty) => {

@@ -138,7 +138,7 @@ export function ProblemViewer({
   return (
     <div className="flex h-full flex-col">
       {/* Header bar */}
-      <div className="shrink-0 border-b border-white/10 bg-card px-4 py-2">
+      <div className="shrink-0 border-b border-white/10 bg-card px-4 py-3">
         <div className="flex items-center gap-2 flex-wrap">
           {/* Category display — left side */}
           <div className="relative">

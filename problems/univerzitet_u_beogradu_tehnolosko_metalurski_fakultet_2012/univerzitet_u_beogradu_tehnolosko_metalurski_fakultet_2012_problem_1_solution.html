@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vrednost brojevnog izraza</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Izračunati vrednost brojevnog izraza:
+  [(3 4/27 - 1 1/6 + 7/18) · 6 3/4 - 8,3] / [5,04 - 2,8 · 0,3]
+
+NUMERATOR:
+Korak 1: Pretvaramo mešovite brojeve u neprave razlomke
+  3 4/27 = (3·27 + 4)/27 = 85/27
+  1 1/6 = (1·6 + 1)/6 = 7/6
+  7/18 ostaje 7/18
+
+Korak 2: Zagrade: 85/27 - 7/6 + 7/18
+  NZS(27, 6, 18):
+    27 = 3^3
+    6 = 2 · 3
+    18 = 2 · 3^2
+    NZS = 2 · 3^3 = 54
+
+  85/27 = 170/54
+  7/6 = 63/54
+  7/18 = 21/54
+
+  170/54 - 63/54 + 21/54 = (170 - 63 + 21)/54 = 128/54
+
+  Skraćujemo: 128/54 = 64/27 (delimo sa 2)
+
+Korak 3: Množimo sa 6 3/4 = 27/4
+  64/27 · 27/4 = (64 · 27)/(27 · 4) = 64/4 = 16
+
+Korak 4: Oduzimamo 8,3 = 83/10
+  16 - 83/10 = 160/10 - 83/10 = 77/10
+
+DENOMINATOR:
+Korak 5: 5,04 - 2,8 · 0,3
+  Prvo množenje: 2,8 · 0,3 = 0,84
+  Zatim: 5,04 - 0,84 = 4,20 = 4,2
+
+  Kao razlomak: 4,2 = 42/10 = 21/5
+
+FINALNI RAZLOMAK:
+Korak 6: (77/10) / (21/5) = 77/10 · 5/21 = (77 · 5)/(10 · 21) = 385/210
+
+Skraćujemo: NZD(385, 210)
+  385 = 5 · 7 · 11
+  210 = 2 · 3 · 5 · 7
+  NZD = 5 · 7 = 35
+
+  385/35 = 11
+  210/35 = 6
+
+  Rezultat: 11/6
+
+Provera: 11/6 = 1 5/6 ≈ 1,833...
+Tačan odgovor je B) 11/6. ✓
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details .theory-content {
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(56,189,248,0.05);
+  border-radius: 10px;
+}
+
+details .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+details .theory-content li {
+  margin-bottom: 12px;
+  padding-left: 16px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+details .theory-content li::before {
+  content: '>';
+  color: #60a5fa;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+canvas {
+  border-radius: 10px;
+  width: 100%;
+  max-width: 650px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step:hover, .step.active {
+  background: rgba(56,189,248,0.05);
+  border-left: 3px solid #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+  padding: 14px;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .big-formula {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+}
+
+.final-answer {
+  font-size: 1.8rem;
+  color: #4ade80;
+  text-align: center;
+  margin: 20px 0;
+  font-weight: bold;
+}
+
+.options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-final {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.option-final.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(52,211,153,0.2);
+}
+
+.option-final .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.option-final .opt-value {
+  font-size: 1.15rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.option-final.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  background: rgba(52,211,153,0.08);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.verification strong {
+  color: #34d399;
+}
+
+.pitfall {
+  border-left: 3px solid #e09468;
+}
+
+.pitfall h2 {
+  color: #e09468 !important;
+}
+
+.pitfall ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall li {
+  margin-bottom: 10px;
+  padding-left: 20px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfall li::before {
+  content: '!';
+  color: #e09468;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.challenge-card details {
+  margin: 0;
+}
+
+.challenge-card summary {
+  color: #f472b6;
+}
+
+.highlight-num {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-den {
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+.fraction-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.fraction-flow-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.12);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  min-width: 100px;
+}
+
+.fraction-flow-item .ff-label {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}
+
+.fraction-flow-item .ff-value {
+  color: #e2e8f0;
+  font-size: 1rem;
+}
+
+.arrow-right {
+  display: flex;
+  align-items: center;
+  color: #4ade80;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .final-answer { font-size: 1.4rem; }
+  .fraction-flow { gap: 8px; }
+  .arrow-right { font-size: 1rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Vrednost brojevnog izraza</h1>
+  <p class="subtitle">Aritmetika razlomaka, mešoviti brojevi i decimalni brojevi</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Vrednost brojevnog izraza:</p>
+    <div class="math-block">
+      \[\frac{\left(3\dfrac{4}{27} - 1\dfrac{1}{6} + \dfrac{7}{18}\right) \cdot 6\dfrac{3}{4} - 8{,}3}{5{,}04 - 2{,}8 \cdot 0{,}3}\]
+    </div>
+    <p>je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{11}{6}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(2\dfrac{1}{6}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{13}{4}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(3\dfrac{1}{4}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Računaćemo sistematično: prvo pretvorimo sve mešovite i decimalne brojeve u obične razlomke, zatim rešavamo zagradu u brojiocu (svođenje na zajednički imenilac), množimo rezultat, i na kraju delimo brojilac imeniocem. Poštujemo redosled operacija!</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i pravila</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Mešoviti u nepravi razlomak:</strong> \(a\dfrac{b}{c} = \dfrac{a \cdot c + b}{c}\). Na primer, \(3\dfrac{4}{27} = \dfrac{3 \cdot 27 + 4}{27} = \dfrac{85}{27}\).</li>
+          <li><strong>Najmanji zajednički sadržalac (NZS):</strong> Za sabiranje/oduzimanje razlomaka sa različitim imeniocima, svodimo ih na zajednički imenilac. NZS se traži rastavljanjem na proste činioce.</li>
+          <li><strong>Decimalni u razlomak:</strong> \(8{,}3 = \dfrac{83}{10}\), \(5{,}04 = \dfrac{504}{100} = \dfrac{126}{25}\), \(2{,}8 = \dfrac{28}{10} = \dfrac{14}{5}\), \(0{,}3 = \dfrac{3}{10}\).</li>
+          <li><strong>Deljenje razlomaka:</strong> \(\dfrac{a}{b} \div \dfrac{c}{d} = \dfrac{a}{b} \cdot \dfrac{d}{c}\) &mdash; množimo recipročnom vrednošću.</li>
+          <li><strong>Redosled operacija:</strong> Prvo zagrade, zatim množenje/deljenje, pa sabiranje/oduzimanje.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid: Flowchart of computation -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz toka računanja</h2>
+    <canvas id="flowCanvas" width="650" height="480"></canvas>
+    <p class="canvas-hint">Dijagram prikazuje tok izračunavanja brojioca i imenioca</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Pretvaramo mešovite brojeve u neprave razlomke</h3>
+        <p>Svaki mešoviti broj zapisujemo kao nepravilan razlomak:</p>
+        <div class="math-block">
+          \[3\frac{4}{27} = \frac{3 \cdot 27 + 4}{27} = \frac{81 + 4}{27} = \frac{85}{27}\]
+        </div>
+        <div class="math-block">
+          \[1\frac{1}{6} = \frac{1 \cdot 6 + 1}{6} = \frac{7}{6}\]
+        </div>
+        <div class="math-block">
+          \[6\frac{3}{4} = \frac{6 \cdot 4 + 3}{4} = \frac{27}{4}\]
+        </div>
+        <p class="note">Razlomak \(\frac{7}{18}\) je već obični razlomak i ne menjamo ga.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Tražimo NZS imenilaca u zagradi</h3>
+        <p>U zagradi imamo razlomke sa imeniocima <span class="highlight-num">27</span>, <span class="highlight-num">6</span> i <span class="highlight-num">18</span>. Rastavljamo na proste činioce:</p>
+        <div class="math-block">
+          \[\begin{align}
+          27 &= 3^3 \\
+          6 &= 2 \cdot 3 \\
+          18 &= 2 \cdot 3^2
+          \end{align}\]
+        </div>
+        <p>Najmanji zajednički sadržalac je proizvod najvećih stepena svih prostih činilaca:</p>
+        <div class="math-block">
+          \[\text{NZS}(27, 6, 18) = 2 \cdot 3^3 = 2 \cdot 27 = 54\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Na koje razlomke se svode \(\frac{85}{27}\), \(\frac{7}{6}\) i \(\frac{7}{18}\) sa imeniocem 54?</summary>
+      <div class="answer">
+        \(\frac{85}{27} = \frac{170}{54}\), \(\frac{7}{6} = \frac{63}{54}\), \(\frac{7}{18} = \frac{21}{54}\)
+      </div>
+    </details>
+
+    <div class="step" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Svodimo na zajednički imenilac i računamo zagradu</h3>
+        <p>Proširujemo svaki razlomak da dobije imenilac 54:</p>
+        <div class="math-block">
+          \[\frac{85}{27} = \frac{85 \cdot 2}{27 \cdot 2} = \frac{170}{54}\]
+        </div>
+        <div class="math-block">
+          \[\frac{7}{6} = \frac{7 \cdot 9}{6 \cdot 9} = \frac{63}{54}\]
+        </div>
+        <div class="math-block">
+          \[\frac{7}{18} = \frac{7 \cdot 3}{18 \cdot 3} = \frac{21}{54}\]
+        </div>
+        <p>Sada računamo izraz u zagradi:</p>
+        <div class="math-block">
+          \[\frac{170}{54} - \frac{63}{54} + \frac{21}{54} = \frac{170 - 63 + 21}{54} = \frac{128}{54}\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Skraćujemo rezultat zagrade</h3>
+        <p>Razlomak \(\frac{128}{54}\) skraćujemo sa 2 (jer su oba broja parna):</p>
+        <div class="math-block">
+          \[\frac{128}{54} = \frac{128 \div 2}{54 \div 2} = \frac{64}{27}\]
+        </div>
+        <p class="note">Proveravamo: NZD(64, 27) = 1, jer je 64 = 2\(^6\), a 27 = 3\(^3\). Razlomak je neskrativ.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Množimo rezultat zagrade sa \(6\frac{3}{4}\)</h3>
+        <p>Množimo \(\frac{64}{27}\) sa \(\frac{27}{4}\):</p>
+        <div class="math-block">
+          \[\frac{64}{27} \cdot \frac{27}{4} = \frac{64 \cdot \cancel{27}}{\cancel{27} \cdot 4} = \frac{64}{4} = 16\]
+        </div>
+        <p class="note">Lepota ovog zadatka: 27 u imeniocu i 27 u brojiocu se savršeno skrate!</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko iznosi brojilac glavnog razlomka, tj. \(16 - 8{,}3\)?</summary>
+      <div class="answer">
+        \(16 - 8{,}3 = 7{,}7 = \dfrac{77}{10}\)
+      </div>
+    </details>
+
+    <div class="step" id="step6">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Računamo ceo brojilac</h3>
+        <p>Od rezultata množenja oduzimamo \(8{,}3\). Pretvaramo u razlomke:</p>
+        <div class="math-block">
+          \[16 - 8{,}3 = \frac{160}{10} - \frac{83}{10} = \frac{160 - 83}{10} = \frac{77}{10}\]
+        </div>
+        <p>Brojilac glavnog razlomka iznosi <span class="highlight-num">\(\frac{77}{10}\)</span>.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step7">
+      <div class="step-number">7</div>
+      <div class="step-content">
+        <h3>Računamo imenilac glavnog razlomka</h3>
+        <p>U imeniocu imamo \(5{,}04 - 2{,}8 \cdot 0{,}3\). Po redosledu operacija, <strong>prvo množimo</strong>:</p>
+        <div class="math-block">
+          \[2{,}8 \cdot 0{,}3 = 0{,}84\]
+        </div>
+        <p>Zatim oduzimamo:</p>
+        <div class="math-block">
+          \[5{,}04 - 0{,}84 = 4{,}20 = 4{,}2\]
+        </div>
+        <p>Pretvaramo u razlomak:</p>
+        <div class="math-block">
+          \[4{,}2 = \frac{42}{10} = \frac{21}{5}\]
+        </div>
+        <p>Imenilac glavnog razlomka iznosi <span class="highlight-den">\(\frac{21}{5}\)</span>.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step8">
+      <div class="step-number">8</div>
+      <div class="step-content">
+        <h3>Delimo brojilac imeniocem</h3>
+        <p>Sada delimo \(\frac{77}{10}\) sa \(\frac{21}{5}\), što znači da množimo recipročnom vrednošću:</p>
+        <div class="math-block">
+          \[\frac{77}{10} \div \frac{21}{5} = \frac{77}{10} \cdot \frac{5}{21} = \frac{77 \cdot 5}{10 \cdot 21} = \frac{385}{210}\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step9">
+      <div class="step-number">9</div>
+      <div class="step-content">
+        <h3>Skraćujemo konačni razlomak</h3>
+        <p>Tražimo NZD brojeva 385 i 210. Rastavljamo na proste činioce:</p>
+        <div class="math-block">
+          \[\begin{align}
+          385 &= 5 \cdot 7 \cdot 11 \\
+          210 &= 2 \cdot 3 \cdot 5 \cdot 7
+          \end{align}\]
+        </div>
+        <p>Zajednički činioci su \(5\) i \(7\), pa je NZD = \(5 \cdot 7 = 35\).</p>
+        <div class="math-block">
+          \[\frac{385}{210} = \frac{385 \div 35}{210 \div 35} = \frac{11}{6}\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Da li je \(\frac{11}{6}\) neskrativ razlomak?</summary>
+      <div class="answer">
+        Da! NZD(11, 6) = 1, jer je 11 prost broj i ne deli 6. Razlomak \(\frac{11}{6}\) je potpuno skraćen.
+      </div>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Najveća „fora" u ovom zadatku je u koraku 5: rezultat zagrade je \(\frac{64}{27}\), a množimo ga sa \(\frac{27}{4}\). Broj 27 se savršeno skrati, što drastično pojednostavljuje račun. Ovo nije slučajnost &mdash; zadatak je tako osmišljen!</p>
+    <div class="big-formula">
+      \[\frac{64}{\cancel{27}} \cdot \frac{\cancel{27}}{4} = 16\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer">
+      \[\frac{11}{6}\]
+    </div>
+    <div class="options-final">
+      <div class="option-final">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(3\)</div>
+      </div>
+      <div class="option-final correct">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(\dfrac{11}{6}\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(2\dfrac{1}{6}\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(\dfrac{13}{4}\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(3\dfrac{1}{4}\)</div>
+      </div>
+    </div>
+    <div class="verification">
+      <strong>Provera:</strong> Vrednost \(\frac{11}{6} \approx 1{,}833\). Proveravamo: brojilac = \(16 - 8{,}3 = 7{,}7\), imenilac = \(5{,}04 - 0{,}84 = 4{,}2\). Količnik: \(\frac{7{,}7}{4{,}2} = \frac{77}{42} = \frac{11}{6}\) &check;. Napomenimo i da je \(2\frac{1}{6} = \frac{13}{6}\), što nije isto kao \(\frac{11}{6}\) &mdash; pažljivo razlikujte odgovore B i C!
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Mešanje odgovora B i C:</strong> Odgovor C) \(2\frac{1}{6} = \frac{13}{6}\) izgleda slično odgovoru B) \(\frac{11}{6}\), ali to su različiti brojevi! Uvek proverite da li je rezultat \(\frac{11}{6}\) (otprilike 1,83) ili \(\frac{13}{6}\) (otprilike 2,17).</li>
+      <li><strong>Redosled operacija u imeniocu:</strong> U izrazu \(5{,}04 - 2{,}8 \cdot 0{,}3\) prvo se računa množenje \(2{,}8 \cdot 0{,}3 = 0{,}84\), pa tek onda oduzimanje. Ako biste greškom prvo oduzeli \(5{,}04 - 2{,}8 = 2{,}24\) pa množili sa \(0{,}3\), dobili biste pogrešan imenilac.</li>
+      <li><strong>Greška pri pretvaranju mešovitog broja:</strong> \(3\frac{4}{27} \neq \frac{31}{27}\)! Pravilno: \(3 \cdot 27 + 4 = 85\), dakle \(\frac{85}{27}\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Pokušajte da izračunate vrednost izraza:</p>
+    <div class="math-block">
+      \[\frac{\left(2\dfrac{5}{12} - 1\dfrac{3}{8} + \dfrac{1}{6}\right) \cdot 4\dfrac{4}{5} - 3{,}2}{1{,}25 + 0{,}75 \cdot 2}\]
+    </div>
+    <details>
+      <summary>Prikaži pomoć</summary>
+      <div class="theory-content">
+        <p>Slično kao u zadatku, prvo pretvorite mešovite brojeve u neprave razlomke. NZS imenilaca u zagradi (12, 8, 6) je 24. Izračunajte zagradu, pomnožite, oduzmite decimalni broj, i podelite imeniocem (ne zaboravite redosled operacija u imeniocu!).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas: Computation flow diagram
+  const canvas = document.getElementById('flowCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function roundRect(x, y, w, h, r, fillColor, strokeColor) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    if (fillColor) {
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    if (strokeColor) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
+  function drawArrow(x1, y1, x2, y2, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const headLen = 8;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawText(text, x, y, color, fontSize, align) {
+    ctx.fillStyle = color;
+    ctx.font = (fontSize || 13) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = align || 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+  }
+
+  function drawBoldText(text, x, y, color, fontSize, align) {
+    ctx.fillStyle = color;
+    ctx.font = 'bold ' + (fontSize || 13) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = align || 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    drawBoldText('Tok izračunavanja', W / 2, 22, '#94a3b8', 15);
+
+    // === TOP ROW: Three fractions in the bracket ===
+    const topY = 55;
+    const boxW = 120;
+    const boxH = 50;
+
+    // Box 1: 85/27
+    roundRect(40, topY, boxW, boxH, 8, 'rgba(96,165,250,0.12)', '#60a5fa');
+    drawText('85/27', 100, topY + 16, '#60a5fa', 13);
+    drawText('(3 4/27)', 100, topY + 36, '#94a3b8', 11);
+
+    // Box 2: 7/6
+    roundRect(200, topY, boxW, boxH, 8, 'rgba(244,114,182,0.12)', '#f472b6');
+    drawText('7/6', 260, topY + 16, '#f472b6', 13);
+    drawText('(1 1/6)', 260, topY + 36, '#94a3b8', 11);
+
+    // Box 3: 7/18
+    roundRect(360, topY, boxW, boxH, 8, 'rgba(96,165,250,0.12)', '#60a5fa');
+    drawText('7/18', 420, topY + 16, '#60a5fa', 13);
+
+    // Operator labels
+    drawBoldText('\u2212', 175, topY + 25, '#e2e8f0', 18);
+    drawBoldText('+', 340, topY + 25, '#e2e8f0', 18);
+
+    // Arrows down to NZS result
+    const nzsY = 145;
+    drawArrow(100, topY + boxH, 280, nzsY, '#334155');
+    drawArrow(260, topY + boxH, 280, nzsY, '#334155');
+    drawArrow(420, topY + boxH, 280, nzsY, '#334155');
+
+    // NZS label
+    drawText('NZS = 54', 530, topY + 25, '#94a3b8', 11);
+
+    // Box: result of bracket = 64/27
+    roundRect(210, nzsY, 140, 50, 8, 'rgba(96,165,250,0.12)', '#60a5fa');
+    drawText('128/54 = 64/27', 280, nzsY + 16, '#60a5fa', 13);
+    drawText('(rezultat zagrade)', 280, nzsY + 36, '#94a3b8', 11);
+
+    // Multiply arrow to the right
+    const mulX = 400;
+    drawArrow(350, nzsY + 25, mulX, nzsY + 25, '#a78bfa');
+    drawBoldText('\u00D7', 375, nzsY + 12, '#a78bfa', 14);
+
+    // Box: 27/4
+    roundRect(mulX, nzsY, 110, 50, 8, 'rgba(167,139,250,0.12)', '#a78bfa');
+    drawText('27/4', mulX + 55, nzsY + 16, '#a78bfa', 13);
+    drawText('(6 3/4)', mulX + 55, nzsY + 36, '#94a3b8', 11);
+
+    // Arrow down from both
+    const prodY = 235;
+    drawArrow(280, nzsY + 50, 280, prodY, '#334155');
+    drawArrow(mulX + 55, nzsY + 50, 280, prodY, '#334155');
+
+    // Box: product = 16
+    roundRect(220, prodY, 120, 45, 8, 'rgba(52,211,153,0.12)', '#34d399');
+    drawBoldText('16', 280, prodY + 15, '#4ade80', 18);
+    drawText('(27 se skrati!)', 280, prodY + 35, '#94a3b8', 11);
+
+    // Arrow down, subtract 8.3
+    const subY = 315;
+    drawArrow(280, prodY + 45, 280, subY, '#334155');
+    drawBoldText('\u2212 8,3', 320, prodY + 55, '#e2e8f0', 13);
+
+    // Box: numerator = 77/10
+    roundRect(210, subY, 140, 45, 8, 'rgba(96,165,250,0.15)', '#60a5fa');
+    drawBoldText('Brojilac: 77/10', 280, subY + 15, '#60a5fa', 13);
+    drawText('(= 7,7)', 280, subY + 35, '#94a3b8', 11);
+
+    // === DENOMINATOR computation (right side) ===
+    const denX = 530;
+    const denY1 = 235;
+
+    // Box: 2.8 * 0.3
+    roundRect(denX - 60, denY1, 120, 45, 8, 'rgba(167,139,250,0.12)', '#a78bfa');
+    drawText('2,8 \u00D7 0,3', denX, denY1 + 15, '#a78bfa', 12);
+    drawText('= 0,84', denX, denY1 + 33, '#94a3b8', 11);
+
+    // Arrow down
+    const denY2 = 315;
+    drawArrow(denX, denY1 + 45, denX, denY2, '#334155');
+    drawBoldText('5,04 \u2212', denX - 5, denY1 + 55, '#e2e8f0', 12);
+
+    // Box: denominator = 21/5
+    roundRect(denX - 60, denY2, 120, 45, 8, 'rgba(167,139,250,0.15)', '#a78bfa');
+    drawBoldText('Imenilac: 21/5', denX, denY2 + 15, '#a78bfa', 13);
+    drawText('(= 4,2)', denX, denY2 + 35, '#94a3b8', 11);
+
+    // Arrows from numerator and denominator to final result
+    const finalY = 405;
+    drawArrow(280, subY + 45, 340, finalY, '#4ade80');
+    drawArrow(denX, denY2 + 45, 400, finalY, '#4ade80');
+
+    // Division symbol
+    drawBoldText('\u00F7', 370, subY + 55, '#e2e8f0', 18);
+
+    // Final result box
+    roundRect(290, finalY, 160, 55, 12, 'rgba(52,211,153,0.18)', '#4ade80');
+    drawBoldText('11/6', 370, finalY + 20, '#4ade80', 22);
+    drawText('Konačan rezultat', 370, finalY + 42, '#94a3b8', 12);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Vrednost brojevnog izraza sa razlomcima i decimalnim brojevima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["brojevni izraz", "razlomci", "mešoviti brojevi", "decimalni brojevi", "aritmetika", "redosled operacija"]
+}
+BRAINSPARK_META-->

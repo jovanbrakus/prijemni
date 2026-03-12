@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maksimalna zapremina valjka upisanog u loptu</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Find the maximum volume of a cylinder inscribed in a sphere of radius R.
+
+  Setup:
+  - Sphere of radius R, centered at origin.
+  - Cylinder inscribed in sphere: the circular edges of the cylinder lie on the sphere.
+  - Let r = radius of cylinder, h = height of cylinder.
+  - The relationship between r, h, and R comes from the right triangle formed by:
+    * The sphere's radius R (hypotenuse, from center to edge of cylinder top circle)
+    * Half the cylinder height h/2 (vertical leg)
+    * The cylinder radius r (horizontal leg)
+  - By Pythagorean theorem: r^2 + (h/2)^2 = R^2
+  - So r^2 = R^2 - h^2/4
+
+  Volume of cylinder:
+  V = pi * r^2 * h = pi * (R^2 - h^2/4) * h = pi * (R^2 * h - h^3/4)
+
+  To maximize, take derivative with respect to h and set to zero:
+  dV/dh = pi * (R^2 - 3h^2/4) = 0
+  R^2 = 3h^2/4
+  h^2 = 4R^2/3
+  h = 2R/sqrt(3) = 2R*sqrt(3)/3
+
+  Now find r^2:
+  r^2 = R^2 - h^2/4 = R^2 - (4R^2/3)/4 = R^2 - R^2/3 = 2R^2/3
+
+  Compute maximum volume:
+  V_max = pi * r^2 * h = pi * (2R^2/3) * (2R*sqrt(3)/3)
+        = pi * (4R^3 * sqrt(3)) / 9
+        = 4R^3 * pi * sqrt(3) / 9
+
+  This matches answer A) 4R^3*pi*sqrt(3)/9.
+
+  Verification with second derivative:
+  d^2V/dh^2 = pi * (-6h/4) = -3*pi*h/2
+  At h = 2R/sqrt(3) > 0, d^2V/dh^2 < 0, so it's indeed a maximum.
+
+  Numerical check for R=1:
+  h = 2/sqrt(3) ≈ 1.1547
+  r^2 = 2/3, r ≈ 0.8165
+  V = pi * (2/3) * (2/sqrt(3)) = 4*pi/(3*sqrt(3)) = 4*pi*sqrt(3)/9 ≈ 2.4184
+
+  Check option A: 4*1^3*pi*sqrt(3)/9 = 4*pi*sqrt(3)/9 ≈ 2.4184 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.5rem;
+}
+
+.problem-text {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #e2e8f0;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 12px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1rem;
+  color: #e2e8f0;
+}
+
+.answer-option {
+  flex: 1;
+  min-width: 120px;
+  max-width: 220px;
+}
+
+.plan-text {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: #c8d6e5;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #a78bfa;
+  padding: 10px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+.theory-content {
+  padding: 16px 0;
+  color: #c8d6e5;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  line-height: 1.8;
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.formula-name {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  padding: 20px;
+  border-left: 3px solid #334155;
+  border-radius: 0 12px 12px 0;
+  background: rgba(30, 41, 59, 0.5);
+  transition: border-color 0.3s, background 0.3s;
+  cursor: pointer;
+}
+
+.step-container:hover,
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.step-text {
+  color: #c8d6e5;
+  margin-bottom: 12px;
+  line-height: 1.8;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.checkpoint {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 1rem;
+  padding: 4px 0;
+}
+
+.checkpoint-answer {
+  padding: 12px 0;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-title {
+  font-size: 1.2rem;
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-formula {
+  font-size: 1.3rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.08));
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-label {
+  font-size: 1rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.option-card {
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  text-align: center;
+  min-width: 100px;
+  transition: all 0.3s;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.15);
+}
+
+.option-card .opt-letter {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.option-card.correct .opt-letter {
+  color: #4ade80;
+}
+
+.verification-note {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(56, 189, 248, 0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfall-box {
+  background: rgba(224, 148, 104, 0.08);
+  border: 1px solid rgba(224, 148, 104, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.pitfall-title {
+  color: #e09468;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 6px 0;
+  color: #c8d6e5;
+  line-height: 1.7;
+}
+
+.pitfall-list li::before {
+  content: "\26A0\FE0F ";
+}
+
+.challenge-box {
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.challenge-title {
+  color: #a78bfa;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+#three-container {
+  width: 100%;
+  height: 420px;
+  border-radius: 12px;
+  overflow: hidden;
+  touch-action: none;
+  position: relative;
+}
+
+#three-container canvas {
+  touch-action: none;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.slider-row label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  min-width: 200px;
+}
+
+.slider-row input[type="range"] {
+  flex: 1;
+  min-width: 150px;
+  accent-color: #60a5fa;
+  height: 6px;
+}
+
+.slider-value {
+  color: #60a5fa;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+.volume-display {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 1.05rem;
+  color: #e2e8f0;
+}
+
+.volume-display .vol-value {
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.volume-display .vol-max {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid {
+    flex-direction: column;
+  }
+  .answer-option {
+    max-width: 100%;
+  }
+  #three-container {
+    height: 300px;
+  }
+  .options-row {
+    flex-direction: column;
+    align-items: center;
+  }
+  .slider-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Maksimalna zapremina valjka upisanog u loptu</h1>
+  <p class="subtitle">Optimizacija zapremine primenom izvoda -- stereometrija i matematička analiza</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title"><span class="icon">📋</span> Tekst zadatka</h2>
+    <p class="problem-text">
+      Maksimalna zapremina valjka upisanog u loptu poluprečnika \( R \) iznosi:
+    </p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( \dfrac{4R^3\pi\sqrt{3}}{9} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( \dfrac{2R^3\pi}{\sqrt{3}} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( \dfrac{3R^3\pi}{2} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( \dfrac{R^3\pi}{2} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( \dfrac{3R^2\pi\sqrt{3}}{4} \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">🎯</span> Plan rešavanja</h2>
+    <p class="plan-text">
+      Uspostavićemo vezu između poluprečnika valjka \( r \), visine valjka \( h \) i poluprečnika lopte \( R \) koristeći Pitagorinu teoremu. Zatim ćemo zapreminu valjka izraziti kao funkciju jedne promenljive i pomoću prvog izvoda naći njenu maksimalnu vrednost.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li>
+            <span class="formula-name">Zapremina valjka:</span>
+            \[ V = \pi r^2 h \]
+            gde je \( r \) poluprečnik osnove, a \( h \) visina valjka.
+          </li>
+          <li>
+            <span class="formula-name">Pitagorina teorema:</span>
+            \[ a^2 + b^2 = c^2 \]
+            Za pravougli trougao sa katetama \( a \), \( b \) i hipotenuzom \( c \).
+          </li>
+          <li>
+            <span class="formula-name">Uslov za ekstremum funkcije:</span>
+            \[ f'(x) = 0 \]
+            Ako je \( f''(x) < 0 \), reč je o maksimumu.
+          </li>
+          <li>
+            <span class="formula-name">Veza valjka i lopte:</span>
+            Kada je valjak upisan u loptu poluprečnika \( R \), gornja i donja kružnica valjka leže na sferi. Iz centra sfere do ivice kružnice valjka rastojanje je tačno \( R \).
+          </li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Interactive 3D Diagram -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">🔮</span> Interaktivni 3D dijagram</h2>
+    <div id="three-container"></div>
+    <div class="slider-row">
+      <label for="height-slider">Visina valjka \( h \):</label>
+      <input type="range" id="height-slider" min="0.05" max="1.95" step="0.01" value="1.155">
+      <span class="slider-value" id="slider-value-display">1,15 R</span>
+    </div>
+    <div class="volume-display">
+      Zapremina: <span class="vol-value" id="vol-display">V = 2,42 R³</span>
+      &nbsp;|&nbsp;
+      Maksimalna: <span class="vol-max">V<sub>max</sub> = 2,42 R³</span>
+    </div>
+    <p class="drag-hint">Prevucite mišem za rotaciju modela. Koristite klizač za promenu visine valjka.</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">📝</span> Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <h3 class="step-title">Postavka problema i veza između dimenzija</h3>
+      </div>
+      <p class="step-text">
+        Zamislimo loptu (sferu) poluprečnika \( R \) sa centrom u tački \( O \). U tu loptu upisan je valjak čije obe kružne osnove dodiruju sferu.
+      </p>
+      <p class="step-text">
+        Neka je \( r \) poluprečnik osnove valjka, a \( h \) njegova visina. Posmatramo presek kroz osu valjka: dobijamo krug poluprečnika \( R \) i pravougaonik visine \( h \) i širine \( 2r \).
+      </p>
+      <p class="step-text">
+        Centar sfere je na sredini visine valjka. Rastojanje od centra do ivice gornje osnove daje pravougli trougao sa katetama \( r \) i \( \frac{h}{2} \), i hipotenuzom \( R \).
+      </p>
+      <div class="math-block">
+        \[ r^2 + \left(\frac{h}{2}\right)^2 = R^2 \]
+      </div>
+      <p class="note">Ovo je ključna veza -- izražava zavisnost \( r \) od \( h \) i \( R \).</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <h3 class="step-title">Izražavanje \( r^2 \) preko \( h \)</h3>
+      </div>
+      <p class="step-text">
+        Iz prethodne jednačine izrazimo \( r^2 \):
+      </p>
+      <div class="math-block">
+        \[ r^2 = R^2 - \frac{h^2}{4} \]
+      </div>
+      <p class="note">Uslov da valjak postoji: \( 0 < h < 2R \), jer mora biti \( r^2 > 0 \).</p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <h3 class="step-title">Zapremina kao funkcija jedne promenljive</h3>
+      </div>
+      <p class="step-text">
+        Zapremina valjka je \( V = \pi r^2 h \). Zamenimo \( r^2 \):
+      </p>
+      <div class="math-block">
+        \[ V(h) = \pi \left(R^2 - \frac{h^2}{4}\right) \cdot h \]
+      </div>
+      <p class="step-text">
+        Raspisujemo:
+      </p>
+      <div class="math-block">
+        \[ V(h) = \pi \left(R^2 h - \frac{h^3}{4}\right) \]
+      </div>
+      <p class="note">Sada imamo zapreminu kao funkciju samo od \( h \), što nam omogućava primenu izvoda.</p>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>🧠 Proveri se: Šta bismo dobili za \( h = 2R \)?</summary>
+      <p class="checkpoint-answer">
+        Za \( h = 2R \): \( r^2 = R^2 - R^2 = 0 \), pa je \( r = 0 \). Valjak bi degenerisao u duž -- zapremina je 0. To potvrđuje da ekstremne vrednosti visine ne daju maksimum.
+      </p>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <h3 class="step-title">Nalaženje prvog izvoda</h3>
+      </div>
+      <p class="step-text">
+        Diferenciramo \( V(h) \) po \( h \):
+      </p>
+      <div class="math-block">
+        \[ V'(h) = \pi \left(R^2 - \frac{3h^2}{4}\right) \]
+      </div>
+      <p class="step-text">
+        Izvod polinoma \( R^2 h \) po \( h \) je \( R^2 \), a izvod \( \frac{h^3}{4} \) po \( h \) je \( \frac{3h^2}{4} \).
+      </p>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">5</div>
+        <h3 class="step-title">Rešavanje jednačine \( V'(h) = 0 \)</h3>
+      </div>
+      <p class="step-text">
+        Postavljamo uslov za ekstremum:
+      </p>
+      <div class="math-block">
+        \[ \pi \left(R^2 - \frac{3h^2}{4}\right) = 0 \]
+      </div>
+      <p class="step-text">
+        Pošto je \( \pi \neq 0 \), imamo:
+      </p>
+      <div class="math-block">
+        \[ R^2 = \frac{3h^2}{4} \]
+      </div>
+      <p class="step-text">
+        Rešavamo po \( h \):
+      </p>
+      <div class="math-block">
+        \[ h^2 = \frac{4R^2}{3} \quad \Rightarrow \quad h = \frac{2R}{\sqrt{3}} = \frac{2R\sqrt{3}}{3} \]
+      </div>
+      <p class="note">Uzimamo pozitivnu vrednost jer je \( h > 0 \).</p>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">6</div>
+        <h3 class="step-title">Potvrda da je u pitanju maksimum</h3>
+      </div>
+      <p class="step-text">
+        Nalazimo drugi izvod:
+      </p>
+      <div class="math-block">
+        \[ V''(h) = \pi \cdot \left(-\frac{6h}{4}\right) = -\frac{3\pi h}{2} \]
+      </div>
+      <p class="step-text">
+        Za \( h = \frac{2R\sqrt{3}}{3} > 0 \), drugi izvod je:
+      </p>
+      <div class="math-block">
+        \[ V''\!\left(\frac{2R\sqrt{3}}{3}\right) = -\frac{3\pi}{2} \cdot \frac{2R\sqrt{3}}{3} = -\pi R\sqrt{3} < 0 \]
+      </div>
+      <p class="step-text">
+        Pošto je \( V'' < 0 \), potvrđujemo da je u pitanju <strong>maksimum</strong>.
+      </p>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>🧠 Proveri se: Koliko iznosi \( r^2 \) za optimalnu visinu?</summary>
+      <p class="checkpoint-answer">
+        \( r^2 = R^2 - \frac{h^2}{4} = R^2 - \frac{1}{4} \cdot \frac{4R^2}{3} = R^2 - \frac{R^2}{3} = \frac{2R^2}{3} \)
+      </p>
+    </details>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">7</div>
+        <h3 class="step-title">Nalaženje poluprečnika valjka \( r \)</h3>
+      </div>
+      <p class="step-text">
+        Uvrštavamo optimalnu visinu u izraz za \( r^2 \):
+      </p>
+      <div class="math-block">
+        \[ r^2 = R^2 - \frac{h^2}{4} = R^2 - \frac{1}{4} \cdot \frac{4R^2}{3} = R^2 - \frac{R^2}{3} = \frac{2R^2}{3} \]
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">8</div>
+        <h3 class="step-title">Izračunavanje maksimalne zapremine</h3>
+      </div>
+      <p class="step-text">
+        Uvrštavamo \( r^2 = \frac{2R^2}{3} \) i \( h = \frac{2R\sqrt{3}}{3} \) u formulu za zapreminu:
+      </p>
+      <div class="math-block">
+        \[ V_{\max} = \pi \cdot r^2 \cdot h = \pi \cdot \frac{2R^2}{3} \cdot \frac{2R\sqrt{3}}{3} \]
+      </div>
+      <p class="step-text">
+        Množimo brojioce i imenioce:
+      </p>
+      <div class="math-block">
+        \[ V_{\max} = \pi \cdot \frac{4R^3\sqrt{3}}{9} = \frac{4R^3\pi\sqrt{3}}{9} \]
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>🧠 Proveri se: Koliko je \( V_{\max} \) numerički za \( R = 1 \)?</summary>
+      <p class="checkpoint-answer">
+        \( V_{\max} = \frac{4 \cdot 1 \cdot \pi \cdot \sqrt{3}}{9} = \frac{4\pi\sqrt{3}}{9} \approx 2{,}418 \). Ovo je otprilike 57,7% zapremine sfere (\( \frac{4\pi}{3} \approx 4{,}189 \)), što deluje razumno.
+      </p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p style="color: #c8d6e5; margin-bottom: 12px;">
+      Optimalna visina valjka iznosi \( h = \frac{2R\sqrt{3}}{3} \), što je znatno manje od prečnika lopte \( 2R \). Valjak sa maksimalnom zapreminom je relativno "zdepast" -- radije je širi nego viši!
+    </p>
+    <div class="insight-formula">
+      \[ \boxed{V_{\max} = \frac{4R^3\pi\sqrt{3}}{9}} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="final-answer-label">Konačan odgovor</div>
+    <div class="final-answer-value">
+      \[ V_{\max} = \frac{4R^3\pi\sqrt{3}}{9} \]
+    </div>
+    <div class="options-row">
+      <div class="option-card correct">
+        <div class="opt-letter">(A)</div>
+        <div>\( \frac{4R^3\pi\sqrt{3}}{9} \)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-letter">(B)</div>
+        <div>\( \frac{2R^3\pi}{\sqrt{3}} \)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-letter">(C)</div>
+        <div>\( \frac{3R^3\pi}{2} \)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-letter">(D)</div>
+        <div>\( \frac{R^3\pi}{2} \)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-letter">(E)</div>
+        <div>\( \frac{3R^2\pi\sqrt{3}}{4} \)</div>
+      </div>
+    </div>
+    <div class="verification-note">
+      <strong>Provera:</strong> Za \( R = 1 \), opcija A daje \( \frac{4\pi\sqrt{3}}{9} \approx 2{,}42 \), a opcija B daje \( \frac{2\pi}{\sqrt{3}} = \frac{2\pi\sqrt{3}}{3} \approx 3{,}63 \). Opcija B bi bila veća od zapremine sfere pomnožene sa nekim razumnim faktorom, ali zapravo \( \frac{2\pi\sqrt{3}}{3} \approx 3{,}63 \) je čak blizu zapremine sfere \( \frac{4\pi}{3} \approx 4{,}19 \), što bi značilo da valjak zauzima skoro 87% sfere -- nerealno. Opcija A sa ~57,7% je geometrijski ispravan rezultat.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="pitfall-box">
+    <div class="pitfall-title">Česte greške</div>
+    <ul class="pitfall-list">
+      <li>Zaboraviti da se primeni Pitagorina teorema za vezu \( r \), \( h/2 \) i \( R \). Bez ove veze nemoguće je svesti problem na jednu promenljivu.</li>
+      <li>Pomešati \( h \) i \( h/2 \) u Pitagorinoj teoremi. Centar sfere je na <em>sredini</em> visine valjka, pa je vertikalna kateta \( h/2 \), ne \( h \)!</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="challenge-title">Dodatni izazov</div>
+    <p style="color: #c8d6e5; margin-bottom: 10px;">
+      Koliki je odnos zapremine optimalnog valjka i zapremine sfere u koju je upisan? Da li ovaj odnos zavisi od \( R \)?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="color: #94a3b8; padding: 10px 0;">
+        Izračunajte \( \frac{V_{\text{valjak}}}{V_{\text{sfera}}} = \frac{\frac{4R^3\pi\sqrt{3}}{9}}{\frac{4R^3\pi}{3}} \). Primetićete da se \( R^3 \) i \( \pi \) skrate -- odnos je konstantan i iznosi \( \frac{\sqrt{3}}{3} \approx 0{,}577 \), tj. valjak zauzima oko 57,7% zapremine sfere, bez obzira na \( R \).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<!-- Three.js Interactive 3D Scene -->
+<script>
+(() => {
+  const container = document.getElementById('three-container');
+  if (!container) return;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0c1222);
+
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+  camera.position.set(3.5, 2.5, 3.5);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0x4488cc, 0.4);
+  scene.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 5, 5);
+  scene.add(dirLight);
+
+  const pointLight = new THREE.PointLight(0x60a5fa, 0.6, 20);
+  pointLight.position.set(-3, 3, 2);
+  scene.add(pointLight);
+
+  const R = 1.0;
+
+  // Sphere (wireframe)
+  const sphereGeo = new THREE.SphereGeometry(R, 48, 36);
+  const sphereMat = new THREE.MeshPhongMaterial({
+    color: 0x60a5fa,
+    transparent: true,
+    opacity: 0.12,
+    wireframe: false,
+    side: THREE.DoubleSide
+  });
+  const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+  scene.add(sphere);
+
+  // Sphere wireframe overlay
+  const sphereWireGeo = new THREE.SphereGeometry(R * 1.001, 24, 18);
+  const sphereWireMat = new THREE.MeshBasicMaterial({
+    color: 0x60a5fa,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.15
+  });
+  const sphereWire = new THREE.Mesh(sphereWireGeo, sphereWireMat);
+  scene.add(sphereWire);
+
+  // Cylinder
+  let cylinderMesh = null;
+  let topCircle = null;
+  let bottomCircle = null;
+  let radiusLine = null;
+  let heightLine = null;
+  let hypotenuseLine = null;
+
+  function createCylinder(h) {
+    // Remove old
+    if (cylinderMesh) scene.remove(cylinderMesh);
+    if (topCircle) scene.remove(topCircle);
+    if (bottomCircle) scene.remove(bottomCircle);
+    if (radiusLine) scene.remove(radiusLine);
+    if (heightLine) scene.remove(heightLine);
+    if (hypotenuseLine) scene.remove(hypotenuseLine);
+
+    const r = Math.sqrt(R * R - (h / 2) * (h / 2));
+    if (r <= 0 || isNaN(r)) return;
+
+    // Main cylinder
+    const cylGeo = new THREE.CylinderGeometry(r, r, h, 48, 1, false);
+    const cylMat = new THREE.MeshPhongMaterial({
+      color: 0x4ade80,
+      transparent: true,
+      opacity: 0.35,
+      side: THREE.DoubleSide
+    });
+    cylinderMesh = new THREE.Mesh(cylGeo, cylMat);
+    scene.add(cylinderMesh);
+
+    // Top and bottom circle edges
+    const circleGeo = new THREE.RingGeometry(r - 0.005, r + 0.005, 64);
+    const circleMat = new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide });
+
+    topCircle = new THREE.Mesh(circleGeo, circleMat);
+    topCircle.rotation.x = -Math.PI / 2;
+    topCircle.position.y = h / 2;
+    scene.add(topCircle);
+
+    bottomCircle = new THREE.Mesh(circleGeo.clone(), circleMat.clone());
+    bottomCircle.rotation.x = -Math.PI / 2;
+    bottomCircle.position.y = -h / 2;
+    scene.add(bottomCircle);
+
+    // Right triangle: center -> edge of top circle (radius), center -> top center (height/2)
+    // Radius line (horizontal, from center to edge at top)
+    const rLineMat = new THREE.LineBasicMaterial({ color: 0xf472b6, linewidth: 2 });
+    const rLineGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, h / 2, 0),
+      new THREE.Vector3(r, h / 2, 0)
+    ]);
+    radiusLine = new THREE.Line(rLineGeo, rLineMat);
+    scene.add(radiusLine);
+
+    // Height line (vertical, from center to top center)
+    const hLineMat = new THREE.LineBasicMaterial({ color: 0xa78bfa, linewidth: 2 });
+    const hLineGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, h / 2, 0)
+    ]);
+    heightLine = new THREE.Line(hLineGeo, hLineMat);
+    scene.add(heightLine);
+
+    // Hypotenuse (R line, from center to edge at top)
+    const hypMat = new THREE.LineDashedMaterial({ color: 0x60a5fa, dashSize: 0.05, gapSize: 0.03 });
+    const hypGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(r, h / 2, 0)
+    ]);
+    hypotenuseLine = new THREE.Line(hypGeo, hypMat);
+    hypotenuseLine.computeLineDistances();
+    scene.add(hypotenuseLine);
+
+    return r;
+  }
+
+  // Optimal height
+  const hOptimal = 2 * R / Math.sqrt(3);
+  const vMax = 4 * R * R * R * Math.PI * Math.sqrt(3) / 9;
+
+  // Axes helper (subtle)
+  const axesMat = new THREE.LineBasicMaterial({ color: 0x334155 });
+  const xAxisGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-1.5, 0, 0), new THREE.Vector3(1.5, 0, 0)
+  ]);
+  scene.add(new THREE.Line(xAxisGeo, axesMat));
+  const yAxisGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, -1.5, 0), new THREE.Vector3(0, 1.5, 0)
+  ]);
+  scene.add(new THREE.Line(yAxisGeo, axesMat));
+
+  // Center point
+  const centerGeo = new THREE.SphereGeometry(0.03, 16, 16);
+  const centerMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const centerDot = new THREE.Mesh(centerGeo, centerMat);
+  scene.add(centerDot);
+
+  // Initial cylinder
+  const slider = document.getElementById('height-slider');
+  const sliderDisplay = document.getElementById('slider-value-display');
+  const volDisplay = document.getElementById('vol-display');
+
+  function updateCylinder() {
+    const hVal = parseFloat(slider.value);
+    const rCalc = createCylinder(hVal);
+    if (rCalc === undefined) return;
+
+    const vol = Math.PI * rCalc * rCalc * hVal;
+    const volNorm = vol; // already in terms of R=1
+
+    sliderDisplay.textContent = (hVal).toFixed(2).replace('.', ',') + ' R';
+    volDisplay.textContent = 'V = ' + volNorm.toFixed(3).replace('.', ',') + ' R\u00B3';
+
+    // Highlight if near optimal
+    if (Math.abs(hVal - hOptimal) < 0.03) {
+      volDisplay.style.color = '#f472b6';
+      volDisplay.textContent += ' (MAKSIMUM!)';
+    } else {
+      volDisplay.style.color = '#4ade80';
+    }
+  }
+
+  slider.addEventListener('input', updateCylinder);
+  createCylinder(hOptimal);
+  updateCylinder();
+
+  // Orbit controls (simple manual rotation)
+  let isDragging = false;
+  let prevX = 0, prevY = 0;
+  let theta = 0.8, phi = 0.6;
+  const radius = 4.5;
+
+  function updateCamera() {
+    camera.position.x = radius * Math.sin(phi) * Math.cos(theta);
+    camera.position.y = radius * Math.cos(phi);
+    camera.position.z = radius * Math.sin(phi) * Math.sin(theta);
+    camera.lookAt(0, 0, 0);
+  }
+  updateCamera();
+
+  const canvasEl = renderer.domElement;
+  canvasEl.style.touchAction = 'none';
+
+  canvasEl.addEventListener('pointerdown', (e) => {
+    isDragging = true;
+    prevX = e.clientX;
+    prevY = e.clientY;
+    canvasEl.setPointerCapture(e.pointerId);
+  });
+
+  canvasEl.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - prevX;
+    const dy = e.clientY - prevY;
+    theta += dx * 0.008;
+    phi -= dy * 0.008;
+    phi = Math.max(0.2, Math.min(Math.PI - 0.2, phi));
+    prevX = e.clientX;
+    prevY = e.clientY;
+    updateCamera();
+  });
+
+  canvasEl.addEventListener('pointerup', (e) => {
+    isDragging = false;
+    canvasEl.releasePointerCapture(e.pointerId);
+  });
+
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+    if (!isDragging) {
+      theta += 0.002;
+      updateCamera();
+    }
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Resize handler
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+
+  // Step click interaction
+  document.querySelectorAll('.step-container').forEach(step => {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(s => s.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Maksimalna zapremina valjka upisanog u loptu",
+  "subject": "math",
+  "unit": "calculus",
+  "topic_tags": ["optimizacija", "zapremina valjka", "izvodi", "stereometrija", "ekstremi funkcije"]
+}
+BRAINSPARK_META-->

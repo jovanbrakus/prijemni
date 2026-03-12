@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepeni imaginarne jedinice</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Izračunati i^120
+Options: a) 1, b) -1, v) i
+
+Key facts about powers of i (imaginary unit):
+- i^0 = 1
+- i^1 = i
+- i^2 = -1
+- i^3 = i^2 * i = -1 * i = -i
+- i^4 = i^3 * i = -i * i = -i^2 = -(-1) = 1
+
+So powers of i cycle with period 4: {1, i, -1, -i, 1, i, -1, -i, ...}
+
+To find i^n, compute n mod 4:
+- n mod 4 = 0 => i^n = 1
+- n mod 4 = 1 => i^n = i
+- n mod 4 = 2 => i^n = -1
+- n mod 4 = 3 => i^n = -i
+
+For i^120:
+120 / 4 = 30 (exactly, no remainder)
+120 mod 4 = 0
+
+Therefore: i^120 = (i^4)^30 = 1^30 = 1
+
+Answer: a) 1
+
+Verification: 120 = 4 * 30, so i^120 = (i^4)^30 = 1^30 = 1. Correct.
+
+On the unit circle in the complex plane:
+- i^0 = 1 is at angle 0° (point (1, 0))
+- i^1 = i is at angle 90° (point (0, 1))
+- i^2 = -1 is at angle 180° (point (-1, 0))
+- i^3 = -i is at angle 270° (point (0, -1))
+- i^4 = 1 is back at 0° (full circle)
+
+Each multiplication by i rotates by 90° counterclockwise on the unit circle.
+i^120 = rotation by 120 * 90° = 10800° = 30 * 360°, which is 30 full circles,
+ending at 0° = point (1, 0) = 1.
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+}
+.highlight-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 20px;
+  text-align: center;
+  min-width: 80px;
+  flex: 1;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.step-container:hover {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+.step-container.active {
+  background: rgba(96,165,250,0.08);
+  border-left-color: #4ade80;
+}
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+.step-content h3 {
+  color: #60a5fa;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+.step-content p {
+  margin-bottom: 8px;
+}
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+.final-answer {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.final-answer h2 {
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+.option-card {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 24px;
+  text-align: center;
+  min-width: 80px;
+  transition: all 0.3s;
+}
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  box-shadow: 0 0 20px rgba(74,222,128,0.15);
+}
+.option-card .opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+.pitfall-box {
+  background: rgba(224,148,104,0.08);
+  border: 1px solid rgba(224,148,104,0.2);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 12px;
+}
+.pitfall-box li {
+  margin-left: 20px;
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+details {
+  margin: 15px 0;
+}
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+}
+details summary:hover {
+  color: #93bbfd;
+}
+.theory-card {
+  background: rgba(167,139,250,0.05);
+  border: 1px solid rgba(167,139,250,0.15);
+}
+.theory-card ul {
+  list-style: none;
+  padding: 0;
+}
+.theory-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+}
+.theory-card li:last-child {
+  border-bottom: none;
+}
+.theory-card li::before {
+  content: '▸ ';
+  color: #a78bfa;
+}
+.checkpoint {
+  background: rgba(244,114,182,0.08);
+  border: 1px solid rgba(244,114,182,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+.checkpoint summary {
+  color: #f472b6;
+}
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+}
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+.cycle-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+.cycle-table th, .cycle-table td {
+  border: 1px solid #334155;
+  padding: 10px 16px;
+  text-align: center;
+}
+.cycle-table th {
+  background: rgba(96,165,250,0.1);
+  color: #60a5fa;
+  font-weight: 600;
+}
+.cycle-table td {
+  background: #0f172a;
+}
+.verification-note {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 14px; }
+  .step-container { padding: 10px; gap: 10px; }
+  .options-row { gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Stepeni imaginarne jedinice</h1>
+  <p class="subtitle">Kompleksni brojevi — cikličnost stepena broja \(i\)</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Izračunati \(i^{120}\).</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(a)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(b)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(v)</div>
+        <div class="value">\(i\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p>Iskoristićemo činjenicu da se stepeni imaginarne jedinice \(i\) ponavljaju sa periodom 4. Naći ćemo ostatak pri deljenju eksponenta 120 sa 4 i na osnovu toga odrediti vrednost \(i^{120}\).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>📐 Ključne formule i definicije</summary>
+      <ul>
+        <li><strong>Imaginarna jedinica:</strong> \(i = \sqrt{-1}\), pa važi \(i^2 = -1\)</li>
+        <li><strong>Ciklus stepena od \(i\):</strong>
+          \[i^0 = 1, \quad i^1 = i, \quad i^2 = -1, \quad i^3 = -i, \quad i^4 = 1, \quad \ldots\]
+          Stepeni se ponavljaju sa periodom 4.
+        </li>
+        <li><strong>Opšte pravilo:</strong> Za bilo koji ceo broj \(n\), važi \(i^n = i^{n \bmod 4}\), gde je \(n \bmod 4\) ostatak pri deljenju sa 4.</li>
+        <li><strong>Geometrijska interpretacija:</strong> Množenje sa \(i\) je rotacija za \(90°\) u pozitivnom smeru na jediničnoj kružnici u kompleksnoj ravni.</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid: Unit Circle Canvas -->
+  <div class="card">
+    <h2>Vizuelni prikaz: Stepeni od \(i\) na jediničnoj kružnici</h2>
+    <canvas id="unitCircle" width="500" height="500"></canvas>
+    <p class="canvas-hint">Svako množenje sa \(i\) je rotacija za 90° u pozitivnom smeru. Nakon 4 koraka — povratak na početak!</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Podsetimo se ciklusa stepena od \(i\)</h3>
+        <p>Imaginarna jedinica \(i\) ima osobinu da se njeni stepeni ponavljaju sa periodom 4:</p>
+        <table class="cycle-table">
+          <tr>
+            <th>Stepen</th>
+            <th>\(i^0\)</th>
+            <th>\(i^1\)</th>
+            <th>\(i^2\)</th>
+            <th>\(i^3\)</th>
+            <th>\(i^4\)</th>
+            <th>\(i^5\)</th>
+            <th>\(i^6\)</th>
+            <th>\(i^7\)</th>
+          </tr>
+          <tr>
+            <td><strong>Vrednost</strong></td>
+            <td>\(1\)</td>
+            <td>\(i\)</td>
+            <td>\(-1\)</td>
+            <td>\(-i\)</td>
+            <td>\(1\)</td>
+            <td>\(i\)</td>
+            <td>\(-1\)</td>
+            <td>\(-i\)</td>
+          </tr>
+        </table>
+        <p class="note">Uočavamo obrazac: \(1 \to i \to -1 \to -i \to 1 \to \ldots\) — ciklus dužine 4.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Zašto se ciklus ponavlja?</h3>
+        <p>Krenimo od definicije: \(i^2 = -1\). Onda:</p>
+        <div class="highlight-box">
+          \[i^3 = i^2 \cdot i = (-1) \cdot i = -i\]
+        </div>
+        <div class="highlight-box">
+          \[i^4 = i^3 \cdot i = (-i) \cdot i = -i^2 = -(-1) = 1\]
+        </div>
+        <p>Pošto je \(i^4 = 1\), svaki sledeći stepen se svodi na jedan od prvih četiri: \(1, i, -1, -i\).</p>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>🧠 Proveri se: Koliko iznosi \(i^8\)?</summary>
+        <p>\(i^8 = (i^4)^2 = 1^2 = 1\). Svaki stepen koji je deljiv sa 4 daje 1!</p>
+      </details>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Odredimo \(120 \bmod 4\)</h3>
+        <p>Da bismo izračunali \(i^{120}\), potrebno je da nađemo ostatak pri deljenju broja 120 sa 4:</p>
+        <div class="highlight-box">
+          \[120 \div 4 = 30 \quad (\text{ostatak } 0)\]
+        </div>
+        <p>Dakle, \(120 = 4 \times 30\), što znači da se 120 deli sa 4 <strong>bez ostatka</strong>.</p>
+        <p class="note">Ostatak 0 znači da \(i^{120}\) ima istu vrednost kao \(i^0 = 1\).</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izračunamo \(i^{120}\)</h3>
+        <p>Koristimo osobinu stepenovanja — stepen stepena:</p>
+        <div class="highlight-box">
+          \[i^{120} = i^{4 \times 30} = \left(i^4\right)^{30} = 1^{30} = 1\]
+        </div>
+        <p>Pošto je \(i^4 = 1\), podizanje jedinice na bilo koji stepen i dalje daje jedinicu.</p>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>🧠 Proveri se: Koliko iznosi \(i^{122}\)?</summary>
+        <p>\(122 = 4 \times 30 + 2\), pa je \(i^{122} = i^2 = -1\). Ostatak pri deljenju sa 4 je 2, pa koristimo \(i^2\).</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Množenje sa \(i\) odgovara rotaciji za \(90°\) u kompleksnoj ravni. Broj \(i^{120}\) znači 120 uzastopnih rotacija za \(90°\), tj. ukupno \(120 \times 90° = 10\,800° = 30 \times 360°\) — tačno 30 punih krugova!</p>
+    <div class="highlight-box" style="font-size:1.3rem; text-align:center; margin-top:12px;">
+      \[i^{120} = \left(i^4\right)^{30} = 1^{30} = 1\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\(i^{120} = 1\)</div>
+    <div class="options-row">
+      <div class="option-card correct">
+        <div class="opt-label">(a)</div>
+        <div>\(1\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(b)</div>
+        <div>\(-1\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(v)</div>
+        <div>\(i\)</div>
+      </div>
+    </div>
+    <p style="color:#4ade80; font-weight:600; margin-top:12px;">Tačan odgovor je (a) \(1\)</p>
+    <div class="verification-note">
+      <strong>Provera:</strong> Broj 120 je deljiv sa 4 (\(120 = 4 \times 30\)), pa je \(i^{120} = (i^4)^{30} = 1^{30} = 1\). Geometrijski, 120 rotacija za \(90°\) daje 30 punih krugova, vraćajući nas u tačku \((1, 0)\) na jediničnoj kružnici — upravo broj 1.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <div class="pitfall-box">
+      <ul>
+        <li><strong>Pogrešan ostatak:</strong> Pažljivo delite eksponent sa 4. Greška u računanju ostatka vodi do potpuno pogrešnog odgovora. Na primer, da je eksponent bio 121 (ostatak 1), rezultat bi bio \(i\), a ne 1.</li>
+        <li><strong>Zaboravljanje da je \(i^4 = 1\):</strong> Neki učenici pokušavaju da računaju \(i^{120}\) „na silu" umesto da primete cikličnost. Uvek prvo proverite deljivost eksponenta sa 4!</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2>Bonus izazov</h2>
+    <p>Izračunaj zbir \(i + i^2 + i^3 + \ldots + i^{2024}\).</p>
+    <details>
+      <summary>💡 Pomoć</summary>
+      <p>Primeti da je \(i + i^2 + i^3 + i^4 = i + (-1) + (-i) + 1 = 0\). Svaka grupa od 4 uzastopna stepena daje zbir 0. Koliko takvih grupa ima u 2024 sabiraka?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('unitCircle');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const cx = W / 2;
+  const cy = H / 2;
+  const R = 160;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = -3; i <= 3; i++) {
+      const x = cx + i * (R / 2);
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+      const y = cy + i * (R / 2);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, cy);
+    ctx.lineTo(W, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, 0);
+    ctx.lineTo(cx, H);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Re', W - 30, cy - 10);
+    ctx.textAlign = 'center';
+    ctx.fillText('Im', cx + 16, 20);
+
+    // Unit circle
+    ctx.strokeStyle = 'rgba(96,165,250,0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Glow on circle
+    ctx.strokeStyle = 'rgba(96,165,250,0.08)';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Points data: i^0, i^1, i^2, i^3
+    const points = [
+      { angle: 0, label: 'i⁰ = 1', value: '(1, 0)', color: '#4ade80' },
+      { angle: Math.PI / 2, label: 'i¹ = i', value: '(0, 1)', color: '#60a5fa' },
+      { angle: Math.PI, label: 'i² = −1', value: '(−1, 0)', color: '#f472b6' },
+      { angle: 3 * Math.PI / 2, label: 'i³ = −i', value: '(0, −1)', color: '#a78bfa' }
+    ];
+
+    // Draw rotation arrows between points
+    const arrowColors = ['rgba(96,165,250,0.5)', 'rgba(244,114,182,0.5)', 'rgba(167,139,250,0.5)', 'rgba(74,222,128,0.5)'];
+    for (let k = 0; k < 4; k++) {
+      const startAngle = -points[k].angle;
+      const endAngle = -points[(k + 1) % 4].angle;
+      const arcStart = startAngle + 0.15;
+      const arcEnd = endAngle === 0 ? -2 * Math.PI + 0.15 : endAngle - 0.15;
+
+      ctx.strokeStyle = arrowColors[k];
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, R + 25, arcStart - 0.05, arcEnd + 0.05, true);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Arrowhead
+      const arrowAngle = arcEnd + 0.05;
+      const ax = cx + (R + 25) * Math.cos(arrowAngle);
+      const ay = cy + (R + 25) * Math.sin(arrowAngle);
+      const headLen = 10;
+      const tangentAngle = arrowAngle - Math.PI / 2;
+      ctx.fillStyle = arrowColors[k];
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax + headLen * Math.cos(tangentAngle + 0.5), ay + headLen * Math.sin(tangentAngle + 0.5));
+      ctx.lineTo(ax + headLen * Math.cos(tangentAngle - 0.5), ay + headLen * Math.sin(tangentAngle - 0.5));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // "×i" label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'italic 13px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('×i', cx + R + 45, cy - R / 2 - 10);
+    ctx.fillText('(90°)', cx + R + 45, cy - R / 2 + 8);
+
+    // Draw points
+    points.forEach((p, idx) => {
+      const px = cx + R * Math.cos(-p.angle);
+      const py = cy + R * Math.sin(-p.angle);
+
+      // Glow
+      const grd = ctx.createRadialGradient(px, py, 0, px, py, 20);
+      grd.addColorStop(0, p.color + '40');
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(px, py, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(px, py, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Outer ring
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(px, py, 10, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Labels
+      ctx.font = 'bold 15px "Segoe UI", sans-serif';
+      ctx.fillStyle = p.color;
+      ctx.textAlign = 'center';
+      let lx = px, ly = py;
+      if (idx === 0) { lx += 55; ly += 5; }
+      else if (idx === 1) { ly -= 22; }
+      else if (idx === 2) { lx -= 55; ly += 5; }
+      else { ly += 30; }
+      ctx.fillText(p.label, lx, ly);
+
+      ctx.font = '12px "Segoe UI", sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(p.value, lx, ly + 16);
+    });
+
+    // Highlight i^120 = 1 with special marker
+    const highlightX = cx + R;
+    const highlightY = cy;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.arc(highlightX, highlightY, 18, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // i^120 label
+    ctx.font = 'bold 14px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.textAlign = 'center';
+    ctx.fillText('i¹²⁰ = 1', cx + R + 55, cy + 35);
+
+    // Small arrow pointing to the point
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx + R + 35, cy + 28);
+    ctx.lineTo(cx + R + 20, cy + 10);
+    ctx.stroke();
+
+    // Title at bottom
+    ctx.font = '13px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText('Jedinična kružnica u kompleksnoj ravni', cx, H - 15);
+
+    // Tick marks on axes
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('1', cx + R, cy + 18);
+    ctx.fillText('−1', cx - R, cy + 18);
+    ctx.textAlign = 'right';
+    ctx.fillText('i', cx - 8, cy - R + 4);
+    ctx.textAlign = 'left';
+    ctx.fillText('−i', cx + 6, cy + R + 4);
+  }
+
+  draw();
+
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepeni imaginarne jedinice — izračunavanje i^120",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "imaginarna jedinica", "stepenovanje", "cikličnost"]
+}
+BRAINSPARK_META-->

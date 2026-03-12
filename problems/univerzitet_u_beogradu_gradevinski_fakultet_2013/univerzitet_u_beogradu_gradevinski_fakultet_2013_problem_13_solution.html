@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Količnik stepena kompleksnih brojeva</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Compute (1-i)^11 / (1+i)^5, where i^2 = -1.
+
+OPTIONS: (A) 4, (B) 4i, (V) -8i, (G) 8i, (D) 8
+CORRECT ANSWER FROM KEY: (D) 8
+
+METHOD 1: Polar form
+|1+i| = sqrt(2), arg(1+i) = pi/4  =>  1+i = sqrt(2) * e^(i*pi/4)
+|1-i| = sqrt(2), arg(1-i) = -pi/4  =>  1-i = sqrt(2) * e^(-i*pi/4)
+
+(1-i)^11 = (sqrt(2))^11 * e^(-i*11*pi/4) = 2^(11/2) * e^(-i*11*pi/4)
+(1+i)^5  = (sqrt(2))^5  * e^(i*5*pi/4)  = 2^(5/2)  * e^(i*5*pi/4)
+
+Division:
+  modulus: 2^(11/2) / 2^(5/2) = 2^(6/2) = 2^3 = 8
+  argument: -11*pi/4 - 5*pi/4 = -16*pi/4 = -4*pi = 0 (mod 2*pi)
+
+Result = 8 * e^(0) = 8 * (cos 0 + i sin 0) = 8
+
+METHOD 2: Algebraic simplification using (1-i)/(1+i) = -i
+  (1-i)/(1+i) = (1-i)^2 / ((1+i)(1-i)) = (1 - 2i + i^2) / (1 - i^2) = (1 - 2i - 1) / (1 + 1) = -2i/2 = -i
+
+  Rewrite: (1-i)^11 / (1+i)^5 = (1-i)^6 * [(1-i)/(1+i)]^5 = (1-i)^6 * (-i)^5
+
+  (1-i)^2 = 1 - 2i + i^2 = -2i
+  (1-i)^6 = ((1-i)^2)^3 = (-2i)^3 = -8i^3 = -8*(-i) = 8i
+
+  (-i)^5 = ((-i)^4) * (-i) = (i^4) * (-i) = 1 * (-i) = -i
+
+  Result = 8i * (-i) = -8i^2 = -8*(-1) = 8
+
+METHOD 3: Direct computation using (1-i)^2 = -2i, (1+i)^2 = 2i
+  (1-i)^11 / (1+i)^5
+  = (1-i)^11 / (1+i)^5
+  Multiply numerator and denominator by (1-i)^5:
+  = (1-i)^11 * (1-i)^5 / ((1+i)^5 * (1-i)^5)
+  Wait, that's not simplifying well. Better:
+
+  Multiply top and bottom by (1+i):
+  = (1-i)^11 * (1+i) / (1+i)^6
+  (1-i)(1+i) = 2, so (1-i)^11 * (1+i) = (1-i)^10 * (1-i)(1+i) * ...
+
+  Actually cleanest approach:
+  (1-i)^11 / (1+i)^5
+  = [(1-i)(1+i)]^5 * (1-i)^6 / (1+i)^10  ... no, let me just stick with Methods 1 and 2.
+
+VERIFICATION: Both methods give 8. Answer is (D). Matches the answer key.
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+.plan-card h2 { color: #a78bfa; }
+details {
+  margin: 15px 0;
+}
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+}
+details summary:hover { color: #93c5fd; }
+.theory-content {
+  padding: 16px 0 0 8px;
+}
+.theory-content li {
+  margin-bottom: 10px;
+  list-style: none;
+  padding-left: 20px;
+  position: relative;
+}
+.theory-content li::before {
+  content: '\25B8';
+  position: absolute;
+  left: 0;
+  color: #a78bfa;
+}
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+.step:hover, .step.active {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+.step-number {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+.step-content { flex: 1; }
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+.checkpoint .answer {
+  padding-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.insight-box h2 { color: #a78bfa; margin-bottom: 12px; }
+.insight-formula {
+  font-size: 1.3rem;
+  color: #e2e8f0;
+  margin: 12px 0;
+}
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.final-answer-box h2 {
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 12px 0;
+}
+.options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+.option-final {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+.option-final.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(52,211,153,0.2);
+}
+.option-final.correct .opt-label {
+  color: #4ade80;
+}
+.opt-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+.opt-value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.verification {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 16px;
+  font-style: italic;
+}
+.pitfalls li {
+  color: #cbd5e1;
+  margin-bottom: 10px;
+  padding-left: 24px;
+  position: relative;
+  list-style: none;
+}
+.pitfalls li::before {
+  content: '\26A0';
+  position: absolute;
+  left: 0;
+  color: #e09468;
+}
+.challenge-card {
+  border-left: 3px solid #f472b6;
+}
+.challenge-card h2 { color: #f472b6; }
+.canvas-card {
+  text-align: center;
+}
+.canvas-card canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+.method-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.method-tab {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 8px 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+.method-tab.active-tab {
+  background: rgba(96,165,250,0.15);
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
+.method-tab:hover {
+  border-color: #60a5fa;
+  color: #cbd5e1;
+}
+.method-content {
+  display: none;
+}
+.method-content.visible {
+  display: block;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { padding: 12px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .method-tabs { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Количник степена комплексних бројева</h1>
+  <p class="subtitle">Kompleksni brojevi — stepenovanje i deljenje izraza sa imaginarnom jedinicom</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako je \(i^2 = -1\), onda je \(\dfrac{(1-i)^{11}}{(1+i)^5}\) jednako:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(4i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">\(-8i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\(8i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(8\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Prikazaćemo dva elegantna pristupa: algebarski (koristeći \((1-i)/(1+i) = -i\) i svojstva stepena) i trigonometrijski (koristeći polarni oblik kompleksnih brojeva). Oba pristupa vode do istog rezultata i produbljuju razumevanje kompleksnih brojeva.</p>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Imaginarna jedinica:</strong> \(i^2 = -1\), \(i^3 = -i\), \(i^4 = 1\). Stepeni broja \(i\) se ponavljaju sa periodom 4.</li>
+          <li><strong>Konjugovano-kompleksni broj:</strong> Za \(z = a + bi\), konjugat je \(\bar{z} = a - bi\). Važi \(z \cdot \bar{z} = a^2 + b^2 = |z|^2\).</li>
+          <li><strong>Polarni (trigonometrijski) oblik:</strong> \(z = r(\cos\varphi + i\sin\varphi)\), gde je \(r = |z|\) i \(\varphi = \arg(z)\).</li>
+          <li><strong>De Moavrov (De Moivre) obrazac:</strong>
+            \[ \big[r(\cos\varphi + i\sin\varphi)\big]^n = r^n(\cos n\varphi + i\sin n\varphi) \]
+          </li>
+          <li><strong>Korisna jednakost:</strong> \((1-i)(1+i) = 1 - i^2 = 1 + 1 = 2\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card canvas-card">
+    <h2>Kompleksna ravan: \(1+i\) i \(1-i\)</h2>
+    <canvas id="complexCanvas" width="560" height="560"></canvas>
+    <p class="canvas-hint">Brojevi \(1+i\) i \(1-i\) su simetrični u odnosu na realnu osu, oba na rastojanju \(\sqrt{2}\) od koordinatnog početka</p>
+  </div>
+
+  <!-- STEP BY STEP -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Method tabs -->
+    <div class="method-tabs" id="methodTabs">
+      <div class="method-tab active-tab" data-method="algebraic">Algebarski pristup</div>
+      <div class="method-tab" data-method="polar">Trigonometrijski pristup</div>
+    </div>
+
+    <!-- ALGEBRAIC METHOD -->
+    <div class="method-content visible" id="method-algebraic">
+
+      <div class="step" tabindex="0">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Pojednostavimo količnik \(\dfrac{1-i}{1+i}\)</h3>
+          <p>Ključni trik je da pomnožimo brojilac i imenilac sa konjugatom imenioca, tj. sa \(1-i\):</p>
+          <div class="math-block">
+            \[ \frac{1-i}{1+i} = \frac{(1-i)(1-i)}{(1+i)(1-i)} = \frac{(1-i)^2}{1 - i^2} \]
+          </div>
+          <p>Pošto je \(i^2 = -1\), imenilac je:</p>
+          <div class="math-block">
+            \[ 1 - i^2 = 1 - (-1) = 2 \]
+          </div>
+          <p>A brojilac:</p>
+          <div class="math-block">
+            \[ (1-i)^2 = 1 - 2i + i^2 = 1 - 2i - 1 = -2i \]
+          </div>
+          <p>Dakle:</p>
+          <div class="math-block">
+            \[ \frac{1-i}{1+i} = \frac{-2i}{2} = -i \]
+          </div>
+          <p class="note">Ovo je veoma korisna jednakost koju vredi zapamtiti: \(\frac{1-i}{1+i} = -i\).</p>
+        </div>
+      </div>
+
+      <div class="step" tabindex="0">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Prepišemo izraz koristeći \(\frac{1-i}{1+i} = -i\)</h3>
+          <p>Rastavimo razlomak tako da iskoristimo upravo dobijeni rezultat:</p>
+          <div class="math-block">
+            \[ \frac{(1-i)^{11}}{(1+i)^5} = \frac{(1-i)^5 \cdot (1-i)^6}{(1+i)^5} = \left(\frac{1-i}{1+i}\right)^5 \cdot (1-i)^6 \]
+          </div>
+          <p>Zamenom \(\frac{1-i}{1+i} = -i\) dobijamo:</p>
+          <div class="math-block">
+            \[ = (-i)^5 \cdot (1-i)^6 \]
+          </div>
+        </div>
+      </div>
+
+      <details class="checkpoint">
+        <summary>🔍 Proveri se: Koliko je \((-i)^5\)?</summary>
+        <div class="answer">\((-i)^5 = (-i)^4 \cdot (-i) = (i^4) \cdot (-i) = 1 \cdot (-i) = -i\). Stepeni od \(-i\) se takođe ponavljaju sa periodom 4!</div>
+      </details>
+
+      <div class="step" tabindex="0">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Izračunamo \((-i)^5\)</h3>
+          <p>Pošto se stepeni broja \(-i\) ponavljaju sa periodom 4, a \(5 = 4 \cdot 1 + 1\):</p>
+          <div class="math-block">
+            \[ (-i)^5 = (-i)^{4} \cdot (-i) = 1 \cdot (-i) = -i \]
+          </div>
+          <p class="note">Alternativno: \((-i)^5 = (-1)^5 \cdot i^5 = -1 \cdot i = -i\).</p>
+        </div>
+      </div>
+
+      <div class="step" tabindex="0">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h3>Izračunamo \((1-i)^6\)</h3>
+          <p>Znamo da je \((1-i)^2 = -2i\), pa:</p>
+          <div class="math-block">
+            \[ (1-i)^6 = \big[(1-i)^2\big]^3 = (-2i)^3 \]
+          </div>
+          <p>Rastavimo stepen:</p>
+          <div class="math-block">
+            \[ (-2i)^3 = (-2)^3 \cdot i^3 = -8 \cdot (-i) = 8i \]
+          </div>
+        </div>
+      </div>
+
+      <details class="checkpoint">
+        <summary>🔍 Proveri se: Koliko je \((-2)^3\) i koliko je \(i^3\)?</summary>
+        <div class="answer">\((-2)^3 = -8\) (negativan broj na neparan stepen daje negativan rezultat). \(i^3 = i^2 \cdot i = (-1) \cdot i = -i\).</div>
+      </details>
+
+      <div class="step" tabindex="0">
+        <div class="step-number">5</div>
+        <div class="step-content">
+          <h3>Pomnožimo dobijene vrednosti</h3>
+          <p>Sada spajamo rezultate iz koraka 3 i 4:</p>
+          <div class="math-block">
+            \[ \frac{(1-i)^{11}}{(1+i)^5} = (-i) \cdot 8i = -8 \cdot i^2 \]
+          </div>
+          <p>Pošto je \(i^2 = -1\):</p>
+          <div class="math-block">
+            \[ = -8 \cdot (-1) = 8 \]
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POLAR METHOD -->
+    <div class="method-content" id="method-polar">
+
+      <div class="step" tabindex="0">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Zapišemo \(1+i\) i \(1-i\) u polarnom obliku</h3>
+          <p>Za kompleksni broj \(z = a + bi\), polarni oblik je \(z = r(\cos\varphi + i\sin\varphi)\), gde je \(r = \sqrt{a^2 + b^2}\).</p>
+          <div class="math-block">
+            \[ |1+i| = \sqrt{1^2 + 1^2} = \sqrt{2}, \quad \arg(1+i) = \frac{\pi}{4} \]
+          </div>
+          <div class="math-block">
+            \[ 1+i = \sqrt{2}\left(\cos\frac{\pi}{4} + i\sin\frac{\pi}{4}\right) \]
+          </div>
+          <p>Slično za \(1-i\) (simetrično u odnosu na realnu osu):</p>
+          <div class="math-block">
+            \[ |1-i| = \sqrt{2}, \quad \arg(1-i) = -\frac{\pi}{4} \]
+          </div>
+          <div class="math-block">
+            \[ 1-i = \sqrt{2}\left(\cos\!\left(-\frac{\pi}{4}\right) + i\sin\!\left(-\frac{\pi}{4}\right)\right) \]
+          </div>
+        </div>
+      </div>
+
+      <div class="step" tabindex="0">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Primenimo De Moavrov obrazac</h3>
+          <p>Za stepenovanje kompleksnog broja u polarnom obliku važi:</p>
+          <div class="math-block">
+            \[ (1-i)^{11} = \left(\sqrt{2}\right)^{11} \left(\cos\!\left(-\frac{11\pi}{4}\right) + i\sin\!\left(-\frac{11\pi}{4}\right)\right) \]
+          </div>
+          <div class="math-block">
+            \[ (1+i)^{5} = \left(\sqrt{2}\right)^{5} \left(\cos\frac{5\pi}{4} + i\sin\frac{5\pi}{4}\right) \]
+          </div>
+        </div>
+      </div>
+
+      <details class="checkpoint">
+        <summary>🔍 Proveri se: Koliko je \((\sqrt{2})^{11}\)?</summary>
+        <div class="answer">\((\sqrt{2})^{11} = (2^{1/2})^{11} = 2^{11/2} = 2^5 \cdot 2^{1/2} = 32\sqrt{2}\).</div>
+      </details>
+
+      <div class="step" tabindex="0">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Izračunamo modul količnika</h3>
+          <p>Modul količnika je količnik modula:</p>
+          <div class="math-block">
+            \[ \frac{|1-i|^{11}}{|1+i|^5} = \frac{(\sqrt{2})^{11}}{(\sqrt{2})^5} = (\sqrt{2})^{11-5} = (\sqrt{2})^{6} \]
+          </div>
+          <div class="math-block">
+            \[ (\sqrt{2})^{6} = (2^{1/2})^6 = 2^3 = 8 \]
+          </div>
+          <p>Modul rezultata je <span class="highlight">8</span>.</p>
+        </div>
+      </div>
+
+      <div class="step" tabindex="0">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h3>Izračunamo argument količnika</h3>
+          <p>Argument količnika je razlika argumenata:</p>
+          <div class="math-block">
+            \[ \arg = -\frac{11\pi}{4} - \frac{5\pi}{4} = -\frac{16\pi}{4} = -4\pi \]
+          </div>
+          <p>Svedemo na interval \([0, 2\pi)\):</p>
+          <div class="math-block">
+            \[ -4\pi + 2 \cdot 2\pi = -4\pi + 4\pi = 0 \]
+          </div>
+          <p>Argument rezultata je <span class="highlight">0</span>, što znači da je rezultat realan i pozitivan.</p>
+        </div>
+      </div>
+
+      <div class="step" tabindex="0">
+        <div class="step-number">5</div>
+        <div class="step-content">
+          <h3>Zapišemo konačan rezultat</h3>
+          <p>Kombinujemo modul i argument:</p>
+          <div class="math-block">
+            \[ \frac{(1-i)^{11}}{(1+i)^5} = 8(\cos 0 + i\sin 0) = 8 \cdot 1 = 8 \]
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Jednakost \(\frac{1-i}{1+i} = -i\) dramatično pojednostavljuje račun. Kad god vidite razlomak sa \(1 \pm i\), pokušajte da ga svedete na stepen broja \(i\)!</p>
+    <div class="insight-formula">
+      \[ \frac{(1-i)^{11}}{(1+i)^5} = (-i)^5 \cdot (1-i)^6 = (-i) \cdot 8i = 8 \]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\(\dfrac{(1-i)^{11}}{(1+i)^5} = 8\)</div>
+    <div class="options-final">
+      <div class="option-final">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(4\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(4i\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(V)</div>
+        <div class="opt-value">\(-8i\)</div>
+      </div>
+      <div class="option-final">
+        <div class="opt-label">(G)</div>
+        <div class="opt-value">\(8i\)</div>
+      </div>
+      <div class="option-final correct">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(8\)</div>
+      </div>
+    </div>
+    <p class="verification">Provera: Oba pristupa (algebarski i trigonometrijski) daju isti rezultat. Rezultat je realan broj, što ima smisla jer je argument jednak nuli. Tačan odgovor je (D).</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfalls">
+      <li><strong>Pogrešan znak kod \(i^3\):</strong> Česta greška je da se izračuna \(i^3 = i\) umesto \(i^3 = -i\). Zapamtite: \(i^3 = i^2 \cdot i = (-1) \cdot i = -i\).</li>
+      <li><strong>Zaboravljanje konjugata:</strong> Pri racionalizaciji razlomka \(\frac{1-i}{1+i}\), množimo sa konjugatom imenioca \(\frac{1-i}{1-i}\), ne sa nečim drugim. Rezultat \(-i\) treba proveriti množenjem: \(-i \cdot (1+i) = -i - i^2 = -i + 1 = 1 - i\). Tačno!</li>
+      <li><strong>Greška sa modulom u polarnom obliku:</strong> I \(|1+i|\) i \(|1-i|\) su jednaki \(\sqrt{2}\), ne \(2\). Česta greška je da se koristi \(2\) kao modul, što daje pogrešan rezultat.</li>
+    </ul>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Koliko iznosi \(\dfrac{(1+i)^{20}}{(1-i)^{18}}\)?</p>
+    <details>
+      <summary>💡 Nagoveštaj</summary>
+      <p style="color:#cbd5e1; padding-top:8px;">Koristi istu tehniku: \(\frac{1+i}{1-i}\) je konjugat od \(\frac{1-i}{1+i} = -i\), dakle \(\frac{1+i}{1-i} = i\). Rastavi na \(\left(\frac{1+i}{1-i}\right)^{18} \cdot (1+i)^2\) i iskoristi da je \((1+i)^2 = 2i\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Complex plane canvas
+  const canvas = document.getElementById('complexCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const cx = W / 2;
+  const cy = H / 2;
+  const scale = 130;
+
+  function toCanvas(x, y) {
+    return { x: cx + x * scale, y: cy - y * scale };
+  }
+
+  function drawArrow(fromX, fromY, toX, toY, color, dashed) {
+    const p1 = toCanvas(fromX, fromY);
+    const p2 = toCanvas(toX, toY);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    if (dashed) {
+      ctx.setLineDash([6, 4]);
+    } else {
+      ctx.setLineDash([]);
+    }
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrowhead
+    const angle = Math.atan2(p1.y - p2.y, p2.x - p1.x);
+    const headLen = 10;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(p2.x, p2.y);
+    ctx.lineTo(p2.x - headLen * Math.cos(angle - 0.3), p2.y + headLen * Math.sin(angle - 0.3));
+    ctx.lineTo(p2.x - headLen * Math.cos(angle + 0.3), p2.y + headLen * Math.sin(angle + 0.3));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawPoint(x, y, label, color, offsetX, offsetY) {
+    const pt = toCanvas(x, y);
+
+    // Glow
+    const grd = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, 22);
+    grd.addColorStop(0, color + '66');
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Point
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, pt.x + (offsetX || 0), pt.y + (offsetY || 0));
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = -2; i <= 2; i++) {
+      const p1 = toCanvas(i, -2.2);
+      const p2 = toCanvas(i, 2.2);
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+      const p3 = toCanvas(-2.2, i);
+      const p4 = toCanvas(2.2, i);
+      ctx.beginPath();
+      ctx.moveTo(p3.x, p3.y);
+      ctx.lineTo(p4.x, p4.y);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, cy);
+    ctx.lineTo(W, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, 0);
+    ctx.lineTo(cx, H);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', W - 25, cy - 10);
+    ctx.fillText('Im', cx + 18, 20);
+
+    // Tick marks on axes
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    for (let i = -2; i <= 2; i++) {
+      if (i === 0) continue;
+      const px = toCanvas(i, 0);
+      ctx.beginPath();
+      ctx.moveTo(px.x, px.y - 4);
+      ctx.lineTo(px.x, px.y + 4);
+      ctx.stroke();
+      ctx.fillText(String(i), px.x, px.y + 18);
+
+      const py = toCanvas(0, i);
+      ctx.beginPath();
+      ctx.moveTo(py.x - 4, py.y);
+      ctx.lineTo(py.x + 4, py.y);
+      ctx.stroke();
+      ctx.fillText(i + 'i', py.x - 20, py.y + 5);
+    }
+
+    // Unit circle (radius sqrt(2))
+    ctx.strokeStyle = 'rgba(96,165,250,0.2)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.sqrt(2) * scale, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label for the circle
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    const circLabelPt = toCanvas(Math.sqrt(2) * Math.cos(Math.PI * 0.15), Math.sqrt(2) * Math.sin(Math.PI * 0.15));
+    ctx.fillText('r = \u221A2', circLabelPt.x + 8, circLabelPt.y - 4);
+
+    // Angle arc for 1+i (pi/4)
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 40, 0, -Math.PI / 4, true);
+    ctx.stroke();
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('\u03C0/4', cx + 43, cy - 10);
+
+    // Angle arc for 1-i (-pi/4)
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 35, 0, Math.PI / 4);
+    ctx.stroke();
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('-\u03C0/4', cx + 37, cy + 22);
+
+    // Vectors from origin to 1+i and 1-i
+    drawArrow(0, 0, 1, 1, '#a78bfa', false);
+    drawArrow(0, 0, 1, -1, '#60a5fa', false);
+
+    // Points
+    drawPoint(1, 1, '1 + i', '#a78bfa', 40, -10);
+    drawPoint(1, -1, '1 - i', '#60a5fa', 40, 18);
+    drawPoint(0, 0, '', '#94a3b8', 0, 0);
+
+    // Dashed line showing symmetry
+    ctx.strokeStyle = 'rgba(244,114,182,0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    const s1 = toCanvas(1, 1);
+    const s2 = toCanvas(1, -1);
+    ctx.beginPath();
+    ctx.moveTo(s1.x, s1.y);
+    ctx.lineTo(s2.x, s2.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Symmetry label
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('simetrija', s1.x + 12, (s1.y + s2.y) / 2 + 4);
+
+    // Result point at 8 on real axis (show as a star marker)
+    const resPt = toCanvas(2, 0);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    // Info text at bottom
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Rezultat: 8 (realan broj, arg = 0)', cx, H - 25);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('|1\u00B1i| = \u221A2,  (\u221A2)\u00B9\u00B9 / (\u221A2)\u2075 = (\u221A2)\u2076 = 8', cx, H - 50);
+  }
+
+  draw();
+
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  // Method tab switching
+  const tabs = document.querySelectorAll('.method-tab');
+  const contents = document.querySelectorAll('.method-content');
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      const method = tab.getAttribute('data-method');
+      tabs.forEach(function(t) { t.classList.remove('active-tab'); });
+      tab.classList.add('active-tab');
+      contents.forEach(function(c) { c.classList.remove('visible'); });
+      var target = document.getElementById('method-' + method);
+      if (target) target.classList.add('visible');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Količnik stepena kompleksnih brojeva (1-i)^11 / (1+i)^5",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "imaginarna jedinica", "stepenovanje", "polarni oblik", "De Moavrov obrazac", "racionalizacija"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deljenje polinoma — Ostatak i koeficijenti</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: P(x) = x^4 + ax^3 + x^2 + b divided by Q(x) = x^2 + 2x gives remainder R(x) = -2x + 1.
+Find a + b.
+
+Strategy: Polynomial division theorem states P(x) = Q(x) * S(x) + R(x) for some quotient S(x).
+
+Key insight: Q(x) = x^2 + 2x = x(x + 2), with roots x = 0 and x = -2.
+At the roots of Q(x), P(x) = R(x) since Q(x)*S(x) = 0.
+
+Step 1: Evaluate at x = 0.
+P(0) = 0 + 0 + 0 + b = b
+R(0) = -2(0) + 1 = 1
+Therefore: b = 1
+
+Step 2: Evaluate at x = -2.
+P(-2) = (-2)^4 + a(-2)^3 + (-2)^2 + b
+      = 16 - 8a + 4 + b
+      = 20 - 8a + b
+R(-2) = -2(-2) + 1 = 4 + 1 = 5
+Therefore: 20 - 8a + b = 5
+
+Step 3: Substitute b = 1.
+20 - 8a + 1 = 5
+21 - 8a = 5
+8a = 16
+a = 2
+
+Step 4: Compute a + b.
+a + b = 2 + 1 = 3
+
+Verification: With a = 2, b = 1, P(x) = x^4 + 2x^3 + x^2 + 1.
+Let's do the actual polynomial division:
+P(x) / Q(x) = (x^4 + 2x^3 + x^2 + 1) / (x^2 + 2x)
+
+x^4 + 2x^3 + x^2 + 1 = (x^2 + 2x)(x^2) + x^2 + 1
+                       Remainder so far: x^2 + 1
+Continue: x^2 + 1 = (x^2 + 2x)(1) + (-2x + 1)
+                       Remainder: -2x + 1 ✓
+
+So S(x) = x^2 + 1, and indeed:
+(x^2 + 2x)(x^2 + 1) + (-2x + 1) = x^4 + x^2 + 2x^3 + 2x - 2x + 1 = x^4 + 2x^3 + x^2 + 1 ✓
+
+Answer: a + b = 3, which is option A. Matches the answer key.
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px;
+}
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.step-container:hover {
+  background: rgba(96,165,250,0.05);
+  border-left-color: #4ade80;
+}
+.step-container.active {
+  background: rgba(96,165,250,0.08);
+  border-left-color: #4ade80;
+}
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+.step-content {
+  flex: 1;
+}
+.step-content p {
+  margin-bottom: 8px;
+}
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+details {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  font-size: 1.05rem;
+}
+details summary:hover {
+  color: #c4b5fd;
+}
+details[open] summary {
+  margin-bottom: 12px;
+}
+details ul {
+  padding-left: 20px;
+}
+details li {
+  margin-bottom: 8px;
+}
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+.final-answer {
+  background: linear-gradient(135deg, rgba(52,211,153,0.12), rgba(74,222,128,0.12));
+  border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.final-answer h2 {
+  color: #4ade80;
+  margin-bottom: 14px;
+}
+.final-answer .answer-value {
+  font-size: 1.6rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+.option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+.option-card {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 22px;
+  text-align: center;
+  min-width: 70px;
+}
+.option-card.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+}
+.option-card .opt-label {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+.option-card.correct .opt-label {
+  color: #4ade80;
+}
+.option-card .opt-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+.pitfall-box {
+  background: rgba(224,148,104,0.08);
+  border: 1px solid rgba(224,148,104,0.25);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.pitfall-box h2 {
+  color: #e09468;
+  margin-bottom: 12px;
+}
+.pitfall-box li {
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+  max-width: 100%;
+}
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(148,163,184,0.06);
+  border-radius: 8px;
+}
+.checkpoint {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.2);
+}
+.checkpoint summary {
+  color: #34d399;
+}
+.slider-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  margin: 16px 0;
+}
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.slider-group label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.slider-group input[type="range"] {
+  width: 160px;
+  accent-color: #60a5fa;
+}
+.slider-value {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.1rem;
+  min-width: 40px;
+  text-align: center;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .step-container { padding: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .slider-container { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Deljenje polinoma — Određivanje koeficijenata iz ostatka</h1>
+  <p class="subtitle">Primena teoreme o deljenju polinoma i korena delioca za nalaženje nepoznatih koeficijenata</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako polinom \(P(x) = x^4 + ax^3 + x^2 + b\) pri deljenju polinomom \(Q(x) = x^2 + 2x\) daje ostatak \(R(x) = -2x + 1\), onda je \(a + b\) jednako:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p>Iskoristićemo činjenicu da je \(Q(x) = x^2 + 2x = x(x + 2)\), pa ima korene \(x = 0\) i \(x = -2\). Uvrštavanjem ovih korena u jednakost \(P(x) = Q(x) \cdot S(x) + R(x)\) dobijamo \(P(0) = R(0)\) i \(P(-2) = R(-2)\), čime nalazimo \(a\) i \(b\).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <ul>
+        <li><strong>Teorema o deljenju polinoma:</strong> Za svaki polinom \(P(x)\) i delilac \(Q(x) \neq 0\), postoje jedinstveni polinomi \(S(x)\) (količnik) i \(R(x)\) (ostatak) takvi da:
+        \[ P(x) = Q(x) \cdot S(x) + R(x), \quad \deg(R) < \deg(Q) \]</li>
+        <li><strong>Ostatak pri deljenju linearnim faktorom:</strong> Ako je \(Q(c) = 0\), tada iz \(P(x) = Q(x) \cdot S(x) + R(x)\) sledi \(P(c) = R(c)\), jer \(Q(c) \cdot S(c) = 0\).</li>
+        <li><strong>Faktorizacija:</strong> \(x^2 + 2x = x(x + 2)\), sa korenima \(x_1 = 0\) i \(x_2 = -2\).</li>
+        <li><strong>Stepen ostatka:</strong> Kada delimo polinomom stepena 2, ostatak je polinomom stepena najviše 1 (linearan ili konstanta).</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelizacija polinoma</h2>
+    <p style="margin-bottom:8px; color:#94a3b8;">Grafici polinoma \(P(x)\), delioca \(Q(x)\), i ostatka \(R(x)\). Pomerate klizače da menjate \(a\) i \(b\) i vidite kako se menja \(P(x)\). Kada je \(P(x) - R(x)\) deljivo sa \(Q(x)\), grafik \(P(x)\) prolazi kroz tačke gde se \(R(x)\) i \(Q(x)\) seku.</p>
+    <div class="slider-container">
+      <div class="slider-group">
+        <label>Koeficijent \(a\)</label>
+        <input type="range" id="slider-a" min="-4" max="6" step="0.1" value="2">
+        <span class="slider-value" id="val-a">2</span>
+      </div>
+      <div class="slider-group">
+        <label>Koeficijent \(b\)</label>
+        <input type="range" id="slider-b" min="-4" max="6" step="0.1" value="1">
+        <span class="slider-value" id="val-b">1</span>
+      </div>
+    </div>
+    <canvas id="poly-canvas" width="750" height="420"></canvas>
+    <p class="canvas-hint">Pomerite klizače na \(a = 2\) i \(b = 1\) — tada \(P(x)\) prolazi kroz tačke \((0, 1)\) i \((-2, 5)\), gde se poklapa sa \(R(x)\).</p>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Postavimo jednakost deljenja</h3>
+        <p>Prema teoremi o deljenju polinoma, važi:</p>
+        <div class="math-block">
+          \[ P(x) = Q(x) \cdot S(x) + R(x) \]
+        </div>
+        <p>gde je \(S(x)\) količnik, a \(R(x) = -2x + 1\) dati ostatak. Pošto je \(\deg(P) = 4\) i \(\deg(Q) = 2\), količnik \(S(x)\) je stepena 2.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Faktorizujmo delilac</h3>
+        <p>Delilac \(Q(x)\) možemo rastaviti na faktore:</p>
+        <div class="math-block">
+          \[ Q(x) = x^2 + 2x = x(x + 2) \]
+        </div>
+        <p>Ovaj polinom ima dva korena: \(x_1 = 0\) i \(x_2 = -2\).</p>
+        <p class="note">Ovo je ključan korak — koreni delioca nam daju mogućnost da "poništimo" količnik!</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Uvrstimo \(x = 0\) u jednakost deljenja</h3>
+        <p>Za \(x = 0\) važi \(Q(0) = 0\), pa:</p>
+        <div class="math-block">
+          \[ P(0) = \underbrace{Q(0)}_{= 0} \cdot S(0) + R(0) = R(0) \]
+        </div>
+        <p>Izračunajmo obe strane:</p>
+        <div class="math-block">
+          \[ P(0) = 0^4 + a \cdot 0^3 + 0^2 + b = b \]
+        </div>
+        <div class="math-block">
+          \[ R(0) = -2 \cdot 0 + 1 = 1 \]
+        </div>
+        <p>Dakle, dobijamo prvi uslov:</p>
+        <div class="math-block">
+          \[ \boxed{b = 1} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>✅ Proveri se: Koliko je \(b\)?</summary>
+      <p style="margin-top:8px;">Iz \(P(0) = R(0)\) direktno dobijamo \(b = 1\).</p>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Uvrstimo \(x = -2\) u jednakost deljenja</h3>
+        <p>Za \(x = -2\) važi \(Q(-2) = (-2)^2 + 2 \cdot (-2) = 4 - 4 = 0\), pa:</p>
+        <div class="math-block">
+          \[ P(-2) = \underbrace{Q(-2)}_{= 0} \cdot S(-2) + R(-2) = R(-2) \]
+        </div>
+        <p>Izračunajmo levu stranu:</p>
+        <div class="math-block">
+          \[ P(-2) = (-2)^4 + a \cdot (-2)^3 + (-2)^2 + b \]
+        </div>
+        <div class="math-block">
+          \[ P(-2) = 16 - 8a + 4 + b = 20 - 8a + b \]
+        </div>
+        <p>I desnu stranu:</p>
+        <div class="math-block">
+          \[ R(-2) = -2 \cdot (-2) + 1 = 4 + 1 = 5 \]
+        </div>
+        <p>Dobijamo jednačinu:</p>
+        <div class="math-block">
+          \[ 20 - 8a + b = 5 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Uvrstimo \(b = 1\) i nađemo \(a\)</h3>
+        <p>Zamenom \(b = 1\) u jednačinu iz prethodnog koraka:</p>
+        <div class="math-block">
+          \[ 20 - 8a + 1 = 5 \]
+        </div>
+        <div class="math-block">
+          \[ 21 - 8a = 5 \]
+        </div>
+        <div class="math-block">
+          \[ 8a = 16 \]
+        </div>
+        <div class="math-block">
+          \[ \boxed{a = 2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>✅ Proveri se: Koliko je \(a\)?</summary>
+      <p style="margin-top:8px;">Iz jednačine \(21 - 8a = 5\) dobijamo \(a = 2\).</p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Izračunajmo \(a + b\)</h3>
+        <p>Sada imamo oba koeficijenta:</p>
+        <div class="math-block">
+          \[ a + b = 2 + 1 = 3 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Verifikacija — stvarno deljenje</h3>
+        <p>Proverimo rezultat tako što ćemo izvršiti deljenje polinoma \(P(x) = x^4 + 2x^3 + x^2 + 1\) sa \(Q(x) = x^2 + 2x\):</p>
+        <div class="math-block">
+          \[ x^4 + 2x^3 + x^2 + 1 = (x^2 + 2x) \cdot x^2 + x^2 + 1 \]
+        </div>
+        <p>Nastavljamo deljenje ostatka \(x^2 + 1\) sa \(x^2 + 2x\):</p>
+        <div class="math-block">
+          \[ x^2 + 1 = (x^2 + 2x) \cdot 1 + (-2x + 1) \]
+        </div>
+        <p>Dakle, ukupno:</p>
+        <div class="math-block">
+          \[ x^4 + 2x^3 + x^2 + 1 = (x^2 + 2x)(x^2 + 1) + (-2x + 1) \]
+        </div>
+        <p>Ostatak je zaista \(R(x) = -2x + 1\). Potvrđeno!</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>✅ Proveri se: Razvij \((x^2 + 2x)(x^2 + 1) + (-2x + 1)\)</summary>
+      <p style="margin-top:8px;">\((x^2 + 2x)(x^2 + 1) = x^4 + x^2 + 2x^3 + 2x\). Dodamo ostatak: \(x^4 + 2x^3 + x^2 + 2x - 2x + 1 = x^4 + 2x^3 + x^2 + 1 = P(x)\). Tačno!</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p style="margin-bottom:12px;">Koreni delioca su „magični" — uvrštavanjem korena \(Q(x)\) u jednakost deljenja, množenik \(Q(x) \cdot S(x)\) nestaje, i dobijamo direktan odnos između \(P\) i \(R\). Za delilac sa \(n\) korena dobijamo \(n\) jednačina — tačno onoliko koliko nam treba za \(n\) nepoznatih!</p>
+    <div class="math-block" style="display:inline-block;">
+      \[ Q(c) = 0 \;\Longrightarrow\; P(c) = R(c) \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <p>Za \(a = 2\) i \(b = 1\):</p>
+    <div class="answer-value">\( a + b = 3 \)</div>
+
+    <div class="option-row">
+      <div class="option-card correct">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(3\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(2\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(V)</div>
+        <div class="opt-value">\(1\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(G)</div>
+        <div class="opt-value">\(-1\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(-2\)</div>
+      </div>
+    </div>
+
+    <div class="verification">
+      <strong>Verifikacija:</strong> Potvrđeno stvarnim deljenjem — \(P(x) = x^4 + 2x^3 + x^2 + 1 = (x^2 + 2x)(x^2 + 1) + (-2x + 1)\). Ostatak je zaista \(-2x + 1\), što potvrđuje da su \(a = 2\) i \(b = 1\) ispravni, te je \(a + b = 3\).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="pitfall-box">
+    <h2>⚠️ Česte greške</h2>
+    <ul>
+      <li><strong>Pogrešan predznak pri stepenima:</strong> Čest propust je greškom izračunati \((-2)^3 = 8\) umesto \(-8\), ili \((-2)^4 = -16\) umesto \(16\). Uvek pažljivo sa parnim i neparnim stepenima negativnog broja!</li>
+      <li><strong>Pokušaj kompletnog deljenja umesto korišćenja korena:</strong> Ako pokušate da delite \(P(x)\) sa \(Q(x)\) sa nepoznatim \(a\) i \(b\), jednačivanje koeficijenata daje komplikovaniji sistem. Metoda uvrštavanja korena je mnogo elegantnija i brža.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2>Dodatni izazov</h2>
+    <p>Neka je polinom \(P(x) = x^5 + cx^4 + 3x^2 + d\). Ako pri deljenju sa \(Q(x) = x^2 - x\) ostatak iznosi \(R(x) = 5x - 2\), koliko je \(c \cdot d\)?</p>
+    <details>
+      <summary>💡 Nagoveštaj</summary>
+      <p style="margin-top:8px;">Delilac je \(Q(x) = x(x - 1)\), sa korenima \(x = 0\) i \(x = 1\). Uvrstite oba u \(P(x) = R(x)\) da dobijete sistem od dve jednačine sa dve nepoznate \(c\) i \(d\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Interactive polynomial visualization
+  const canvas = document.getElementById('poly-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const sliderA = document.getElementById('slider-a');
+  const sliderB = document.getElementById('slider-b');
+  const valA = document.getElementById('val-a');
+  const valB = document.getElementById('val-b');
+
+  const padL = 70, padR = 30, padT = 30, padB = 50;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  const xMin = -3.5, xMax = 2.5;
+  const yMin = -8, yMax = 22;
+
+  function toCanvasX(x) {
+    return padL + (x - xMin) / (xMax - xMin) * plotW;
+  }
+  function toCanvasY(y) {
+    return padT + (yMax - y) / (yMax - yMin) * plotH;
+  }
+
+  function P(x, a, b) {
+    return Math.pow(x, 4) + a * Math.pow(x, 3) + x * x + b;
+  }
+  function Q(x) {
+    return x * x + 2 * x;
+  }
+  function R(x) {
+    return -2 * x + 1;
+  }
+
+  function drawGrid() {
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+      const cx = toCanvasX(x);
+      ctx.beginPath();
+      ctx.moveTo(cx, padT);
+      ctx.lineTo(cx, H - padB);
+      ctx.stroke();
+    }
+    for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y += 2) {
+      const cy = toCanvasY(y);
+      ctx.beginPath();
+      ctx.moveTo(padL, cy);
+      ctx.lineTo(W - padR, cy);
+      ctx.stroke();
+    }
+  }
+
+  function drawAxes() {
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+
+    // x-axis
+    const y0 = toCanvasY(0);
+    if (y0 >= padT && y0 <= H - padB) {
+      ctx.beginPath();
+      ctx.moveTo(padL, y0);
+      ctx.lineTo(W - padR, y0);
+      ctx.stroke();
+    }
+
+    // y-axis
+    const x0 = toCanvasX(0);
+    if (x0 >= padL && x0 <= W - padR) {
+      ctx.beginPath();
+      ctx.moveTo(x0, padT);
+      ctx.lineTo(x0, H - padB);
+      ctx.stroke();
+    }
+
+    // x-labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+      if (x === 0) continue;
+      ctx.fillText(x.toString(), toCanvasX(x), H - padB + 8);
+    }
+    ctx.fillText('0', toCanvasX(0) - 12, H - padB + 8);
+
+    // y-labels
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y += 4) {
+      if (y === 0) continue;
+      ctx.fillText(y.toString(), padL - 10, toCanvasY(y));
+    }
+  }
+
+  function drawCurve(func, color, dashPattern, lineW) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineW || 2.5;
+    if (dashPattern) ctx.setLineDash(dashPattern);
+    else ctx.setLineDash([]);
+    ctx.beginPath();
+    let started = false;
+    const step = 0.02;
+    for (let x = xMin; x <= xMax; x += step) {
+      const y = func(x);
+      if (y === null || y === undefined || !isFinite(y)) { started = false; continue; }
+      if (y < yMin - 5 || y > yMax + 5) { started = false; continue; }
+      const cx = toCanvasX(x);
+      const cy = toCanvasY(y);
+      if (!started) {
+        ctx.moveTo(cx, cy);
+        started = true;
+      } else {
+        ctx.lineTo(cx, cy);
+      }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawPoint(x, y, color, labelText, offsetX, offsetY) {
+    const cx = toCanvasX(x);
+    const cy = toCanvasY(y);
+
+    // Glow
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10, 0, 2 * Math.PI);
+    var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 10);
+    grad.addColorStop(0, color + '66');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Point
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Label
+    if (labelText) {
+      ctx.fillStyle = color;
+      ctx.font = 'bold 12px "Segoe UI", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(labelText, cx + (offsetX || 8), cy + (offsetY || -8));
+    }
+  }
+
+  function draw() {
+    var a = parseFloat(sliderA.value);
+    var b = parseFloat(sliderB.value);
+    valA.textContent = a.toFixed(1).replace('.', ',');
+    valB.textContent = b.toFixed(1).replace('.', ',');
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    drawGrid();
+    drawAxes();
+
+    // Draw R(x) = -2x + 1
+    drawCurve(R, '#4ade80', [6, 4], 2);
+
+    // Draw P(x)
+    drawCurve(function(x) { return P(x, a, b); }, '#60a5fa', null, 2.5);
+
+    // Key points: where P should equal R at roots of Q
+    var p0 = P(0, a, b);
+    var r0 = R(0);
+    var pn2 = P(-2, a, b);
+    var rn2 = R(-2);
+
+    // Draw the key evaluation points on R(x)
+    drawPoint(0, r0, '#4ade80', '(0, ' + r0.toFixed(0) + ') na R', 8, -8);
+    drawPoint(-2, rn2, '#4ade80', '(-2, ' + rn2.toFixed(0) + ') na R', 8, -8);
+
+    // Draw points on P(x)
+    if (p0 >= yMin && p0 <= yMax) {
+      drawPoint(0, p0, '#60a5fa', '(0, ' + p0.toFixed(1).replace('.', ',') + ') na P', 8, 18);
+    }
+    if (pn2 >= yMin && pn2 <= yMax) {
+      drawPoint(-2, pn2, '#60a5fa', '(-2, ' + pn2.toFixed(1).replace('.', ',') + ') na P', -120, 18);
+    }
+
+    // Check if the values match
+    var matchAt0 = Math.abs(p0 - r0) < 0.15;
+    var matchAtN2 = Math.abs(pn2 - rn2) < 0.15;
+
+    // Status indicator
+    ctx.font = 'bold 13px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    if (matchAt0 && matchAtN2) {
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText('✓ P(0) = R(0) i P(-2) = R(-2) — Ostatak je tačan!', padL + 10, padT + 8);
+    } else {
+      ctx.fillStyle = '#f472b6';
+      var msg = '';
+      if (!matchAt0) msg += 'P(0) ≠ R(0)  ';
+      if (!matchAtN2) msg += 'P(-2) ≠ R(-2)';
+      ctx.fillText('✗ ' + msg, padL + 10, padT + 8);
+    }
+
+    // Legend
+    var lx = W - padR - 180;
+    var ly = H - padB - 60;
+    ctx.font = '12px "Segoe UI", sans-serif';
+
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(lx, ly + 2);
+    ctx.lineTo(lx + 18, ly + 2);
+    ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('P(x) = x⁴ + ax³ + x² + b', lx + 24, ly + 2);
+
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(lx, ly + 22);
+    ctx.lineTo(lx + 18, ly + 22);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('R(x) = -2x + 1', lx + 24, ly + 22);
+  }
+
+  draw();
+
+  sliderA.addEventListener('input', draw);
+  sliderB.addEventListener('input', draw);
+
+  // Step click interaction
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Deljenje polinoma — Određivanje koeficijenata iz ostatka",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["deljenje polinoma", "ostatak pri deljenju", "teorema o deljenju", "polinomi", "koreni polinoma"]
+}
+BRAINSPARK_META-->

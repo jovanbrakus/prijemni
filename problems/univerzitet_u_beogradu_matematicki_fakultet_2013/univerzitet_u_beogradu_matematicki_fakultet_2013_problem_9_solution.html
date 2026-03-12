@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Precrtavanje cifara - Poslednja preostala cifra</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: A 2013-digit number is formed by repeating "12345" — it goes 12345 12345 ... 12345 123.
+  That is 402 full copies of "12345" (402 × 5 = 2010 digits) plus "123" (3 more digits) = 2013 digits total.
+
+  Process: Going left to right, cross out all digits at ODD positions.
+  The remaining (uncrossed) digits form a new number, and the process repeats.
+  Continue until all digits are crossed out.
+  Question: Which digit is the LAST one crossed out?
+
+  Analysis — which position survives the longest?
+
+  Round 1: Positions 1,2,3,...,2013. Remove odd positions (1,3,5,...,2013).
+           Remaining: positions 2,4,6,...,2012. That's 1006 digits.
+
+  Round 2: From the 1006 remaining digits, remove those at odd positions in the NEW sequence.
+           The new sequence position 1 = original position 2, new position 2 = original position 4, etc.
+           Removing odd positions of new sequence = removing original positions 2,6,10,...
+           Remaining after round 2: original positions 4,8,12,...,2012. That's 503 digits.
+
+  General pattern: After k rounds, the surviving positions are those divisible by 2^k
+  that are ≤ 2013 (actually ≤ 2012 since 2012 is the largest even number ≤ 2013).
+
+  Wait, let me be more careful. After round 1, we have positions 2,4,6,...,2012.
+  After round 2, from those 1006 positions, we keep every 2nd one:
+    positions 4,8,12,...,2012 (multiples of 4). That's 503 positions.
+  After round 3, from those 503, keep every 2nd: positions 8,16,24,...
+    The 503 positions are 4,8,12,...,2012.
+    Odd-indexed: 4,12,20,... → removed
+    Even-indexed: 8,16,24,... → kept
+    These are multiples of 8 up to 2012. That's floor(2012/8) = 251 positions.
+  After round 4: multiples of 16 up to 2012 → floor(2012/16) = 125 positions.
+    But wait - at round 3 we had 503 positions (odd count), and from round 3 we keep
+    positions at even indices. Let me re-examine.
+
+  Actually, the key insight is simpler. The last digit to be removed is at the position
+  corresponding to the highest power of 2 that is ≤ 2013.
+
+  Why? In each round, we remove digits at odd positions of the current sequence.
+  The digit that survives the longest is the one that always lands on an even position
+  in every round, until it's the very last one left.
+
+  After round k, the survivors are at original positions: 2^k, 2·2^k, 3·2^k, ...
+  But actually that's not quite right either. Let me think again carefully.
+
+  Round 1: Remove positions 1,3,5,...,2013. Survivors: 2,4,6,...,2012.
+  Round 2: The survivors form a sequence of 1006 elements. Remove odd-indexed ones.
+    Survivor list: [2,4,6,8,...,2012]
+    Odd-indexed (1st,3rd,5th,...): 2,6,10,14,... → removed
+    Even-indexed (2nd,4th,6th,...): 4,8,12,16,... → kept
+    Survivors after round 2: multiples of 4 up to 2012. Count: 503.
+  Round 3: 503 elements: [4,8,12,16,...,2012]
+    Remove odd-indexed: 4,12,20,28,...
+    Keep even-indexed: 8,16,24,32,...
+    Survivors: multiples of 8 up to 2012. Count: 251.
+  Round 4: 251 elements: [8,16,24,...,2008]
+    Remove odd-indexed: 8,24,40,...
+    Keep even-indexed: 16,32,48,...
+    Survivors: multiples of 16 up to 2008. Count: 125.
+  Round 5: 125 elements: [16,32,...,2000]
+    Remove odd-indexed: 16,48,80,...
+    Keep even-indexed: 32,64,96,...
+    Survivors: multiples of 32 up to 2016... but max is 2000. floor(2000/32) = 62. Count: 62.
+    Wait: multiples of 32 up to 2000: 32,64,...,1984. That's 62 elements.
+    But 62*32 = 1984, and 63*32 = 2016 > 2012. So 62 elements.
+    Hmm, let me reconsider. The 125 elements are 16,32,48,...,2000.
+    Actually 125*16 = 2000. So the list is 16,32,...,2000.
+    Odd-indexed: 16,48,80,...  These are 16 + (k-1)*32 for k=1,2,...
+    Even-indexed: 32,64,96,... These are 32*k for k=1,2,...
+    How many even-indexed? floor(125/2) = 62.
+    The 62nd even-indexed: the 124th element = 124*16 = 1984.
+    So survivors: 32,64,...,1984. Count: 62.
+  Round 6: 62 elements: [32,64,96,...,1984]
+    Remove odd-indexed: 32,96,160,...
+    Keep even-indexed: 64,128,192,...
+    Survivors: multiples of 64, starting from 64.
+    Count: 31. Last one: 62*64/2...
+    Even-indexed from [32,64,96,...,1984]: 64,128,192,...,1984.
+    Count: 31. Last = 31*64 = 1984.
+    Wait: 62 elements. Even-indexed = 31 elements. The 31st even = 62nd element = 1984.
+    Hmm, 62nd element of the original sequence [32,64,...] = 62*32 = 1984.
+    The even-indexed ones are the 2nd,4th,...,62nd = 64,128,...,1984.
+    These are 64*k for k=1,...,31. So 31 elements, max = 1984.
+  Round 7: 31 elements: [64,128,192,...,1984]
+    Remove odd-indexed: 64,192,320,...
+    Keep even-indexed: 128,256,384,...
+    Count: 15. Elements: 128*k for k=1,...,15. Max = 1920.
+  Round 8: 15 elements: [128,256,...,1920]
+    Remove odd-indexed: 128,384,640,...
+    Keep even-indexed: 256,512,768,...
+    Count: 7. Max = 7*256 = 1792.
+  Round 9: 7 elements: [256,512,768,1024,1280,1536,1792]
+    Remove odd-indexed: 256,768,1280,1792
+    Keep even-indexed: 512,1024,1536
+    Count: 3.
+  Round 10: 3 elements: [512,1024,1536]
+    Remove odd-indexed: 512, 1536
+    Keep even-indexed: 1024
+    Count: 1.
+  Round 11: 1 element: [1024]
+    Remove it (it's at position 1, which is odd). Done.
+
+  So the last digit removed is at original position 1024.
+
+  Note: 1024 = 2^10, which is the highest power of 2 ≤ 2013. This confirms the pattern.
+
+  Now find the digit at position 1024:
+  The number repeats "12345" cyclically.
+  Position p has digit = digit at position ((p-1) mod 5 + 1) in "12345".
+  1024 - 1 = 1023. 1023 mod 5 = 1023 - 204*5 = 1023 - 1020 = 3.
+  So it's the (3+1) = 4th character of "12345", which is '4'.
+
+  Answer: D) 4
+
+  Verification: 2^10 = 1024 ≤ 2013, 2^11 = 2048 > 2013. ✓
+  1024 = 204*5 + 4, so position 1024 corresponds to the 4th digit in the pattern. ✓
+  The 4th digit of "12345" is 4. ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item.answer-option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-option {
+  color: #34d399;
+  font-size: 1.2rem;
+  margin-top: 8px;
+}
+
+.final-answer-box .all-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.final-answer-box .all-options .option {
+  background: rgba(51, 65, 85, 0.4);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.final-answer-box .all-options .option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+.round-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 0.95rem;
+}
+
+.round-table th, .round-table td {
+  padding: 8px 14px;
+  border: 1px solid #334155;
+  text-align: center;
+}
+
+.round-table th {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.round-table td {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.digit-sequence {
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+  line-height: 2;
+  font-size: 1rem;
+  color: #cbd5e1;
+}
+
+.digit-sequence .d-highlight {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.digit-sequence .d-crossed {
+  color: #64748b;
+  text-decoration: line-through;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid, .options-grid {
+    flex-direction: column;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+  .round-table {
+    font-size: 0.8rem;
+  }
+  .round-table th, .round-table td {
+    padding: 5px 8px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Precrtavanje cifara u velikom broju</h1>
+  <p class="subtitle">Kombinatorika i nizovi -- poziciono rasudjivanje sa stepenima dvojke</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128203;</span> Tekst zadatka</div>
+    <div class="problem-statement">
+      <p>Dat je 2013-cifren broj \( \underbrace{12345\,12345\,\ldots\,12345}_{402 \text{ puta}}\,123 \). U broju se, iduci sleva na desno, redom precrtavaju sve cifre na neparnim mestima. Neprecrtane cifre u postojecem poretku cine novi broj u kome se ponavlja isti postupak precrtavanja. Ovaj se postupak ponavlja sve dok ne budu precrtane sve cifre. Koja je cifra poslednja precrtana?</p>
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">(A) 1</div>
+        <div class="given-item answer-option" data-option="B">(B) 2</div>
+        <div class="given-item answer-option" data-option="C">(C) 3</div>
+        <div class="given-item answer-option" data-option="D">(D) 4</div>
+        <div class="given-item answer-option" data-option="E">(E) 5</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      Umesto da simuliramo precrtavanje svih 2013 cifara, uocicemo obrazac: u svakoj rundi, preostale cifre na neparnim pozicijama se brisu. Pozicija koja prezivljava najduze je ona koja u svakoj rundi zauzima parnu poziciju -- a to je upravo originalna pozicija jednaka najvecem stepenu broja 2 koji ne prelazi 2013. Potom cemo odrediti koja cifra stoji na toj poziciji u periodicnom nizu "12345".
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Precrtavanje na neparnim pozicijama -- opsti princip (klikni da otvoris)</summary>
+      <div class="detail-content">
+        <p>Kada iz niza od \( n \) elemenata u svakoj rundi brisemo one na neparnim pozicijama (1. ,3., 5., ...), nakon \( k \) rundi prezivljavaju elementi cije su originalne pozicije oblika \( 2^k \cdot m \) za prirodne brojeve \( m \).</p>
+        <p style="margin-top: 10px;">Poslednji preostali element je onaj na poziciji koja je <strong>najveci stepen dvojke</strong> koji ne prelazi \( n \):</p>
+        <div class="step-math">
+          \[ p = 2^{\lfloor \log_2 n \rfloor} \]
+        </div>
+        <p style="margin-top: 10px;">Intuicija: element na poziciji \( 2^k \) uvek zauzima parnu poziciju u tekucem nizu, sve dok nije jedini preostali -- tek tada se brise kao poslednji.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Periodicnost cifara (klikni da otvoris)</summary>
+      <div class="detail-content">
+        <p>Nas broj se formira ponavljanjem bloka "12345". Cifra na poziciji \( p \) (brojeci od 1) jednaka je:</p>
+        <div class="step-math">
+          \[ c_p = ((p - 1) \bmod 5) + 1 \]
+        </div>
+        <p style="margin-top: 8px;">Na primer: pozicija 1 daje cifru 1, pozicija 7 daje cifru 2, pozicija 14 daje cifru 4.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Vizuelni prikaz</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="760" height="480"></canvas>
+    </div>
+    <p class="canvas-caption">Simulacija precrtavanja na manjem primeru (16 cifara) -- pozicija 8 = \( 2^3 \) prezivljava najduze</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128290;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Struktura broja</div>
+        <p>Broj ima tacno 2013 cifara. Blok "12345" se ponavlja, pa imamo:</p>
+        <div class="step-math">
+          \[ 2013 = 402 \times 5 + 3 \]
+        </div>
+        <p>Dakle, 402 potpuna ponavljanja bloka "12345", pa zatim jos "123". Broj izgleda ovako:</p>
+        <div class="highlight-box">
+          <span class="digit-sequence">1 2 3 4 5 | 1 2 3 4 5 | 1 2 3 4 5 | ... | 1 2 3 4 5 | 1 2 3</span>
+        </div>
+        <p>Pozicije idu od 1 do 2013. Cifra na poziciji \( p \) odredjena je formulom \( c_p = ((p-1) \bmod 5) + 1 \).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Sta se desava u svakoj rundi?</div>
+        <p>Pratimo sta se desava sa pozicijama kroz runde precrtavanja:</p>
+        <table class="round-table">
+          <tr>
+            <th>Runda</th>
+            <th>Preostale pozicije</th>
+            <th>Broj preostalih</th>
+          </tr>
+          <tr>
+            <td>Pre pocetka</td>
+            <td>\( 1, 2, 3, 4, \ldots, 2013 \)</td>
+            <td>2013</td>
+          </tr>
+          <tr>
+            <td>Posle 1. runde</td>
+            <td>\( 2, 4, 6, 8, \ldots, 2012 \)</td>
+            <td>1006</td>
+          </tr>
+          <tr>
+            <td>Posle 2. runde</td>
+            <td>\( 4, 8, 12, 16, \ldots, 2012 \)</td>
+            <td>503</td>
+          </tr>
+          <tr>
+            <td>Posle 3. runde</td>
+            <td>\( 8, 16, 24, \ldots, 2008 \)</td>
+            <td>251</td>
+          </tr>
+          <tr>
+            <td>Posle 4. runde</td>
+            <td>\( 16, 32, 48, \ldots, 2000 \)</td>
+            <td>125</td>
+          </tr>
+          <tr>
+            <td>Posle 5. runde</td>
+            <td>\( 32, 64, 96, \ldots, 1984 \)</td>
+            <td>62</td>
+          </tr>
+          <tr>
+            <td>Posle 6. runde</td>
+            <td>\( 64, 128, 192, \ldots, 1984 \)</td>
+            <td>31</td>
+          </tr>
+          <tr>
+            <td>Posle 7. runde</td>
+            <td>\( 128, 256, 384, \ldots, 1920 \)</td>
+            <td>15</td>
+          </tr>
+          <tr>
+            <td>Posle 8. runde</td>
+            <td>\( 256, 512, 768, \ldots, 1792 \)</td>
+            <td>7</td>
+          </tr>
+          <tr>
+            <td>Posle 9. runde</td>
+            <td>\( 512, 1024, 1536 \)</td>
+            <td>3</td>
+          </tr>
+          <tr>
+            <td>Posle 10. runde</td>
+            <td>\( 1024 \)</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td>Posle 11. runde</td>
+            <td>nista (poslednja cifra precrtana)</td>
+            <td>0</td>
+          </tr>
+        </table>
+        <p>Vidimo da je cifra na originalnoj poziciji <strong>1024</strong> poslednja precrtana.</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zasto bas pozicija 1024?</summary>
+            <div class="detail-content">
+              <p>Posle svake runde prezivljavaju pozicije koje su visekratnici sve vecih stepena dvojke. Pozicija 1024 = \( 2^{10} \) je deljiva sa svim stepenima dvojke do \( 2^{10} \), pa uvek zauzima parnu poziciju u preostalom nizu. Tek kada ostane sama, brise se u 11. rundi.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Najveci stepen dvojke \( \leq 2013 \)</div>
+        <p>Trazimo najvece \( 2^k \leq 2013 \):</p>
+        <div class="step-math">
+          \[ 2^{10} = 1024 \leq 2013 \qquad \text{ali} \qquad 2^{11} = 2048 > 2013 \]
+        </div>
+        <p>Dakle, poslednja precrtana cifra je na poziciji \( 2^{10} = 1024 \).</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Da li smo sigurni da 1024 ne "ispadne" ranije?</summary>
+            <div class="detail-content">
+              <p>Da. U svakoj rundi, preostali niz ima oblik \( 2^k, 2 \cdot 2^k, 3 \cdot 2^k, \ldots \). Pozicija 1024 = \( 2^{10} \) se u tom nizu nalazi na mestu \( 1024 / 2^k = 2^{10-k} \), sto je paran broj za svako \( k < 10 \). Tek u rundi kada je jedina preostala, njena pozicija u nizu je 1 (neparna) i biva precrtana.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Odredjivanje cifre na poziciji 1024</div>
+        <p>Broj se sastoji od ponavljanja bloka "12345". Pozicija u bloku se odredjuje ostatkom pri deljenju sa 5:</p>
+        <div class="step-math">
+          \[ 1024 = 204 \times 5 + 4 \]
+        </div>
+        <p>Ostatak je 4, sto znaci da je pozicija 1024 cetvrta cifra u bloku "12345":</p>
+        <div class="highlight-box">
+          <span class="digit-sequence">1 &nbsp; 2 &nbsp; 3 &nbsp; <span class="d-highlight">4</span> &nbsp; 5</span>
+        </div>
+        <p>Cifra na poziciji 1024 je <strong>4</strong>.</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Verifikacija racuna</summary>
+            <div class="detail-content">
+              <p>Koristeci formulu \( c_p = ((p-1) \bmod 5) + 1 \):</p>
+              <p>\( c_{1024} = ((1024-1) \bmod 5) + 1 = (1023 \bmod 5) + 1 = 3 + 1 = 4 \) &#10003;</p>
+              <p style="margin-top: 8px;">Alternativno: 204 kompletna bloka zauzimaju pozicije 1--1020. Pozicija 1024 je 4. cifra 205-og bloka, dakle cifra 4. &#10003;</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Kljucni uvid</div>
+    <p>Kada se u nizu od \( n \) elemenata u svakoj rundi brisu elementi na neparnim pozicijama, element koji prezivljava najduze je onaj na poziciji \( 2^{\lfloor \log_2 n \rfloor} \) -- <strong>najveci stepen dvojke koji ne prelazi \( n \)</strong>. Ovo je zato sto je ta pozicija uvek na parnom mestu u svakom sledecim nizu, sve dok ne ostane sama. Ovaj obrazac se pojavljuje u mnogim problemima eliminacije (npr. Jozefusov problem).</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">Poslednja precrtana cifra je \( 4 \)</div>
+    <div class="answer-option">Pozicija 1024 = \( 2^{10} \), cifra u bloku: 4. mesto u "12345"</div>
+    <div class="all-options">
+      <div class="option">(A) 1</div>
+      <div class="option">(B) 2</div>
+      <div class="option">(C) 3</div>
+      <div class="option correct">(D) 4</div>
+      <div class="option">(E) 5</div>
+    </div>
+    <p style="margin-top: 16px; color: #94a3b8; font-size: 0.95rem;">
+      Verifikacija: \( 2^{10} = 1024 \leq 2013 < 2048 = 2^{11} \). Pozicija 1024: \( 1024 = 204 \times 5 + 4 \implies \) cifra je 4. &#10003;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Brkanje parnih i neparnih pozicija:</strong> U zadatku se precrtavaju cifre na <em>neparnim</em> mestima (1., 3., 5., ...), ne na parnim. Greska u tumacenju zadatka menja kompletno resenje.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Pokusaj simulacije umesto uocavanja obrasca:</strong> Sa 2013 cifara, rucna simulacija je nemoguca. Trik je prepoznati da preostale pozicije nakon \( k \) rundi cine visekratnike od \( 2^k \), pa je poslednja pozicija \( 2^{10} = 1024 \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Greska u odredjivanju cifre:</strong> Paziti na "off-by-one" gresku pri deljenju sa 5. Pozicija 1024 odgovara ostatku 4 (ne 0!), jer \( 1024 \div 5 = 204 \) ostatak \( 4 \). Cifra je cetvrta u bloku, dakle 4.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#10007;</span>
+      <p><strong>Zaboravljanje da se rundi ne prenumerisu pozicije:</strong> Bitno je pratiti <em>originalne</em> pozicije. Svaka nova runda ne menja originalne pozicije cifara -- menja se samo koji su elementi prisutni.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Sta ako se umesto cifara na neparnim mestima precrtavaju cifre na <em>parnim</em> mestima? Koja bi cifra bila poslednja precrtana u istom broju od 2013 cifara?</p>
+    <details>
+      <summary>Pogledaj odgovor</summary>
+      <div class="detail-content">
+        <p>Ako se brisu parne pozicije, nakon 1. runde ostaju: 1, 3, 5, ..., 2013 (1007 cifara). Poslednja preostala je na originalnoj poziciji \( 2 \cdot 2^{\lfloor \log_2 1007 \rfloor} - 1 = 2 \cdot 512 - 1 = 1023 \).</p>
+        <p style="margin-top: 8px;">Zapravo, princip je slozeniji jer se menja struktura preostalih pozicija. U ovom slucaju, poslednja preostala pozicija je \( 2 \cdot 2^{10} - 1 = 2047 \)... ali 2047 > 2013, pa treba pazljivije analizirati. Ovo je dobar izazov za dalje razmisljanje!</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // We'll illustrate the process with a small example: 16 digits of "1234512345123451"
+  // Positions: 1..16, pattern "12345" repeating => 1,2,3,4,5,1,2,3,4,5,1,2,3,4,5,1
+  const N = 16;
+  const pattern = '1234512345123451';
+  const digits = pattern.split('');
+
+  // Pre-compute which positions survive each round
+  // Round 0: all positions 1..16
+  // Round 1: even positions: 2,4,6,8,10,12,14,16
+  // Round 2: 4,8,12,16
+  // Round 3: 8,16
+  // Round 4: 8 (since 8 is at pos 1 of [8,16], 16 is at pos 2 -> wait)
+  // Actually: Round 3 survivors: 8,16 (2 elements)
+  // Round 4: remove odd positions from [8,16] -> remove 8, keep 16? No wait.
+  // [8,16]: pos 1 = 8 (odd, remove), pos 2 = 16 (even, keep). Survivors: [16]
+  // Round 5: [16] -> remove pos 1 -> gone.
+  // Hmm, so for N=16, last survivor is 16 = 2^4. Let me re-check for consistency.
+  // Actually 2^floor(log2(16)) = 2^4 = 16. So last is position 16 -> digit '1'.
+  // Let me use N=10 instead for a nicer illustration.
+  // N=10: "1234512345"
+  // Survivors after round 1: 2,4,6,8,10 (5 elems)
+  // Round 2: [2,4,6,8,10]. Remove odd: 2,6,10. Keep: 4,8 (2 elems)
+  // Round 3: [4,8]. Remove odd: 4. Keep: 8 (1 elem)
+  // Round 4: [8]. Remove -> done.
+  // Last survivor: position 8 = 2^3. Digit: ((8-1)%5)+1 = (7%5)+1 = 2+1 = 3. Digit = 3.
+
+  // Let's illustrate with N=10 for clarity
+  const exN = 10;
+  const exDigits = '1234512345'.split('');
+
+  // Compute rounds
+  let positions = [];
+  for (let i = 1; i <= exN; i++) positions.push(i);
+
+  const rounds = [positions.slice()];
+  let current = positions.slice();
+  while (current.length > 0) {
+    const next = [];
+    for (let i = 0; i < current.length; i++) {
+      if ((i + 1) % 2 === 0) { // even index (1-based), i.e., i is odd (0-based)
+        next.push(current[i]);
+      }
+    }
+    rounds.push(next);
+    current = next;
+  }
+
+  // Draw
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const cellW = 52;
+    const cellH = 34;
+    const startX = 40;
+    const startY = 50;
+    const rowGap = 46;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Primer sa 10 cifara: "1234512345"', startX, 28);
+
+    // Draw each round
+    const numRounds = rounds.length; // includes empty final
+
+    for (let r = 0; r < Math.min(numRounds, 6); r++) {
+      const y = startY + r * rowGap;
+      const currentRound = rounds[r];
+      const nextRound = r + 1 < rounds.length ? rounds[r + 1] : [];
+      const removedInThis = r > 0 ? [] : [];
+
+      // Label
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      if (r === 0) {
+        ctx.fillText('Pocetak:', startX - 8, y + cellH / 2 + 5);
+      } else {
+        ctx.fillText('Runda ' + r + ':', startX - 8, y + cellH / 2 + 5);
+      }
+
+      // Determine which are removed in next round
+      const nextSet = new Set(nextRound);
+      const currentSet = new Set(currentRound);
+
+      // Draw cells for all 10 positions
+      for (let i = 0; i < exN; i++) {
+        const pos = i + 1;
+        const x = startX + i * (cellW + 4);
+
+        const inCurrent = currentSet.has(pos);
+        const inNext = nextSet.has(pos);
+        const isRemoved = inCurrent && !inNext;
+        const isLast = (r === numRounds - 2) && currentRound.length === 1 && currentRound[0] === pos;
+
+        if (!inCurrent) {
+          // Already eliminated - ghost cell
+          ctx.fillStyle = 'rgba(30, 41, 59, 0.3)';
+          ctx.fillRect(x, y, cellW, cellH);
+          ctx.strokeStyle = '#1e293b';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, y, cellW, cellH);
+          // crossed out digit
+          ctx.fillStyle = '#334155';
+          ctx.font = '14px Courier New, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(exDigits[i], x + cellW / 2, y + cellH / 2 + 5);
+        } else if (isLast) {
+          // Last survivor highlighted
+          ctx.fillStyle = 'rgba(52, 211, 153, 0.25)';
+          ctx.fillRect(x, y, cellW, cellH);
+          ctx.strokeStyle = '#34d399';
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(x, y, cellW, cellH);
+          ctx.fillStyle = '#34d399';
+          ctx.font = 'bold 16px Courier New, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(exDigits[i], x + cellW / 2, y + cellH / 2 + 5);
+        } else if (isRemoved) {
+          // Being removed this round - red tint
+          ctx.fillStyle = 'rgba(244, 114, 182, 0.15)';
+          ctx.fillRect(x, y, cellW, cellH);
+          ctx.strokeStyle = '#f472b6';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x, y, cellW, cellH);
+          ctx.fillStyle = '#f472b6';
+          ctx.font = '15px Courier New, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(exDigits[i], x + cellW / 2, y + cellH / 2 + 5);
+          // X mark
+          ctx.strokeStyle = 'rgba(244, 114, 182, 0.6)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(x + 4, y + 4);
+          ctx.lineTo(x + cellW - 4, y + cellH - 4);
+          ctx.moveTo(x + cellW - 4, y + 4);
+          ctx.lineTo(x + 4, y + cellH - 4);
+          ctx.stroke();
+        } else {
+          // Surviving
+          ctx.fillStyle = 'rgba(96, 165, 250, 0.1)';
+          ctx.fillRect(x, y, cellW, cellH);
+          ctx.strokeStyle = '#60a5fa';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x, y, cellW, cellH);
+          ctx.fillStyle = '#e2e8f0';
+          ctx.font = '15px Courier New, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(exDigits[i], x + cellW / 2, y + cellH / 2 + 5);
+        }
+
+        // Position number below on first row
+        if (r === 0) {
+          ctx.fillStyle = '#64748b';
+          ctx.font = '11px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('p=' + pos, x + cellW / 2, y - 6);
+        }
+      }
+    }
+
+    // Bottom summary
+    const summaryY = startY + 6 * rowGap + 10;
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Poslednja precrtana: pozicija 8 = 2\u00B3, cifra "3"', W / 2, summaryY);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Za nas zadatak (2013 cifara): pozicija 1024 = 2\u00B9\u2070, cifra "4"', W / 2, summaryY + 24);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Precrtavanje cifara u 2013-cifrenom broju",
+  "subject": "math",
+  "unit": "kombinatorika",
+  "topic_tags": ["nizovi", "stepeni dvojke", "eliminacija", "periodicnost", "poziciono rasudivanje", "kombinatorika"]
+}
+BRAINSPARK_META-->

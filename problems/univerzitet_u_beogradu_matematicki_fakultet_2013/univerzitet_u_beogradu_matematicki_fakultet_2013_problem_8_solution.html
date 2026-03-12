@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minimum funkcije sa apsolutnom vrednošću</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Find the minimum value of f(x) = -x² + 3x|x - 3| on [0, 4].
+
+  Key insight: Split by absolute value at x = 3.
+
+  Case 1: x ∈ [0, 3] → |x - 3| = 3 - x
+    f(x) = -x² + 3x(3 - x)
+         = -x² + 9x - 3x²
+         = -4x² + 9x
+
+    f'(x) = -8x + 9 = 0 → x = 9/8
+    f(9/8) = -4(81/64) + 9(9/8) = -324/64 + 81/8 = -81/16 + 81/8 = -81/16 + 162/16 = 81/16 ≈ 5.0625
+    f(0) = 0
+    f(3) = -4(9) + 9(3) = -36 + 27 = -9
+
+  Case 2: x ∈ [3, 4] → |x - 3| = x - 3
+    f(x) = -x² + 3x(x - 3)
+         = -x² + 3x² - 9x
+         = 2x² - 9x
+
+    f'(x) = 4x - 9 = 0 → x = 9/4 = 2.25 (NOT in [3, 4], discard)
+    f(3) = 2(9) - 9(3) = 18 - 27 = -9
+    f(4) = 2(16) - 9(4) = 32 - 36 = -4
+
+  Critical values to compare:
+    f(0) = 0
+    f(9/8) = 81/16 (local max on first piece)
+    f(3) = -9
+    f(4) = -4
+
+  Minimum value is -9 at x = 3.
+
+  Answer: B) -9
+
+  Verification:
+    f(3) = -(3)² + 3(3)|3 - 3| = -9 + 9·0 = -9 ✓
+    Both pieces agree at x = 3: -4(9) + 27 = -9 and 2(9) - 27 = -9 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.given-item.answer-option {
+  min-width: 100px;
+  text-align: center;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-option {
+  color: #34d399;
+  font-size: 1.2rem;
+  margin-top: 8px;
+}
+
+.final-answer-box .all-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.final-answer-box .all-options .option {
+  background: rgba(51, 65, 85, 0.4);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.final-answer-box .all-options .option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+.verification-math {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid,
+  .options-grid {
+    flex-direction: column;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+  .final-answer-box .all-options {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Minimum funkcije sa apsolutnom vrednošću</h1>
+  <p class="subtitle">Analiza po delovima — izvod i ekstremne vrednosti na segmentu</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <div class="problem-statement">
+      <p>Najmanja vrednost funkcije \( f(x) = -x^2 + 3x|x - 3| \) na intervalu \( [0, 4] \) je:</p>
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">(A) \( -\dfrac{81}{8} \)</div>
+        <div class="given-item answer-option" data-option="B">(B) \( -9 \)</div>
+        <div class="given-item answer-option" data-option="C">(C) \( 0 \)</div>
+        <div class="given-item answer-option" data-option="D">(D) \( -28 \)</div>
+        <div class="given-item answer-option" data-option="E">(E) \( -4 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Funkcija sadrži \( |x - 3| \), pa moramo da je razbijemo na dva dela u zavisnosti od znaka izraza pod apsolutnom vrednošću. Na svakom delu dobijamo polinom čiji minimum nalazimo pomoću izvoda i provere krajnjih tačaka.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Apsolutna vrednost i traženje minimuma na segmentu (klikni da otvoriš)</summary>
+      <div class="detail-content">
+        <p><strong>Apsolutna vrednost:</strong></p>
+        <div class="step-math">
+          \[ |x - a| = \begin{cases} a - x, & \text{ako } x \le a \\ x - a, & \text{ako } x \ge a \end{cases} \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Traženje ekstremnih vrednosti na zatvorenom intervalu \([a, b]\):</strong></p>
+        <ol style="margin-top: 8px; padding-left: 20px;">
+          <li>Nađi sve kritične tačke (gde je \( f'(x) = 0 \) ili \( f' \) ne postoji) unutar \( (a, b) \).</li>
+          <li>Izračunaj \( f \) u svim kritičnim tačkama i u krajnjim tačkama \( a \) i \( b \).</li>
+          <li>Najmanja od tih vrednosti je minimum, a najveća maksimum.</li>
+        </ol>
+        <p style="margin-top: 12px;">Za funkcije sa apsolutnom vrednošću, tačka u kojoj se izraz pod \( |\cdot| \) menja iz negativnog u pozitivni (ovde \( x = 3 \)) je takođe kritična tačka — tu izvod po pravilu ne postoji.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Grafik funkcije</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="700" height="420"></canvas>
+    </div>
+    <p class="canvas-caption">Graf funkcije \( f(x) = -x^2 + 3x|x - 3| \) na intervalu \( [0, 4] \). Minimum se postiže u tački \( x = 3 \).</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Razbijanje po apsolutnoj vrednosti</div>
+        <p>Izraz \( |x - 3| \) menja oblik u tački \( x = 3 \). Razlikujemo dva slučaja:</p>
+        <div class="step-math">
+          \[ |x - 3| = \begin{cases} 3 - x, & \text{za } x \in [0, 3] \\ x - 3, & \text{za } x \in [3, 4] \end{cases} \]
+        </div>
+        <p>Zamenom u polaznu funkciju dobijamo dva polinoma.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Prvi deo: \( x \in [0, 3] \)</div>
+        <p>Za \( x \in [0, 3] \) važi \( |x - 3| = 3 - x \), pa:</p>
+        <div class="step-math">
+          \[ f(x) = -x^2 + 3x(3 - x) = -x^2 + 9x - 3x^2 = -4x^2 + 9x \]
+        </div>
+        <p>Tražimo izvod i izjednačavamo sa nulom:</p>
+        <div class="step-math">
+          \[ f'(x) = -8x + 9 = 0 \quad \Rightarrow \quad x = \frac{9}{8} \]
+        </div>
+        <p>Tačka \( x = \frac{9}{8} = 1{,}125 \) pripada intervalu \( [0, 3] \). Izračunavamo vrednosti:</p>
+        <div class="step-math">
+          \[ f(0) = 0 \]
+        </div>
+        <div class="step-math">
+          \[ f\!\left(\frac{9}{8}\right) = -4 \cdot \frac{81}{64} + 9 \cdot \frac{9}{8} = -\frac{81}{16} + \frac{81}{8} = -\frac{81}{16} + \frac{162}{16} = \frac{81}{16} \approx 5{,}06 \]
+        </div>
+        <div class="step-math">
+          \[ f(3) = -4 \cdot 9 + 9 \cdot 3 = -36 + 27 = -9 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Kontrolna tačka: Da li je \( f(3) = -9 \) tačno?</summary>
+            <div class="detail-content">
+              Proveravamo direktno iz originalne funkcije: \( f(3) = -(3)^2 + 3 \cdot 3 \cdot |3 - 3| = -9 + 9 \cdot 0 = -9 \). Tačno!
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Drugi deo: \( x \in [3, 4] \)</div>
+        <p>Za \( x \in [3, 4] \) važi \( |x - 3| = x - 3 \), pa:</p>
+        <div class="step-math">
+          \[ f(x) = -x^2 + 3x(x - 3) = -x^2 + 3x^2 - 9x = 2x^2 - 9x \]
+        </div>
+        <p>Izvod:</p>
+        <div class="step-math">
+          \[ f'(x) = 4x - 9 = 0 \quad \Rightarrow \quad x = \frac{9}{4} = 2{,}25 \]
+        </div>
+        <p>Tačka \( x = \frac{9}{4} \) <strong>ne pripada</strong> intervalu \( [3, 4] \), pa je odbacujemo. Preostaju samo krajnje tačke:</p>
+        <div class="step-math">
+          \[ f(3) = 2 \cdot 9 - 9 \cdot 3 = 18 - 27 = -9 \]
+        </div>
+        <div class="step-math">
+          \[ f(4) = 2 \cdot 16 - 9 \cdot 4 = 32 - 36 = -4 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Kontrolna tačka: Zašto je \( f(3) \) isti iz oba dela?</summary>
+            <div class="detail-content">
+              Tačka \( x = 3 \) je zajednička za oba intervala. Pošto je funkcija \( f \) neprekidna (apsolutna vrednost ne narušava neprekidnost), oba izraza moraju dati istu vrednost u \( x = 3 \). To je dobra provera da smo ispravno pojednostavili!
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Poređenje svih vrednosti</div>
+        <p>Sakupljamo sve relevantne vrednosti funkcije na intervalu \( [0, 4] \):</p>
+        <div class="step-math">
+          \[ f(0) = 0, \quad f\!\left(\frac{9}{8}\right) = \frac{81}{16} \approx 5{,}06, \quad f(3) = -9, \quad f(4) = -4 \]
+        </div>
+        <p>Najmanja od ovih vrednosti je:</p>
+        <div class="step-math">
+          \[ \min f = f(3) = -9 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Kontrolna tačka: Da li smo proverili sve kandidate?</summary>
+            <div class="detail-content">
+              <p>Da. Kandidati za ekstrem na zatvorenom intervalu su:</p>
+              <ul style="padding-left: 20px; margin-top: 6px;">
+                <li>Krajnje tačke: \( x = 0 \) i \( x = 4 \) — provereno.</li>
+                <li>Stacionarne tačke (gde je \( f' = 0 \)): \( x = \frac{9}{8} \) na prvom delu (pripada intervalu, provereno) i \( x = \frac{9}{4} \) na drugom delu (ne pripada, odbačeno).</li>
+                <li>Tačka nediferencijabilnosti: \( x = 3 \) (gde se menja apsolutna vrednost) — provereno.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Ključni uvid</div>
+    <p>Kod funkcija sa apsolutnom vrednošću, tačka u kojoj se menja znak izraza pod \( |\cdot| \) je gotovo uvek kandidat za ekstremnu vrednost. Ovde je to \( x = 3 \), gde je \( |x - 3| = 0 \), što znači da se član \( 3x|x - 3| \) potpuno poništava i ostaje samo \( -x^2 = -9 \). Na prvom delu funkcija opada ka toj tački (parabolom sa negativnim koeficijentom uz \( x^2 \)), a na drugom delu raste od nje — upravo tu se postiže minimum.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konačan odgovor</div>
+    <div class="answer-value">\( f_{\min} = -9 \)</div>
+    <div class="answer-option">Tačan odgovor je (B) \( -9 \)</div>
+    <div class="all-options">
+      <div class="option">(A) \( -\dfrac{81}{8} \)</div>
+      <div class="option correct">(B) \( -9 \)</div>
+      <div class="option">(C) \( 0 \)</div>
+      <div class="option">(D) \( -28 \)</div>
+      <div class="option">(E) \( -4 \)</div>
+    </div>
+    <div class="verification-math" style="margin-top: 18px;">
+      <p style="color: #94a3b8; margin-bottom: 8px;">Verifikacija:</p>
+      \[ f(3) = -(3)^2 + 3 \cdot 3 \cdot |3 - 3| = -9 + 0 = -9 \; \checkmark \]
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Česte greške</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Zaboraviti razbijanje po apsolutnoj vrednosti:</strong> Ako pokušate da derivirate \( f(x) = -x^2 + 3x|x - 3| \) direktno bez razbijanja, dobićete pogrešan rezultat jer apsolutna vrednost nije diferencijabilna u \( x = 3 \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Greška pri pojednostavljivanju:</strong> Na prvom delu, \( -x^2 + 3x(3-x) = -x^2 + 9x - 3x^2 = -4x^2 + 9x \). Česta greška je pisati \( -2x^2 + 9x \) zaboravljajući da se sabiraju \( -x^2 \) i \( -3x^2 \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Brkanje \( \frac{81}{16} \) sa \( \frac{81}{8} \):</strong> Vrednost \( f\!\left(\frac{9}{8}\right) = \frac{81}{16} \) je <em>maksimum</em>, ne minimum. Opcija (A) \( -\frac{81}{8} \) je mamac koji ne odgovara nijednoj izračunatoj vrednosti.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Ignorisanje tačke \( x = 3 \):</strong> Pošto je \( x = \frac{9}{4} \) jedina stacionarna tačka drugog dela i ne pripada \( [3, 4] \), lako se previdi da baš \( x = 3 \) (tačka preloma) daje minimum.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Nađi <strong>najveću</strong> vrednost funkcije \( f(x) = -x^2 + 3x|x - 3| \) na intervalu \( [0, 4] \). U kojoj tački se postiže?</p>
+    <details>
+      <summary>Pogledaj odgovor</summary>
+      <div class="detail-content">
+        <p>Iz naše analize, kandidati su: \( f(0) = 0 \), \( f\!\left(\frac{9}{8}\right) = \frac{81}{16} \), \( f(3) = -9 \), \( f(4) = -4 \).</p>
+        <p style="margin-top: 8px;">Najveća vrednost je \( f\!\left(\frac{9}{8}\right) = \frac{81}{16} = 5{,}0625 \), i postiže se u tački \( x = \frac{9}{8} \).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function f(x) {
+    if (x <= 3) {
+      return -4 * x * x + 9 * x;
+    } else {
+      return 2 * x * x - 9 * x;
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Coordinate system setup (Y-up)
+    const margin = { left: 70, right: 40, top: 40, bottom: 60 };
+    const plotW = W - margin.left - margin.right;
+    const plotH = H - margin.top - margin.bottom;
+
+    // Domain [0, 4], Range ~ [-10, 6]
+    const xMin = -0.3, xMax = 4.5;
+    const yMin = -11, yMax = 7;
+
+    function toCanvasX(x) {
+      return margin.left + (x - xMin) / (xMax - xMin) * plotW;
+    }
+    function toCanvasY(y) {
+      return margin.top + plotH - (y - yMin) / (yMax - yMin) * plotH;
+    }
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.5)';
+    ctx.lineWidth = 0.5;
+    for (let y = -10; y <= 6; y += 2) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(xMin), toCanvasY(y));
+      ctx.lineTo(toCanvasX(xMax), toCanvasY(y));
+      ctx.stroke();
+    }
+    for (let x = 0; x <= 4; x += 1) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(x), toCanvasY(yMin));
+      ctx.lineTo(toCanvasX(x), toCanvasY(yMax));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.5;
+    // X-axis
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(xMin), toCanvasY(0));
+    ctx.lineTo(toCanvasX(xMax), toCanvasY(0));
+    ctx.stroke();
+    // Y-axis
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), toCanvasY(yMin));
+    ctx.lineTo(toCanvasX(0), toCanvasY(yMax));
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let x = 0; x <= 4; x += 1) {
+      ctx.fillText(x.toString(), toCanvasX(x), toCanvasY(0) + 20);
+    }
+    ctx.textAlign = 'right';
+    for (let y = -10; y <= 6; y += 2) {
+      if (y === 0) continue;
+      ctx.fillText(y.toString(), toCanvasX(0) - 8, toCanvasY(y) + 4);
+    }
+    ctx.fillText('0', toCanvasX(0) - 8, toCanvasY(0) + 16);
+
+    // Axis arrows
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.font = 'italic 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('x', toCanvasX(xMax) - 5, toCanvasY(0) + 20);
+    ctx.fillText('y', toCanvasX(0) + 16, toCanvasY(yMax) + 12);
+
+    // Plot function - piece 1 [0, 3] in blue
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    const steps = 200;
+    for (let i = 0; i <= steps; i++) {
+      const x = 0 + (3 - 0) * i / steps;
+      const y = f(x);
+      const cx = toCanvasX(x);
+      const cy = toCanvasY(y);
+      if (i === 0) ctx.moveTo(cx, cy);
+      else ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+
+    // Plot function - piece 2 [3, 4] in pink
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const x = 3 + (4 - 3) * i / steps;
+      const y = f(x);
+      const cx = toCanvasX(x);
+      const cy = toCanvasY(y);
+      if (i === 0) ctx.moveTo(cx, cy);
+      else ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+
+    // Mark key points
+    function drawPoint(x, y, color, label, labelDx, labelDy) {
+      ctx.beginPath();
+      ctx.arc(toCanvasX(x), toCanvasY(y), 6, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, toCanvasX(x) + (labelDx || 0), toCanvasY(y) + (labelDy || -14));
+    }
+
+    // f(0) = 0
+    drawPoint(0, 0, '#94a3b8', 'f(0) = 0', 50, -8);
+
+    // f(9/8) = 81/16 ≈ 5.0625 (maximum)
+    drawPoint(9/8, 81/16, '#a78bfa', 'f(9/8) = 81/16', 60, -8);
+
+    // f(3) = -9 (minimum)
+    drawPoint(3, -9, '#34d399', 'f(3) = −9  ← MIN', 0, 22);
+
+    // f(4) = -4
+    drawPoint(4, -4, '#94a3b8', 'f(4) = −4', -40, -12);
+
+    // Legend
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(margin.left + 10, margin.top + 8, 20, 3);
+    ctx.fillText('−4x² + 9x  (x ∈ [0, 3])', margin.left + 36, margin.top + 14);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.fillRect(margin.left + 10, margin.top + 28, 20, 3);
+    ctx.fillText('2x² − 9x  (x ∈ [3, 4])', margin.left + 36, margin.top + 34);
+  }
+
+  draw();
+
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Minimum funkcije sa apsolutnom vrednošću na segmentu",
+  "subject": "math",
+  "unit": "analiza_funkcija",
+  "topic_tags": ["apsolutna vrednost", "ekstremne vrednosti", "minimum na segmentu", "izvod", "analiza po delovima", "kvadratna funkcija"]
+}
+BRAINSPARK_META-->

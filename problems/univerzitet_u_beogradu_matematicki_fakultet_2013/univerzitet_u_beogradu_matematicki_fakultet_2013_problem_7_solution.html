@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naizmenično raspoređivanje dečaka i devojčica</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: 10 stolica u jednom redu, 5 dečaka i 5 devojčica.
+  Uslov: nikoje dve osobe istog pola ne sede jedna pored druge.
+  Dakle, dečaci i devojčice moraju da se naizmenično smenjuju.
+
+  Ključna opservacija: Sa 10 stolica i uslovom naizmeničnosti,
+  postoje tačno 2 moguća rasporeda po polu:
+    Obrazac 1: D Ž D Ž D Ž D Ž D Ž  (dečak na neparnim mestima)
+    Obrazac 2: Ž D Ž D Ž D Ž D Ž D  (devojčica na neparnim mestima)
+
+  Za svaki obrazac:
+    - 5 dečaka se mogu rasporediti na 5 "muških" mesta na 5! = 120 načina
+    - 5 devojčica se mogu rasporediti na 5 "ženskih" mesta na 5! = 120 načina
+
+  Ukupno za jedan obrazac: 5! × 5! = 120 × 120 = 14400
+  Ukupno za oba obrasca: 2 × 14400 = 28800
+
+  Odgovor: D) 28800
+
+  Verifikacija:
+    5! = 120
+    120 × 120 = 14400
+    2 × 14400 = 28800 ✓
+
+  Provera sa ostalim opcijama:
+    A) 3628800 = 10! (to bi bio ukupan broj rasporeda bez ograničenja)
+    B) 14400 = 5! × 5! (samo jedan obrazac, zaboravljena dva moguća)
+    C) 30240 — ne odgovara logičnom izračunu
+    D) 28800 = 2 × 5! × 5! ✓
+    E) 242 — premalo, nema kombinatorni smisao ovde
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.given-item.answer-option[data-option] {
+  min-width: 120px;
+  text-align: center;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 12px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.final-answer-box .answer-option {
+  color: #34d399;
+  font-size: 1.2rem;
+  margin-top: 8px;
+}
+
+.final-answer-box .all-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.final-answer-box .all-options .option {
+  background: rgba(51, 65, 85, 0.4);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.final-answer-box .all-options .option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.verification-box {
+  background: rgba(52, 211, 153, 0.05);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-top: 16px;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid, .options-grid {
+    flex-direction: column;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+  .final-answer-box .all-options {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Naizmenično raspoređivanje dečaka i devojčica</h1>
+  <p class="subtitle">Kombinatorika — permutacije sa ograničenjima</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <div class="problem-statement">
+      <p>Na koliko načina se na 10 stolica u jednom redu mogu rasporediti 5 dečaka i 5 devojčica tako da nikoje dve osobe istog pola ne sede jedna pored druge?</p>
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">(A) \( 3628800 \)</div>
+        <div class="given-item answer-option" data-option="B">(B) \( 14400 \)</div>
+        <div class="given-item answer-option" data-option="C">(C) \( 30240 \)</div>
+        <div class="given-item answer-option" data-option="D">(D) \( 28800 \)</div>
+        <div class="given-item answer-option" data-option="E">(E) \( 242 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Uslov "nikoje dve osobe istog pola ne sede jedna pored druge" znači da dečaci i devojčice moraju da se naizmenično smenjuju. Odredićemo koliko ima mogućih obrazaca (dečak-devojčica ili devojčica-dečak), a zatim za svaki obrazac prebrojati permutacije dečaka i devojčica na njihovim mestima.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Pravilo proizvoda i permutacije (klikni da otvoriš)</summary>
+      <div class="detail-content">
+        <p><strong>Pravilo proizvoda:</strong> Ako se jedna radnja može izvršiti na \( m \) načina, a druga (nezavisna) na \( n \) načina, onda se obe radnje zajedno mogu izvršiti na \( m \cdot n \) načina.</p>
+        <div class="step-math">
+          \[ \text{Ukupno} = m \times n \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Permutacije:</strong> Broj načina da se \( n \) različitih objekata rasporedi u red je:</p>
+        <div class="step-math">
+          \[ n! = n \cdot (n-1) \cdot (n-2) \cdots 2 \cdot 1 \]
+        </div>
+        <p style="margin-top: 8px;">Na primer, \( 5! = 5 \cdot 4 \cdot 3 \cdot 2 \cdot 1 = 120 \).</p>
+        <p style="margin-top: 12px;"><strong>Pravilo zbira:</strong> Ako se radnja može izvršiti na jedan OD \( m \) ili \( n \) (međusobno isključivih) načina, ukupno ima \( m + n \) načina.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Vizuelni prikaz</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="800" height="420"></canvas>
+    </div>
+    <p class="canvas-caption">Dva moguća obrasca naizmeničnog raspoređivanja na 10 stolica</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Prepoznajmo uslov: naizmenično raspoređivanje</div>
+        <p>Uslov glasi: nikoje dve osobe istog pola ne sede jedna pored druge. To znači da se dečaci (D) i devojčice (Ž) moraju <strong>strogo naizmenično smenjivati</strong>.</p>
+        <p style="margin-top: 8px;">Sa 10 stolica (5 dečaka i 5 devojčica), postoje tačno <strong>dva moguća obrasca</strong>:</p>
+        <div class="step-math">
+          \[ \text{Obrazac 1:} \quad \text{D}\;\text{Ž}\;\text{D}\;\text{Ž}\;\text{D}\;\text{Ž}\;\text{D}\;\text{Ž}\;\text{D}\;\text{Ž} \]
+        </div>
+        <div class="step-math">
+          \[ \text{Obrazac 2:} \quad \text{Ž}\;\text{D}\;\text{Ž}\;\text{D}\;\text{Ž}\;\text{D}\;\text{Ž}\;\text{D}\;\text{Ž}\;\text{D} \]
+        </div>
+        <p>Nijedan drugi raspored ne zadovoljava uslov.</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zašto samo dva obrasca?</summary>
+            <div class="detail-content">
+              Ako na prvu stolicu sednemo dečaka, onda na drugu mora devojčica (jer dvoje istog pola ne smeju sedeti jedno pored drugog), pa na treću opet dečak, itd. Ceo obrazac je potpuno određen izborom ko sedi na prvoj stolici. Pošto na prvoj stolici može biti ili dečak ili devojčica, imamo tačno 2 obrasca.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Prebrojimo rasporede za jedan obrazac</div>
+        <p>Razmotrimo Obrazac 1: D Ž D Ž D Ž D Ž D Ž.</p>
+        <p style="margin-top: 8px;">Dečaci zauzimaju pozicije 1, 3, 5, 7, 9 (ukupno 5 mesta). Pošto su svih 5 dečaka <strong>različiti</strong>, mogu se rasporediti na ovih 5 mesta na:</p>
+        <div class="step-math">
+          \[ 5! = 5 \cdot 4 \cdot 3 \cdot 2 \cdot 1 = 120 \text{ načina} \]
+        </div>
+        <p>Devojčice zauzimaju pozicije 2, 4, 6, 8, 10 (ukupno 5 mesta). Analogno, mogu se rasporediti na:</p>
+        <div class="step-math">
+          \[ 5! = 120 \text{ načina} \]
+        </div>
+        <p>Pošto su rasporedi dečaka i devojčica <strong>nezavisni</strong>, po pravilu proizvoda:</p>
+        <div class="step-math">
+          \[ \text{Za Obrazac 1:} \quad 5! \times 5! = 120 \times 120 = 14\,400 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Isto važi i za drugi obrazac</div>
+        <p>Za Obrazac 2 (Ž D Ž D Ž D Ž D Ž D) situacija je potpuno simetrična:</p>
+        <ul style="margin: 8px 0 8px 20px;">
+          <li>Devojčice su na pozicijama 1, 3, 5, 7, 9 — rasporede se na \( 5! = 120 \) načina</li>
+          <li>Dečaci su na pozicijama 2, 4, 6, 8, 10 — rasporede se na \( 5! = 120 \) načina</li>
+        </ul>
+        <div class="step-math">
+          \[ \text{Za Obrazac 2:} \quad 5! \times 5! = 120 \times 120 = 14\,400 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zašto koristimo množenje, a ne sabiranje?</summary>
+            <div class="detail-content">
+              Koristimo množenje (pravilo proizvoda) jer su rasporedi dečaka i devojčica <strong>nezavisni</strong> izbori — raspored dečaka ni na koji način ne utiče na raspored devojčica. Sabiranje bismo koristili samo kad bismo birali JEDNO OD DVA (međusobno isključiva), što ćemo uraditi u sledećem koraku za dva obrasca.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Saberimo oba obrasca</div>
+        <p>Obrazac 1 i Obrazac 2 su <strong>međusobno isključivi</strong> (ne mogu istovremeno važiti), pa se po pravilu zbira ukupan broj rasporeda dobija sabiranjem:</p>
+        <div class="step-math">
+          \[ \text{Ukupno} = 14\,400 + 14\,400 = 2 \times 5! \times 5! \]
+        </div>
+        <div class="step-math">
+          \[ = 2 \times 120 \times 120 = \boxed{28\,800} \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zašto opcija A (3628800 = 10!) nije tačna?</summary>
+            <div class="detail-content">
+              <p>Broj \( 10! = 3\,628\,800 \) predstavlja ukupan broj rasporeda 10 osoba na 10 stolica <strong>bez ikakvih ograničenja</strong>. Naš uslov (naizmeničnost) drastično smanjuje broj mogućnosti. Zapravo, samo \( \frac{28\,800}{3\,628\,800} \approx 0{,}79\% \) svih mogućih rasporeda zadovoljava uslov!</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Ključni uvid</div>
+    <p>Ključ ovog zadatka je prepoznati da uslov "nikoje dve osobe istog pola ne sede jedna pored druge" <strong>jednoznačno nameće naizmenični obrazac</strong>. Kada to shvatimo, problem se svodi na jednostavno brojanje: koliko obrazaca postoji (2), i koliko načina postoji da rasporedimo dečake i devojčice unutar svakog obrasca (\( 5! \times 5! \)). Ovo je klasičan primer <strong>dekompozicije problema</strong> — razlažemo složen uslov na nezavisne, lako rešive delove.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konačan odgovor</div>
+    <div class="answer-value">\( 2 \times 5! \times 5! = 28\,800 \)</div>
+    <div class="answer-option">Tačan odgovor je D) \( 28800 \)</div>
+    <div class="all-options">
+      <div class="option">(A) \( 3628800 \)</div>
+      <div class="option">(B) \( 14400 \)</div>
+      <div class="option">(C) \( 30240 \)</div>
+      <div class="option correct">(D) \( 28800 \)</div>
+      <div class="option">(E) \( 242 \)</div>
+    </div>
+    <div class="verification-box">
+      <strong>Verifikacija:</strong> \( 5! = 120 \), pa \( 120 \times 120 = 14\,400 \), i \( 2 \times 14\,400 = 28\,800 \). Opcija B (\( 14400 \)) odgovara samo jednom obrascu — česta greška je zaboraviti faktor 2.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Česte greške</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Zaboravljanje faktora 2:</strong> Najčešća greška je računati samo jedan obrazac (npr. D Ž D Ž...) i dobiti \( 5! \times 5! = 14\,400 \). Ne zaboravite da postoje <em>dva</em> moguća naizmenična obrasca!</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Odgovor 10! (bez ograničenja):</strong> Vrednost \( 10! = 3\,628\,800 \) je broj rasporeda bez ikakvih ograničenja. Uslov naizmeničnosti drastično smanjuje broj mogućnosti.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Mešanje pravila proizvoda i zbira:</strong> Rasporedi dečaka i devojčica unutar jednog obrasca se <em>množe</em> (nezavisni izbori), dok se dva obrasca <em>sabiraju</em> (međusobno isključivi slučajevi).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Na koliko načina se može rasporediti 5 dečaka i 5 devojčica u <strong>krug</strong> (oko okruglog stola) tako da nikoje dve osobe istog pola ne sede jedna pored druge?</p>
+    <details>
+      <summary>Pogledaj odgovor</summary>
+      <div class="detail-content">
+        <p>U krugu fiksiramo jednu osobu da eliminišemo rotacije. Npr. fiksiramo jednog dečaka — preostalih 4 dečaka se rasporede na \( 4! \) načina, a 5 devojčica na \( 5! \) načina (jer se naizmeničnost automatski nameće).</p>
+        <div class="step-math">
+          \[ 4! \times 5! = 24 \times 120 = 2\,880 \]
+        </div>
+        <p style="margin-top: 8px;">U kružnom rasporeda nema dva obrasca — kada fiksiramo jednu osobu, obrazac je jednoznačno određen. Rezultat je tačno 10 puta manji nego u linearnom slučaju!</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const chairW = 58;
+    const chairH = 50;
+    const gap = 12;
+    const totalW = 10 * chairW + 9 * gap;
+    const startX = (W - totalW) / 2;
+
+    // Pattern labels
+    const patterns = [
+      { label: 'Obrazac 1: dečak počinje', y: 60, seq: ['D','Ž','D','Ž','D','Ž','D','Ž','D','Ž'] },
+      { label: 'Obrazac 2: devojčica počinje', y: 230, seq: ['Ž','D','Ž','D','Ž','D','Ž','D','Ž','D'] }
+    ];
+
+    const boyColor = '#60a5fa';
+    const girlColor = '#f472b6';
+    const boyBg = 'rgba(96, 165, 250, 0.15)';
+    const girlBg = 'rgba(244, 114, 182, 0.15)';
+
+    patterns.forEach(function(pat) {
+      // Pattern label
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(pat.label, W / 2, pat.y - 20);
+
+      for (var i = 0; i < 10; i++) {
+        var x = startX + i * (chairW + gap);
+        var y = pat.y;
+        var isBoy = pat.seq[i] === 'D';
+
+        // Chair rectangle
+        ctx.fillStyle = isBoy ? boyBg : girlBg;
+        ctx.strokeStyle = isBoy ? boyColor : girlColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(x, y, chairW, chairH, 8);
+        ctx.fill();
+        ctx.stroke();
+
+        // Label (D or Ž)
+        ctx.fillStyle = isBoy ? boyColor : girlColor;
+        ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pat.seq[i], x + chairW / 2, y + chairH / 2);
+
+        // Position number below
+        ctx.fillStyle = '#64748b';
+        ctx.font = '12px Segoe UI, system-ui, sans-serif';
+        ctx.fillText(String(i + 1), x + chairW / 2, y + chairH + 16);
+      }
+
+      // Brace and count below
+      var braceY = pat.y + chairH + 34;
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('5! × 5! = 120 × 120 = 14 400 načina', W / 2, braceY);
+    });
+
+    // Total at bottom
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ukupno: 14 400 + 14 400 = 28 800', W / 2, H - 20);
+
+    // Plus sign between patterns
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 26px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('+', W / 2, 195);
+
+    // Legend
+    var legX = startX;
+    var legY = H - 55;
+    ctx.fillStyle = boyBg;
+    ctx.strokeStyle = boyColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(legX, legY, 18, 18, 4);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = boyColor;
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('D = dečak (5! = 120 rasporeda)', legX + 24, legY + 9);
+
+    legX = startX + 300;
+    ctx.fillStyle = girlBg;
+    ctx.strokeStyle = girlColor;
+    ctx.beginPath();
+    ctx.roundRect(legX, legY, 18, 18, 4);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = girlColor;
+    ctx.fillText('Ž = devojčica (5! = 120 rasporeda)', legX + 24, legY + 9);
+
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  draw();
+
+  var resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Naizmenično raspoređivanje dečaka i devojčica",
+  "subject": "math",
+  "unit": "kombinatorika",
+  "topic_tags": ["kombinatorika", "permutacije", "pravilo proizvoda", "naizmenično raspoređivanje", "faktorijel"]
+}
+BRAINSPARK_META-->

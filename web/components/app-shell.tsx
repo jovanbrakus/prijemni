@@ -28,6 +28,7 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
     selectedFaculty
   );
   const [expandedYear, setExpandedYear] = useState<number | null>(selectedYear);
+  const [filterReported, setFilterReported] = useState(false);
 
   const fetchReports = useCallback(async () => {
     try {
@@ -161,11 +162,14 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
         >
           <Sidebar
             faculties={faculties}
+            reports={reports}
             selectedFaculty={selectedFaculty}
             selectedYear={selectedYear}
             selectedProblem={selectedProblem}
             expandedFaculty={expandedFaculty}
             expandedYear={expandedYear}
+            filterReported={filterReported}
+            onFilterReportedChange={setFilterReported}
             onExpandFaculty={handleExpandFaculty}
             onExpandYear={setExpandedYear}
             onSelectProblem={handleSelectProblem}

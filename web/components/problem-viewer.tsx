@@ -89,26 +89,38 @@ export function ProblemViewer({
     }
   };
 
-  const handleCategorySelect = async (newCategory: string | null) => {
+  const [pendingCategory, setPendingCategory] = useState<string | null | undefined>(undefined);
+
+  const handleCategorySelect = (newCategory: string | null) => {
     if (!document || !order) return;
+    if (newCategory === category) {
+      setShowCategoryDropdown(false);
+      return;
+    }
+    setPendingCategory(newCategory);
+    setShowCategoryDropdown(false);
+  };
+
+  const handleConfirmCategory = async () => {
+    if (pendingCategory === undefined || !document || !order) return;
     setSavingCategory(true);
     setError(null);
     try {
       const res = await fetch("/api/category", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ document, order, category: newCategory }),
+        body: JSON.stringify({ document, order, category: pendingCategory }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to update category");
       }
-      onCategoryChange(newCategory);
-      setShowCategoryDropdown(false);
+      onCategoryChange(pendingCategory);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to update category");
     } finally {
       setSavingCategory(false);
+      setPendingCategory(undefined);
     }
   };
 
@@ -128,7 +140,7 @@ export function ProblemViewer({
       {/* Header bar */}
       <div className="shrink-0 border-b border-white/10 bg-card px-4 py-2">
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Category display */}
+          {/* Category display — left side */}
           <div className="relative">
             <button
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
@@ -194,49 +206,34 @@ export function ProblemViewer({
             )}
           </div>
 
-          <div className="h-4 w-px bg-white/10" />
-
-          {!report && (
-            <button
-              onClick={() => {
-                setShowForm(!showForm);
-                setError(null);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <Flag className="h-3.5 w-3.5" />
-              Report Problem
-            </button>
-          )}
-
-          {report && (
+          {/* Confirmation dialog */}
+          {pendingCategory !== undefined && (
             <>
-              <button
-                onClick={() => {
-                  setShowDescription(!showDescription);
-                  setError(null);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              >
-                {showDescription ? (
-                  <EyeOff className="h-3.5 w-3.5" />
-                ) : (
-                  <Eye className="h-3.5 w-3.5" />
-                )}
-                View Report
-              </button>
-              <button
-                onClick={handleMarkFixed}
-                disabled={submitting}
-                className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-50"
-              >
-                {submitting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Check className="h-3.5 w-3.5" />
-                )}
-                Mark as Fixed
-              </button>
+              <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setPendingCategory(undefined)} />
+              <div className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-card p-4 shadow-lg w-80">
+                <p className="text-sm text-foreground mb-1">Change category?</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {categorySr || "Bez kategorije"}
+                  {" → "}
+                  {categoryOptions.find((c) => c.id === pendingCategory)?.sr || "Bez kategorije"}
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setPendingCategory(undefined)}
+                    className="rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmCategory}
+                    disabled={savingCategory}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {savingCategory && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Confirm
+                  </button>
+                </div>
+              </div>
             </>
           )}
 
@@ -246,6 +243,53 @@ export function ProblemViewer({
               {error}
             </span>
           )}
+
+          {/* Report buttons — right side */}
+          <div className="ml-auto flex items-center gap-2">
+            {!report && (
+              <button
+                onClick={() => {
+                  setShowForm(!showForm);
+                  setError(null);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <Flag className="h-3.5 w-3.5" />
+                Report Problem
+              </button>
+            )}
+
+            {report && (
+              <>
+                <button
+                  onClick={() => {
+                    setShowDescription(!showDescription);
+                    setError(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  {showDescription ? (
+                    <EyeOff className="h-3.5 w-3.5" />
+                  ) : (
+                    <Eye className="h-3.5 w-3.5" />
+                  )}
+                  View Report
+                </button>
+                <button
+                  onClick={handleMarkFixed}
+                  disabled={submitting}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20 disabled:opacity-50"
+                >
+                  {submitting ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Check className="h-3.5 w-3.5" />
+                  )}
+                  Mark as Fixed
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Report form */}

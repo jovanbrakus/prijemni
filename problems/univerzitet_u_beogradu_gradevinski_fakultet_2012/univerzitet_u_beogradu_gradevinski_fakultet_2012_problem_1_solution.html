@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teleskopski zbir razlomaka</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Izračunati vrednost izraza
+  1/(1*2) + 1/(2*3) + 1/(3*4) + 1/(4*5) + 1/(5*6)
+
+Approach: Partial fraction decomposition (telescoping sum)
+Key identity: 1/(n*(n+1)) = 1/n - 1/(n+1)
+
+Step 1: Apply the identity to each term
+  1/(1*2) = 1/1 - 1/2
+  1/(2*3) = 1/2 - 1/3
+  1/(3*4) = 1/3 - 1/4
+  1/(4*5) = 1/4 - 1/5
+  1/(5*6) = 1/5 - 1/6
+
+Step 2: Sum all terms (telescoping)
+  = (1 - 1/2) + (1/2 - 1/3) + (1/3 - 1/4) + (1/4 - 1/5) + (1/5 - 1/6)
+  = 1 - 1/6
+  = 5/6
+
+Verification: 5/6 = 0.8333...
+  1/(1*2) = 0.5
+  1/(2*3) = 0.1666...
+  1/(3*4) = 0.0833...
+  1/(4*5) = 0.05
+  1/(5*6) = 0.0333...
+  Sum = 0.5 + 0.1666... + 0.0833... + 0.05 + 0.0333... = 0.8333... = 5/6
+
+Answer: D) 5/6
+
+General formula: sum from k=1 to n of 1/(k*(k+1)) = n/(n+1)
+For n=5: 5/(5+1) = 5/6. Confirmed.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.03);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.05);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.slider-container label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.slider-container input[type="range"] {
+  width: 200px;
+  accent-color: #60a5fa;
+}
+
+.slider-value {
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1rem;
+  min-width: 40px;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Teleskopski zbir razlomaka</h1>
+  <p class="subtitle">Parcijalni razlomci i teleskopsko sabiranje</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Vrednost izraza
+      <div class="math-box">
+        \[ \frac{1}{1 \cdot 2} + \frac{1}{2 \cdot 3} + \frac{1}{3 \cdot 4} + \frac{1}{4 \cdot 5} + \frac{1}{5 \cdot 6} \]
+      </div>
+      jednaka je:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{1}{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{2}{3}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">\(\dfrac{3}{4}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\(\dfrac{4}{5}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{5}{6}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Svaki razlomak oblika \(\frac{1}{n(n+1)}\) rastavićemo na parcijalne razlomke koristeći identitet \(\frac{1}{n(n+1)} = \frac{1}{n} - \frac{1}{n+1}\). Zatim ćemo primeniti teleskopsko sabiranje, gde se susedni članovi poništavaju, pa ostaje samo prvi i poslednji.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Parcijalni razlomci</summary>
+      <p style="margin-top: 8px;">Razlomak čiji imenilac je proizvod dva uzastopna cela broja može se rastaviti:</p>
+      <div class="math-box">
+        \[ \frac{1}{n(n+1)} = \frac{1}{n} - \frac{1}{n+1} \]
+      </div>
+      <p>Ovo se lako proverava svodjenjem desne strane na zajednički imenilac: \(\frac{1}{n} - \frac{1}{n+1} = \frac{(n+1) - n}{n(n+1)} = \frac{1}{n(n+1)}\).</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Teleskopski zbir</summary>
+      <p style="margin-top: 8px;">Zbir u kome se svaki član poništava sa delom sledećeg ili prethodnog člana zove se <strong>teleskopski zbir</strong>:</p>
+      <div class="math-box">
+        \[ \sum_{k=1}^{n} \left(\frac{1}{k} - \frac{1}{k+1}\right) = 1 - \frac{1}{n+1} = \frac{n}{n+1} \]
+      </div>
+      <p>Kao teleskop koji se sklapa — srednji delovi nestaju, ostaju samo krajevi.</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz teleskopskog sabiranja</div>
+    <canvas id="telescopeCanvas" width="900" height="520"></canvas>
+    <div class="slider-container">
+      <label for="termSlider">Broj sabiraka:</label>
+      <input type="range" id="termSlider" min="1" max="10" value="5" step="1">
+      <span class="slider-value" id="termValue">5</span>
+    </div>
+    <p class="canvas-hint">Pomeri klizač da vidiš kako teleskopski zbir raste sa brojem sabiraka</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Zapišimo ključni identitet</div>
+      <p class="step-explanation">
+        Za svaki prirodan broj \(n\), važi sledeća jednakost:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{n(n+1)} = \frac{1}{n} - \frac{1}{n+1} \]
+      </div>
+      <p class="step-explanation">
+        Ovo se dokazuje svodjenjem desne strane na zajednički imenilac \(n(n+1)\):
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{n} - \frac{1}{n+1} = \frac{n+1 - n}{n(n+1)} = \frac{1}{n(n+1)} \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Rastavimo svaki sabirak</div>
+      <p class="step-explanation">
+        Primenimo identitet na svaki od pet razlomaka u zbiru:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{1 \cdot 2} = \frac{1}{1} - \frac{1}{2} \]
+      </div>
+      <div class="math-box">
+        \[ \frac{1}{2 \cdot 3} = \frac{1}{2} - \frac{1}{3} \]
+      </div>
+      <div class="math-box">
+        \[ \frac{1}{3 \cdot 4} = \frac{1}{3} - \frac{1}{4} \]
+      </div>
+      <div class="math-box">
+        \[ \frac{1}{4 \cdot 5} = \frac{1}{4} - \frac{1}{5} \]
+      </div>
+      <div class="math-box">
+        \[ \frac{1}{5 \cdot 6} = \frac{1}{5} - \frac{1}{6} \]
+      </div>
+
+      <details>
+        <summary>Proveri sebe: Koliko je \(\frac{1}{3} - \frac{1}{4}\)?</summary>
+        <p>\(\frac{1}{3} - \frac{1}{4} = \frac{4-3}{12} = \frac{1}{12} = \frac{1}{3 \cdot 4}\). Tačno!</p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Saberimo sve — teleskopsko poništavanje</div>
+      <p class="step-explanation">
+        Zapišimo celokupan zbir koristeći rastavljene razlomke:
+      </p>
+      <div class="math-box">
+        \[ \left(\frac{1}{1} - \frac{1}{2}\right) + \left(\frac{1}{2} - \frac{1}{3}\right) + \left(\frac{1}{3} - \frac{1}{4}\right) + \left(\frac{1}{4} - \frac{1}{5}\right) + \left(\frac{1}{5} - \frac{1}{6}\right) \]
+      </div>
+      <p class="step-explanation">
+        Uočimo šta se dešava sa srednjim članovima:
+      </p>
+      <div class="math-box">
+        \[ = \frac{1}{1} \underbrace{- \frac{1}{2} + \frac{1}{2}}_{\displaystyle 0} \underbrace{- \frac{1}{3} + \frac{1}{3}}_{\displaystyle 0} \underbrace{- \frac{1}{4} + \frac{1}{4}}_{\displaystyle 0} \underbrace{- \frac{1}{5} + \frac{1}{5}}_{\displaystyle 0} - \frac{1}{6} \]
+      </div>
+      <p class="step-explanation">
+        Svi srednji članovi se poništavaju u parovima! Ostaju samo prvi i poslednji:
+      </p>
+      <div class="math-box">
+        \[ = \frac{1}{1} - \frac{1}{6} \]
+      </div>
+
+      <details>
+        <summary>Proveri sebe: Zašto se \(-\frac{1}{2}\) i \(+\frac{1}{2}\) poništavaju?</summary>
+        <p>Prvi razlomak daje \(-\frac{1}{2}\), a drugi razlomak daje \(+\frac{1}{2}\). Njihov zbir je \(-\frac{1}{2} + \frac{1}{2} = 0\). Isto važi za svaki par susednih članova.</p>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Izračunajmo konačnu vrednost</div>
+      <p class="step-explanation">
+        Preostaje jednostavno oduzimanje:
+      </p>
+      <div class="math-box">
+        \[ 1 - \frac{1}{6} = \frac{6}{6} - \frac{1}{6} = \frac{6-1}{6} = \frac{5}{6} \]
+      </div>
+
+      <details>
+        <summary>Proveri sebe: Koliko je \(\frac{5}{6}\) decimalno?</summary>
+        <p>\(\frac{5}{6} = 0{,}8\overline{3}\). Možemo proveriti sabiranjem: \(0{,}5 + 0{,}1\overline{6} + 0{,}08\overline{3} + 0{,}05 + 0{,}0\overline{3} \approx 0{,}833\). Slaže se!</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Opšta formula za teleskopski zbir ovog tipa glasi:
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.15rem;">
+      \[ \sum_{k=1}^{n} \frac{1}{k(k+1)} = \frac{n}{n+1} \]
+    </div>
+    <p>
+      U našem slučaju \(n = 5\), pa dobijamo \(\frac{5}{5+1} = \frac{5}{6}\). Ova formula radi za bilo koji prirodan broj \(n\) — pogledaj dijagram iznad i pomeri klizač da se uveriš!
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(\dfrac{5}{6}\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(\frac{1}{2}\)</div>
+      <div class="final-option" data-option="B">(B) \(\frac{2}{3}\)</div>
+      <div class="final-option" data-option="V">(V) \(\frac{3}{4}\)</div>
+      <div class="final-option" data-option="G">(G) \(\frac{4}{5}\)</div>
+      <div class="final-option correct" data-option="D">(D) \(\frac{5}{6}\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(1 - \frac{1}{6} = \frac{5}{6}\). Takođe, svaki ponuđeni odgovor je oblika \(\frac{n}{n+1}\), i zaista za \(n = 5\) sabiraka dobijamo \(\frac{5}{6}\). &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešno sabiranje razlomaka</div>
+      <p>Neki učenici pokušaju da saberu razlomke direktno svodjenjem na zajednički imenilac (NZS = 720), što je moguće ali nepotrebno komplikovano i podložno greškama u računu. Parcijalni razlomci su daleko elegantniji pristup.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Mešanje sa harmonijskim redom</div>
+      <p>Ovaj zbir \(\sum \frac{1}{k(k+1)}\) nije isto što i harmonijski red \(\sum \frac{1}{k}\). Harmonijski red divergira, dok naš zbir konvergira ka 1 (kad \(n \to \infty\)). Razlika je u tome što su naši imenitelji <em>proizvodi</em> uzastopnih brojeva.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Izračunaj vrednost sličnog izraza, ali sa proizvodom tri uzastopna broja u imeniocu:
+    </p>
+    <div class="math-box">
+      \[ \frac{1}{1 \cdot 2 \cdot 3} + \frac{1}{2 \cdot 3 \cdot 4} + \frac{1}{3 \cdot 4 \cdot 5} + \frac{1}{4 \cdot 5 \cdot 6} \]
+    </div>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Koristi sličnu ideju parcijalnih razlomaka: \(\frac{1}{n(n+1)(n+2)} = \frac{1}{2}\left(\frac{1}{n(n+1)} - \frac{1}{(n+1)(n+2)}\right)\). Ponovo se dobija teleskopski zbir!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('telescopeCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('termSlider');
+  const valueDisplay = document.getElementById('termValue');
+
+  let numTerms = 5;
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 520;
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Teleskopski zbir: poništavanje članova', W / 2, 28);
+
+    // Parameters
+    const n = numTerms;
+    const startY = 55;
+    const rowHeight = 38;
+    const colWidth = Math.min(70, (W - 120) / (n + 2));
+    const tableLeft = (W - colWidth * (n + 2)) / 2;
+
+    // Subtitle
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('n = ' + n + '    Zbir = ' + n + '/' + (n + 1), W / 2, startY - 8);
+
+    // Draw the decomposition table
+    const tableTop = startY + 5;
+
+    // Header row: fraction labels 1/1, -1/2, +1/2, -1/3, ... , -1/(n+1)
+    // Each row represents one term: 1/(k*(k+1)) = 1/k - 1/(k+1)
+
+    // Column headers: the values 1/1, 1/2, 1/3, ... , 1/(n+1)
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    for (let j = 1; j <= n + 1; j++) {
+      const x = tableLeft + (j) * colWidth;
+      ctx.fillStyle = '#64748b';
+      ctx.fillText('1/' + j, x, tableTop + 12);
+    }
+
+    // Row label column
+    ctx.textAlign = 'right';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+
+    for (let i = 1; i <= n; i++) {
+      const y = tableTop + 20 + i * rowHeight;
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('1/(' + i + '\u00B7' + (i + 1) + ')', tableLeft - 5, y + 5);
+    }
+
+    // Fill in the +1 and -1 entries
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    for (let i = 1; i <= n; i++) {
+      const y = tableTop + 20 + i * rowHeight;
+      for (let j = 1; j <= n + 1; j++) {
+        const x = tableLeft + j * colWidth;
+
+        if (j === i) {
+          // +1/i (positive term)
+          ctx.fillStyle = '#4ade80';
+          ctx.fillText('+', x, y + 5);
+
+          // highlight cell
+          ctx.fillStyle = 'rgba(74, 222, 128, 0.1)';
+          ctx.fillRect(x - colWidth / 2 + 2, y - rowHeight / 2 + 4, colWidth - 4, rowHeight - 4);
+        } else if (j === i + 1) {
+          // -1/(i+1) (negative term)
+          ctx.fillStyle = '#f472b6';
+          ctx.fillText('\u2013', x, y + 5);
+
+          // highlight cell
+          ctx.fillStyle = 'rgba(244, 114, 182, 0.1)';
+          ctx.fillRect(x - colWidth / 2 + 2, y - rowHeight / 2 + 4, colWidth - 4, rowHeight - 4);
+        }
+      }
+    }
+
+    // Draw cancellation arrows between adjacent + and - in same column
+    for (let j = 2; j <= n; j++) {
+      const x = tableLeft + j * colWidth;
+      // The minus sign is in row (j-1), the plus sign is in row j
+      const yMinus = tableTop + 20 + (j - 1) * rowHeight;
+      const yPlus = tableTop + 20 + j * rowHeight;
+
+      ctx.beginPath();
+      ctx.moveTo(x + colWidth * 0.3, yMinus + 10);
+      ctx.quadraticCurveTo(x + colWidth * 0.45, (yMinus + yPlus) / 2 + 5, x + colWidth * 0.3, yPlus - 8);
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Small "0" label
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('= 0', x + colWidth * 0.35, (yMinus + yPlus) / 2 + 8);
+    }
+
+    // Bottom summary: only first + and last - survive
+    const summaryY = tableTop + 20 + (n + 1) * rowHeight + 15;
+
+    // Draw a line separator
+    ctx.beginPath();
+    ctx.moveTo(tableLeft - 10, summaryY - 20);
+    ctx.lineTo(tableLeft + (n + 2) * colWidth, summaryY - 20);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Surviving terms
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    // First column: +1/1 survives
+    const x1 = tableLeft + 1 * colWidth;
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('+1/1', x1, summaryY);
+
+    // Draw green circle
+    ctx.beginPath();
+    ctx.arc(x1, summaryY - 5, 18, 0, Math.PI * 2);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Last column: -1/(n+1) survives
+    const xLast = tableLeft + (n + 1) * colWidth;
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('-1/' + (n + 1), xLast, summaryY);
+
+    // Draw pink circle
+    ctx.beginPath();
+    ctx.arc(xLast, summaryY - 5, 22, 0, Math.PI * 2);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Cancelled columns
+    for (let j = 2; j <= n; j++) {
+      const x = tableLeft + j * colWidth;
+      ctx.fillStyle = '#475569';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('0', x, summaryY);
+    }
+
+    // Result text
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ostaje samo:', W / 2, summaryY + 35);
+
+    // Result formula
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('1 - 1/' + (n + 1) + ' = ' + n + '/' + (n + 1), W / 2, summaryY + 60);
+
+    // Draw a bar chart showing partial sums
+    const chartTop = summaryY + 85;
+    const chartH = H - chartTop - 25;
+    const chartLeft = tableLeft + 30;
+    const chartRight = W - tableLeft - 30;
+    const chartWidth = chartRight - chartLeft;
+    const barSpacing = chartWidth / n;
+    const barWidth = Math.min(40, barSpacing * 0.6);
+
+    // Chart title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Parcijalni zbirovi', W / 2, chartTop - 5);
+
+    // Y axis
+    ctx.beginPath();
+    ctx.moveTo(chartLeft, chartTop);
+    ctx.lineTo(chartLeft, chartTop + chartH);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // X axis
+    ctx.beginPath();
+    ctx.moveTo(chartLeft, chartTop + chartH);
+    ctx.lineTo(chartRight + 10, chartTop + chartH);
+    ctx.stroke();
+
+    // Y axis labels and gridlines: 0, 0.25, 0.5, 0.75, 1
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    for (let v = 0; v <= 4; v++) {
+      const val = v * 0.25;
+      const yPos = chartTop + chartH - (val * chartH);
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(val.toFixed(2).replace('.', ','), chartLeft - 5, yPos + 4);
+
+      if (v > 0) {
+        ctx.beginPath();
+        ctx.moveTo(chartLeft, yPos);
+        ctx.lineTo(chartRight + 10, yPos);
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+
+    // Draw target line at n/(n+1)
+    const targetVal = n / (n + 1);
+    const targetY = chartTop + chartH - (targetVal * chartH);
+    ctx.beginPath();
+    ctx.moveTo(chartLeft, targetY);
+    ctx.lineTo(chartRight + 10, targetY);
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(n + '/' + (n + 1), chartRight + 14, targetY + 4);
+
+    // Draw bars for partial sums
+    let partialSum = 0;
+    ctx.textAlign = 'center';
+    for (let k = 1; k <= n; k++) {
+      partialSum += 1 / (k * (k + 1));
+      const barH = partialSum * chartH;
+      const barX = chartLeft + (k - 0.5) * barSpacing - barWidth / 2;
+      const barY = chartTop + chartH - barH;
+
+      // Bar gradient
+      const grad = ctx.createLinearGradient(barX, barY, barX, chartTop + chartH);
+      grad.addColorStop(0, '#60a5fa');
+      grad.addColorStop(1, '#3b82f6');
+      ctx.fillStyle = grad;
+
+      // Draw rounded top bar
+      const r = Math.min(4, barWidth / 4);
+      ctx.beginPath();
+      ctx.moveTo(barX + r, barY);
+      ctx.lineTo(barX + barWidth - r, barY);
+      ctx.quadraticCurveTo(barX + barWidth, barY, barX + barWidth, barY + r);
+      ctx.lineTo(barX + barWidth, chartTop + chartH);
+      ctx.lineTo(barX, chartTop + chartH);
+      ctx.lineTo(barX, barY + r);
+      ctx.quadraticCurveTo(barX, barY, barX + r, barY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Value on top
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      const fraction = k + '/' + (k + 1);
+      ctx.fillText(fraction, barX + barWidth / 2, barY - 6);
+
+      // Label below
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('S' + k, barX + barWidth / 2, chartTop + chartH + 14);
+    }
+  }
+
+  function onSliderChange() {
+    numTerms = parseInt(slider.value);
+    valueDisplay.textContent = numTerms;
+    draw();
+  }
+
+  slider.addEventListener('input', onSliderChange);
+
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Teleskopski zbir razlomaka oblika 1/(n(n+1))",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["teleskopski zbir", "parcijalni razlomci", "razlomci", "nizovi", "algebarski izrazi"]
+}
+BRAINSPARK_META-->

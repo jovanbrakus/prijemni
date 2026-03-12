@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Identičnost složenog algebarskog izraza</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem:
+Izraz:
+  (1/(a + 1/(b + 1/a))) * (1/(b + 1/a)) - (1/(b + 1/(a + 1/b))) * (1/(a + 1/b))
+identički je jednak kom od ponuđenih?
+
+A) ab + 1
+B) a - b
+V) (ab + 1)/(ab)
+G) 0
+
+Strategy: introduce substitutions for the nested continued fractions.
+
+Step 1: Define inner expressions
+  Let P = b + 1/a = (ab + 1)/a
+  Let Q = a + 1/b = (ab + 1)/b
+
+Step 2: Compute the outer nested expressions
+  a + 1/P = a + 1/((ab+1)/a) = a + a/(ab+1) = (a(ab+1) + a)/(ab+1) = (a^2*b + a + a)/(ab+1) = (a^2*b + 2a)/(ab+1) = a(ab+2)/(ab+1)
+
+  b + 1/Q = b + 1/((ab+1)/b) = b + b/(ab+1) = (b(ab+1) + b)/(ab+1) = (a*b^2 + b + b)/(ab+1) = (a*b^2 + 2b)/(ab+1) = b(ab+2)/(ab+1)
+
+Step 3: Compute first term of the expression
+  First term = (1/(a + 1/P)) * (1/P)
+             = 1/(a(ab+2)/(ab+1)) * 1/((ab+1)/a)
+             = (ab+1)/(a(ab+2)) * a/(ab+1)
+             = 1/(ab+2)
+
+Step 4: Compute second term of the expression
+  Second term = (1/(b + 1/Q)) * (1/Q)
+              = 1/(b(ab+2)/(ab+1)) * 1/((ab+1)/b)
+              = (ab+1)/(b(ab+2)) * b/(ab+1)
+              = 1/(ab+2)
+
+Step 5: Final result
+  Expression = 1/(ab+2) - 1/(ab+2) = 0
+
+Verification with a = 2, b = 3:
+  P = b + 1/a = 3 + 1/2 = 7/2
+  Q = a + 1/b = 2 + 1/3 = 7/3
+
+  a + 1/P = 2 + 2/7 = 16/7
+  b + 1/Q = 3 + 3/7 = 24/7
+
+  First term: (1/(16/7)) * (1/(7/2)) = (7/16) * (2/7) = 2/16 = 1/8
+  Second term: (1/(24/7)) * (1/(7/3)) = (7/24) * (3/7) = 3/24 = 1/8
+
+  Expression = 1/8 - 1/8 = 0  ✓
+
+  Also check: ab + 2 = 6 + 2 = 8, so 1/(ab+2) = 1/8. Confirms the formula.
+
+  Check other options with a=2, b=3:
+  A) ab + 1 = 7      ≠ 0
+  B) a - b = -1       ≠ 0
+  V) (ab+1)/(ab) = 7/6 ≠ 0
+
+Answer: Г) 0
+
+The answer from the key is Г) 0. CONFIRMED.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Identičnost složenog razlomačkog izraza</h1>
+  <p class="subtitle">Uprošćavanje višestrukih verižnih (lančanih) razlomaka pomoću supstitucije</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Postavka zadatka</div>
+    <div class="problem-text">
+      Izraz:
+      <div class="math-box">
+        \[ \frac{1}{a + \dfrac{1}{b + \dfrac{1}{a}}} \cdot \frac{1}{b + \dfrac{1}{a}} \;-\; \frac{1}{b + \dfrac{1}{a + \dfrac{1}{b}}} \cdot \frac{1}{a + \dfrac{1}{b}} \]
+      </div>
+      za one vrednosti promenljivih \(a\) i \(b\) za koje je definisan, identički je jednak izrazu:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(ab + 1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(Б)</div>
+        <div class="value">\(a - b\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(В)</div>
+        <div class="value">\(\dfrac{ab + 1}{ab}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(Г)</div>
+        <div class="value">\(0\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      1. Uvedemo smene za unutrašnje razlomke: \(P = b + \frac{1}{a}\) i \(Q = a + \frac{1}{b}\), čime se izraz značajno uprošćava.<br>
+      2. Izrazimo sve složene razlomke preko \(P\) i \(Q\), izračunamo svaki sabirak posebno, pa ih oduzmemo.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Ključne formule i pravila</summary>
+      <ul style="margin-top: 12px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;"><strong>Sabiranje razlomaka:</strong>
+          <div class="math-box">\[ a + \frac{1}{b} = \frac{ab + 1}{b} \]</div>
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Recipročna vrednost razlomka:</strong>
+          <div class="math-box">\[ \frac{1}{\;\dfrac{p}{q}\;} = \frac{q}{p} \]</div>
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Množenje razlomaka:</strong>
+          <div class="math-box">\[ \frac{a}{b} \cdot \frac{c}{d} = \frac{ac}{bd} \]</div>
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Verižni (lančani) razlomci:</strong> Složeni razlomci oblika \(a + \frac{1}{b + \frac{1}{c}}\) se uprošćavaju „iznutra ka spolja" &mdash; prvo se sredi najdublji razlomak, pa sledeći nivo.
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz strukture izraza</div>
+    <canvas id="solutionCanvas" width="900" height="560"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-title"><span class="step-badge">1</span> Uvedemo smene za unutrašnje razlomke</div>
+      <p class="step-explanation">
+        Definišemo dva pomoćna izraza koji se ponavljaju u zadatku:
+      </p>
+      <div class="math-box">
+        \[ P = b + \frac{1}{a} = \frac{ab + 1}{a} \]
+      </div>
+      <div class="math-box">
+        \[ Q = a + \frac{1}{b} = \frac{ab + 1}{b} \]
+      </div>
+      <p class="step-explanation">
+        Primetimo da \(P\) i \(Q\) imaju <span class="highlight">isti brojilac</span> \(ab + 1\), samo sa različitim imeniocima. Ovo je ključ zadatka.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-title"><span class="step-badge">2</span> Izrazimo spoljašnje razlomke</div>
+      <p class="step-explanation">
+        Sada izračunamo \(a + \frac{1}{P}\), odnosno spoljašnji nivo prvog lančanog razlomka:
+      </p>
+      <div class="math-box">
+        \[ a + \frac{1}{P} = a + \frac{1}{\;\frac{ab+1}{a}\;} = a + \frac{a}{ab + 1} \]
+      </div>
+      <p class="step-explanation">
+        Svedemo na zajednički imenilac:
+      </p>
+      <div class="math-box">
+        \[ a + \frac{a}{ab + 1} = \frac{a(ab + 1) + a}{ab + 1} = \frac{a^2b + a + a}{ab + 1} = \frac{a^2 b + 2a}{ab + 1} = \frac{a(ab + 2)}{ab + 1} \]
+      </div>
+      <p class="step-explanation">
+        Potpuno analogno za \(b + \frac{1}{Q}\):
+      </p>
+      <div class="math-box">
+        \[ b + \frac{1}{Q} = b + \frac{b}{ab + 1} = \frac{b(ab + 1) + b}{ab + 1} = \frac{ab^2 + 2b}{ab + 1} = \frac{b(ab + 2)}{ab + 1} \]
+      </div>
+      <details>
+        <summary>Proveri se: Šta je zajednički faktor u oba rezultata?</summary>
+        <p>Oba izraza imaju imenilac \(ab + 1\) i faktor \(ab + 2\) u brojiocu. Razlika je samo u tome da prvi ima \(a\), a drugi \(b\) ispred zagrade.</p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-title"><span class="step-badge">3</span> Izračunamo prvi sabirak</div>
+      <p class="step-explanation">
+        Prvi sabirak u polaznom izrazu je:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{a + \frac{1}{P}} \cdot \frac{1}{P} \]
+      </div>
+      <p class="step-explanation">
+        Zamenimo ono što smo izračunali:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{\;\dfrac{a(ab+2)}{ab+1}\;} \cdot \frac{1}{\;\dfrac{ab+1}{a}\;} = \frac{ab+1}{a(ab+2)} \cdot \frac{a}{ab+1} \]
+      </div>
+      <p class="step-explanation">
+        Skratimo \(ab + 1\) i \(a\):
+      </p>
+      <div class="math-box">
+        \[ = \frac{\cancel{(ab+1)}}{\cancel{a}\,(ab+2)} \cdot \frac{\cancel{a}}{\cancel{(ab+1)}} = \frac{1}{ab + 2} \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-title"><span class="step-badge">4</span> Izračunamo drugi sabirak</div>
+      <p class="step-explanation">
+        Drugi sabirak je:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{b + \frac{1}{Q}} \cdot \frac{1}{Q} \]
+      </div>
+      <p class="step-explanation">
+        Primenimo isti postupak:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{\;\dfrac{b(ab+2)}{ab+1}\;} \cdot \frac{1}{\;\dfrac{ab+1}{b}\;} = \frac{ab+1}{b(ab+2)} \cdot \frac{b}{ab+1} \]
+      </div>
+      <p class="step-explanation">
+        Skratimo \(ab + 1\) i \(b\):
+      </p>
+      <div class="math-box">
+        \[ = \frac{\cancel{(ab+1)}}{\cancel{b}\,(ab+2)} \cdot \frac{\cancel{b}}{\cancel{(ab+1)}} = \frac{1}{ab + 2} \]
+      </div>
+      <details>
+        <summary>Proveri se: Da li su prvi i drugi sabirak jednaki?</summary>
+        <p>Da! Oba sabirka su jednaka \(\frac{1}{ab + 2}\). To je posledica simetrije izraza &mdash; zamena \(a \leftrightarrow b\) u formuli daje isti rezultat.</p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" data-step="5">
+      <div class="step-title"><span class="step-badge">5</span> Oduzmemo sabirke</div>
+      <p class="step-explanation">
+        Konačno, oduzimamo drugi sabirak od prvog:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{ab + 2} - \frac{1}{ab + 2} = 0 \]
+      </div>
+      <p class="step-explanation">
+        Dva identična razlomka se <span class="highlight">međusobno ponište</span> i rezultat je nula!
+      </p>
+      <details>
+        <summary>Proveri se: Numerička verifikacija sa \(a = 2, \; b = 3\)</summary>
+        <p>Za \(a = 2, b = 3\):</p>
+        <p>\(P = 3 + \frac{1}{2} = \frac{7}{2}\), &ensp; \(Q = 2 + \frac{1}{3} = \frac{7}{3}\)</p>
+        <p>Prvi sabirak: \(\frac{1}{ab + 2} = \frac{1}{8}\)</p>
+        <p>Drugi sabirak: \(\frac{1}{ab + 2} = \frac{1}{8}\)</p>
+        <p>Razlika: \(\frac{1}{8} - \frac{1}{8} = 0\) &ensp; &#10004;</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Oba sabirka u izrazu imaju istu strukturu, samo sa zamenjenim ulogama \(a\) i \(b\). Pošto
+      izraz \(b + \frac{1}{a}\) i \(a + \frac{1}{b}\) dele zajednički brojilac \(ab + 1\), oba sabirka se
+      pojedinačno svode na isti rezultat \(\frac{1}{ab+2}\). Zato je njihova razlika uvek jednaka nuli,
+      bez obzira na konkretne vrednosti \(a\) i \(b\).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačan odgovor</div>
+    <div class="answer">\(0\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(ab + 1\)</div>
+      <div class="final-option" data-option="B">(Б) \(a - b\)</div>
+      <div class="final-option" data-option="C">(В) \(\dfrac{ab+1}{ab}\)</div>
+      <div class="final-option correct" data-option="D">(Г) \(0\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija: za \(a = 2,\; b = 3\): oba sabirka jednaka su \(\frac{1}{8}\), razlika \(= 0\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešan redosled sređivanja lančanog razlomka</div>
+      <p>Verižni razlomci se moraju sređivati „iznutra ka spolja". Ako počnete od spoljašnjeg nivoa, dobićete pogrešan oblik. Uvek prvo sredite \(b + \frac{1}{a}\), pa tek onda računajte \(a + \frac{1}{b + \frac{1}{a}}\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Previđanje simetrije izraza</div>
+      <p>Mnogi studenti pokušavaju da raspisuju ceo izraz odjednom, što vodi do veoma komplikovanih razlomaka. Uvođenje smena \(P\) i \(Q\) i uočavanje simetrije \(a \leftrightarrow b\) drastično pojednostavljuje račun.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Šta bi se desilo da umesto razlike imamo <strong>zbir</strong> istih sabiraka:
+    </p>
+    <div class="math-box">
+      \[ \frac{1}{a + \dfrac{1}{b + \dfrac{1}{a}}} \cdot \frac{1}{b + \dfrac{1}{a}} \;+\; \frac{1}{b + \dfrac{1}{a + \dfrac{1}{b}}} \cdot \frac{1}{a + \dfrac{1}{b}} \]
+    </div>
+    <details>
+      <summary>Nagovještaj</summary>
+      <p>Već znamo da je svaki sabirak jednak \(\frac{1}{ab+2}\). Šta dobijamo kada ih saberemo?</p>
+    </details>
+    <details>
+      <summary>Rešenje</summary>
+      <p>\(\frac{1}{ab+2} + \frac{1}{ab+2} = \frac{2}{ab+2}\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('solutionCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 560 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 560;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Struktura uprošćavanja', W / 2, 28);
+
+    var boxW = Math.min(260, W * 0.32);
+    var boxH = 52;
+
+    /* Row 1: Smene */
+    var y1 = 74;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Smena P', W * 0.28, y1 - 14);
+    ctx.fillText('Smena Q', W * 0.72, y1 - 14);
+
+    drawBox(W * 0.28, y1, boxW, boxH, 'P = b + 1/a = (ab+1)/a', 'unutrašnji razlomak', '#a78bfa');
+    drawBox(W * 0.72, y1, boxW, boxH, 'Q = a + 1/b = (ab+1)/b', 'unutrašnji razlomak', '#a78bfa');
+
+    /* Row 2: Spoljašnji nivoi */
+    var y2 = 155;
+    drawArrow(W * 0.28, y1 + boxH / 2 + 2, W * 0.28, y2 - boxH / 2);
+    drawArrow(W * 0.72, y1 + boxH / 2 + 2, W * 0.72, y2 - boxH / 2);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('dodamo a', W * 0.09, (y1 + y2) / 2);
+    ctx.fillText('dodamo b', W * 0.91, (y1 + y2) / 2);
+
+    var boxW2 = Math.min(300, W * 0.36);
+    drawBox(W * 0.28, y2, boxW2, boxH, 'a + 1/P = a(ab+2)/(ab+1)', 'spoljašnji nivo', '#60a5fa');
+    drawBox(W * 0.72, y2, boxW2, boxH, 'b + 1/Q = b(ab+2)/(ab+1)', 'spoljašnji nivo', '#60a5fa');
+
+    /* Row 3: Sabirci */
+    var y3 = 245;
+    drawArrow(W * 0.28, y2 + boxH / 2 + 2, W * 0.28, y3 - boxH / 2);
+    drawArrow(W * 0.72, y2 + boxH / 2 + 2, W * 0.72, y3 - boxH / 2);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('1/(a+1/P) \u00B7 1/P', W * 0.09, (y2 + y3) / 2);
+    ctx.fillText('1/(b+1/Q) \u00B7 1/Q', W * 0.91, (y2 + y3) / 2);
+
+    drawBox(W * 0.28, y3, boxW, boxH, '1/(ab + 2)', 'prvi sabirak', '#f472b6');
+    drawBox(W * 0.72, y3, boxW, boxH, '1/(ab + 2)', 'drugi sabirak', '#f472b6');
+
+    /* Highlight that they are equal */
+    var y3mid = y3;
+    ctx.beginPath();
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 1.5;
+    ctx.moveTo(W * 0.28 + boxW / 2 + 8, y3mid);
+    ctx.lineTo(W * 0.72 - boxW / 2 - 8, y3mid);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('=', W * 0.5, y3mid + 5);
+
+    /* Row 4: Razlika */
+    var y4 = 345;
+    drawArrow(W * 0.28, y3 + boxH / 2 + 2, W * 0.5, y4 - boxH / 2);
+    drawArrow(W * 0.72, y3 + boxH / 2 + 2, W * 0.5, y4 - boxH / 2);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('razlika', W * 0.5, (y3 + y4) / 2 - 8);
+
+    var mergeW = Math.min(380, W * 0.55);
+    drawBox(W * 0.5, y4, mergeW, boxH + 4, '1/(ab+2) \u2212 1/(ab+2)', 'identični sabirci', '#a78bfa');
+
+    /* Row 5: Final result */
+    var y5 = 440;
+    drawArrow(W * 0.5, y4 + boxH / 2 + 4, W * 0.5, y5 - boxH / 2);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('poništavanje', W * 0.5, (y4 + y5) / 2 + 2);
+
+    var finalW = Math.min(150, W * 0.22);
+    drawBox(W * 0.5, y5, finalW, boxH, '0', 'rezultat', '#34d399');
+
+    /* Final highlight */
+    var y6 = 510;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Odgovor: (\u0413) 0', W / 2, y6);
+
+    /* Decorative note */
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Simetrija a \u2194 b garantuje jednakost oba sabirka', W / 2, y6 + 28);
+  }
+
+  function drawBox(x, y, w, h, title, sub, color) {
+    var r = 10;
+    ctx.beginPath();
+    ctx.roundRect(x - w / 2, y - h / 2, w, h, r);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(title, x, y - 4);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(sub, x, y + 17);
+  }
+
+  function drawArrow(x1, y1, x2, y2) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    var size = 7;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - size * Math.cos(angle - 0.4), y2 - size * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - size * Math.cos(angle + 0.4), y2 - size * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fillStyle = '#475569';
+    ctx.fill();
+  }
+
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(container) {
+    container.addEventListener('click', function() {
+      stepContainers.forEach(function(c) { c.classList.remove('active'); });
+      container.classList.add('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Identičnost složenog razlomačkog izraza sa verižnim razlomcima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["verižni razlomci", "lančani razlomci", "algebarski razlomci", "supstitucija", "simetrija izraza", "uprošćavanje"]
+}
+BRAINSPARK_META-->

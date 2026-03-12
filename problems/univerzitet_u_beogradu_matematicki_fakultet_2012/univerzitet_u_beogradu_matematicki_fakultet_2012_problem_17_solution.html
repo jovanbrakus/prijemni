@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poređenje binomnih koeficijenata C(2012,k)</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem:
+a = C(2012, 1004), b = C(2012, 1006), c = C(2012, 1007).
+Determine ordering among a, b, c.
+
+Key tool: consecutive ratio formula
+C(n, k+1) / C(n, k) = (n - k) / (k + 1)
+
+For n = 2012:
+C(2012, k+1) / C(2012, k) = (2012 - k) / (k + 1)
+
+This ratio > 1 iff 2012 - k > k + 1 iff k < 2011/2 = 1005.5
+So C(2012, k) increases for k = 0, 1, ..., 1005 and starts decreasing for k >= 1006.
+Maximum at k = 1006. (Since n = 2012 is even, max is at k = n/2 = 1006.)
+
+So b = C(2012, 1006) is the maximum. b is the largest.
+
+Compare c and a:
+c = C(2012, 1007), a = C(2012, 1004)
+
+Use the symmetry: C(2012, 1007) = C(2012, 1005) since C(n, k) = C(n, n-k)
+Wait: C(2012, 1007) = C(2012, 2012-1007) = C(2012, 1005). Yes!
+
+So c = C(2012, 1005).
+
+Now compare a = C(2012, 1004) vs c = C(2012, 1005):
+C(2012, 1005) / C(2012, 1004) = (2012 - 1004) / 1005 = 1008/1005 > 1
+
+So c > a.
+
+Therefore: a < c < b, which is option (B).
+
+Alternative direct computation for c vs a without symmetry:
+c/a = C(2012,1007)/C(2012,1004)
+= [C(2012,1005)/C(2012,1004)] * [C(2012,1006)/C(2012,1005)] * [C(2012,1007)/C(2012,1006)]
+= (1008/1005) * (1007/1006) * (1005/1007)
+= 1008/1006 > 1
+
+Both methods confirm c > a.
+
+Answer: B) a < c < b
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #60a5fa;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.plan-card h2 { color: #a78bfa; }
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 14px;
+  background: rgba(96,165,250,0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(96,165,250,0.12);
+  list-style: none;
+  user-select: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B8 ';
+  display: inline;
+}
+
+details[open] summary::before {
+  content: '\25BE ';
+}
+
+details .details-content {
+  padding: 14px 18px;
+  margin-top: 8px;
+  background: rgba(96,165,250,0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(96,165,250,0.08);
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+  cursor: pointer;
+  padding: 8px;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.step-container:hover {
+  background: rgba(96,165,250,0.04);
+  border-left-color: #4ade80;
+}
+
+.step-container.active {
+  background: rgba(52,211,153,0.06);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  min-width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 { color: #a78bfa; }
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.08));
+  border: 2px solid rgba(52,211,153,0.35);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-value {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 18px 0;
+}
+
+.option-chip {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 1.05rem;
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+
+.option-chip.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(52,211,153,0.15);
+}
+
+.pitfall-box {
+  border-left: 4px solid #e09468;
+}
+
+.pitfall-box h2 { color: #e09468; }
+
+.challenge-box {
+  border-left: 4px solid #a78bfa;
+}
+
+.challenge-box h2 { color: #a78bfa; }
+
+.canvas-wrapper {
+  background: #0c1222;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  overflow: hidden;
+  margin: 14px 0;
+}
+
+canvas {
+  width: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.provera-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(52,211,153,0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(52,211,153,0.12);
+}
+
+.formula-list {
+  list-style: none;
+  padding: 0;
+}
+
+.formula-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+}
+
+.formula-list li:last-child { border-bottom: none; }
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.step-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .given-grid { flex-direction: column; }
+  .options-grid { flex-direction: column; align-items: center; }
+  .final-answer-box .answer-value { font-size: 1.8rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Title -->
+  <h1>Poređenje binomnih koeficijenata</h1>
+  <p class="subtitle">Osobine binomnog koeficijenta i lokacija maksimuma u Paskalovom trouglu</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako je \(a = \binom{2012}{1004}\), \(b = \binom{2012}{1006}\) i \(c = \binom{2012}{1007}\), onda je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(c &lt; a &lt; b\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(a &lt; c &lt; b\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(a &lt; b &lt; c\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(c &lt; b &lt; a\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(b &lt; c &lt; a\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Koristićemo formulu za odnos uzastopnih binomnih koeficijenata \(\binom{n}{k+1}/\binom{n}{k} = (n-k)/(k+1)\) da odredimo gde se postiže maksimum i kako se koeficijenti ponašaju levo i desno od njega. Zatim ćemo primeniti simetriju \(\binom{n}{k} = \binom{n}{n-k}\) da dodatno pojednostavimo poređenje.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="details-content">
+        <ul class="formula-list">
+          <li><strong>Binomni koeficijent:</strong> \(\displaystyle\binom{n}{k} = \frac{n!}{k!\,(n-k)!}\) — broj načina da se izabere \(k\) od \(n\) elemenata</li>
+          <li><strong>Simetrija:</strong> \(\binom{n}{k} = \binom{n}{n-k}\) — binomni koeficijent je simetričan oko sredine</li>
+          <li><strong>Odnos uzastopnih koeficijenata:</strong> \(\dfrac{\binom{n}{k+1}}{\binom{n}{k}} = \dfrac{n-k}{k+1}\) — ovo je ključna formula za poređenje</li>
+          <li><strong>Monotonija:</strong> \(\binom{n}{k}\) raste za \(k < n/2\), dostiže maksimum za \(k = \lfloor n/2 \rfloor\), pa opada</li>
+          <li><strong>Maksimum (parno \(n\)):</strong> Kada je \(n\) paran, jedinstveni maksimum je \(\binom{n}{n/2}\)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color: #94a3b8; margin-bottom: 8px;">Dijagram prikazuje oblik binomnih koeficijenata \(\binom{2012}{k}\) oko maksimuma i položaj vrednosti \(a\), \(b\), \(c\).</p>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="900" height="500"></canvas>
+    </div>
+    <p class="drag-hint">Zvonasti oblik binomnih koeficijenata sa označenim položajima a, b i c</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Odredimo gde je maksimum binomnog koeficijenta</h3>
+        <p>Za \(\binom{n}{k}\), odnos uzastopnih koeficijenata je:</p>
+        <div class="math-box">
+          \[
+          \frac{\binom{n}{k+1}}{\binom{n}{k}} = \frac{n - k}{k + 1}
+          \]
+        </div>
+        <p>Ovaj odnos je veći od \(1\) (tj. koeficijent raste) kada je \(n - k > k + 1\), odnosno:</p>
+        <div class="math-box">
+          \[
+          k < \frac{n - 1}{2} = \frac{2011}{2} = 1005{,}5
+          \]
+        </div>
+        <p>Dakle, \(\binom{2012}{k}\) <span class="highlight">raste</span> za \(k \le 1005\) i <span class="highlight">opada</span> za \(k \ge 1006\). Maksimum se dostiže u \(k = 1006\).</p>
+        <p class="step-note">Za parno \(n = 2012\), maksimum je jedinstven i postiže se u \(k = n/2 = 1006\).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Zaključak: \(b\) je najveći</h3>
+        <p>Pošto je \(b = \binom{2012}{1006}\) upravo maksimum niza binomnih koeficijenata za \(n = 2012\), odmah znamo:</p>
+        <div class="math-box">
+          \[
+          b = \binom{2012}{1006} \ge \binom{2012}{k} \quad \text{za svako } k
+          \]
+        </div>
+        <p>Posebno, \(b > a\) i \(b > c\). Ostaje da uporedimo \(a\) i \(c\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details>
+      <summary>Proveri se: Zašto je maksimum baš u k = 1006?</summary>
+      <div class="details-content">
+        <p>Odnos \(\binom{2012}{k+1}/\binom{2012}{k} = (2012-k)/(k+1)\).</p>
+        <p>Za \(k = 1005\): odnos = \(1007/1006 > 1\), pa koeficijent još raste.</p>
+        <p>Za \(k = 1006\): odnos = \(1006/1007 < 1\), pa koeficijent počinje da opada.</p>
+        <p>Dakle prelaz sa rasta na pad se dešava upravo na \(k = 1006\) --- to je maksimum.</p>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Primenimo simetriju na \(c\)</h3>
+        <p>Koristimo osobinu \(\binom{n}{k} = \binom{n}{n-k}\):</p>
+        <div class="math-box">
+          \[
+          c = \binom{2012}{1007} = \binom{2012}{2012 - 1007} = \binom{2012}{1005}
+          \]
+        </div>
+        <p>Dakle \(c\) je zapravo isto što i \(\binom{2012}{1005}\). Sada poredimo:</p>
+        <div class="math-box">
+          \[
+          a = \binom{2012}{1004} \quad \text{vs.} \quad c = \binom{2012}{1005}
+          \]
+        </div>
+        <p class="step-note">Ovo je mnogo lakše poređenje --- dva susedna binomna koeficijenta!</p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Uporedimo \(a\) i \(c\) pomoću formule za odnos</h3>
+        <p>Izračunavamo odnos \(c/a\):</p>
+        <div class="math-box">
+          \[
+          \frac{c}{a} = \frac{\binom{2012}{1005}}{\binom{2012}{1004}} = \frac{2012 - 1004}{1004 + 1} = \frac{1008}{1005}
+          \]
+        </div>
+        <p>Pošto je \(\dfrac{1008}{1005} > 1\), zaključujemo:</p>
+        <div class="math-box" style="text-align: center;">
+          \[
+          c > a
+          \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details>
+      <summary>Proveri se: Alternativno poređenje bez simetrije</summary>
+      <div class="details-content">
+        <p>Možemo direktno izračunati \(c/a = \binom{2012}{1007}/\binom{2012}{1004}\) koristeći uzastopne odnose:</p>
+        <p>\(\displaystyle\frac{c}{a} = \frac{\binom{2012}{1005}}{\binom{2012}{1004}} \cdot \frac{\binom{2012}{1006}}{\binom{2012}{1005}} \cdot \frac{\binom{2012}{1007}}{\binom{2012}{1006}}\)</p>
+        <p>\(\displaystyle= \frac{1008}{1005} \cdot \frac{1007}{1006} \cdot \frac{1005}{1007} = \frac{1008}{1006} > 1\)</p>
+        <p>Isti zaključak: \(c > a\).</p>
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Sastavimo konačni poredak</h3>
+        <p>Iz prethodnih koraka imamo:</p>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li>\(b > a\) (jer je \(b\) maksimum, a \(1004 \ne 1006\))</li>
+          <li>\(b > c\) (jer je \(b\) maksimum, a \(1007 \ne 1006\))</li>
+          <li>\(c > a\) (jer je \(1008/1005 > 1\))</li>
+        </ul>
+        <p>Kombinujući sve tri nejednakosti:</p>
+        <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+          \[
+          a < c < b
+          \]
+        </div>
+        <p class="step-note">Na brojevnoj osi binomnih koeficijenata: \(a\) je na poziciji 1004 (najdalje od centra), \(c\) je na simetričnoj poziciji 1005, a \(b\) je u centru 1006.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Binomni koeficijenti \(\binom{n}{k}\) formiraju <span class="highlight">zvonasti oblik</span> sa maksimumom u sredini (\(k = n/2\) za parno \(n\)). Simetrija \(\binom{n}{k} = \binom{n}{n-k}\) omogućava da se \(\binom{2012}{1007}\) "prebaci" na \(\binom{2012}{1005}\), čime se poređenje sa \(\binom{2012}{1004}\) svodi na poređenje dva susedna koeficijenta. Što je \(k\) bliže centru, to je koeficijent veći.</p>
+    <div class="math-box" style="text-align: center;">
+      \[
+      \underbrace{\binom{2012}{1004}}_{a} < \underbrace{\binom{2012}{1005}}_{= c} < \underbrace{\binom{2012}{1006}}_{b}
+      \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2 style="color: #34d399; margin-bottom: 10px;">Konačan odgovor</h2>
+    <div class="options-grid">
+      <div class="option-chip">(A) \(c &lt; a &lt; b\)</div>
+      <div class="option-chip correct">(B) \(a &lt; c &lt; b\)</div>
+      <div class="option-chip">(C) \(a &lt; b &lt; c\)</div>
+      <div class="option-chip">(D) \(c &lt; b &lt; a\)</div>
+      <div class="option-chip">(E) \(b &lt; c &lt; a\)</div>
+    </div>
+    <div class="answer-value">Odgovor je (B) \(a < c < b\)</div>
+    <p style="color: #94a3b8; margin-top: 8px;">\(\binom{2012}{1004} < \binom{2012}{1007} < \binom{2012}{1006}\)</p>
+    <div class="provera-note">
+      <strong>Provera:</strong> Maksimum \(\binom{2012}{k}\) je u \(k = 1006\), pa je \(b\) najveći. Simetrijom, \(c = \binom{2012}{1005}\), pa je \(c\) bliže centru nego \(a = \binom{2012}{1004}\), odakle \(c > a\). Redosled: \(a < c < b\).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-box">
+    <h2>Česte greške</h2>
+    <ul style="list-style: disc; padding-left: 20px; color: #e2e8f0;">
+      <li style="margin-bottom: 10px;"><strong>Pogrešna lokacija maksimuma:</strong>
+        Učenici ponekad pomisle da je maksimum u \(k = n/2 - 1 = 1005\) umesto u \(k = 1006\). Formula jasno pokazuje da odnos prelazi sa \(>1\) na \(<1\) upravo u \(k = 1006\).</li>
+      <li style="margin-bottom: 10px;"><strong>Zaboravljanje simetrije:</strong>
+        Bez simetrije \(\binom{n}{k} = \binom{n}{n-k}\), poređenje \(\binom{2012}{1004}\) i \(\binom{2012}{1007}\) deluje teško jer su razdvojeni za tri pozicije. Simetrija ih svodi na susedne.</li>
+      <li style="margin-bottom: 10px;"><strong>Brkanje sa \(c > b\):</strong>
+        Opcija (C) tvrdi da je \(c > b\), ali \(c = \binom{2012}{1007}\) je za jednu poziciju udaljenije od centra nego \(b = \binom{2012}{1006}\), pa je \(c < b\).</li>
+      <li><strong>Pogrešan smer nejednakosti za \(a\) i \(c\):</strong>
+        Opcija (A) tvrdi \(c < a\). To bi značilo da je \(\binom{2012}{1005} < \binom{2012}{1004}\), ali koeficijenti rastu ka centru, pa je to nemoguće.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-box">
+    <h2>Bonus izazov</h2>
+    <p>Odredite poredak sledećih binomnih koeficijenata:</p>
+    <div class="math-box" style="text-align: center;">
+      \[
+      p = \binom{2023}{1010}, \quad q = \binom{2023}{1012}, \quad r = \binom{2023}{1015}
+      \]
+    </div>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="details-content">
+        <p>Za \(n = 2023\) (neparno), maksimum se postiže u \(k = 1011\) i \(k = 1012\) (dva jednaka maksimuma).</p>
+        <p>Simetrija: \(\binom{2023}{1015} = \binom{2023}{1008}\). Pozicije od centra:</p>
+        <ul style="margin: 8px 0; padding-left: 20px;">
+          <li>\(q\): na poziciji 1012 (u maksimumu)</li>
+          <li>\(p\): na poziciji 1010 (2 od centra)</li>
+          <li>\(r = \binom{2023}{1008}\): na poziciji 1008 (3 od centra, korišćenjem simetrije)</li>
+        </ul>
+        <p>Odgovor: \(r < p < q\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    canvas.style.height = '500px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width;
+    const H = 500;
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const centerX = W / 2;
+    const marginL = 60;
+    const marginR = 40;
+    const marginTop = 60;
+    const marginBot = 80;
+    const plotW = W - marginL - marginR;
+    const plotH = H - marginTop - marginBot;
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Binomni koeficijenti C(2012, k) oko maksimuma', centerX, 28);
+
+    // We'll draw a bell curve representing C(2012, k) for k around 1000-1012
+    // Using a Gaussian approximation centered at k=1006 with sigma ~ sqrt(2012/4) ~ 22.4
+    // We show k from 998 to 1014
+
+    var kMin = 998;
+    var kMax = 1014;
+    var kCenter = 1006;
+    var sigma = 22.4;
+    var numPoints = 200;
+
+    function gaussian(k) {
+      return Math.exp(-0.5 * Math.pow((k - kCenter) / sigma, 2));
+    }
+
+    function kToX(k) {
+      return marginL + (k - kMin) / (kMax - kMin) * plotW;
+    }
+
+    function valToY(v) {
+      return marginTop + plotH * (1 - v);
+    }
+
+    // Draw axes
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(marginL, marginTop);
+    ctx.lineTo(marginL, marginTop + plotH);
+    ctx.lineTo(marginL + plotW, marginTop + plotH);
+    ctx.stroke();
+
+    // Y-axis label
+    ctx.save();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.translate(20, marginTop + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('C(2012, k)', 0, 0);
+    ctx.restore();
+
+    // X-axis label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('k', centerX, H - 10);
+
+    // X-axis tick marks
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var k = kMin; k <= kMax; k++) {
+      var tx = kToX(k);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(tx, marginTop + plotH);
+      ctx.lineTo(tx, marginTop + plotH + 5);
+      ctx.stroke();
+      if (k % 2 === 0) {
+        ctx.fillText(k.toString(), tx, marginTop + plotH + 20);
+      }
+    }
+
+    // Draw the bell curve
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (var i = 0; i <= numPoints; i++) {
+      var k = kMin + (kMax - kMin) * i / numPoints;
+      var v = gaussian(k);
+      var x = kToX(k);
+      var y = valToY(v);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Fill under curve
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.08)';
+    ctx.beginPath();
+    ctx.moveTo(kToX(kMin), valToY(0));
+    for (var i = 0; i <= numPoints; i++) {
+      var k = kMin + (kMax - kMin) * i / numPoints;
+      var v = gaussian(k);
+      ctx.lineTo(kToX(k), valToY(v));
+    }
+    ctx.lineTo(kToX(kMax), valToY(0));
+    ctx.closePath();
+    ctx.fill();
+
+    // Mark special points
+    var points = [
+      { k: 1004, label: 'a', sublabel: 'k=1004', color: '#f472b6' },
+      { k: 1006, label: 'b', sublabel: 'k=1006', color: '#4ade80' },
+      { k: 1007, label: 'c', sublabel: 'k=1007', color: '#a78bfa' }
+    ];
+
+    // Also mark the symmetric position of c
+    var symPoint = { k: 1005, label: 'c\u2032', sublabel: 'k=1005 (=c)', color: '#a78bfa' };
+
+    // Draw symmetric equivalence arrow
+    var cx1 = kToX(1007);
+    var cy1 = valToY(gaussian(1007));
+    var cx2 = kToX(1005);
+    var cy2 = valToY(gaussian(1005));
+
+    // Dashed arc connecting c and c'
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(167, 139, 250, 0.5)';
+    ctx.lineWidth = 1.5;
+    var arcMidX = (cx1 + cx2) / 2;
+    var arcMidY = Math.min(cy1, cy2) - 40;
+    ctx.beginPath();
+    ctx.moveTo(cx1, cy1 - 8);
+    ctx.quadraticCurveTo(arcMidX, arcMidY - 15, cx2, cy2 - 8);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label for symmetry
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.7)';
+    ctx.font = '10px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('simetrija', arcMidX, arcMidY - 10);
+
+    // Draw symmetric point
+    var sv = gaussian(1005);
+    var sx = kToX(1005);
+    var sy = valToY(sv);
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.3)';
+    ctx.beginPath();
+    ctx.arc(sx, sy, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 6, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Draw main points
+    points.forEach(function(p) {
+      var v = gaussian(p.k);
+      var x = kToX(p.k);
+      var y = valToY(v);
+
+      // Vertical dashed line
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = p.color + '60';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, valToY(0));
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Point circle
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(x, y, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glow
+      var glow = ctx.createRadialGradient(x, y, 3, x, y, 18);
+      glow.addColorStop(0, p.color + '40');
+      glow.addColorStop(1, p.color + '00');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label above
+      ctx.fillStyle = p.color;
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      var labelOffset = p.k === 1006 ? -22 : -18;
+      ctx.fillText(p.label, x, y + labelOffset);
+
+      // Sublabel below x-axis
+      ctx.fillStyle = p.color;
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(p.sublabel, x, marginTop + plotH + 35);
+    });
+
+    // Draw "MAX" label at b
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('MAX', kToX(1006), valToY(gaussian(1006)) - 36);
+
+    // Draw ordering at bottom
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Poredak:  a < c < b', centerX, H - 35);
+
+    // Draw color coded version
+    var orderY = H - 35;
+    // Just the colored result below
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    var parts = [
+      { text: 'C(2012,1004)', color: '#f472b6' },
+      { text: ' < ', color: '#94a3b8' },
+      { text: 'C(2012,1007)', color: '#a78bfa' },
+      { text: ' < ', color: '#94a3b8' },
+      { text: 'C(2012,1006)', color: '#4ade80' }
+    ];
+    var totalWidth = 0;
+    parts.forEach(function(p) {
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      totalWidth += ctx.measureText(p.text).width;
+    });
+    var startX = centerX - totalWidth / 2;
+    parts.forEach(function(p) {
+      ctx.fillStyle = p.color;
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(p.text, startX, orderY + 20);
+      startX += ctx.measureText(p.text).width;
+    });
+  }
+
+  // Step click highlighting
+  document.querySelectorAll('.step-container').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      step.classList.toggle('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Poređenje binomnih koeficijenata C(2012, k)",
+  "subject": "math",
+  "unit": "kombinatorika",
+  "topic_tags": ["binomni koeficijent", "kombinatorika", "Paskalov trougao", "simetrija", "nejednakosti"]
+}
+BRAINSPARK_META-->

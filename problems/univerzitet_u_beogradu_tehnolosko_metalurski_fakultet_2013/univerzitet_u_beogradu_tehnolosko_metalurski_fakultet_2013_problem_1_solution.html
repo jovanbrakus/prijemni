@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje algebarskog izraza</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Simplify the expression
+  [1/(m+n)^2] * (1/m^2 + 1/n^2) + [2/(m+n)^3] * (1/m + 1/n)
+then multiply the result by m^2 * n^2, where m ≠ -n.
+
+Step 1: Simplify the sub-expressions.
+  1/m^2 + 1/n^2 = (n^2 + m^2) / (m^2 * n^2)
+  1/m + 1/n = (n + m) / (mn)
+
+Step 2: Substitute back.
+  First term: [1/(m+n)^2] * [(m^2 + n^2) / (m^2 * n^2)]
+            = (m^2 + n^2) / [(m+n)^2 * m^2 * n^2]
+
+  Second term: [2/(m+n)^3] * [(m+n) / (mn)]
+             = 2(m+n) / [(m+n)^3 * mn]
+             = 2 / [(m+n)^2 * mn]
+
+Step 3: Now multiply the entire expression by m^2 * n^2.
+  First term * m^2 n^2:
+    (m^2 + n^2) / [(m+n)^2 * m^2 * n^2] * m^2 * n^2
+    = (m^2 + n^2) / (m+n)^2
+
+  Second term * m^2 n^2:
+    2 / [(m+n)^2 * mn] * m^2 * n^2
+    = 2mn / (m+n)^2
+
+Step 4: Combine.
+  (m^2 + n^2) / (m+n)^2 + 2mn / (m+n)^2
+  = (m^2 + n^2 + 2mn) / (m+n)^2
+  = (m + n)^2 / (m + n)^2
+  = 1
+
+Answer: C) 1 ✓
+
+Verification with m=1, n=2:
+  m+n = 3, m^2 n^2 = 4
+  First part: 1/9 * (1 + 1/4) = 1/9 * 5/4 = 5/36
+  Second part: 2/27 * (1 + 1/2) = 2/27 * 3/2 = 6/54 = 1/9 = 4/36
+  Sum: 5/36 + 4/36 = 9/36 = 1/4
+  Multiply by m^2 n^2 = 4: 1/4 * 4 = 1 ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  font-size: 1.4rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  font-size: 1.15rem;
+  color: #a78bfa;
+  margin-bottom: 10px;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement .problem-text {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item.answer-option {
+  cursor: default;
+  transition: border-color 0.2s;
+}
+
+.plan-card {
+  border-left: 4px solid #60a5fa;
+}
+
+.theory-details {
+  margin-bottom: 24px;
+}
+
+.theory-details summary {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  font-size: 1.15rem;
+  color: #a78bfa;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theory-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.theory-details summary::before {
+  content: '▶';
+  font-size: 0.8rem;
+  transition: transform 0.3s;
+}
+
+.theory-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.theory-details .theory-content {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 20px;
+}
+
+.theory-content .formula-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.step-badge {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #60a5fa;
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+}
+
+.math-highlight {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.checkpoint-details {
+  margin: 12px 0;
+}
+
+.checkpoint-details summary {
+  background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  list-style: none;
+}
+
+.checkpoint-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.checkpoint-details .checkpoint-content {
+  padding: 12px 16px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid #a78bfa;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-card {
+  border: 2px solid #34d399;
+  text-align: center;
+}
+
+.final-answer-card .answer-value {
+  font-size: 2rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options-review {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.answer-options-review .opt {
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 1rem;
+}
+
+.answer-options-review .opt.correct {
+  border-color: #4ade80;
+  background: rgba(52, 211, 153, 0.1);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  font-style: italic;
+}
+
+.pitfalls-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfalls-list li {
+  padding: 10px 0;
+  padding-left: 28px;
+  position: relative;
+  color: #f472b6;
+}
+
+.pitfalls-list li::before {
+  content: '⚠';
+  position: absolute;
+  left: 0;
+  top: 10px;
+}
+
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  .container {
+    padding: 10px;
+  }
+  .card {
+    padding: 16px;
+  }
+  .given-grid {
+    grid-template-columns: 1fr;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .answer-options-review {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Pojednostavljivanje algebarskog izraza</h1>
+  <p class="subtitle">Algebarske transformacije sa razlomcima i stepenima</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <div class="problem-text">
+      <p>Izraz</p>
+      <div class="math-highlight">
+        \[
+        \frac{1}{(m+n)^2}\left(\frac{1}{m^2}+\frac{1}{n^2}\right)+\frac{2}{(m+n)^3}\left(\frac{1}{m}+\frac{1}{n}\right) \bigg| \cdot m^2 n^2 \quad (m \neq -n)
+        \]
+      </div>
+      <p>identicki je jednak:</p>
+      <div class="given-grid">
+        <div class="given-item answer-option" data-option="A">(A) \(\dfrac{m+n}{2mn}\)</div>
+        <div class="given-item answer-option" data-option="B">(B) \(\dfrac{4}{(m+n)^2}\)</div>
+        <div class="given-item answer-option" data-option="C">(C) \(1\)</div>
+        <div class="given-item answer-option" data-option="D">(D) \(\dfrac{2mn}{m+n}\)</div>
+        <div class="given-item answer-option" data-option="E">(E) \(2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan resavanja</h2>
+    <p>Sredimo zagrade svodenjem na zajednicki imenilac, zatim pomnozimo ceo izraz sa \(m^2 n^2\) i uprostimo koristeci formulu za kvadrat zbira.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <details class="theory-details">
+    <summary>Podsetnik iz teorije</summary>
+    <div class="theory-content">
+      <p>Korisne formule za ovaj zadatak:</p>
+      <div class="formula-box">
+        \[\frac{1}{a^2} + \frac{1}{b^2} = \frac{a^2 + b^2}{a^2 b^2}\]
+      </div>
+      <div class="formula-box">
+        \[\frac{1}{a} + \frac{1}{b} = \frac{a + b}{ab}\]
+      </div>
+      <div class="formula-box">
+        \[a^2 + 2ab + b^2 = (a + b)^2 \quad \text{(kvadrat zbira)}\]
+      </div>
+      <p style="margin-top:12px; color:#94a3b8;">Kljucna ideja: prepoznati kvadrat zbira \((m+n)^2\) u brojiocu nakon svih transformacija.</p>
+    </div>
+  </details>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz transformacija</h2>
+    <canvas id="vizCanvas" height="420"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Resenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Sredimo zagrade</h3>
+        <p>Prvo svedemo sabirke unutar zagrada na zajednicki imenilac:</p>
+        <div class="math-highlight">
+          \[\frac{1}{m^2} + \frac{1}{n^2} = \frac{n^2 + m^2}{m^2 n^2}\]
+        </div>
+        <div class="math-highlight">
+          \[\frac{1}{m} + \frac{1}{n} = \frac{n + m}{mn} = \frac{m + n}{mn}\]
+        </div>
+
+        <details class="checkpoint-details">
+          <summary>Proveri sebe: Zasto koristimo zajednicki imenilac?</summary>
+          <div class="checkpoint-content">
+            Kada sabiramo razlomke \(\frac{1}{m^2}\) i \(\frac{1}{n^2}\), moramo ih svesti na isti imenilac \(m^2 n^2\) da bismo mogli da ih saberemo. To je osnovni princip sabiranja razlomaka.
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Zamenimo u polazni izraz</h3>
+        <p>Ubacimo dobijene izraze nazad:</p>
+        <div class="math-highlight">
+          \[\frac{1}{(m+n)^2} \cdot \frac{m^2 + n^2}{m^2 n^2} + \frac{2}{(m+n)^3} \cdot \frac{m+n}{mn}\]
+        </div>
+        <p>Sredimo drugi sabirak &mdash; skracujemo \((m+n)\) iz brojioca i imenioca:</p>
+        <div class="math-highlight">
+          \[\frac{2 \cancel{(m+n)}}{(m+n)^{\cancel{3}\,2} \cdot mn} = \frac{2}{(m+n)^2 \cdot mn}\]
+        </div>
+        <p>Sada imamo:</p>
+        <div class="math-highlight">
+          \[\frac{m^2 + n^2}{(m+n)^2 \cdot m^2 n^2} + \frac{2}{(m+n)^2 \cdot mn}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Pomnozimo sa \(m^2 n^2\)</h3>
+        <p>Sada ceo izraz mnozimo sa \(m^2 n^2\):</p>
+        <div class="math-highlight">
+          \[\frac{m^2 + n^2}{(m+n)^2 \cdot \cancel{m^2 n^2}} \cdot \cancel{m^2 n^2} \;+\; \frac{2}{(m+n)^2 \cdot \cancel{mn}} \cdot m^{\cancel{2}} n^{\cancel{2}}\]
+        </div>
+        <p>Dobijamo:</p>
+        <div class="math-highlight">
+          \[\frac{m^2 + n^2}{(m+n)^2} + \frac{2mn}{(m+n)^2}\]
+        </div>
+
+        <details class="checkpoint-details">
+          <summary>Proveri sebe: Kako smo skratili u drugom sabirku?</summary>
+          <div class="checkpoint-content">
+            U drugom sabirku imamo \(\frac{2}{(m+n)^2 \cdot mn} \cdot m^2 n^2\). Delimo \(m^2 n^2\) sa \(mn\) i dobijamo \(mn\). Dakle: \(\frac{2 \cdot mn}{(m+n)^2}\).
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Saberemo razlomke</h3>
+        <p>Oba razlomka imaju isti imenilac \((m+n)^2\), pa ih jednostavno saberemo:</p>
+        <div class="math-highlight">
+          \[\frac{m^2 + n^2 + 2mn}{(m+n)^2}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Prepoznamo kvadrat zbira</h3>
+        <p>Brojilac je upravo formula za kvadrat zbira:</p>
+        <div class="math-highlight">
+          \[m^2 + 2mn + n^2 = (m+n)^2\]
+        </div>
+        <p>Pa dobijamo:</p>
+        <div class="math-highlight">
+          \[\frac{(m+n)^2}{(m+n)^2} = 1\]
+        </div>
+
+        <details class="checkpoint-details">
+          <summary>Proveri sebe: Zasto smemo da skratimo \((m+n)^2\)?</summary>
+          <div class="checkpoint-content">
+            Uslov zadatka je \(m \neq -n\), sto znaci da je \(m + n \neq 0\). Zato je \((m+n)^2 \neq 0\) i mozemo slobodno da skratimo.
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Kljucni uvid</h2>
+    <p>Cela sustina ovog zadatka je u tome da se prepozna formula za <strong>kvadrat zbira</strong> \(m^2 + 2mn + n^2 = (m+n)^2\). Kada se izraz pravilno sredi, u brojiocu se pojavljuje upravo ta formula, koja se zatim skracuje sa istim izrazom u imeniocu.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konacan odgovor</h2>
+    <div class="answer-value">\(1\)</div>
+    <div class="answer-options-review">
+      <div class="opt" data-option="A">(A) \(\frac{m+n}{2mn}\)</div>
+      <div class="opt" data-option="B">(B) \(\frac{4}{(m+n)^2}\)</div>
+      <div class="opt correct" data-option="C">(C) \(1\)</div>
+      <div class="opt" data-option="D">(D) \(\frac{2mn}{m+n}\)</div>
+      <div class="opt" data-option="E">(E) \(2\)</div>
+    </div>
+    <p class="verification-note">Verifikacija: za \(m = 1,\; n = 2\) izraz daje \(\frac{1}{4}\), a pomnozeno sa \(m^2 n^2 = 4\) dobija se \(1\).</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Ceste greske</h2>
+    <ul class="pitfalls-list">
+      <li>Zaboraviti da se \(\frac{2}{(m+n)^3} \cdot \frac{m+n}{mn}\) moze skratiti pre mnozenja sa \(m^2 n^2\), sto vodi ka nepotrebno komplikovanim razlomcima.</li>
+      <li>Ne prepoznati formulu \(m^2 + 2mn + n^2 = (m+n)^2\) u poslednjem koraku, pa ostati sa izrazom koji izgleda kao da se ne moze dalje uprostiti.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Izazov za razmisljanje</h2>
+    <p>Sta bi se desilo ako umesto \(m^2 n^2\) pomnozimo polazni izraz sa \(m \cdot n\)? Koji bi tada bio rezultat?</p>
+    <details class="checkpoint-details">
+      <summary>Pogledaj nagovest</summary>
+      <div class="checkpoint-content">
+        Ako pomnozimo sa \(mn\) umesto \(m^2 n^2\), prvi sabirak postaje \(\frac{m^2+n^2}{(m+n)^2 \cdot mn}\), a drugi \(\frac{2}{(m+n)^2}\). Pokusaj da ih saberes &mdash; rezultat je \(\frac{m^2+n^2+2mn}{(m+n)^2 \cdot mn} \cdot mn\)... ali pazljivo, ovde je mnozenje samo sa \(mn\)!
+        <br><br>
+        Rezultat: \(\dfrac{m^2+n^2}{(m+n)^2 \cdot mn} + \dfrac{2}{(m+n)^2} = \dfrac{m^2+n^2+2mn}{(m+n)^2 \cdot mn} = \dfrac{1}{mn}\).
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('vizCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = rect.width - 48;
+    canvas.width = w * dpr;
+    canvas.height = 420 * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = '420px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw(w, 420);
+  }
+
+  function draw(W, H) {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const centerX = W / 2;
+    const boxW = Math.min(W - 40, 520);
+    const boxH = 52;
+    const startX = centerX - boxW / 2;
+    const gap = 18;
+
+    const steps = [
+      { label: 'Polazni izraz', color: '#60a5fa', text: '1/(m+n)² · (1/m² + 1/n²) + 2/(m+n)³ · (1/m + 1/n)' },
+      { label: 'Sredimo zagrade', color: '#a78bfa', text: '(m²+n²)/[(m+n)²·m²n²] + 2/[(m+n)²·mn]' },
+      { label: 'Pomnozimo sa m²n²', color: '#f472b6', text: '(m²+n²)/(m+n)² + 2mn/(m+n)²' },
+      { label: 'Saberemo', color: '#34d399', text: '(m²+2mn+n²) / (m+n)²' },
+      { label: 'Rezultat', color: '#4ade80', text: '(m+n)² / (m+n)² = 1' },
+    ];
+
+    let y = 20;
+
+    steps.forEach((s, i) => {
+      // Box
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2;
+      roundRect(ctx, startX, y, boxW, boxH, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      // Glow effect
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 1;
+      roundRect(ctx, startX, y, boxW, boxH, 10);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Label
+      ctx.fillStyle = s.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(s.label, startX + 14, y + 18);
+
+      // Expression text
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '13px Courier New, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.text, centerX, y + 38);
+
+      y += boxH;
+
+      // Arrow between steps
+      if (i < steps.length - 1) {
+        const arrowX = centerX;
+        ctx.beginPath();
+        ctx.moveTo(arrowX, y + 2);
+        ctx.lineTo(arrowX, y + gap - 2);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Arrowhead
+        ctx.beginPath();
+        ctx.moveTo(arrowX - 5, y + gap - 8);
+        ctx.lineTo(arrowX, y + gap - 2);
+        ctx.lineTo(arrowX + 5, y + gap - 8);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        y += gap;
+      }
+    });
+
+    // Step numbers on the left
+    y = 20;
+    steps.forEach((s, i) => {
+      const circX = startX - 22;
+      const circY = y + boxH / 2;
+      ctx.beginPath();
+      ctx.arc(circX, circY, 14, 0, Math.PI * 2);
+      ctx.fillStyle = s.color;
+      ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(i + 1), circX, circY);
+      y += boxH + (i < steps.length - 1 ? gap : 0);
+    });
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje algebarskog izraza sa razlomcima i stepenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["algebarski izrazi", "razlomci", "kvadrat zbira", "pojednostavljivanje", "algebarske transformacije"]
+}
+BRAINSPARK_META-->

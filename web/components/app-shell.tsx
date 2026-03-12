@@ -7,9 +7,10 @@ import { Menu, X } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { ProblemViewer } from "./problem-viewer";
 import { cn } from "@/lib/utils";
-import type { FacultyEntry, Report } from "@/lib/types";
+import type { FacultyEntry, Report, CategoryOption } from "@/lib/types";
 
-function AppShellInner({ faculties }: { faculties: FacultyEntry[] }) {
+function AppShellInner({ faculties: initialFaculties, categoryOptions }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[] }) {
+  const [faculties, setFaculties] = useState(initialFaculties);
   const searchParams = useSearchParams();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -56,6 +57,39 @@ function AppShellInner({ faculties }: { faculties: FacultyEntry[] }) {
 
   const solutionUrl = selectedEntry?.solutionUrl ?? null;
   const selectedDocument = selectedEntry?.document ?? null;
+
+  const handleCategoryChange = useCallback(
+    (newCategoryId: string | null) => {
+      if (!selectedFaculty || !selectedYear || !selectedProblem) return;
+      // Update local state optimistically
+      setFaculties((prev) =>
+        prev.map((f) => {
+          if (f.slug !== selectedFaculty) return f;
+          return {
+            ...f,
+            years: f.years.map((y) => {
+              if (y.year !== selectedYear) return y;
+              return {
+                ...y,
+                problems: y.problems.map((p) => {
+                  if (p.order !== selectedProblem) return p;
+                  const opt = categoryOptions.find((c) => c.id === newCategoryId);
+                  return {
+                    ...p,
+                    category: newCategoryId,
+                    categorySr: opt?.sr ?? null,
+                    categoryGroupId: opt?.groupId ?? null,
+                    categoryGroupSr: opt?.groupSr ?? null,
+                  };
+                }),
+              };
+            }),
+          };
+        })
+      );
+    },
+    [selectedFaculty, selectedYear, selectedProblem, categoryOptions]
+  );
 
   const currentReport = useMemo(() => {
     if (!selectedDocument || !selectedProblem) return null;
@@ -144,8 +178,13 @@ function AppShellInner({ faculties }: { faculties: FacultyEntry[] }) {
             solutionUrl={solutionUrl}
             document={selectedDocument}
             order={selectedProblem}
+            category={selectedEntry?.category ?? null}
+            categorySr={selectedEntry?.categorySr ?? null}
+            categoryGroupSr={selectedEntry?.categoryGroupSr ?? null}
+            categoryOptions={categoryOptions}
             report={currentReport}
             onReportChange={fetchReports}
+            onCategoryChange={handleCategoryChange}
           />
         </main>
       </div>
@@ -153,10 +192,10 @@ function AppShellInner({ faculties }: { faculties: FacultyEntry[] }) {
   );
 }
 
-export function AppShell({ faculties }: { faculties: FacultyEntry[] }) {
+export function AppShell({ faculties, categoryOptions }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[] }) {
   return (
     <Suspense>
-      <AppShellInner faculties={faculties} />
+      <AppShellInner faculties={faculties} categoryOptions={categoryOptions} />
     </Suspense>
   );
 }

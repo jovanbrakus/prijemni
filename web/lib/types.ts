@@ -19,11 +19,27 @@ export interface RawCategory {
   sr: string;
 }
 
+export interface RawCategoryGroup {
+  id: string;
+  en: string;
+  sr: string;
+  categories: string[];
+}
+
+export interface CategoryOption {
+  id: string;
+  sr: string;
+  groupId: string;
+  groupSr: string;
+}
+
 export interface ProblemEntry {
   order: number;
   document: string;
   category: string | null;
   categorySr: string | null;
+  categoryGroupId: string | null;
+  categoryGroupSr: string | null;
   solutionUrl: string;
 }
 

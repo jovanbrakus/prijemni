@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir prvih 100 prirodnih brojeva</title>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Zbir prvih 100 prirodnih brojeva je:
+  а) 4950
+  б) 5000
+  в) 5050
+
+  The first 100 natural numbers are 1, 2, 3, ..., 100.
+
+  Gauss's pairing trick:
+  Write the sum forwards:  S = 1 + 2 + 3 + ... + 98 + 99 + 100
+  Write the sum backwards: S = 100 + 99 + 98 + ... + 3 + 2 + 1
+
+  Add both rows column by column:
+  2S = (1+100) + (2+99) + (3+98) + ... + (100+1)
+  Each pair sums to 101, and there are 100 such pairs.
+  2S = 100 × 101 = 10100
+  S = 10100 / 2 = 5050
+
+  General formula: S = n(n+1)/2
+  For n = 100: S = 100 × 101 / 2 = 5050
+
+  Verification:
+  - Option а) 4950: This would be the sum if we started from 0 instead of 1, i.e. 0+1+2+...+99 = 99×100/2 = 4950
+    Actually no: 0+1+...+99 = 99×100/2 = 4950. So 4950 is a common mistake if someone calculates
+    the sum of 0 to 99 or uses n(n-1)/2 instead of n(n+1)/2.
+  - Option б) 5000: This is 100×50 = 5000, a rough estimate but not exact.
+  - Option в) 5050: Correct! S = 100×101/2 = 5050.
+
+  The correct answer is в) 5050.
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 120px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card h2 {
+  color: #a78bfa;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+.theory-content {
+  margin-top: 12px;
+  padding-left: 8px;
+}
+
+.theory-content li {
+  margin-bottom: 10px;
+  list-style: none;
+  padding-left: 20px;
+  position: relative;
+}
+
+.theory-content li::before {
+  content: '\25B8';
+  color: #a78bfa;
+  position: absolute;
+  left: 0;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 12px;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-formula {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  text-align: center;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+}
+
+.final-answer {
+  font-size: 1.8rem;
+  color: #4ade80;
+  margin: 16px 0;
+  font-weight: 700;
+}
+
+.options-review {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-review {
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: rgba(30, 41, 59, 0.8);
+  min-width: 140px;
+  text-align: center;
+}
+
+.option-review.correct {
+  border-color: #4ade80;
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.option-review .opt-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.option-review.correct .opt-label {
+  color: #4ade80;
+}
+
+.verification {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 16px;
+  text-align: left;
+}
+
+.verification h3 {
+  color: #34d399;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.pitfalls-card {
+  border-left: 3px solid #e09468;
+}
+
+.pitfalls-card h2 {
+  color: #e09468;
+}
+
+.pitfall-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: flex-start;
+}
+
+.pitfall-icon {
+  color: #e09468;
+  font-size: 1.1rem;
+  min-width: 24px;
+}
+
+.challenge-card {
+  border-left: 3px solid #f472b6;
+}
+
+.challenge-card h2 {
+  color: #f472b6;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { flex-direction: column; }
+  .options-review { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Zbir prvih 100 prirodnih brojeva</h1>
+  <p class="subtitle">Aritmetika i teorija brojeva &mdash; Gausova formula za zbir aritmetičkog niza</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Zbir prvih 100 prirodnih brojeva je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(а)</div>
+        <div class="value">\( 4950 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(б)</div>
+        <div class="value">\( 5000 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(в)</div>
+        <div class="value">\( 5050 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Iskoristićemo poznati <strong>Gausov trik uparivanja</strong>: zapišemo zbir dva puta (unapred i unazad), saberemo odgovarajuće parove i dobijemo zatvorenu formulu \( S = \frac{n(n+1)}{2} \). Zatim uvrštavamo \( n = 100 \).</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Zbir aritmetičkog niza:</strong> Za aritmetički niz sa prvim članom \(a_1\), poslednjim članom \(a_n\) i \(n\) članova: \( S_n = \frac{n \cdot (a_1 + a_n)}{2} \)</li>
+          <li><strong>Specijalan slučaj &mdash; prirodni brojevi:</strong> Kada je \(a_1 = 1\), \(a_n = n\) i razlika \(d = 1\): \( S_n = \frac{n(n+1)}{2} \)</li>
+          <li><strong>Gausov trik:</strong> Ako zbir zapišemo unapred i unazad pa saberemo, svaki par daje isti zbir \((n+1)\), a ima tačno \(n\) parova. Odatle \(2S = n(n+1)\).</li>
+          <li><strong>Trougaoni brojevi:</strong> Zbir \(1 + 2 + \ldots + n\) daje \(n\)-ti trougaoni broj, koji se može prikazati kao trougao od tačaka sa \(n\) redova.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz &mdash; Gausovo uparivanje</h2>
+    <canvas id="main-canvas" width="700" height="520"></canvas>
+    <p class="drag-hint">Animacija prikazuje kako se parovi formiraju &mdash; svaki par daje zbir 101</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Zapišemo traženi zbir</h3>
+        <p>Potrebno je izračunati zbir prvih 100 prirodnih brojeva:</p>
+        <div class="math-block">
+          \[ S = 1 + 2 + 3 + \ldots + 98 + 99 + 100 \]
+        </div>
+        <p class="note">Ovde imamo tačno 100 sabiraka.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Zapišemo zbir ponovo, ali unazad</h3>
+        <p>Isti zbir zapišemo od poslednjeg do prvog člana:</p>
+        <div class="math-block">
+          \[ S = 100 + 99 + 98 + \ldots + 3 + 2 + 1 \]
+        </div>
+        <p class="note">Ovo je isti zbir (jer je sabiranje komutativno), samo zapisano obrnutim redom.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Saberemo oba zapisa</h3>
+        <p>Saberimo odgovarajuće članove iz oba reda:</p>
+        <div class="math-block">
+          \[\begin{align}
+            S &= \;\;\;1 + \;\;\;2 + \;\;\;3 + \ldots + 98 + 99 + 100 \\
+            S &= 100 + 99 + 98 + \ldots + \;\;3 + \;\;2 + \;\;\;\;1
+          \end{align}\]
+        </div>
+        <p>Sabiranjem kolonu po kolonu:</p>
+        <div class="math-block">
+          \[ 2S = (1+100) + (2+99) + (3+98) + \ldots + (100+1) \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se! Koliko iznosi svaki par u zagradi?</summary>
+      <div class="answer">Svaki par iznosi \(101\). Na primer: \(1 + 100 = 101\), \(2 + 99 = 101\), \(3 + 98 = 101\), itd.</div>
+    </details>
+
+    <div class="step" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Uočimo pravilnost</h3>
+        <p>Svaki par daje isti zbir:</p>
+        <div class="math-block">
+          \[ 1 + 100 = 101,\quad 2 + 99 = 101,\quad 3 + 98 = 101,\quad \ldots \]
+        </div>
+        <p>Generalno, \(k\)-ti par je:</p>
+        <div class="math-block">
+          \[ k + (101 - k) = 101 \quad \text{za svako } k = 1, 2, \ldots, 100 \]
+        </div>
+        <p class="note">Ovo važi jer se prvi sabirak povećava za 1, a drugi smanjuje za 1 &mdash; zbir se ne menja.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Izračunamo \(2S\)</h3>
+        <p>Imamo tačno 100 parova, svaki jednak 101:</p>
+        <div class="math-block">
+          \[ 2S = \underbrace{101 + 101 + \ldots + 101}_{100 \text{ puta}} = 100 \times 101 \]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[ 2S = 10100 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se! Koliko je \(100 \times 101\)?</summary>
+      <div class="answer">\(100 \times 101 = 100 \times 100 + 100 \times 1 = 10000 + 100 = 10100\). Tačno!</div>
+    </details>
+
+    <div class="step" id="step6">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Nađemo \(S\)</h3>
+        <p>Podelimo obe strane sa 2:</p>
+        <div class="math-block">
+          \[ S = \frac{2S}{2} = \frac{10100}{2} = 5050 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step7">
+      <div class="step-number">7</div>
+      <div class="step-content">
+        <h3>Opšta formula</h3>
+        <p>Isti postupak za bilo koje \(n\) daje Gausovu formulu:</p>
+        <div class="math-block">
+          \[ S_n = 1 + 2 + 3 + \ldots + n = \frac{n(n+1)}{2} \]
+        </div>
+        <p>Za \(n = 100\):</p>
+        <div class="math-block">
+          \[ S_{100} = \frac{100 \cdot 101}{2} = \frac{10100}{2} = 5050 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se! Koliko je zbir prvih 10 prirodnih brojeva po formuli?</summary>
+      <div class="answer">\(S_{10} = \frac{10 \cdot 11}{2} = \frac{110}{2} = 55\). Ručna provera: \(1+2+3+4+5+6+7+8+9+10 = 55\). Tačno!</div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Gausov trik se zasniva na jednostavnoj ideji: ako uparimo prvi i poslednji član, drugi i pretposlednji, itd., svaki par daje isti zbir \((n+1)\). Pošto ima \(n\) takvih parova (a svaki broj se broji dva puta), dobijamo:</p>
+    <div class="insight-formula">
+      \[ S = \frac{n(n+1)}{2} = \frac{100 \cdot 101}{2} = 5050 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer">
+      \[ S = \frac{100 \cdot 101}{2} = 5050 \]
+    </div>
+    <div class="options-review">
+      <div class="option-review">
+        <div class="opt-label">(а)</div>
+        <div>\( 4950 \)</div>
+      </div>
+      <div class="option-review">
+        <div class="opt-label">(б)</div>
+        <div>\( 5000 \)</div>
+      </div>
+      <div class="option-review correct">
+        <div class="opt-label">(в)</div>
+        <div>\( 5050 \)</div>
+      </div>
+    </div>
+    <p style="color:#4ade80; font-weight:600; margin-top:12px;">Tačan odgovor je (в) 5050</p>
+
+    <div class="verification">
+      <h3>Provera</h3>
+      <p>Alternativna provera: zbir prvih \(n\) prirodnih brojeva možemo izračunati i kao zbir prvih 10 dekada.</p>
+      <p>\(S_{10} = 55\), pa zbir prvih 100 brojeva rasporedimo po grupama:</p>
+      <p>\((1+\ldots+10) + (11+\ldots+20) + \ldots + (91+\ldots+100)\)</p>
+      <p>\(= 55 + 155 + 255 + 355 + 455 + 555 + 655 + 755 + 855 + 955\)</p>
+      <p>Ovo su 10 članova aritmetičkog niza sa prvim članom 55 i razlikom 100:</p>
+      <p>\(S = \frac{10 \cdot (55 + 955)}{2} = \frac{10 \cdot 1010}{2} = 5050\). Potvrđeno!</p>
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls-card">
+    <h2>Česte greške</h2>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">&#9888;</span>
+      <p><strong>Pogrešna formula \(\frac{n(n-1)}{2}\) umesto \(\frac{n(n+1)}{2}\):</strong> Ako se upotrebi \(\frac{100 \cdot 99}{2} = 4950\), to daje zbir prvih 99 brojeva (ili brojeva od 0 do 99), a ne prvih 100. Zato je odgovor (а) zamka za ovu grešku.</p>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">&#9888;</span>
+      <p><strong>Gruba procena umesto tačnog izračunavanja:</strong> Ako se prosek proceni kao 50 (umesto tačnog proseka 50,5) i pomnoži sa 100, dobija se 5000. To je odgovor (б), ali nije tačan jer prosek prvih 100 prirodnih brojeva iznosi \(\frac{1+100}{2} = 50{,}5\).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Koliki je zbir svih parnih brojeva od 2 do 200? A koliki je zbir svih neparnih brojeva od 1 do 199?</p>
+    <details>
+      <summary>Pomoć</summary>
+      <p style="margin-top:8px; color:#f472b6;">Za parne: izdvoj faktor 2, pa dobijaš \(2(1 + 2 + \ldots + 100) = 2 \cdot 5050\). Za neparne: iskoristi činjenicu da je zbir svih brojeva od 1 do 200 jednak zbiru parnih plus zbiru neparnih, ili primeni formulu za zbir aritmetičkog niza sa \(a_1 = 1\), \(d = 2\), \(n = 100\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('main-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Animation state
+  let animPhase = 0; // 0 = showing numbers, 1 = pairing animation, 2 = showing result
+  let animProgress = 0;
+  let animFrame = null;
+  let pairIndex = 0;
+  const totalPairsToShow = 10; // We show representative pairs: 1+100, 2+99, ... 10+91
+  const pairDelay = 60; // frames between pairs
+  let frameCount = 0;
+
+  // Colors
+  const BG = '#0f172a';
+  const CARD_BG = '#1e293b';
+  const BORDER = '#334155';
+  const TEXT = '#e2e8f0';
+  const MUTED = '#94a3b8';
+  const BLUE = '#60a5fa';
+  const PURPLE = '#a78bfa';
+  const GREEN = '#4ade80';
+  const PINK = '#f472b6';
+
+  // Draw the staircase / pairing visualization
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.font = 'bold 16px Segoe UI, sans-serif';
+    ctx.fillStyle = BLUE;
+    ctx.textAlign = 'center';
+    ctx.fillText('Gausovo uparivanje: S = 1 + 2 + 3 + ... + 100', W / 2, 30);
+
+    // Draw the pairing diagram
+    // Top row: 1, 2, 3, ..., 10 (representative)
+    // Bottom row: 100, 99, 98, ..., 91 (representative)
+    // Show arcs connecting pairs
+
+    const startX = 60;
+    const topY = 130;
+    const bottomY = 340;
+    const cellW = 58;
+    const cellH = 40;
+    const nums = 10;
+
+    // Subtle grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    // Label rows
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.fillStyle = MUTED;
+    ctx.textAlign = 'right';
+    ctx.fillText('S =', startX - 10, topY + cellH / 2 + 5);
+    ctx.fillText('S =', startX - 10, bottomY + cellH / 2 + 5);
+
+    // Draw top row: 1, 2, 3, ..., 10
+    const topNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const bottomNumbers = [100, 99, 98, 97, 96, 95, 94, 93, 92, 91];
+
+    for (let i = 0; i < nums; i++) {
+      const x = startX + i * cellW;
+
+      // Top cell
+      const topHighlight = i < pairIndex;
+      ctx.fillStyle = topHighlight ? 'rgba(96, 165, 250, 0.15)' : 'rgba(96, 165, 250, 0.05)';
+      ctx.strokeStyle = topHighlight ? BLUE : BORDER;
+      ctx.lineWidth = topHighlight ? 2 : 1;
+      ctx.beginPath();
+      ctx.roundRect(x, topY, cellW - 6, cellH, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = 'bold 16px Segoe UI, sans-serif';
+      ctx.fillStyle = topHighlight ? BLUE : TEXT;
+      ctx.textAlign = 'center';
+      ctx.fillText(String(topNumbers[i]), x + (cellW - 6) / 2, topY + cellH / 2 + 6);
+
+      // Bottom cell
+      const botHighlight = i < pairIndex;
+      ctx.fillStyle = botHighlight ? 'rgba(167, 139, 250, 0.15)' : 'rgba(167, 139, 250, 0.05)';
+      ctx.strokeStyle = botHighlight ? PURPLE : BORDER;
+      ctx.lineWidth = botHighlight ? 2 : 1;
+      ctx.beginPath();
+      ctx.roundRect(x, bottomY, cellW - 6, cellH, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = 'bold 16px Segoe UI, sans-serif';
+      ctx.fillStyle = botHighlight ? PURPLE : TEXT;
+      ctx.textAlign = 'center';
+      ctx.fillText(String(bottomNumbers[i]), x + (cellW - 6) / 2, bottomY + cellH / 2 + 6);
+    }
+
+    // Ellipsis after 10
+    ctx.font = 'bold 18px Segoe UI, sans-serif';
+    ctx.fillStyle = MUTED;
+    ctx.textAlign = 'left';
+    const ellipsisX = startX + nums * cellW + 4;
+    ctx.fillText('... + 100', ellipsisX, topY + cellH / 2 + 6);
+    ctx.fillText('... + 1', ellipsisX, bottomY + cellH / 2 + 6);
+
+    // Draw pairing arcs for completed pairs
+    for (let i = 0; i < Math.min(pairIndex, nums); i++) {
+      const x = startX + i * cellW + (cellW - 6) / 2;
+      const arcTopY = topY + cellH;
+      const arcBotY = bottomY;
+      const midY = (arcTopY + arcBotY) / 2;
+
+      // Draw connecting arc
+      ctx.strokeStyle = GREEN;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x, arcTopY);
+      ctx.bezierCurveTo(x + 25, midY - 20, x + 25, midY + 20, x, arcBotY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw sum label at the midpoint
+      const sumVal = topNumbers[i] + bottomNumbers[i];
+      ctx.font = 'bold 15px Segoe UI, sans-serif';
+      ctx.fillStyle = GREEN;
+      ctx.textAlign = 'center';
+      ctx.fillText('= ' + sumVal, x + 32, midY + 5);
+    }
+
+    // Draw 2S result area
+    const resultY = 420;
+    if (pairIndex > 0) {
+      // Background box for result
+      const boxW = 500;
+      const boxX = (W - boxW) / 2;
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+      ctx.strokeStyle = GREEN;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(boxX, resultY, boxW, 70, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = 'bold 15px Segoe UI, sans-serif';
+      ctx.fillStyle = TEXT;
+      ctx.textAlign = 'center';
+
+      if (pairIndex >= nums) {
+        // Show full formula
+        ctx.fillText('Svaki par daje 101, a ima 100 parova:', W / 2, resultY + 25);
+        ctx.font = 'bold 20px Segoe UI, sans-serif';
+        ctx.fillStyle = GREEN;
+        ctx.fillText('2S = 100 \u00D7 101 = 10100  \u21D2  S = 5050', W / 2, resultY + 55);
+      } else {
+        // Show partial progress
+        ctx.fillText('Uparivanje: ' + pairIndex + ' od 100 parova prikazano', W / 2, resultY + 25);
+        ctx.font = 'bold 18px Segoe UI, sans-serif';
+        ctx.fillStyle = GREEN;
+        ctx.fillText('Svaki par daje zbir 101', W / 2, resultY + 55);
+      }
+    }
+
+    // Info label
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.fillStyle = MUTED;
+    ctx.textAlign = 'center';
+    ctx.fillText('Prikazujemo prvih 10 od 100 parova (ostali se ponašaju identično)', W / 2, 60);
+
+    // Legend
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    const legX = 20;
+    const legY = 85;
+
+    ctx.fillStyle = BLUE;
+    ctx.fillRect(legX, legY, 12, 12);
+    ctx.fillStyle = TEXT;
+    ctx.fillText('Rastuci red (1, 2, 3, ...)', legX + 18, legY + 10);
+
+    ctx.fillStyle = PURPLE;
+    ctx.fillRect(legX + 200, legY, 12, 12);
+    ctx.fillStyle = TEXT;
+    ctx.fillText('Opadajuci red (100, 99, 98, ...)', legX + 218, legY + 10);
+
+    ctx.fillStyle = GREEN;
+    ctx.fillRect(legX + 460, legY, 12, 12);
+    ctx.fillStyle = TEXT;
+    ctx.fillText('Par = 101', legX + 478, legY + 10);
+  }
+
+  function animate() {
+    frameCount++;
+
+    if (pairIndex < totalPairsToShow) {
+      if (frameCount % pairDelay === 0) {
+        pairIndex++;
+      }
+    }
+
+    draw();
+
+    if (pairIndex < totalPairsToShow) {
+      animFrame = requestAnimationFrame(animate);
+    }
+  }
+
+  // Start animation when canvas is visible
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        if (!animFrame && pairIndex < totalPairsToShow) {
+          frameCount = 0;
+          animate();
+        }
+      } else {
+        if (animFrame) {
+          cancelAnimationFrame(animFrame);
+          animFrame = null;
+        }
+      }
+    });
+  }, { threshold: 0.3 });
+
+  observer.observe(canvas);
+
+  // Also draw initial state
+  draw();
+
+  // Step click highlight
+  document.querySelectorAll('.step').forEach(step => {
+    step.addEventListener('click', () => {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir prvih 100 prirodnih brojeva",
+  "subject": "math",
+  "unit": "number-theory",
+  "topic_tags": ["zbir prirodnih brojeva", "Gausova formula", "aritmetički niz", "trik uparivanja"]
+}
+BRAINSPARK_META-->

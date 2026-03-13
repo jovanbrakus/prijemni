@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Računanje vrednosti numeričkog izraza — BrainSpark</title>
+<script>MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Vrednost izraza (4,25 - 2½ · 3,2) : (3,75 : 0,4 - 7½) je:
+A) -1    B) 15/4    V) -2    G) 4
+Tačan odgovor: V) -2
+
+SOLVING:
+
+Konvertujemo sve u razlomke:
+  4,25 = 425/100 = 17/4
+  2½ = 5/2
+  3,2 = 32/10 = 16/5
+  3,75 = 375/100 = 15/4
+  0,4 = 4/10 = 2/5
+  7½ = 15/2
+
+Brojilac: 4,25 - 2½ · 3,2
+  Korak 1: 2½ · 3,2 = 5/2 · 16/5 = 80/10 = 8
+  Korak 2: 4,25 - 8 = 17/4 - 32/4 = -15/4
+
+Imenilac: 3,75 : 0,4 - 7½
+  Korak 1: 3,75 : 0,4 = 15/4 : 2/5 = 15/4 · 5/2 = 75/8
+  Korak 2: 75/8 - 7½ = 75/8 - 15/2 = 75/8 - 60/8 = 15/8
+
+Rezultat: (-15/4) : (15/8) = -15/4 · 8/15 = -120/60 = -2
+
+VERIFICATION:
+  Brojilac: 4,25 - 2,5 · 3,2 = 4,25 - 8 = -3,75 = -15/4
+  Imenilac: 3,75/0,4 - 7,5 = 9,375 - 7,5 = 1,875 = 15/8
+  Količnik: -3,75 / 1,875 = -2 ✓
+
+  Tačan odgovor: V) -2 ✓
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.7;
+    padding: 2rem 1rem;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 {
+    text-align: center;
+    font-size: 2.2rem;
+    margin-bottom: 0.3rem;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    text-align: center;
+    color: #94a3b8;
+    margin-bottom: 2rem;
+    font-size: 1.05rem;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .card h2 {
+    font-size: 1.35rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-blue { background: rgba(96,165,250,0.15); color: #60a5fa; }
+  .badge-purple { background: rgba(167,139,250,0.15); color: #a78bfa; }
+  .badge-green { background: rgba(52,211,153,0.15); color: #34d399; }
+  .badge-pink { background: rgba(244,114,182,0.15); color: #f472b6; }
+
+  .problem-statement {
+    border-left: 4px solid #60a5fa;
+  }
+  .problem-statement p { font-size: 1.12rem; margin-bottom: 1rem; }
+
+  .given-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.7rem;
+    margin-top: 1rem;
+  }
+  .given-item {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    text-align: center;
+    font-size: 1.05rem;
+  }
+  .given-item .label {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  .given-item .value {
+    font-size: 1.1rem;
+    color: #e2e8f0;
+  }
+  .given-item.answer-option { cursor: default; }
+
+  .plan-list {
+    list-style: none;
+    counter-reset: plan;
+  }
+  .plan-list li {
+    counter-increment: plan;
+    padding: 0.5rem 0 0.5rem 2.5rem;
+    position: relative;
+  }
+  .plan-list li::before {
+    content: counter(plan);
+    position: absolute;
+    left: 0;
+    width: 1.8rem;
+    height: 1.8rem;
+    background: rgba(96,165,250,0.15);
+    color: #60a5fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  details {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    margin: 15px 0;
+    padding: 0;
+  }
+  details summary {
+    padding: 0.8rem 1.2rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: #a78bfa;
+    list-style: none;
+  }
+  details summary::before {
+    content: '\25B8 ';
+  }
+  details[open] summary::before {
+    content: '\25BE ';
+  }
+  details .details-body {
+    padding: 0 1.2rem 1rem;
+  }
+
+  .step-card {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-left: 3px solid transparent;
+    border-radius: 10px;
+    padding: 1.3rem 1.5rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+  .step-card:hover, .step-card.active {
+    border-left-color: #4ade80;
+  }
+  .step-card h3 {
+    font-size: 1.08rem;
+    margin-bottom: 0.6rem;
+    color: #60a5fa;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .step-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(96,165,250,0.2);
+    color: #60a5fa;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .step-card p, .step-card ul { margin-bottom: 0.5rem; }
+  .step-card ul { padding-left: 1.3rem; }
+
+  .math-block {
+    background: rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.15);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin: 0.6rem 0;
+    font-family: 'Courier New', monospace;
+    overflow-x: auto;
+  }
+
+  .checkpoint {
+    background: rgba(52,211,153,0.08);
+    border: 1px solid rgba(52,211,153,0.25);
+    border-radius: 10px;
+    margin: 15px 0;
+  }
+  .checkpoint summary {
+    color: #34d399;
+    font-weight: 600;
+  }
+  .checkpoint summary::before {
+    content: '\25B8 ';
+  }
+  .checkpoint[open] summary::before {
+    content: '\25BE ';
+  }
+
+  .final-answer-box {
+    background: rgba(52,211,153,0.08);
+    border: 2px solid #34d399;
+    border-radius: 14px;
+    padding: 1.8rem;
+    text-align: center;
+  }
+  .final-answer-box .answer-label {
+    font-size: 1rem;
+    color: #34d399;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #4ade80;
+  }
+
+  .options-row {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .option-box {
+    padding: 0.6rem 1.4rem;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    border: 2px solid #334155;
+    color: #94a3b8;
+    background: #0f172a;
+  }
+  .option-box.correct {
+    border-color: #4ade80;
+    color: #4ade80;
+    background: rgba(74,222,128,0.1);
+  }
+
+  .insight-box {
+    border-left: 4px solid #a78bfa;
+  }
+  .insight-box .insight-formula {
+    text-align: center;
+    font-size: 1.3rem;
+    margin: 1rem 0;
+    color: #4ade80;
+  }
+
+  .pitfall-item {
+    background: rgba(244,114,182,0.06);
+    border: 1px solid rgba(244,114,182,0.2);
+    border-radius: 10px;
+    padding: 0.9rem 1.2rem;
+    margin-bottom: 0.7rem;
+  }
+  .pitfall-item strong { color: #f472b6; }
+
+  canvas {
+    display: block;
+    margin: 0 auto;
+    border-radius: 10px;
+    max-width: 100%;
+    touch-action: none;
+  }
+
+  .note { color: #94a3b8; font-size: 0.95rem; font-style: italic; }
+
+  @media (max-width: 700px) {
+    body { padding: 1rem 0.5rem; }
+    h1 { font-size: 1.5rem; }
+    .card { padding: 1.2rem; }
+    .given-grid { grid-template-columns: repeat(2, 1fr); }
+    .options-row { gap: 0.5rem; }
+    .option-box { padding: 0.5rem 1rem; font-size: 0.95rem; }
+    .step-card { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Vrednost numeričkog izraza</h1>
+  <p class="subtitle">Računanje sa decimalnim brojevima, razlomcima i mešovitim brojevima — redosled operacija</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2><span class="badge badge-blue">Zadatak</span> Tekst zadatka</h2>
+    <p>Vrednost izraza</p>
+    <div class="math-block" style="text-align:center;">
+      \[\left(4{,}25 - 2\frac{1}{2} \cdot 3{,}2\right) : \left(3{,}75 : 0{,}4 - 7\frac{1}{2}\right)\]
+    </div>
+    <p>je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{15}{4}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="V">
+        <div class="label">(V)</div>
+        <div class="value">\(-2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\(4\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <h2><span class="badge badge-purple">Plan</span> Kako ćemo rešiti</h2>
+    <ol class="plan-list">
+      <li>Pretvoriti sve decimalne i mešovite brojeve u obične razlomke.</li>
+      <li>Izračunati brojilac (izraz u prvoj zagradi) poštujući redosled operacija — množenje pre oduzimanja.</li>
+      <li>Izračunati imenilac (izraz u drugoj zagradi) — deljenje pre oduzimanja.</li>
+      <li>Podeliti brojilac sa imeniocem i dobiti konačan rezultat.</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <h2><span class="badge badge-purple">Teorija</span> Podsetnik</h2>
+    <details>
+      <summary>Pretvaranje decimalnih brojeva u razlomke</summary>
+      <div class="details-body">
+        <p>Decimalni broj se pretvara u razlomak tako što se zapiše kao količnik celog broja i stepena broja 10:</p>
+        \[4{,}25 = \frac{425}{100} = \frac{17}{4}, \qquad 3{,}2 = \frac{32}{10} = \frac{16}{5}\]
+        <p>Zatim se razlomak skrati zajedničkim deliocem brojioca i imenioca.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Mešoviti brojevi</summary>
+      <div class="details-body">
+        <p>Mešoviti broj \(a\frac{b}{c}\) pretvara se u nepravilan razlomak:</p>
+        \[a\frac{b}{c} = \frac{a \cdot c + b}{c}\]
+        <p>Na primer: \(2\frac{1}{2} = \frac{5}{2}\) i \(7\frac{1}{2} = \frac{15}{2}\).</p>
+      </div>
+    </details>
+    <details>
+      <summary>Redosled računskih operacija</summary>
+      <div class="details-body">
+        <p>Množenje i deljenje imaju <strong>viši prioritet</strong> od sabiranja i oduzimanja. Unutar zagrada, prvo izvršavamo množenje/deljenje, pa tek onda sabiranje/oduzimanje:</p>
+        \[a - b \cdot c = a - (b \cdot c) \qquad \text{(nije } (a-b) \cdot c \text{)}\]
+      </div>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <h2><span class="badge badge-green">Vizuelni prikaz</span> Struktura izraza</h2>
+    <canvas id="expressionCanvas" width="720" height="420"></canvas>
+  </div>
+
+  <!-- STEP BY STEP -->
+  <div class="card">
+    <h2><span class="badge badge-blue">Rešenje</span> Korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-card" id="step1">
+      <h3><span class="step-badge">1</span> Pretvaranje u razlomke</h3>
+      <p>Pretvorimo sve brojeve u obične razlomke:</p>
+      <div class="math-block">
+        \[4{,}25 = \frac{425}{100} = \frac{17}{4}\]
+      </div>
+      <div class="math-block">
+        \[2\frac{1}{2} = \frac{5}{2}\]
+      </div>
+      <div class="math-block">
+        \[3{,}2 = \frac{32}{10} = \frac{16}{5}\]
+      </div>
+      <div class="math-block">
+        \[3{,}75 = \frac{375}{100} = \frac{15}{4}\]
+      </div>
+      <div class="math-block">
+        \[0{,}4 = \frac{4}{10} = \frac{2}{5}\]
+      </div>
+      <div class="math-block">
+        \[7\frac{1}{2} = \frac{15}{2}\]
+      </div>
+      <p>Sada izraz glasi:</p>
+      <div class="math-block" style="text-align:center;">
+        \[\left(\frac{17}{4} - \frac{5}{2} \cdot \frac{16}{5}\right) : \left(\frac{15}{4} : \frac{2}{5} - \frac{15}{2}\right)\]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card" id="step2">
+      <h3><span class="step-badge">2</span> Računanje brojioca — množenje</h3>
+      <p>U prvoj zagradi, prema redosledu operacija, prvo množimo \(\frac{5}{2} \cdot \frac{16}{5}\):</p>
+      <div class="math-block">
+        \[\frac{5}{2} \cdot \frac{16}{5} = \frac{\cancel{5} \cdot 16}{2 \cdot \cancel{5}} = \frac{16}{2} = 8\]
+      </div>
+      <p class="note">Petice u brojiocu i imeniocu se skraćuju.</p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-card" id="step3">
+      <h3><span class="step-badge">3</span> Računanje brojioca — oduzimanje</h3>
+      <p>Sada oduzimamo:</p>
+      <div class="math-block">
+        \[\frac{17}{4} - 8 = \frac{17}{4} - \frac{32}{4} = \frac{17 - 32}{4} = -\frac{15}{4}\]
+      </div>
+      <p>Dakle, <strong>brojilac</strong> (prva zagrada) iznosi \(-\frac{15}{4}\).</p>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko iznosi 4,25 - 8?</summary>
+      <div class="details-body">
+        <p>\(4{,}25 - 8 = -3{,}75 = -\frac{15}{4}\). Ako si dobio/la isto, nastavi dalje!</p>
+      </div>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-card" id="step4">
+      <h3><span class="step-badge">4</span> Računanje imenioca — deljenje</h3>
+      <p>U drugoj zagradi, prvo delimo \(\frac{15}{4} : \frac{2}{5}\). Deljenje razlomaka svodi se na množenje recipročnom vrednošću:</p>
+      <div class="math-block">
+        \[\frac{15}{4} : \frac{2}{5} = \frac{15}{4} \cdot \frac{5}{2} = \frac{15 \cdot 5}{4 \cdot 2} = \frac{75}{8}\]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-card" id="step5">
+      <h3><span class="step-badge">5</span> Računanje imenioca — oduzimanje</h3>
+      <p>Sada oduzimamo \(\frac{15}{2}\) od \(\frac{75}{8}\). Svedemo na zajednički imenilac 8:</p>
+      <div class="math-block">
+        \[\frac{15}{2} = \frac{15 \cdot 4}{2 \cdot 4} = \frac{60}{8}\]
+      </div>
+      <div class="math-block">
+        \[\frac{75}{8} - \frac{60}{8} = \frac{75 - 60}{8} = \frac{15}{8}\]
+      </div>
+      <p>Dakle, <strong>imenilac</strong> (druga zagrada) iznosi \(\frac{15}{8}\).</p>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je 3,75 : 0,4 - 7,5 u decimalnom obliku?</summary>
+      <div class="details-body">
+        <p>\(3{,}75 : 0{,}4 = 9{,}375\), pa \(9{,}375 - 7{,}5 = 1{,}875 = \frac{15}{8}\). Tačno!</p>
+      </div>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-card" id="step6">
+      <h3><span class="step-badge">6</span> Deljenje brojioca imeniocem</h3>
+      <p>Konačno, delimo prvu zagradu drugom:</p>
+      <div class="math-block">
+        \[\left(-\frac{15}{4}\right) : \frac{15}{8} = \left(-\frac{15}{4}\right) \cdot \frac{8}{15}\]
+      </div>
+      <p>Skraćujemo 15 u brojiocu i imeniocu, a zatim 8 i 4:</p>
+      <div class="math-block">
+        \[= -\frac{\cancel{15}}{\cancel{4}} \cdot \frac{\cancel{8}^{\,2}}{\cancel{15}} = -\frac{1}{1} \cdot \frac{2}{1} = -2\]
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-card" id="step7">
+      <h3><span class="step-badge">7</span> Provera rešenja</h3>
+      <p>Proverimo rezultat koristeći decimalne brojeve:</p>
+      <div class="math-block">
+        \[\text{Brojilac: } 4{,}25 - 2{,}5 \cdot 3{,}2 = 4{,}25 - 8 = -3{,}75\]
+      </div>
+      <div class="math-block">
+        \[\text{Imenilac: } 3{,}75 : 0{,}4 - 7{,}5 = 9{,}375 - 7{,}5 = 1{,}875\]
+      </div>
+      <div class="math-block">
+        \[\text{Rezultat: } \frac{-3{,}75}{1{,}875} = -2 \; \checkmark\]
+      </div>
+      <p class="note">Provera potvrđuje da je rezultat zaista \(-2\).</p>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Zašto je rezultat negativan?</summary>
+      <div class="details-body">
+        <p>Brojilac je negativan (\(-3{,}75\)) jer je \(2{,}5 \cdot 3{,}2 = 8\) veće od \(4{,}25\). Imenilac je pozitivan (\(1{,}875\)). Količnik negativnog i pozitivnog broja je uvek negativan.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="card insight-box">
+    <h2><span class="badge badge-purple">Ključni uvid</span></h2>
+    <p>Ključ ovog zadatka je strogo poštovanje <strong>redosleda operacija</strong> unutar svake zagrade. U prvoj zagradi prvo množimo pa oduzimamo; u drugoj zagradi prvo delimo pa oduzimamo. Pretvaranjem svih brojeva u razlomke, izbegavamo greške sa decimalnim zarezom i dobijamo precizan rezultat koji se lako skraćuje.</p>
+    <div class="insight-formula">
+      \[\frac{-\dfrac{15}{4}}{\dfrac{15}{8}} = -\frac{15}{4} \cdot \frac{8}{15} = -2\]
+    </div>
+    <p>Primetimo kako se razlomak \(\frac{15}{15}\) skraćuje, a \(\frac{8}{4} = 2\), što daje elegantan konačan rezultat.</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="card">
+    <h2><span class="badge badge-green">Rezultat</span> Konačan odgovor</h2>
+    <div class="final-answer-box">
+      <div class="answer-label">Vrednost izraza</div>
+      <div class="answer-value">\(-2\)</div>
+    </div>
+    <div class="options-row">
+      <div class="option-box">(A) \(-1\)</div>
+      <div class="option-box">(B) \(\frac{15}{4}\)</div>
+      <div class="option-box correct">(V) \(-2\)</div>
+      <div class="option-box">(G) \(4\)</div>
+    </div>
+    <p style="text-align:center; margin-top:1rem; color:#94a3b8; font-size:0.95rem;">
+      <strong>Verifikacija:</strong> Brojilac \(= -3{,}75\), imenilac \(= 1{,}875\). Količnik: \(-3{,}75 \div 1{,}875 = -2\). Rezultat se poklapa sa odgovorom (V).
+    </p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <h2><span class="badge badge-pink">Zamke</span> Česte greške</h2>
+    <div class="pitfall-item">
+      <strong>Pogrešan redosled operacija:</strong> Najčešća greška je da se u prvoj zagradi prvo oduzme \(4{,}25 - 2{,}5 = 1{,}75\) pa tek onda množi sa \(3{,}2\), što daje pogrešan rezultat \(5{,}6\) umesto \(-3{,}75\). Množenje uvek ide pre oduzimanja!
+    </div>
+    <div class="pitfall-item">
+      <strong>Greška pri deljenju decimala:</strong> Deljenje \(3{,}75 : 0{,}4\) se lako pogreši. Korisno je pretvoriti u razlomke: \(\frac{15}{4} : \frac{2}{5} = \frac{15}{4} \cdot \frac{5}{2} = \frac{75}{8}\), ili množiti oba broja sa 10: \(37{,}5 : 4 = 9{,}375\).
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card">
+    <h2><span class="badge badge-pink">Bonus</span> Dodatni izazov</h2>
+    <p>Pokušaj da izračunaš vrednost sličnog izraza:</p>
+    <div class="math-block" style="text-align:center;">
+      \[\left(5{,}5 - 1\frac{1}{4} \cdot 2{,}8\right) : \left(6{,}25 : 0{,}5 - 10\frac{1}{2}\right)\]
+    </div>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <div class="details-body">
+        <p>Pretvoriti sve u razlomke: \(5{,}5 = \frac{11}{2}\), \(1\frac{1}{4} = \frac{5}{4}\), \(2{,}8 = \frac{14}{5}\). Prvo izračunati množenje \(\frac{5}{4} \cdot \frac{14}{5} = \frac{14}{4} = \frac{7}{2}\), pa oduzeti od \(\frac{11}{2}\). Slično postupiti i u drugoj zagradi.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('expressionCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  function roundedRect(x, y, w, h, r, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+  }
+
+  function arrow(x1, y1, x2, y2, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    var headLen = 8;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+    ctx.stroke();
+  }
+
+  // Background
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Title
+  ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.textAlign = 'center';
+  ctx.fillText('Struktura izraza \u2014 razlaganje na korake', W / 2, 24);
+
+  // Full expression
+  var topY = 40;
+  roundedRect(60, topY, 600, 40, 10, 'rgba(96,165,250,0.12)', '#60a5fa');
+  ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#60a5fa';
+  ctx.fillText('(4,25 \u2212 2\u00BD \u00B7 3,2) : (3,75 : 0,4 \u2212 7\u00BD)', W / 2, topY + 26);
+
+  // Split into two branches
+  var branchY = topY + 56;
+  arrow(W / 2, topY + 40, 200, branchY, '#a78bfa');
+  arrow(W / 2, topY + 40, 520, branchY, '#a78bfa');
+
+  // Left branch: numerator
+  var leftX = 50, rightX = 370;
+
+  // Numerator label
+  roundedRect(leftX, branchY, 300, 32, 8, 'rgba(167,139,250,0.1)', '#a78bfa');
+  ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#a78bfa';
+  ctx.fillText('BROJILAC: 4,25 \u2212 2\u00BD \u00B7 3,2', 200, branchY + 21);
+
+  // Numerator step 1
+  var ns1Y = branchY + 46;
+  arrow(200, branchY + 32, 200, ns1Y, '#a78bfa');
+  roundedRect(leftX + 20, ns1Y, 260, 28, 6, 'rgba(167,139,250,0.06)', '#334155');
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('2\u00BD \u00B7 3,2 = 5/2 \u00B7 16/5 = 8', 200, ns1Y + 19);
+
+  // Numerator step 2
+  var ns2Y = ns1Y + 42;
+  arrow(200, ns1Y + 28, 200, ns2Y, '#a78bfa');
+  roundedRect(leftX + 20, ns2Y, 260, 28, 6, 'rgba(167,139,250,0.06)', '#334155');
+  ctx.fillText('4,25 \u2212 8 = 17/4 \u2212 32/4 = \u221215/4', 200, ns2Y + 19);
+
+  // Numerator result
+  var nrY = ns2Y + 42;
+  arrow(200, ns2Y + 28, 200, nrY, '#f472b6');
+  roundedRect(leftX + 50, nrY, 200, 32, 8, 'rgba(244,114,182,0.12)', '#f472b6');
+  ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#f472b6';
+  ctx.fillText('Brojilac = \u221215/4', 200, nrY + 22);
+
+  // Right branch: denominator
+  roundedRect(rightX, branchY, 300, 32, 8, 'rgba(167,139,250,0.1)', '#a78bfa');
+  ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#a78bfa';
+  ctx.fillText('IMENILAC: 3,75 : 0,4 \u2212 7\u00BD', 520, branchY + 21);
+
+  // Denominator step 1
+  var ds1Y = branchY + 46;
+  arrow(520, branchY + 32, 520, ds1Y, '#a78bfa');
+  roundedRect(rightX + 20, ds1Y, 260, 28, 6, 'rgba(167,139,250,0.06)', '#334155');
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('3,75 : 0,4 = 15/4 \u00B7 5/2 = 75/8', 520, ds1Y + 19);
+
+  // Denominator step 2
+  var ds2Y = ds1Y + 42;
+  arrow(520, ds1Y + 28, 520, ds2Y, '#a78bfa');
+  roundedRect(rightX + 20, ds2Y, 260, 28, 6, 'rgba(167,139,250,0.06)', '#334155');
+  ctx.fillText('75/8 \u2212 7\u00BD = 75/8 \u2212 60/8 = 15/8', 520, ds2Y + 19);
+
+  // Denominator result
+  var drY = ds2Y + 42;
+  arrow(520, ds2Y + 28, 520, drY, '#60a5fa');
+  roundedRect(rightX + 50, drY, 200, 32, 8, 'rgba(96,165,250,0.12)', '#60a5fa');
+  ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#60a5fa';
+  ctx.fillText('Imenilac = 15/8', 520, drY + 22);
+
+  // Merge arrows
+  var mergeY = Math.max(nrY, drY) + 50;
+  arrow(200, nrY + 32, W / 2, mergeY, '#f472b6');
+  arrow(520, drY + 32, W / 2, mergeY, '#60a5fa');
+
+  // Division step
+  roundedRect(160, mergeY, 400, 36, 8, 'rgba(167,139,250,0.1)', '#a78bfa');
+  ctx.font = '13px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('(\u221215/4) : (15/8) = (\u221215/4) \u00B7 (8/15)', W / 2, mergeY + 23);
+
+  // Final result
+  var finalY = mergeY + 52;
+  arrow(W / 2, mergeY + 36, W / 2, finalY, '#4ade80');
+  roundedRect(250, finalY, 220, 40, 10, 'rgba(52,211,153,0.12)', '#34d399');
+  ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#4ade80';
+  ctx.fillText('Rezultat = \u22122', W / 2, finalY + 27);
+
+  // Answer label
+  ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+  ctx.fillStyle = '#4ade80';
+  ctx.fillText('Odgovor: (V) \u22122', W / 2, H - 12);
+
+  // Step click highlighting
+  document.querySelectorAll('.step-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      document.querySelectorAll('.step-card').forEach(function(c) {
+        c.classList.remove('active');
+      });
+      card.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Vrednost numeričkog izraza sa decimalnim i mešovitim brojevima","subject":"math","unit":"algebra","topic_tags":["numerički_izrazi","decimalni_brojevi","mešoviti_brojevi","razlomci","redosled_operacija"]}
+BRAINSPARK_META-->

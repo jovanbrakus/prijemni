@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vrednost numeričkog izraza sa mešovitim brojevima</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Vrednost izraza (4 1/4 - 2,5 · 3 1/5) : (3,75 : 2/5 - 7 1/2)
+
+Step-by-step parsing:
+- 4 1/4 = 17/4 (mixed number: 4*4+1 = 17, over 4)
+- 2,5 = 2.5 = 5/2
+- 3 1/5 = 16/5 (mixed number: 3*5+1 = 16, over 5)
+- 3,75 = 3.75 = 15/4
+- 2/5 is a plain fraction
+- 7 1/2 = 15/2 (mixed number: 7*2+1 = 15, over 2)
+
+NUMERATOR of the main division:
+4 1/4 - 2,5 · 3 1/5
+= 17/4 - (5/2) · (16/5)
+= 17/4 - (5·16)/(2·5)
+= 17/4 - 80/10
+= 17/4 - 8
+= 17/4 - 32/4
+= -15/4
+
+DENOMINATOR of the main division:
+3,75 : 2/5 - 7 1/2
+= (15/4) : (2/5) - 15/2
+= (15/4) · (5/2) - 15/2
+= 75/8 - 15/2
+= 75/8 - 60/8
+= 15/8
+
+FULL EXPRESSION:
+(-15/4) : (15/8)
+= (-15/4) · (8/15)
+= (-15 · 8) / (4 · 15)
+= -120 / 60
+= -2
+
+VERIFICATION: The answer is -2, which matches option D). Confirmed correct!
+
+Alternative check:
+Numerator: 17/4 - 8 = (17-32)/4 = -15/4 ✓
+Denominator: 75/8 - 60/8 = 15/8 ✓
+Division: (-15/4) ÷ (15/8) = (-15/4)(8/15) = -8/4 = -2 ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.problem-statement {
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  text-align: center;
+  font-size: 1.15rem;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item.answer-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 120px;
+  flex: 1;
+}
+
+.given-item .label {
+  font-weight: 700;
+  color: #a78bfa;
+  font-size: 1rem;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  padding-left: 16px;
+  border-left: 3px solid #a78bfa;
+}
+
+details {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1rem;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+.step {
+  margin-bottom: 20px;
+  padding-left: 20px;
+  border-left: 3px solid #334155;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 0.9rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.step-content {
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+.step-content p {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(96,165,250,0.25);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  text-align: center;
+  padding: 28px;
+}
+
+.final-answer-box .answer-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.final-option {
+  padding: 10px 22px;
+  border-radius: 10px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 1.05rem;
+}
+
+.final-option.correct {
+  border-color: #4ade80;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.08);
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  font-style: italic;
+}
+
+.pitfall {
+  color: #f472b6;
+  margin-bottom: 8px;
+  padding-left: 12px;
+  border-left: 3px solid #f472b6;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+  margin: 16px 0;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.check-yourself summary {
+  color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { flex-direction: column; }
+  .final-options { flex-direction: column; align-items: center; }
+  .final-answer-box .answer-value { font-size: 1.6rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Vrednost numeričkog izraza</h1>
+  <p class="subtitle">Računanje sa mešovitim brojevima, decimalnim brojevima i razlomcima</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Vrednost izraza</p>
+    <div class="math-box">
+      \[ \left(4\frac{1}{4} - 2{,}5 \cdot 3\frac{1}{5}\right) : \left(3{,}75 : \frac{2}{5} - 7\frac{1}{2}\right) \]
+    </div>
+    <p>je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\frac{3}{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p class="plan-text">
+      Sve mešovite brojeve i decimalne brojeve ćemo prevesti u obične razlomke.
+      Zatim ćemo zasebno izračunati brojilac (izraz u prvoj zagradi) i imenilac (izraz u drugoj zagradi),
+      pa na kraju izvršiti deljenje.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <h2>Podsetnik iz teorije</h2>
+    <details>
+      <summary>Mešoviti broj u nepravilan razlomak</summary>
+      <div class="math-box">
+        \[ a\frac{b}{c} = \frac{a \cdot c + b}{c} \]
+      </div>
+      <p>Na primer: \(4\frac{1}{4} = \frac{4 \cdot 4 + 1}{4} = \frac{17}{4}\)</p>
+    </details>
+    <details>
+      <summary>Pretvaranje decimalnog broja u razlomak</summary>
+      <div class="math-box">
+        \[ 2{,}5 = \frac{25}{10} = \frac{5}{2}, \quad 3{,}75 = \frac{375}{100} = \frac{15}{4} \]
+      </div>
+    </details>
+    <details>
+      <summary>Deljenje razlomaka</summary>
+      <div class="math-box">
+        \[ \frac{a}{b} : \frac{c}{d} = \frac{a}{b} \cdot \frac{d}{c} \]
+      </div>
+      <p>Deljenje razlomkom znači množenje recipročnom vrednošću tog razlomka.</p>
+    </details>
+    <details>
+      <summary>Množenje razlomaka</summary>
+      <div class="math-box">
+        \[ \frac{a}{b} \cdot \frac{c}{d} = \frac{a \cdot c}{b \cdot d} \]
+      </div>
+      <p>Brojioci se množe međusobno, kao i imenioci.</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz izraza</h2>
+    <div class="canvas-wrapper">
+      <canvas id="exprCanvas" width="700" height="420"></canvas>
+      <p class="canvas-caption">Dijagram toka izračunavanja — pratite strelice korak po korak</p>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title"><span class="step-badge">1</span> Prevedimo sve brojeve u razlomke</div>
+      <div class="step-content">
+        <p>Mešovite brojeve pretvaramo u nepravilne razlomke:</p>
+        <div class="math-box">
+          \[ 4\frac{1}{4} = \frac{4 \cdot 4 + 1}{4} = \frac{17}{4} \]
+        </div>
+        <div class="math-box">
+          \[ 3\frac{1}{5} = \frac{3 \cdot 5 + 1}{5} = \frac{16}{5} \]
+        </div>
+        <div class="math-box">
+          \[ 7\frac{1}{2} = \frac{7 \cdot 2 + 1}{2} = \frac{15}{2} \]
+        </div>
+        <p>Decimalne brojeve takođe pretvaramo u razlomke:</p>
+        <div class="math-box">
+          \[ 2{,}5 = \frac{5}{2}, \quad 3{,}75 = \frac{15}{4} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title"><span class="step-badge">2</span> Izračunajmo brojilac: \(4\frac{1}{4} - 2{,}5 \cdot 3\frac{1}{5}\)</div>
+      <div class="step-content">
+        <p>Prvo množimo \(2{,}5 \cdot 3\frac{1}{5}\), jer množenje ima prednost nad oduzimanjem:</p>
+        <div class="math-box">
+          \[ \frac{5}{2} \cdot \frac{16}{5} = \frac{5 \cdot 16}{2 \cdot 5} = \frac{80}{10} = 8 \]
+        </div>
+        <p>Primetimo da se petice u brojiocu i imeniocu skrate, pa dobijamo \(\frac{16}{2} = 8\).</p>
+        <p>Sada oduzimamo:</p>
+        <div class="math-box">
+          \[ \frac{17}{4} - 8 = \frac{17}{4} - \frac{32}{4} = \frac{17 - 32}{4} = -\frac{15}{4} \]
+        </div>
+
+        <details class="check-yourself">
+          <summary>Proveri sebe: Koliko je 17 - 32?</summary>
+          <p>17 - 32 = -15. Rezultat brojioca je \(-\frac{15}{4}\). Negativan broj jer je 8 veće od \(4\frac{1}{4}\).</p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title"><span class="step-badge">3</span> Izračunajmo imenilac: \(3{,}75 : \frac{2}{5} - 7\frac{1}{2}\)</div>
+      <div class="step-content">
+        <p>Prvo delimo \(3{,}75 : \frac{2}{5}\), jer deljenje ima prednost nad oduzimanjem:</p>
+        <div class="math-box">
+          \[ \frac{15}{4} : \frac{2}{5} = \frac{15}{4} \cdot \frac{5}{2} = \frac{15 \cdot 5}{4 \cdot 2} = \frac{75}{8} \]
+        </div>
+        <p>Sada oduzimamo \(7\frac{1}{2} = \frac{15}{2}\). Svedemo na zajednički imenilac 8:</p>
+        <div class="math-box">
+          \[ \frac{15}{2} = \frac{15 \cdot 4}{2 \cdot 4} = \frac{60}{8} \]
+        </div>
+        <div class="math-box">
+          \[ \frac{75}{8} - \frac{60}{8} = \frac{75 - 60}{8} = \frac{15}{8} \]
+        </div>
+
+        <details class="check-yourself">
+          <summary>Proveri sebe: Koliko je \(\frac{75}{8}\) kao decimalan broj?</summary>
+          <p>\(\frac{75}{8} = 9{,}375\), a \(\frac{15}{2} = 7{,}5\). Razlika: \(9{,}375 - 7{,}5 = 1{,}875 = \frac{15}{8}\). Tačno!</p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title"><span class="step-badge">4</span> Izvršimo konačno deljenje</div>
+      <div class="step-content">
+        <p>Delimo brojilac imeniocem:</p>
+        <div class="math-box">
+          \[ \left(-\frac{15}{4}\right) : \frac{15}{8} = \left(-\frac{15}{4}\right) \cdot \frac{8}{15} \]
+        </div>
+        <p>Skratimo 15 u brojiocu i imeniocu, i 8 sa 4:</p>
+        <div class="math-box">
+          \[ = -\frac{\cancel{15}}{\cancel{4}} \cdot \frac{\cancel{8}^{\,2}}{\cancel{15}} = -\frac{1 \cdot 2}{1 \cdot 1} = -2 \]
+        </div>
+
+        <details class="check-yourself">
+          <summary>Proveri sebe: Zašto je rezultat negativan?</summary>
+          <p>Zato što je brojilac negativan (\(-\frac{15}{4}\)), a imenilac pozitivan (\(\frac{15}{8}\)). Negativan deljeno pozitivnim daje negativan rezultat.</p>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-box">
+    <h2>Ključni uvid</h2>
+    <p>
+      U ovom zadatku, ključno je pravilno utvrditi redosled operacija: u obe zagrade
+      prvo se izvode množenje/deljenje, pa tek onda oduzimanje. Takođe, prilikom konačnog
+      deljenja, razlomci \(-\frac{15}{4}\) i \(\frac{15}{8}\) se lepo skrate jer dele zajednički
+      faktor 15, što daje čist rezultat \(-2\).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\(-2\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) 0</div>
+      <div class="final-option" data-option="B">(B) 1</div>
+      <div class="final-option" data-option="C">(C) 3/2</div>
+      <div class="final-option correct" data-option="D">(D) -2</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(\left(-\frac{15}{4}\right) \cdot \frac{8}{15} = -\frac{120}{60} = -2\) &checkmark;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <p class="pitfall">
+      <strong>Pogrešan redosled operacija u zagradama:</strong> Množenje \(2{,}5 \cdot 3\frac{1}{5}\) i deljenje \(3{,}75 : \frac{2}{5}\) se moraju izvršiti pre oduzimanja. Ako se prvo uradi oduzimanje pa množenje/deljenje, dobija se pogrešan rezultat.
+    </p>
+    <p class="pitfall">
+      <strong>Zaboravljanje znaka:</strong> Brojilac ispada negativan jer je \(2{,}5 \cdot 3\frac{1}{5} = 8\), što je veće od \(4\frac{1}{4} = 4{,}25\). Ako se previdi negativan znak, može se dobiti \(+2\) umesto \(-2\).
+    </p>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2>Izazov za vežbu</h2>
+    <p>Izračunaj vrednost izraza:</p>
+    <div class="math-box">
+      \[ \left(5\frac{1}{3} - 1{,}5 \cdot 4\frac{2}{9}\right) : \left(2{,}25 : \frac{3}{8} - 5\frac{1}{4}\right) \]
+    </div>
+    <details>
+      <summary>Hint</summary>
+      <p>Primeni isti postupak: pretvori sve u razlomke. U brojiocu: \(1{,}5 \cdot 4\frac{2}{9} = \frac{3}{2} \cdot \frac{38}{9} = \frac{38}{6} = \frac{19}{3}\), pa \(5\frac{1}{3} - \frac{19}{3} = \frac{16}{3} - \frac{19}{3} = -1\). Izračunaj imenilac i završi!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('exprCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    function roundRect(x, y, w, h, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+    }
+
+    function arrow(x1, y1, x2, y2, color) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = color || '#60a5fa';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const len = 8;
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - len * Math.cos(angle - 0.4), y2 - len * Math.sin(angle - 0.4));
+      ctx.lineTo(x2 - len * Math.cos(angle + 0.4), y2 - len * Math.sin(angle + 0.4));
+      ctx.closePath();
+      ctx.fillStyle = color || '#60a5fa';
+      ctx.fill();
+    }
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const boxW = 170;
+    const boxH = 50;
+    const row1Y = 20;
+
+    // Row 1: BROJILAC label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('BROJILAC', 15, row1Y + boxH / 2);
+    ctx.textAlign = 'center';
+
+    // Box 1: 4 1/4
+    roundRect(100, row1Y, 110, boxH, 10, 'rgba(96,165,250,0.1)', '#60a5fa');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('4 1/4 = 17/4', 155, row1Y + boxH / 2);
+
+    // Minus sign
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2212', 240, row1Y + boxH / 2);
+
+    // Box 2: 2,5 · 3 1/5
+    roundRect(265, row1Y, 170, boxH, 10, 'rgba(96,165,250,0.1)', '#60a5fa');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('2,5 \u00D7 3 1/5', 350, row1Y + boxH / 2);
+
+    // Arrow down from multiplication
+    arrow(350, row1Y + boxH, 350, row1Y + boxH + 30, '#60a5fa');
+
+    // Row 2: multiplication result
+    const row2Y = row1Y + boxH + 35;
+    roundRect(300, row2Y, 100, 44, 10, 'rgba(96,165,250,0.15)', '#60a5fa');
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= 8', 350, row2Y + 22);
+
+    // Arrow: 17/4 and 8 merge to subtraction
+    arrow(155, row1Y + boxH, 250, row2Y + 44 + 30, '#60a5fa');
+    arrow(350, row2Y + 44, 280, row2Y + 44 + 30, '#60a5fa');
+
+    // Row 3: subtraction result (brojilac)
+    const row3Y = row2Y + 44 + 35;
+    roundRect(200, row3Y, 150, 44, 10, 'rgba(244,114,182,0.12)', '#f472b6');
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('17/4 \u2212 8 = \u221215/4', 275, row3Y + 22);
+
+    // ================= IMENILAC (right side) =================
+    const rRow1Y = 20;
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('IMENILAC', 475, rRow1Y + boxH / 2);
+    ctx.textAlign = 'center';
+
+    // Box: 3,75 : 2/5
+    roundRect(465, rRow1Y, 130, boxH, 10, 'rgba(167,139,250,0.1)', '#a78bfa');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('3,75 : 2/5', 530, rRow1Y + boxH / 2);
+
+    // Minus
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2212', 610, rRow1Y + boxH / 2);
+
+    // Box: 7 1/2
+    roundRect(625, rRow1Y, 65, boxH, 10, 'rgba(167,139,250,0.1)', '#a78bfa');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('7 1/2', 657, rRow1Y + boxH / 2);
+
+    // Arrow from division
+    arrow(530, rRow1Y + boxH, 530, row2Y, '#a78bfa');
+
+    // Division result
+    roundRect(490, row2Y, 80, 44, 10, 'rgba(167,139,250,0.15)', '#a78bfa');
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('75/8', 530, row2Y + 22);
+
+    // Arrows from 75/8 and 7 1/2 => subtraction
+    arrow(530, row2Y + 44, 560, row3Y, '#a78bfa');
+    arrow(657, rRow1Y + boxH, 590, row3Y, '#a78bfa');
+
+    // Row 3 right: subtraction result (imenilac)
+    roundRect(510, row3Y, 150, 44, 10, 'rgba(167,139,250,0.12)', '#a78bfa');
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('75/8 \u2212 60/8 = 15/8', 585, row3Y + 22);
+
+    // ================= KONAČNO DELJENJE =================
+    // Arrows from both row3 results to row4
+    const row4Y = row3Y + 44 + 45;
+    arrow(275, row3Y + 44, 340, row4Y, '#f472b6');
+    arrow(585, row3Y + 44, 380, row4Y, '#a78bfa');
+
+    // Division box
+    roundRect(270, row4Y, 180, 48, 10, 'rgba(52,211,153,0.1)', '#34d399');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(\u221215/4) : (15/8)', 360, row4Y + 24);
+
+    // Arrow to final
+    const row5Y = row4Y + 48 + 30;
+    arrow(360, row4Y + 48, 360, row5Y, '#4ade80');
+
+    // Final result
+    roundRect(300, row5Y, 120, 52, 14, 'rgba(74,222,128,0.15)', '#4ade80');
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 28px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u22122', 360, row5Y + 26);
+
+    // Labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Korak 1: Množenje/Deljenje', 15, row2Y + 22);
+    ctx.fillText('Korak 2: Oduzimanje', 15, row3Y + 22);
+    ctx.fillText('Korak 3: Deljenje', 15, row4Y + 24);
+    ctx.fillText('Odgovor', 15, row5Y + 26);
+  }
+
+  draw();
+
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Vrednost numeričkog izraza sa mešovitim brojevima i razlomcima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["mešoviti brojevi", "razlomci", "decimalni brojevi", "numerički izrazi", "aritmetika"]
+}
+BRAINSPARK_META-->

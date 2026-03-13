@@ -31,7 +31,7 @@ export function ProblemViewer({
   onCategoryChange,
 }: ProblemViewerProps) {
   const [showForm, setShowForm] = useState(false);
-  const [showDescription, setShowDescription] = useState(false);
+  const [showDescription, setShowDescription] = useState(true);
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

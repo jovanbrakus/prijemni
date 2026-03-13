@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broj elemenata skupa</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Koliko elemenata ima skup A ako je:
+  A ∩ {3, 5, 8, 11} = {5, 8}
+  A ∪ {4, 5, 11, 13} = {4, 5, 7, 8, 11, 13}
+  {8, 13} ⊂ A
+  A ⊂ {5, 7, 8, 9, 11, 13}
+
+Ponuđeni odgovori: (A) 2, (B) 3, (C) 4, (D) 5, (E) 6
+
+PRISTUP: Analiziramo svaki uslov i korak po korak utvrđujemo koji elementi moraju, a koji ne smeju biti u A.
+
+USLOV 4: A ⊂ {5, 7, 8, 9, 11, 13}
+  → A može sadržati samo elemente iz skupa {5, 7, 8, 9, 11, 13}.
+  → Elementi 3 i 4 sigurno NISU u A (nisu u nadskupu).
+
+USLOV 1: A ∩ {3, 5, 8, 11} = {5, 8}
+  → 5 ∈ A i 8 ∈ A (jer su u preseku)
+  → 3 ∉ A i 11 ∉ A (jer NISU u preseku, a jesu u {3,5,8,11})
+
+USLOV 3: {8, 13} ⊂ A
+  → 8 ∈ A (već znamo) i 13 ∈ A
+
+USLOV 2: A ∪ {4, 5, 11, 13} = {4, 5, 7, 8, 11, 13}
+  Skup {4, 5, 11, 13} već "donosi" elemente 4, 5, 11, 13 u uniju.
+  Unija treba da sadrži i 7 i 8 → ti moraju doći iz A.
+  Dakle: 7 ∈ A i 8 ∈ A.
+
+  Takođe, unija NE sadrži 9, pa 9 ∉ A (jer bi inače 9 bio u uniji).
+
+REZIME:
+  - 5 ∈ A (uslovi 1, 4)
+  - 7 ∈ A (uslov 2)
+  - 8 ∈ A (uslovi 1, 2, 3)
+  - 13 ∈ A (uslov 3)
+  - 3 ∉ A (uslov 1, i ionako nije u nadskupu iz uslova 4)
+  - 9 ∉ A (uslov 2)
+  - 11 ∉ A (uslov 1)
+
+Dakle: A = {5, 7, 8, 13}, |A| = 4
+
+VERIFIKACIJA:
+  A ∩ {3, 5, 8, 11} = {5, 7, 8, 13} ∩ {3, 5, 8, 11} = {5, 8} ✓
+  A ∪ {4, 5, 11, 13} = {5, 7, 8, 13} ∪ {4, 5, 11, 13} = {4, 5, 7, 8, 11, 13} ✓
+  {8, 13} ⊂ A = {5, 7, 8, 13}: 8 ∈ A i 13 ∈ A ✓
+  A ⊂ {5, 7, 8, 9, 11, 13}: svi elementi A su u nadskupu ✓
+
+ODGOVOR: (C) 4
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h2 .icon {
+  font-size: 1.4rem;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 14px 0;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  text-align: center;
+  flex: 1 1 auto;
+  min-width: 100px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1rem;
+}
+
+.answer-option {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.18);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step {
+  margin-bottom: 20px;
+  padding: 12px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.check-yourself {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.18);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.check-yourself summary {
+  color: #34d399;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.check-yourself summary:hover {
+  color: #4ade80;
+}
+
+.insight-box {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.18);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.insight-box h3 {
+  color: #a78bfa;
+  margin-bottom: 10px;
+}
+
+.final-answer {
+  background: rgba(52,211,153,0.08);
+  border: 2px solid rgba(52,211,153,0.25);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin: 24px 0;
+}
+
+.final-answer h2 {
+  color: #4ade80;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.final-answer .answer-text {
+  font-size: 1.6rem;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.final-answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: rgba(51,65,85,0.5);
+  border: 1px solid #334155;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.pitfalls {
+  color: #f472b6;
+}
+
+.pitfalls li {
+  margin-bottom: 8px;
+  margin-left: 20px;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 10px 0;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto;
+  touch-action: none;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.highlight-blue { color: #60a5fa; font-weight: 600; }
+.highlight-green { color: #34d399; font-weight: 600; }
+.highlight-pink { color: #f472b6; font-weight: 600; }
+.highlight-purple { color: #a78bfa; font-weight: 600; }
+
+.challenge-box {
+  background: rgba(244,114,182,0.08);
+  border: 1px solid rgba(244,114,182,0.18);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.challenge-box h3 {
+  color: #f472b6;
+  margin-bottom: 10px;
+}
+
+.verification-note {
+  margin-top: 12px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.4rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { flex-direction: column; }
+  .final-answer .answer-text { font-size: 1.2rem; }
+  .final-answer-options { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Broj elemenata skupa</h1>
+  <p class="subtitle">Teorija skupova &mdash; presek, unija i podskup</p>
+
+  <!-- (b) Problem Statement -->
+  <div class="card problem-statement">
+    <h2><span class="icon">&#x1F4CB;</span> Tekst zadatka</h2>
+    <p>Koliko elemenata ima skup \(A\) ako je:</p>
+    <div class="math-box">
+      \[A \cap \{3,\, 5,\, 8,\, 11\} = \{5,\, 8\}\]
+    </div>
+    <div class="math-box">
+      \[A \cup \{4,\, 5,\, 11,\, 13\} = \{4,\, 5,\, 7,\, 8,\, 11,\, 13\}\]
+    </div>
+    <div class="math-box">
+      \[\{8,\, 13\} \subset A\]
+    </div>
+    <div class="math-box">
+      \[A \subset \{5,\, 7,\, 8,\, 9,\, 11,\, 13\}\]
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(5\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(6\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- (c) Plan -->
+  <div class="card">
+    <h2><span class="icon">&#x1F5FA;&#xFE0F;</span> Plan rešavanja</h2>
+    <p class="plan-text">
+      Analiziraćemo svaki od četiri uslova zasebno da bismo utvrdili koji elementi <span class="highlight-blue">moraju</span> biti u skupu \(A\), a koji <span class="highlight-pink">ne smeju</span>. Zatim ćemo prebrojati elemente skupa \(A\).
+    </p>
+  </div>
+
+  <!-- (d) Theory Refresher -->
+  <details>
+    <summary>&#x1F4D0; Podsetnik iz teorije</summary>
+    <div class="card">
+      <p style="margin-bottom: 12px;">Ključni pojmovi iz teorije skupova za ovaj zadatak:</p>
+
+      <div class="math-box">
+        \[x \in A \cap B \iff x \in A \;\text{i}\; x \in B\]
+      </div>
+      <p style="margin-bottom: 12px;"><strong>Presek skupova:</strong> Presek \(A \cap B\) sadrži samo one elemente koji pripadaju i skupu \(A\) i skupu \(B\). Ako je \(x \in B\), ali \(x \notin A \cap B\), tada \(x \notin A\).</p>
+
+      <div class="math-box">
+        \[x \in A \cup B \iff x \in A \;\text{ili}\; x \in B\]
+      </div>
+      <p style="margin-bottom: 12px;"><strong>Unija skupova:</strong> Unija \(A \cup B\) sadrži sve elemente koji su u barem jednom od skupova. Ako \(x \notin A \cup B\), onda \(x \notin A\) i \(x \notin B\).</p>
+
+      <div class="math-box">
+        \[B \subset A \iff \text{svaki element } B \text{ pripada i skupu } A\]
+      </div>
+      <p style="margin-bottom: 12px;"><strong>Podskup (strogi):</strong> Ako je \(B \subset A\), svaki element skupa \(B\) je obavezno i element skupa \(A\).</p>
+
+      <div class="math-box">
+        \[A \subset C \implies \text{svaki element } A \text{ je element } C\]
+      </div>
+      <p><strong>Nadskup:</strong> Ako je \(A \subset C\), onda \(A\) ne može sadržati nijedan element koji nije u \(C\).</p>
+    </div>
+  </details>
+
+  <!-- (e) Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2><span class="icon">&#x1F4CA;</span> Venov dijagram &mdash; vizuelna analiza</h2>
+    <canvas id="mainCanvas" width="800" height="500"></canvas>
+    <p class="canvas-hint">Dijagram prikazuje kandidate za elemente skupa A i njihov status na osnovu svakog uslova</p>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: #4ade80;"></div>
+        <span style="color: #4ade80;">Element pripada skupu \(A\)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: #f472b6;"></div>
+        <span style="color: #f472b6;">Element NE pripada skupu \(A\)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: #94a3b8;"></div>
+        <span style="color: #94a3b8;">Element nije kandidat</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- (f) Step-by-Step Solution -->
+  <div class="card">
+    <h2><span class="icon">&#x1F4DD;</span> Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step" id="step1">
+      <div class="step-header"><span class="step-badge">1</span> Uslov 4: Odredimo kandidate za elemente skupa \(A\)</div>
+      <p>Počinjemo od uslova \(A \subset \{5,\, 7,\, 8,\, 9,\, 11,\, 13\}\).</p>
+      <p>To znači da \(A\) može sadržati <strong>samo</strong> elemente iz skupa \(\{5,\, 7,\, 8,\, 9,\, 11,\, 13\}\).</p>
+      <div class="math-box">
+        \[\text{Kandidati za } A: \quad 5,\; 7,\; 8,\; 9,\; 11,\; 13\]
+      </div>
+      <p style="color: #94a3b8;">Elementi poput 3 i 4 sigurno nisu u \(A\), jer nisu u nadskupu.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" id="step2">
+      <div class="step-header"><span class="step-badge">2</span> Uslov 1: Analiziramo presek</div>
+      <p>Uslov glasi: \(A \cap \{3,\, 5,\, 8,\, 11\} = \{5,\, 8\}\).</p>
+      <p>Presek sadrži 5 i 8, što znači da su <span class="highlight-green">oba u skupu \(A\)</span>:</p>
+      <div class="math-box">
+        \[5 \in A \quad \text{i} \quad 8 \in A\]
+      </div>
+      <p>Elementi 3 i 11 su u skupu \(\{3,\, 5,\, 8,\, 11\}\), ali <strong>nisu</strong> u preseku. Dakle:</p>
+      <div class="math-box">
+        \[3 \notin A \quad \text{i} \quad \color{#f472b6}{11 \notin A}\]
+      </div>
+      <p style="color: #94a3b8;">Element 3 ionako nije kandidat (uslov 4), ali za 11 ovo je nova informacija &mdash; eliminišemo ga.</p>
+    </div>
+
+    <!-- Check yourself 1 -->
+    <details class="check-yourself">
+      <summary>Proveri sebe: Posle uslova 1 i 4, koliko kandidata ostaje za skup \(A\)?</summary>
+      <p style="margin-top: 8px; color: #e2e8f0;">Počeli smo sa 6 kandidata: \(\{5, 7, 8, 9, 11, 13\}\). Izbacili smo 11, dakle ostaje 5 kandidata: \(\{5, 7, 8, 9, 13\}\). Od toga, sigurno su u \(A\): 5 i 8.</p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step" id="step3">
+      <div class="step-header"><span class="step-badge">3</span> Uslov 3: Pravi podskup</div>
+      <p>Uslov \(\{8,\, 13\} \subset A\) znači da su <strong>oba elementa</strong> obavezno u skupu \(A\):</p>
+      <div class="math-box">
+        \[8 \in A \quad \text{i} \quad \color{#4ade80}{13 \in A}\]
+      </div>
+      <p style="color: #94a3b8;">Da 8 pripada skupu \(A\) već smo znali iz koraka 2. Novi zaključak je da i \(13 \in A\).</p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" id="step4">
+      <div class="step-header"><span class="step-badge">4</span> Uslov 2: Analiziramo uniju</div>
+      <p>Uslov glasi: \(A \cup \{4,\, 5,\, 11,\, 13\} = \{4,\, 5,\, 7,\, 8,\, 11,\, 13\}\).</p>
+      <p>Skup \(\{4,\, 5,\, 11,\, 13\}\) već &bdquo;donosi&ldquo; elemente 4, 5, 11 i 13 u uniju. Međutim, u rezultatu unije nalaze se i <span class="highlight-blue">7</span> i <span class="highlight-blue">8</span> &mdash; oni moraju doći iz skupa \(A\):</p>
+      <div class="math-box">
+        \[\color{#4ade80}{7 \in A} \quad \text{i} \quad 8 \in A\]
+      </div>
+      <p>Takođe, rezultat unije <strong>ne sadrži</strong> element 9. Pošto 9 nije ni u \(\{4, 5, 11, 13\}\), to znači da:</p>
+      <div class="math-box">
+        \[\color{#f472b6}{9 \notin A}\]
+      </div>
+      <p style="color: #94a3b8;">Jer kada bi \(9 \in A\), tada bi \(9 \in A \cup \{4, 5, 11, 13\}\), a 9 se ne nalazi u rezultatu unije.</p>
+    </div>
+
+    <!-- Check yourself 2 -->
+    <details class="check-yourself">
+      <summary>Proveri sebe: Koji elementi su do sada potvrđeni da pripadaju skupu \(A\)?</summary>
+      <p style="margin-top: 8px; color: #e2e8f0;">Potvrđeni elementi: \(5 \in A\), \(7 \in A\), \(8 \in A\), \(13 \in A\). Eliminisani: \(9 \notin A\), \(11 \notin A\).</p>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step" id="step5">
+      <div class="step-header"><span class="step-badge">5</span> Zaključak &mdash; formiramo skup \(A\)</div>
+      <p>Objedinimo sve zaključke iz prethodnih koraka:</p>
+      <div class="math-box">
+        \[A = \{5,\, 7,\, 8,\, 13\}\]
+      </div>
+      <p>Elementi <span class="highlight-green">u skupu \(A\)</span>: 5, 7, 8, 13.</p>
+      <p>Elementi <span class="highlight-pink">eliminisani</span>: 9 (uslov 2), 11 (uslov 1).</p>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step" id="step6">
+      <div class="step-header"><span class="step-badge">6</span> Prebrojimo elemente</div>
+      <p>Skup \(A = \{5,\, 7,\, 8,\, 13\}\) ima:</p>
+      <div class="math-box">
+        \[|A| = 4\]
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step" id="step7">
+      <div class="step-header"><span class="step-badge">7</span> Verifikacija &mdash; proverimo sve uslove</div>
+      <p>Proverimo da \(A = \{5, 7, 8, 13\}\) zadovoljava svaki uslov:</p>
+      <div class="math-box">
+        \[A \cap \{3, 5, 8, 11\} = \{5, 7, 8, 13\} \cap \{3, 5, 8, 11\} = \{5, 8\} \;\checkmark\]
+      </div>
+      <div class="math-box">
+        \[A \cup \{4, 5, 11, 13\} = \{5, 7, 8, 13\} \cup \{4, 5, 11, 13\} = \{4, 5, 7, 8, 11, 13\} \;\checkmark\]
+      </div>
+      <div class="math-box">
+        \[\{8, 13\} \subset \{5, 7, 8, 13\} \;\checkmark\]
+      </div>
+      <div class="math-box">
+        \[\{5, 7, 8, 13\} \subset \{5, 7, 8, 9, 11, 13\} \;\checkmark\]
+      </div>
+      <p><span class="highlight-green">Svi uslovi su ispunjeni!</span></p>
+    </div>
+
+    <!-- Check yourself 3 -->
+    <details class="check-yourself">
+      <summary>Proveri sebe: Da li bi skup \(A = \{5, 7, 8, 9, 13\}\) (sa elementom 9) zadovoljio sve uslove?</summary>
+      <p style="margin-top: 8px; color: #e2e8f0;">Ne! Uslov 2 zahteva \(A \cup \{4, 5, 11, 13\} = \{4, 5, 7, 8, 11, 13\}\). Sa \(9 \in A\), unija bi bila \(\{4, 5, 7, 8, 9, 11, 13\}\), što sadrži element 9 koji ne treba da bude u rezultatu. Dakle 9 ne sme biti u \(A\).</p>
+    </details>
+  </div>
+
+  <!-- (g) Key Insight -->
+  <div class="insight-box">
+    <h3>&#x1F4A1; Ključni uvid</h3>
+    <p>
+      Svaki uslov daje različite informacije o elementima skupa \(A\):
+    </p>
+    <ul style="margin: 12px 0 12px 20px; line-height: 2;">
+      <li><strong>Presek</strong> govori koji elementi <em>jesu</em> u \(A\) (nalaze se u preseku) i koji <em>nisu</em> (nalaze se u drugom skupu, ali ne i u preseku).</li>
+      <li><strong>Unija</strong> govori koji elementi <em>moraju</em> biti u \(A\) (nalaze se u uniji, a ne u drugom skupu) i koji <em>ne smeju</em> biti u \(A\) (ne nalaze se u rezultatu unije).</li>
+      <li><strong>Podskup/nadskup</strong> ograničava mogući opseg elemenata.</li>
+    </ul>
+    <div class="math-box" style="border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.06);">
+      \[A = \{5,\; 7,\; 8,\; 13\} \quad \Longrightarrow \quad |A| = 4\]
+    </div>
+  </div>
+
+  <!-- (h) Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-text">
+      \[\boxed{|A| = 4}\]
+    </div>
+    <div class="final-answer-options">
+      <div class="final-option">(A) \(2\)</div>
+      <div class="final-option">(B) \(3\)</div>
+      <div class="final-option correct">(C) \(4\)</div>
+      <div class="final-option">(D) \(5\)</div>
+      <div class="final-option">(E) \(6\)</div>
+    </div>
+    <p style="margin-top: 12px; color: #4ade80; font-size: 1.15rem; font-weight: 600;">Odgovor je (C)</p>
+    <p class="verification-note">
+      <strong>Verifikacija:</strong> Skup \(A = \{5, 7, 8, 13\}\) zadovoljava sva četiri uslova. Presek sa \(\{3, 5, 8, 11\}\) daje \(\{5, 8\}\), unija sa \(\{4, 5, 11, 13\}\) daje \(\{4, 5, 7, 8, 11, 13\}\), skup \(\{8, 13\}\) je pravi podskup od \(A\), i \(A\) je podskup od \(\{5, 7, 8, 9, 11, 13\}\).
+    </p>
+  </div>
+
+  <!-- (i) Common Pitfalls -->
+  <div class="card">
+    <h2 class="pitfalls"><span class="icon">&#x26A0;&#xFE0F;</span> Česte greške</h2>
+    <ul class="pitfalls">
+      <li><strong>Zaboraviti eliminaciju iz unije:</strong> Ako se ne iskoristi informacija da rezultat unije ne sadrži 9, može se pogrešno zaključiti da \(9 \in A\) (pošto je 9 u nadskupu iz uslova 4). To bi dalo \(|A| = 5\) &mdash; odgovor (D), koji je pogrešan.</li>
+      <li><strong>Previđanje uslova preseka za eliminaciju:</strong> Iz preseka \(A \cap \{3, 5, 8, 11\} = \{5, 8\}\) sledi da \(11 \notin A\). Ako se to previdi, a uzme u obzir samo uslov 4 gde je 11 kandidat, može se pogrešno uključiti 11 u \(A\).</li>
+    </ul>
+  </div>
+
+  <!-- (j) Optional Challenge -->
+  <div class="challenge-box">
+    <h3>&#x1F680; Izazov za tebe</h3>
+    <p>Koliko skupova \(A\) zadovoljava samo prva tri uslova (bez uslova \(A \subset \{5, 7, 8, 9, 11, 13\}\))? Da li je rešenje i dalje jedinstveno?</p>
+    <details>
+      <summary style="color: #f472b6;">Nagoveštaj</summary>
+      <p style="margin-top: 8px; color: #e2e8f0;">Bez uslova 4, skup \(A\) može sadržati proizvoljne elemente koji nisu pomenuti u ostalim uslovima. Na primer, \(A\) bi mogao da sadrži i element 42 jer on ne utiče ni na presek ni na uniju. Razmisli koje elemente iz \(\{5, 7, 8, 13\}\) mora da sadrži, a šta je sa elementima izvan svih pomenutih skupova.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // ========== Main Canvas: Venn-style set analysis diagram ==========
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = 500;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Elements and their status
+    const candidates = [
+      { val: 5, inA: true },
+      { val: 7, inA: true },
+      { val: 8, inA: true },
+      { val: 9, inA: false },
+      { val: 11, inA: false },
+      { val: 13, inA: true }
+    ];
+
+    const nonCandidates = [3, 4];
+
+    // Draw the superset oval (condition 4)
+    const cx = W / 2;
+    const cy = H / 2 - 10;
+    const ovalRx = Math.min(W * 0.42, 340);
+    const ovalRy = 160;
+
+    // Superset boundary
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, ovalRx, ovalRy, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(96,165,250,0.04)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(96,165,250,0.25)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label superset
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '14px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('{5, 7, 8, 9, 11, 13}', cx, cy - ovalRy - 12);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px "Segoe UI", sans-serif';
+    ctx.fillText('Nadskup (uslov 4)', cx, cy - ovalRy + 4);
+
+    // Draw set A inside the superset
+    const aRx = Math.min(W * 0.25, 200);
+    const aRy = 100;
+    const aCx = cx - 30;
+    const aCy = cy + 5;
+
+    ctx.beginPath();
+    ctx.ellipse(aCx, aCy, aRx, aRy, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(52,211,153,0.06)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(52,211,153,0.35)';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Label set A
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('A', aCx - aRx + 12, aCy - aRy + 24);
+
+    // Position elements inside/outside A
+    // Elements IN A: 5, 7, 8, 13
+    const inAPositions = [
+      { val: 5, x: aCx - aRx * 0.55, y: aCy - 20 },
+      { val: 7, x: aCx - aRx * 0.1, y: aCy - 45 },
+      { val: 8, x: aCx + aRx * 0.3, y: aCy - 15 },
+      { val: 13, x: aCx + aRx * 0.05, y: aCy + 40 }
+    ];
+
+    // Elements NOT IN A but in superset: 9, 11
+    const outAPositions = [
+      { val: 9, x: cx + ovalRx * 0.55, y: cy - 30 },
+      { val: 11, x: cx + ovalRx * 0.5, y: cy + 40 }
+    ];
+
+    // Elements outside superset: 3, 4
+    const outsidePositions = [
+      { val: 3, x: cx - ovalRx - 50, y: cy - 30 },
+      { val: 4, x: cx - ovalRx - 50, y: cy + 30 }
+    ];
+
+    // Draw elements IN A
+    inAPositions.forEach(function(p) {
+      // Glow
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 32);
+      grad.addColorStop(0, 'rgba(52,211,153,0.2)');
+      grad.addColorStop(1, 'rgba(52,211,153,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 32, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Circle
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(52,211,153,0.15)';
+      ctx.fill();
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Number
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 18px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(p.val), p.x, p.y);
+    });
+
+    // Draw elements NOT IN A
+    outAPositions.forEach(function(p) {
+      // Circle
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(244,114,182,0.1)';
+      ctx.fill();
+      ctx.strokeStyle = '#f472b6';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // X mark
+      ctx.strokeStyle = 'rgba(244,114,182,0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(p.x - 15, p.y - 15);
+      ctx.lineTo(p.x + 15, p.y + 15);
+      ctx.moveTo(p.x + 15, p.y - 15);
+      ctx.lineTo(p.x - 15, p.y + 15);
+      ctx.stroke();
+
+      // Number
+      ctx.fillStyle = '#f472b6';
+      ctx.font = 'bold 18px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(p.val), p.x, p.y);
+    });
+
+    // Draw elements outside superset
+    outsidePositions.forEach(function(p) {
+      // Circle
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(148,163,184,0.06)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(148,163,184,0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Number
+      ctx.fillStyle = '#64748b';
+      ctx.font = '16px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(p.val), p.x, p.y);
+    });
+
+    // Annotations for why elements are in/out
+    ctx.textBaseline = 'top';
+    ctx.font = '11px "Segoe UI", sans-serif';
+
+    // Labels for out-of-A elements
+    ctx.fillStyle = '#f472b6';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u2209 A (uslov 2)', outAPositions[0].x, outAPositions[0].y + 28);
+    ctx.fillText('\u2209 A (uslov 1)', outAPositions[1].x, outAPositions[1].y + 28);
+
+    // Labels for outside superset
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'center';
+    ctx.fillText('van nadskupa', outsidePositions[0].x, outsidePositions[0].y + 26);
+    ctx.fillText('van nadskupa', outsidePositions[1].x, outsidePositions[1].y + 26);
+
+    // Bottom info box
+    const boxW = Math.min(440, W * 0.85);
+    const boxH = 48;
+    const boxX = W / 2 - boxW / 2;
+    const boxY = H - 65;
+
+    ctx.beginPath();
+    ctx.moveTo(boxX + 10, boxY);
+    ctx.lineTo(boxX + boxW - 10, boxY);
+    ctx.quadraticCurveTo(boxX + boxW, boxY, boxX + boxW, boxY + 10);
+    ctx.lineTo(boxX + boxW, boxY + boxH - 10);
+    ctx.quadraticCurveTo(boxX + boxW, boxY + boxH, boxX + boxW - 10, boxY + boxH);
+    ctx.lineTo(boxX + 10, boxY + boxH);
+    ctx.quadraticCurveTo(boxX, boxY + boxH, boxX, boxY + boxH - 10);
+    ctx.lineTo(boxX, boxY + 10);
+    ctx.quadraticCurveTo(boxX, boxY, boxX + 10, boxY);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(30,41,59,0.9)';
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 15px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('A = {5, 7, 8, 13}    \u2192    |A| = 4', W / 2, boxY + boxH / 2);
+
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click highlighting
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Broj elemenata skupa - presek, unija i podskup",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["teorija skupova", "presek skupova", "unija skupova", "podskup", "broj elemenata"]
+}
+BRAINSPARK_META-->

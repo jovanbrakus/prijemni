@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Određivanje vrednosti funkcije za zadati argument</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Dato je f((x+3)/(x+1)) = 3x + 2, za x iz R \ {-1}. Naći f(5).
+
+Pristup: Potrebno je naći vrednost x takvu da je (x+3)/(x+1) = 5,
+a zatim izračunati f(5) = 3x + 2 za to x.
+
+Korak 1: Postavimo jednačinu (x+3)/(x+1) = 5
+  x + 3 = 5(x + 1)
+  x + 3 = 5x + 5
+  x - 5x = 5 - 3
+  -4x = 2
+  x = -1/2
+
+Korak 2: Proverimo da x = -1/2 nije -1 (domen je R \ {-1}).
+  -1/2 ≠ -1. OK.
+
+Korak 3: Proverimo: (x+3)/(x+1) za x = -1/2:
+  (-1/2 + 3) / (-1/2 + 1) = (5/2) / (1/2) = 5. Tačno!
+
+Korak 4: f(5) = 3*(-1/2) + 2 = -3/2 + 2 = 1/2
+
+Odgovor: f(5) = 1/2, što je opcija (B).
+
+Alternativni pristup (supstitucija):
+Neka t = (x+3)/(x+1). Izrazimo x preko t.
+t(x+1) = x+3
+tx + t = x + 3
+tx - x = 3 - t
+x(t - 1) = 3 - t
+x = (3-t)/(t-1)
+
+Dakle: f(t) = 3 * (3-t)/(t-1) + 2 = (9-3t)/(t-1) + 2 = (9-3t + 2(t-1))/(t-1) = (9-3t+2t-2)/(t-1) = (7-t)/(t-1)
+
+Za t = 5: f(5) = (7-5)/(5-1) = 2/4 = 1/2. Potvrđeno!
+
+Correct answer verification: B) 1/2 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  background: rgba(96, 165, 250, 0.04);
+  border-left-color: #4ade80;
+}
+
+.step-container.active {
+  background: rgba(96, 165, 250, 0.06);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Određivanje vrednosti kompozitne funkcije</h1>
+  <p class="subtitle">Funkcionalne jednačine i inverzna supstitucija</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Ako je
+      <div class="math-box">
+        \[ f\!\left(\frac{x+3}{x+1}\right) = 3x + 2 \quad \text{za} \quad x \in \mathbb{R} \setminus \{-1\} \]
+      </div>
+      onda je \( f(5) \) jednako:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(-\dfrac{1}{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{1}{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{5}{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(5\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(17\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Funkcija \(f\) je definisana implicitno &mdash; znamo šta daje kad joj je argument oblika \(\frac{x+3}{x+1}\). Da bismo izračunali \(f(5)\), potrebno je naći onu vrednost \(x\) za koju je \(\frac{x+3}{x+1} = 5\), a zatim tu vrednost uvrstiti u \(3x + 2\). Dodatno ćemo prikazati i opštu formulu \(f(t)\) kao verifikaciju.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Funkcionalne jednačine i supstitucija argumenta</summary>
+      <p style="margin-top: 8px;">
+        Kada je funkcija \(f\) zadana u obliku \(f(g(x)) = h(x)\), traženje \(f(a)\) svodi se na dva koraka:
+      </p>
+      <div class="math-box">
+        \[ g(x) = a \;\;\Rightarrow\;\; x = g^{-1}(a) \;\;\Rightarrow\;\; f(a) = h\!\left(g^{-1}(a)\right) \]
+      </div>
+      <p>
+        Alternativno, možemo izvesti eksplicitnu formulu za \(f(t)\) tako što izrazimo \(x\) preko \(t = g(x)\), i zatim uvrstimo u \(h(x)\).
+      </p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Rešavanje linearne jednačine sa razlomkom</summary>
+      <p style="margin-top: 8px;">
+        Za jednačinu \(\frac{x+3}{x+1} = c\), množimo obe strane sa \((x+1)\):
+      </p>
+      <div class="math-box">
+        \[ x + 3 = c(x+1) \;\;\Rightarrow\;\; x + 3 = cx + c \;\;\Rightarrow\;\; x(1-c) = c - 3 \;\;\Rightarrow\;\; x = \frac{c-3}{1-c} \]
+      </div>
+      <p>Pod uslovom da \(c \neq 1\).</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz &mdash; graf funkcije \(f(t)\)</div>
+    <canvas id="functionCanvas" width="900" height="500"></canvas>
+    <p class="canvas-hint">Pomerajte klizač ispod da vidite vrednost \(f(t)\) za različite argumente</p>
+    <div style="display: flex; align-items: center; gap: 12px; margin-top: 12px; justify-content: center; flex-wrap: wrap;">
+      <span style="color: #94a3b8; font-size: 0.95rem;">t =</span>
+      <input type="range" id="tSlider" min="1.2" max="10" step="0.1" value="5" style="width: 280px; accent-color: #60a5fa;">
+      <span id="tValue" style="color: #60a5fa; font-weight: 700; font-size: 1.05rem; min-width: 40px;">5</span>
+      <span style="color: #94a3b8; margin-left: 12px;">f(t) =</span>
+      <span id="ftValue" style="color: #4ade80; font-weight: 700; font-size: 1.05rem; min-width: 50px;">0,5</span>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Postavimo uslov za argument</div>
+      <p class="step-explanation">
+        Želimo da izračunamo \(f(5)\). Znamo da važi \(f\!\left(\frac{x+3}{x+1}\right) = 3x + 2\). Dakle, ako nađemo \(x\) za koje je argument funkcije \(f\) jednak \(5\), moći ćemo direktno da očitamo vrednost.
+      </p>
+      <p class="step-explanation">
+        Postavimo jednačinu:
+      </p>
+      <div class="math-box">
+        \[ \frac{x+3}{x+1} = 5 \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Rešimo jednačinu po \(x\)</div>
+      <p class="step-explanation">
+        Pomnožimo obe strane sa \((x+1)\), uz uslov da \(x \neq -1\):
+      </p>
+      <div class="math-box">
+        \[ x + 3 = 5(x + 1) \]
+      </div>
+      <p class="step-explanation">
+        Raspisujemo desnu stranu:
+      </p>
+      <div class="math-box">
+        \[ x + 3 = 5x + 5 \]
+      </div>
+      <p class="step-explanation">
+        Prenesemo članove sa \(x\) na jednu stranu:
+      </p>
+      <div class="math-box">
+        \[ x - 5x = 5 - 3 \]
+        \[ -4x = 2 \]
+        \[ x = -\frac{1}{2} \]
+      </div>
+      <p class="note">Primetimo: \(x = -\frac{1}{2} \neq -1\), tako da je ova vrednost u dozvoljenom domenu.</p>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Da li je zaista \(\frac{x+3}{x+1} = 5\) za \(x = -\frac{1}{2}\)?</summary>
+      <p style="margin-top: 8px;">
+        \(\displaystyle \frac{-\frac{1}{2}+3}{-\frac{1}{2}+1} = \frac{\frac{5}{2}}{\frac{1}{2}} = \frac{5}{2} \cdot \frac{2}{1} = 5\). Da, tačno!
+      </p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Izračunamo \(f(5)\)</div>
+      <p class="step-explanation">
+        Sada kada znamo da za \(x = -\frac{1}{2}\) važi \(\frac{x+3}{x+1} = 5\), uvrstimo tu vrednost u desnu stranu definicije:
+      </p>
+      <div class="math-box">
+        \[ f(5) = 3 \cdot \left(-\frac{1}{2}\right) + 2 \]
+      </div>
+      <p class="step-explanation">
+        Izračunavamo:
+      </p>
+      <div class="math-box">
+        \[ f(5) = -\frac{3}{2} + 2 = -\frac{3}{2} + \frac{4}{2} = \frac{1}{2} \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko je \(-\frac{3}{2} + 2\)?</summary>
+      <p style="margin-top: 8px;">
+        \(-\frac{3}{2} + 2 = -\frac{3}{2} + \frac{4}{2} = \frac{-3+4}{2} = \frac{1}{2}\). Tačno!
+      </p>
+    </details>
+
+    <!-- Step 4 (Bonus verification) -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Verifikacija &mdash; eksplicitna formula za \(f(t)\)</div>
+      <p class="step-explanation">
+        Kao dodatnu proveru, izvedimo opštu formulu. Neka je \(t = \frac{x+3}{x+1}\). Izrazimo \(x\) preko \(t\):
+      </p>
+      <div class="math-box">
+        \[ t(x+1) = x+3 \]
+        \[ tx + t = x + 3 \]
+        \[ tx - x = 3 - t \]
+        \[ x(t - 1) = 3 - t \]
+        \[ x = \frac{3 - t}{t - 1} \]
+      </div>
+      <p class="step-explanation">
+        Sada uvrstimo u \(f(t) = 3x + 2\):
+      </p>
+      <div class="math-box">
+        \[ f(t) = 3 \cdot \frac{3 - t}{t - 1} + 2 = \frac{9 - 3t}{t - 1} + \frac{2(t-1)}{t-1} = \frac{9 - 3t + 2t - 2}{t - 1} = \frac{7 - t}{t - 1} \]
+      </div>
+      <p class="step-explanation">
+        Proverimo za \(t = 5\):
+      </p>
+      <div class="math-box">
+        \[ f(5) = \frac{7 - 5}{5 - 1} = \frac{2}{4} = \frac{1}{2} \;\; \checkmark \]
+      </div>
+      <p class="note">Oba pristupa daju isti rezultat, što potvrđuje tačnost.</p>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko je \(f(3)\) koristeći formulu \(f(t) = \frac{7-t}{t-1}\)?</summary>
+      <p style="margin-top: 8px;">
+        \(f(3) = \frac{7-3}{3-1} = \frac{4}{2} = 2\). Možete proveriti: za \(x = 0\) je \(\frac{0+3}{0+1} = 3\) i \(3 \cdot 0 + 2 = 2\). Potvrđeno!
+      </p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Kada je funkcija definisana implicitno kao \(f(g(x)) = h(x)\), <span class="highlight">ne moramo da nađemo opštu formulu za \(f\)</span> &mdash; dovoljno je da rešimo jednačinu \(g(x) = a\) za konkretan argument \(a\) i uvrstimo u \(h(x)\). Ovaj pristup je brži i sigurniji za zadatke na prijemnom ispitu.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(\displaystyle f(5) = \frac{1}{2}\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(-\dfrac{1}{2}\)</div>
+      <div class="final-option correct" data-option="B">(B) \(\dfrac{1}{2}\)</div>
+      <div class="final-option" data-option="C">(C) \(\dfrac{5}{2}\)</div>
+      <div class="final-option" data-option="D">(D) \(5\)</div>
+      <div class="final-option" data-option="E">(E) \(17\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija: za \(x = -\frac{1}{2}\) je \(\frac{x+3}{x+1} = \frac{5/2}{1/2} = 5\) i \(3 \cdot (-\frac{1}{2}) + 2 = \frac{1}{2}\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Direktno uvrštavanje \(x = 5\)</div>
+      <p>Najčešća greška je da se u zadanu formulu uvrsti \(x = 5\) i dobije \(f\!\left(\frac{8}{6}\right) = 17\). Time se izračunava \(f\!\left(\frac{4}{3}\right)\), a ne \(f(5)\)! Argument 5 pripada funkciji \(f\), ne promenljivoj \(x\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Greška u znaku</div>
+      <p>Pri rešavanju jednačine \(x + 3 = 5x + 5\), lako se pogreši u prenosu članova. Rezultat \(x = -\frac{1}{2}\) (sa minusom!) daje \(f(5) = \frac{1}{2}\), ali ako se zaboravi minus, dobija se \(f(5) = \frac{7}{2}\) &mdash; pogrešno!</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Koristeći istu definiciju \(f\!\left(\frac{x+3}{x+1}\right) = 3x + 2\), izračunajte:
+    </p>
+    <div class="math-box">
+      \[ f(f(5)) = \;? \]
+    </div>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="margin-top: 8px;">Znamo da je \(f(5) = \frac{1}{2}\). Sada treba da izračunamo \(f\!\left(\frac{1}{2}\right)\). Koristite formulu \(f(t) = \frac{7-t}{t-1}\) ili ponovo rešite \(\frac{x+3}{x+1} = \frac{1}{2}\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('functionCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('tSlider');
+  const tValueEl = document.getElementById('tValue');
+  const ftValueEl = document.getElementById('ftValue');
+
+  let currentT = 5;
+
+  function f(t) {
+    if (Math.abs(t - 1) < 0.001) return null;
+    return (7 - t) / (t - 1);
+  }
+
+  function formatDecimal(val) {
+    if (val === null) return '---';
+    const s = val.toFixed(2);
+    return s.replace('.', ',');
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 500;
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Coordinate system setup
+    const padding = { left: 60, right: 30, top: 40, bottom: 50 };
+    const plotW = W - padding.left - padding.right;
+    const plotH = H - padding.top - padding.bottom;
+
+    // Domain: t from -3 to 11 (avoiding t=1)
+    // Range: f(t) from -8 to 10
+    const tMin = -3, tMax = 11;
+    const fMin = -8, fMax = 10;
+
+    const toCanvasX = (t) => padding.left + ((t - tMin) / (tMax - tMin)) * plotW;
+    const toCanvasY = (fv) => padding.top + ((fMax - fv) / (fMax - fMin)) * plotH;
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let t = -2; t <= 10; t++) {
+      const x = toCanvasX(t);
+      ctx.beginPath();
+      ctx.moveTo(x, padding.top);
+      ctx.lineTo(x, H - padding.bottom);
+      ctx.stroke();
+    }
+    for (let fv = -6; fv <= 8; fv += 2) {
+      const y = toCanvasY(fv);
+      ctx.beginPath();
+      ctx.moveTo(padding.left, y);
+      ctx.lineTo(W - padding.right, y);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    // x-axis (f=0)
+    const yZero = toCanvasY(0);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, yZero);
+    ctx.lineTo(W - padding.right, yZero);
+    ctx.stroke();
+    // y-axis (t=0)
+    const xZero = toCanvasX(0);
+    ctx.beginPath();
+    ctx.moveTo(xZero, padding.top);
+    ctx.lineTo(xZero, H - padding.bottom);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let t = -2; t <= 10; t++) {
+      if (t === 0) continue;
+      ctx.fillText(t.toString(), toCanvasX(t), yZero + 18);
+    }
+    ctx.textAlign = 'right';
+    for (let fv = -6; fv <= 8; fv += 2) {
+      if (fv === 0) continue;
+      ctx.fillText(fv.toString(), xZero - 8, toCanvasY(fv) + 4);
+    }
+
+    // Axis name labels
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('t', W - padding.right + 15, yZero + 5);
+    ctx.fillText('f(t)', xZero + 5, padding.top - 12);
+
+    // Vertical asymptote at t=1
+    const xAsymptote = toCanvasX(1);
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(xAsymptote, padding.top);
+    ctx.lineTo(xAsymptote, H - padding.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Asymptote label
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('t = 1 (asimptota)', xAsymptote + 5, padding.top + 15);
+
+    // Horizontal asymptote at f(t) = -1
+    const yAsymptote = toCanvasY(-1);
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, yAsymptote);
+    ctx.lineTo(W - padding.right, yAsymptote);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.6)';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('f(t) = -1 (asimptota)', padding.left + 5, yAsymptote - 6);
+
+    // Draw function curve (two branches, avoiding t=1)
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+
+    // Left branch: t < 1
+    ctx.beginPath();
+    let started = false;
+    for (let px = padding.left; px <= toCanvasX(0.97); px += 1) {
+      const t = tMin + (px - padding.left) / plotW * (tMax - tMin);
+      if (t >= 0.97) break;
+      const fv = f(t);
+      if (fv === null || fv < fMin - 2 || fv > fMax + 2) {
+        started = false;
+        continue;
+      }
+      const y = toCanvasY(fv);
+      if (!started) {
+        ctx.moveTo(px, y);
+        started = true;
+      } else {
+        ctx.lineTo(px, y);
+      }
+    }
+    ctx.stroke();
+
+    // Right branch: t > 1
+    ctx.beginPath();
+    started = false;
+    for (let px = toCanvasX(1.03); px <= W - padding.right; px += 1) {
+      const t = tMin + (px - padding.left) / plotW * (tMax - tMin);
+      if (t <= 1.03) continue;
+      const fv = f(t);
+      if (fv === null || fv < fMin - 2 || fv > fMax + 2) {
+        started = false;
+        continue;
+      }
+      const y = toCanvasY(fv);
+      if (!started) {
+        ctx.moveTo(px, y);
+        started = true;
+      } else {
+        ctx.lineTo(px, y);
+      }
+    }
+    ctx.stroke();
+
+    // Function label
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    const labelT = 6;
+    const labelFv = f(labelT);
+    if (labelFv !== null) {
+      ctx.fillText('f(t) = (7-t)/(t-1)', toCanvasX(labelT) + 8, toCanvasY(labelFv) - 10);
+    }
+
+    // Highlight the point f(5) = 0.5
+    const pointX = toCanvasX(currentT);
+    const currentFv = f(currentT);
+    if (currentFv !== null && currentFv >= fMin && currentFv <= fMax) {
+      const pointY = toCanvasY(currentFv);
+
+      // Dashed guide lines
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = 'rgba(74, 222, 128, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pointX, pointY);
+      ctx.lineTo(pointX, yZero);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(pointX, pointY);
+      ctx.lineTo(xZero, pointY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Glow effect
+      const gradient = ctx.createRadialGradient(pointX, pointY, 0, pointX, pointY, 20);
+      gradient.addColorStop(0, 'rgba(74, 222, 128, 0.4)');
+      gradient.addColorStop(1, 'rgba(74, 222, 128, 0)');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(pointX, pointY, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath();
+      ctx.arc(pointX, pointY, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      const tDisplay = currentT.toFixed(1).replace('.', ',');
+      const fDisplay = formatDecimal(currentFv);
+      ctx.fillText('f(' + tDisplay + ') = ' + fDisplay, pointX + 12, pointY - 12);
+
+      // Value on axes
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(tDisplay, pointX, yZero + 30);
+      ctx.textAlign = 'right';
+      ctx.fillText(fDisplay, xZero - 10, pointY + 4);
+    }
+
+    // Special point t=7 where f(t)=0
+    const x7 = toCanvasX(7);
+    const y7 = toCanvasY(0);
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.7)';
+    ctx.beginPath();
+    ctx.arc(x7, y7, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('f(7) = 0', x7, y7 - 10);
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Graf funkcije f(t) = (7 - t) / (t - 1)', W / 2, padding.top - 10);
+  }
+
+  function updateSlider() {
+    currentT = parseFloat(slider.value);
+    tValueEl.textContent = currentT.toFixed(1).replace('.', ',');
+    const fv = f(currentT);
+    ftValueEl.textContent = fv !== null ? formatDecimal(fv) : '---';
+    draw();
+  }
+
+  slider.addEventListener('input', updateSlider);
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+<script>
+(() => {
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Određivanje vrednosti funkcije za zadati argument",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["funkcionalne jednačine", "supstitucija", "inverzna funkcija", "racionalni izrazi", "funkcije"]
+}
+BRAINSPARK_META-->

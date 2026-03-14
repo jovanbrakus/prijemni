@@ -72,6 +72,7 @@ Enum of problem categories. Each entry has:
 ### `problems.json`
 
 Each entry represents one problem extracted from a document. Fields:
+- **id** (string): unique 8-character random hex string (e.g. `"a3f7b2e1"`). Generated via `crypto.randomBytes(4).toString('hex')`. Must be unique across all problems — check existing IDs with a Set before assigning. IDs are non-guessable: knowing one reveals nothing about others.
 - **document** (string): filename of the parent document from `documents.json`
 - **order** (integer): problem number within the document (1-based)
 - **solution_path** (string): full path with filename to the HTML file containing the solution

@@ -82,6 +82,7 @@ export function loadData(): { faculties: FacultyEntry[]; categoryOptions: Catego
         const cat = p.category ? categoryMap.get(p.category) : null;
         const group = p.category ? categoryGroupMap.get(p.category) : null;
         return {
+          id: p.id,
           order: p.order,
           document: docFilename,
           category: p.category,

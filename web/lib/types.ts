@@ -7,10 +7,12 @@ export interface RawDocument {
 }
 
 export interface RawProblem {
+  id: string;
   document: string;
   order: number;
   solution_path: string;
   category: string | null;
+  difficulty: number | null;
 }
 
 export interface RawCategory {
@@ -34,6 +36,7 @@ export interface CategoryOption {
 }
 
 export interface ProblemEntry {
+  id: string;
   order: number;
   document: string;
   category: string | null;

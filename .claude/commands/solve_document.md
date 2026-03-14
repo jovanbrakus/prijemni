@@ -79,15 +79,17 @@ The file must contain ONLY the HTML document (starting with <!DOCTYPE html>) fol
 After ALL agents have completed:
 
 1. Read the current `database/problems.json` file
-2. For each successfully solved problem, add an entry:
+2. Collect all existing `id` values into a Set for uniqueness checking
+3. For each successfully solved problem, generate a unique 8-character hex ID using `crypto.randomBytes(4).toString('hex')` (re-generate if it collides with an existing ID) and add an entry:
    ```json
    {
+     "id": "{GENERATED_HEX_ID}",
      "document": "{FILENAME}",
      "order": N,
      "solution_path": "problems/{STEM}/{STEM}_problem_{N}_solution.html"
    }
    ```
-3. Write the updated array back to `database/problems.json` (keep existing entries, append new ones, maintain sorted order by document then order)
+4. Write the updated array back to `database/problems.json` (keep existing entries, append new ones, maintain sorted order by document then order)
 
 ### Step 6: Commit results
 

@@ -1,11 +1,14 @@
 #!/bin/bash
 
 files=(
-  "univerzitet_u_beogradu_tehnolosko_metalurski_fakultet_2013.pdf"
-  "univerzitet_u_beogradu_gradevinski_fakultet_2013.pdf"
-  "univerzitet_u_beogradu_matematicki_fakultet_2013.pdf"
-  "univerzitet_u_beogradu_fizicki_fakultet_2013_grupa_a.pdf"
-  "univerzitet_u_beogradu_rudarsko_geoloski_fakultet_2013_grupa_1.pdf"
+#  "univerzitet_u_beogradu_tehnolosko_metalurski_fakultet_2012.pdf"
+#  "univerzitet_u_beogradu_gradevinski_fakultet_2012.pdf"
+#  "univerzitet_u_beogradu_gradevinski_fakultet_2009.pdf"
+#  "univerzitet_u_beogradu_matematicki_fakultet_2012.pdf"
+#  "univerzitet_u_beogradu_fizicki_fakultet_2009_grupa_b.pdf"
+  "univerzitet_u_beogradu_rudarsko_geoloski_fakultet_2007.pdf"
+  "univerzitet_u_beogradu_matematicki_fakultet_2011.pdf"
+  "univerzitet_u_beogradu_matematicki_fakultet_2010.pdf"
 )
 
 for file in "${files[@]}"; do

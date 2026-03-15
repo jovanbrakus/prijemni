@@ -231,7 +231,22 @@ h. **Final Answer**
    - Clearly highlighted, large text in green (#34d399 / #4ade80)
    - The answer MUST use MathJax delimiters: wrap it in \\( ... \\) or \\[ ... \\].
      Never output raw LaTeX like \`\\frac{}{}\` or \`\\sqrt{}\` without delimiters.
-   - If multiple choice: show all options with the correct one highlighted
+   - **Multiple-choice answer display (CRITICAL for programmatic parsing):**
+     Show all options in a row. The correct option MUST have the CSS class \`correct\`
+     (as a standalone class, e.g. \`class="opt correct"\`). Use uppercase Latin letters
+     with parentheses: \`(A)\`, \`(B)\`, \`(C)\`, \`(D)\`, \`(E)\`. Example:
+     \`\`\`html
+     <div class="answer-options">
+       <span class="opt">(A) \\(1\\)</span>
+       <span class="opt">(B) \\(-1\\)</span>
+       <span class="opt correct">(C) \\(0\\)</span>
+       <span class="opt">(D) \\(2\\)</span>
+     </div>
+     \`\`\`
+     Do NOT use: Cyrillic letters for option labels, lowercase letters, or class names
+     like \`correct-option\` or \`correct-answer\` — always use \`correct\` as a standalone
+     class. Do NOT use Serbian-specific labels like (В), (Г), (Д) — always use
+     Latin (A), (B), (C), (D), (E).
    - Include a small "Verification" or "Sanity Check" note explaining why the answer
      makes sense (e.g. units match, order of magnitude is reasonable, physical intuition)
 
@@ -348,9 +363,12 @@ Notes:
 Before outputting the HTML, verify these structural requirements:
 1. Problem statement uses \`<div class="card problem-statement">\` (both classes required)
 2. Answer options use \`given-grid\` > \`given-item answer-option\` with \`data-option\` attributes
-3. No inline event handlers (no onclick, onmouseover, etc.)
-4. No problem metadata in title/subtitle (no year, faculty, exam name)
-5. Logic scratchpad is present and complete in <head>
+3. Each answer-option has a non-empty \`<div class="value">\` with the answer content
+4. Final answer section has an element with standalone \`correct\` class containing \`(X)\` letter
+5. Option labels use uppercase Latin letters: (A), (B), (C), (D), (E) — never Cyrillic
+6. No inline event handlers (no onclick, onmouseover, etc.)
+7. No problem metadata in title/subtitle (no year, faculty, exam name)
+8. Logic scratchpad is present and complete in <head>
 
 ## Language
 

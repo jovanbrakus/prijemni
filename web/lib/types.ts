@@ -55,6 +55,8 @@ export interface Report {
 
 export interface YearEntry {
   year: number;
+  extra: string | null;
+  label: string;
   problems: ProblemEntry[];
 }
 

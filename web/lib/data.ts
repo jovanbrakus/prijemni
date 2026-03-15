@@ -40,6 +40,12 @@ export function loadCategoryOptions(): CategoryOption[] {
   return options;
 }
 
+function formatExtra(extra: string): string {
+  return extra
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function loadData(): { faculties: FacultyEntry[]; categoryOptions: CategoryOption[] } {
   const documents = readJSON<RawDocument[]>("documents.json");
   const problems = readJSON<RawProblem[]>("problems.json");
@@ -65,16 +71,21 @@ export function loadData(): { faculties: FacultyEntry[]; categoryOptions: Catego
     problemsByDoc.set(p.document, list);
   }
 
-  // Build faculty -> year -> problems hierarchy
-  const facultyMap = new Map<string, Map<number, ProblemEntry[]>>();
+  // Build faculty -> year+extra -> problems hierarchy
+  type YearBucket = { year: number; extra: string | null; problems: ProblemEntry[] };
+  const facultyMap = new Map<string, Map<string, YearBucket>>();
 
   for (const [docFilename, docProblems] of problemsByDoc) {
     const doc = docMap.get(docFilename);
     if (!doc || doc.year === null) continue;
+    // Skip solution documents
+    if (doc.extra === "resenja") continue;
 
     const yearMap =
-      facultyMap.get(doc.faculty) || new Map<number, ProblemEntry[]>();
+      facultyMap.get(doc.faculty) || new Map<string, YearBucket>();
     facultyMap.set(doc.faculty, yearMap);
+
+    const key = `${doc.year}:${doc.extra || ""}`;
 
     const entries: ProblemEntry[] = docProblems
       .sort((a, b) => a.order - b.order)
@@ -93,17 +104,29 @@ export function loadData(): { faculties: FacultyEntry[]; categoryOptions: Catego
         };
       });
 
-    yearMap.set(doc.year, entries);
+    const existing = yearMap.get(key);
+    if (existing) {
+      existing.problems.push(...entries);
+    } else {
+      yearMap.set(key, { year: doc.year, extra: doc.extra, problems: entries });
+    }
   }
 
   // Convert to sorted arrays
   const faculties: FacultyEntry[] = [];
   for (const [slug, yearMap] of facultyMap) {
     const years: YearEntry[] = [];
-    for (const [year, problems] of yearMap) {
-      years.push({ year, problems });
+    for (const [, bucket] of yearMap) {
+      years.push({
+        year: bucket.year,
+        extra: bucket.extra,
+        label: bucket.extra
+          ? `${bucket.year} (${formatExtra(bucket.extra)})`
+          : `${bucket.year}`,
+        problems: bucket.problems,
+      });
     }
-    years.sort((a, b) => b.year - a.year);
+    years.sort((a, b) => b.year - a.year || (a.extra || "").localeCompare(b.extra || ""));
 
     faculties.push({
       slug,

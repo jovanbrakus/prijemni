@@ -11,7 +11,7 @@ import type { FacultyEntry, Report, CategoryOption } from "@/lib/types";
 
 interface ProblemLocation {
   facultySlug: string;
-  year: number;
+  yearKey: string;
   problem: import("@/lib/types").ProblemEntry;
 }
 
@@ -29,10 +29,11 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
     const index = new Map<string, ProblemLocation>();
     for (const faculty of faculties) {
       for (const yearEntry of faculty.years) {
+        const yearKey = `${yearEntry.year}:${yearEntry.extra || ""}`;
         for (const problem of yearEntry.problems) {
           index.set(problem.id, {
             facultySlug: faculty.slug,
-            year: yearEntry.year,
+            yearKey,
             problem,
           });
         }
@@ -47,8 +48,8 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
   const [expandedFaculty, setExpandedFaculty] = useState<string | null>(
     selectedLocation?.facultySlug ?? null
   );
-  const [expandedYear, setExpandedYear] = useState<number | null>(
-    selectedLocation?.year ?? null
+  const [expandedYear, setExpandedYear] = useState<string | null>(
+    selectedLocation?.yearKey ?? null
   );
   const [filterReported, setFilterReported] = useState(false);
 
@@ -56,7 +57,7 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
   useEffect(() => {
     if (selectedLocation) {
       setExpandedFaculty(selectedLocation.facultySlug);
-      setExpandedYear(selectedLocation.year);
+      setExpandedYear(selectedLocation.yearKey);
     }
   }, [selectedLocation]);
 

@@ -12,11 +12,11 @@ interface SidebarProps {
   reports: Report[];
   selectedProblemId: string | null;
   expandedFaculty: string | null;
-  expandedYear: number | null;
+  expandedYear: string | null;
   filterReported: boolean;
   onFilterReportedChange: (value: boolean) => void;
   onExpandFaculty: (slug: string | null) => void;
-  onExpandYear: (year: number | null) => void;
+  onExpandYear: (year: string | null) => void;
   onSelectProblem: (id: string) => void;
 }
 
@@ -43,6 +43,7 @@ export function Sidebar({
   for (const faculty of faculties) {
     let facultyCount = 0;
     for (const year of faculty.years) {
+      const yearKey = `${year.year}:${year.extra || ""}`;
       let yearCount = 0;
       for (const p of year.problems) {
         if (hasReport(p.id)) {
@@ -50,7 +51,7 @@ export function Sidebar({
         }
       }
       if (yearCount > 0) {
-        yearReportCounts.set(`${faculty.slug}:${year.year}`, yearCount);
+        yearReportCounts.set(`${faculty.slug}:${yearKey}`, yearCount);
         facultyCount += yearCount;
       }
     }
@@ -67,7 +68,7 @@ export function Sidebar({
           ...f,
           years: f.years
             .filter((y) =>
-              yearReportCounts.has(`${f.slug}:${y.year}`)
+              yearReportCounts.has(`${f.slug}:${y.year}:${y.extra || ""}`)
             )
             .map((y) => ({
               ...y,
@@ -171,17 +172,18 @@ export function Sidebar({
               {isExpanded && (
                 <div className="ml-3 mt-1">
                   {faculty.years.map((yearEntry) => {
-                    const isYearExpanded = filterReported || expandedYear === yearEntry.year;
+                    const yearKey = `${yearEntry.year}:${yearEntry.extra || ""}`;
+                    const isYearExpanded = filterReported || expandedYear === yearKey;
                     const yearReportCount = yearReportCounts.get(
-                      `${faculty.slug}:${yearEntry.year}`
+                      `${faculty.slug}:${yearKey}`
                     );
 
                     return (
-                      <div key={yearEntry.year} className="mb-0.5">
+                      <div key={yearKey} className="mb-0.5">
                         <button
                           onClick={() =>
                             filterReported ? undefined : onExpandYear(
-                              isYearExpanded ? null : yearEntry.year
+                              isYearExpanded ? null : yearKey
                             )
                           }
                           className={cn(
@@ -198,7 +200,7 @@ export function Sidebar({
                               isYearExpanded && "rotate-90"
                             )}
                           />
-                          <span>{yearEntry.year}</span>
+                          <span>{yearEntry.label}</span>
                           {yearReportCount && !filterReported && (
                             <span className="text-[10px] font-medium text-amber-400">
                               {yearReportCount}

@@ -191,6 +191,17 @@ $(".answer-option[data-option]").each((_, el) => {
   }
 });
 
+// ── 10. CSS for answer options ──
+if (answerOptions.length > 0) {
+  const styleText = $("style").text();
+  if (!styleText.includes(".given-grid")) {
+    errors.push('Missing CSS for ".given-grid" — answer options will not display correctly without flex/grid layout.');
+  }
+  if (!styleText.includes(".given-item") && !styleText.includes(".answer-option")) {
+    errors.push('Missing CSS for ".given-item" / ".answer-option" — answer options will be unstyled.');
+  }
+}
+
 // ── Output ──
 if (errors.length === 0 && warnings.length === 0) {
   console.log("OK: All validation checks passed.");

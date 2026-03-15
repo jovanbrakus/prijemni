@@ -10,24 +10,20 @@ import type { FacultyEntry, Report } from "@/lib/types";
 interface SidebarProps {
   faculties: FacultyEntry[];
   reports: Report[];
-  selectedFaculty: string | null;
-  selectedYear: number | null;
-  selectedProblem: number | null;
+  selectedProblemId: string | null;
   expandedFaculty: string | null;
   expandedYear: number | null;
   filterReported: boolean;
   onFilterReportedChange: (value: boolean) => void;
   onExpandFaculty: (slug: string | null) => void;
   onExpandYear: (year: number | null) => void;
-  onSelectProblem: (faculty: string, year: number, order: number) => void;
+  onSelectProblem: (id: string) => void;
 }
 
 export function Sidebar({
   faculties,
   reports,
-  selectedFaculty,
-  selectedYear,
-  selectedProblem,
+  selectedProblemId,
   expandedFaculty,
   expandedYear,
   filterReported,
@@ -81,8 +77,6 @@ export function Sidebar({
             })),
         }))
     : faculties;
-
-
 
   return (
     <ScrollArea className="h-full">
@@ -218,22 +212,13 @@ export function Sidebar({
                         {isYearExpanded && (
                           <div className="ml-4 mt-0.5">
                             {yearEntry.problems.map((problem) => {
-                              const isActive =
-                                selectedFaculty === faculty.slug &&
-                                selectedYear === yearEntry.year &&
-                                selectedProblem === problem.order;
+                              const isActive = selectedProblemId === problem.id;
                               const isReported = hasReport(problem.id);
 
                               return (
                                 <button
-                                  key={problem.order}
-                                  onClick={() =>
-                                    onSelectProblem(
-                                      faculty.slug,
-                                      yearEntry.year,
-                                      problem.order
-                                    )
-                                  }
+                                  key={problem.id}
+                                  onClick={() => onSelectProblem(problem.id)}
                                   className={cn(
                                     "flex w-full items-center gap-2 rounded-md px-3 py-1 text-left text-xs transition-colors",
                                     "hover:bg-accent hover:text-accent-foreground",

@@ -9,6 +9,12 @@ import { ProblemViewer } from "./problem-viewer";
 import { cn } from "@/lib/utils";
 import type { FacultyEntry, Report, CategoryOption } from "@/lib/types";
 
+interface ProblemLocation {
+  facultySlug: string;
+  year: number;
+  problem: import("@/lib/types").ProblemEntry;
+}
+
 function AppShellInner({ faculties: initialFaculties, categoryOptions }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[] }) {
   const [faculties, setFaculties] = useState(initialFaculties);
   const searchParams = useSearchParams();
@@ -16,19 +22,43 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
   const [mobileOpen, setMobileOpen] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
 
-  const selectedFaculty = searchParams.get("faculty");
-  const selectedYear = searchParams.get("year")
-    ? Number(searchParams.get("year"))
-    : null;
-  const selectedProblem = searchParams.get("problem")
-    ? Number(searchParams.get("problem"))
-    : null;
+  const selectedId = searchParams.get("id");
+
+  // Build flat lookup: id → { facultySlug, year, problem }
+  const problemIndex = useMemo(() => {
+    const index = new Map<string, ProblemLocation>();
+    for (const faculty of faculties) {
+      for (const yearEntry of faculty.years) {
+        for (const problem of yearEntry.problems) {
+          index.set(problem.id, {
+            facultySlug: faculty.slug,
+            year: yearEntry.year,
+            problem,
+          });
+        }
+      }
+    }
+    return index;
+  }, [faculties]);
+
+  const selectedLocation = selectedId ? problemIndex.get(selectedId) ?? null : null;
+  const selectedEntry = selectedLocation?.problem ?? null;
 
   const [expandedFaculty, setExpandedFaculty] = useState<string | null>(
-    selectedFaculty
+    selectedLocation?.facultySlug ?? null
   );
-  const [expandedYear, setExpandedYear] = useState<number | null>(selectedYear);
+  const [expandedYear, setExpandedYear] = useState<number | null>(
+    selectedLocation?.year ?? null
+  );
   const [filterReported, setFilterReported] = useState(false);
+
+  // Auto-expand sidebar when URL changes
+  useEffect(() => {
+    if (selectedLocation) {
+      setExpandedFaculty(selectedLocation.facultySlug);
+      setExpandedYear(selectedLocation.year);
+    }
+  }, [selectedLocation]);
 
   const fetchReports = useCallback(async () => {
     try {
@@ -46,50 +76,33 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
     fetchReports();
   }, [fetchReports]);
 
-  const selectedEntry = useMemo(() => {
-    if (!selectedFaculty || !selectedYear || !selectedProblem) return null;
-    const faculty = faculties.find((f) => f.slug === selectedFaculty);
-    if (!faculty) return null;
-    const year = faculty.years.find((y) => y.year === selectedYear);
-    if (!year) return null;
-    const problem = year.problems.find((p) => p.order === selectedProblem);
-    return problem ?? null;
-  }, [faculties, selectedFaculty, selectedYear, selectedProblem]);
-
   const solutionUrl = selectedEntry?.solutionUrl ?? null;
   const selectedDocument = selectedEntry?.document ?? null;
 
   const handleCategoryChange = useCallback(
     (newCategoryId: string | null) => {
-      if (!selectedFaculty || !selectedYear || !selectedProblem) return;
-      // Update local state optimistically
+      if (!selectedId) return;
       setFaculties((prev) =>
-        prev.map((f) => {
-          if (f.slug !== selectedFaculty) return f;
-          return {
-            ...f,
-            years: f.years.map((y) => {
-              if (y.year !== selectedYear) return y;
+        prev.map((f) => ({
+          ...f,
+          years: f.years.map((y) => ({
+            ...y,
+            problems: y.problems.map((p) => {
+              if (p.id !== selectedId) return p;
+              const opt = categoryOptions.find((c) => c.id === newCategoryId);
               return {
-                ...y,
-                problems: y.problems.map((p) => {
-                  if (p.order !== selectedProblem) return p;
-                  const opt = categoryOptions.find((c) => c.id === newCategoryId);
-                  return {
-                    ...p,
-                    category: newCategoryId,
-                    categorySr: opt?.sr ?? null,
-                    categoryGroupId: opt?.groupId ?? null,
-                    categoryGroupSr: opt?.groupSr ?? null,
-                  };
-                }),
+                ...p,
+                category: newCategoryId,
+                categorySr: opt?.sr ?? null,
+                categoryGroupId: opt?.groupId ?? null,
+                categoryGroupSr: opt?.groupSr ?? null,
               };
             }),
-          };
-        })
+          })),
+        }))
       );
     },
-    [selectedFaculty, selectedYear, selectedProblem, categoryOptions]
+    [selectedId, categoryOptions]
   );
 
   const currentReport = useMemo(() => {
@@ -98,12 +111,8 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
   }, [reports, selectedEntry]);
 
   const handleSelectProblem = useCallback(
-    (faculty: string, year: number, order: number) => {
-      const params = new URLSearchParams();
-      params.set("faculty", faculty);
-      params.set("year", String(year));
-      params.set("problem", String(order));
-      router.push(`/?${params.toString()}`, { scroll: false });
+    (id: string) => {
+      router.push(`/?id=${id}`, { scroll: false });
       setMobileOpen(false);
     },
     [router]
@@ -159,9 +168,7 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
           <Sidebar
             faculties={faculties}
             reports={reports}
-            selectedFaculty={selectedFaculty}
-            selectedYear={selectedYear}
-            selectedProblem={selectedProblem}
+            selectedProblemId={selectedId}
             expandedFaculty={expandedFaculty}
             expandedYear={expandedYear}
             filterReported={filterReported}
@@ -178,7 +185,7 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
             solutionUrl={solutionUrl}
             problemId={selectedEntry?.id ?? null}
             document={selectedDocument}
-            order={selectedProblem}
+            order={selectedEntry?.order ?? null}
             category={selectedEntry?.category ?? null}
             categorySr={selectedEntry?.categorySr ?? null}
             categoryGroupSr={selectedEntry?.categoryGroupSr ?? null}

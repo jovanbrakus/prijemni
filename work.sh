@@ -6,9 +6,10 @@ files=(
 #  "univerzitet_u_beogradu_gradevinski_fakultet_2009.pdf"
 #  "univerzitet_u_beogradu_matematicki_fakultet_2012.pdf"
 #  "univerzitet_u_beogradu_fizicki_fakultet_2009_grupa_b.pdf"
-  "univerzitet_u_beogradu_rudarsko_geoloski_fakultet_2007.pdf"
-  "univerzitet_u_beogradu_matematicki_fakultet_2011.pdf"
-  "univerzitet_u_beogradu_matematicki_fakultet_2010.pdf"
+  "univerzitet_u_beogradu_matematicki_fakultet_2009.pdf"
+  "univerzitet_u_beogradu_matematicki_fakultet_2008.pdf"
+  "univerzitet_u_beogradu_matematicki_fakultet_2007.pdf"
+  "univerzitet_u_beogradu_matematicki_fakultet_2006.pdf"
 )
 
 for file in "${files[@]}"; do

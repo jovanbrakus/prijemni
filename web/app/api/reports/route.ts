@@ -28,20 +28,17 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { document, order, description } = body as {
-      document: string;
-      order: number;
+    const { problemId, description } = body as {
+      problemId: string;
       description: string;
     };
 
-    if (!document || !order || !description?.trim()) {
+    if (!problemId || !description?.trim()) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const reports = readReports();
-    const existing = reports.find(
-      (r) => r.document === document && r.order === order
-    );
+    const existing = reports.find((r) => r.problemId === problemId);
     if (existing) {
       return NextResponse.json(
         { error: "Report already exists for this problem" },
@@ -49,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    reports.push({ document, order, description: description.trim() });
+    reports.push({ problemId, description: description.trim() });
     writeReports(reports);
 
     return NextResponse.json({ ok: true }, { status: 201 });
@@ -62,16 +59,14 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
-    const { document, order } = body as { document: string; order: number };
+    const { problemId } = body as { problemId: string };
 
-    if (!document || !order) {
+    if (!problemId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const reports = readReports();
-    const index = reports.findIndex(
-      (r) => r.document === document && r.order === order
-    );
+    const index = reports.findIndex((r) => r.problemId === problemId);
     if (index === -1) {
       return NextResponse.json({ error: "Report not found" }, { status: 404 });
     }

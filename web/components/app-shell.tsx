@@ -93,13 +93,9 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
   );
 
   const currentReport = useMemo(() => {
-    if (!selectedDocument || !selectedProblem) return null;
-    return (
-      reports.find(
-        (r) => r.document === selectedDocument && r.order === selectedProblem
-      ) ?? null
-    );
-  }, [reports, selectedDocument, selectedProblem]);
+    if (!selectedEntry) return null;
+    return reports.find((r) => r.problemId === selectedEntry.id) ?? null;
+  }, [reports, selectedEntry]);
 
   const handleSelectProblem = useCallback(
     (faculty: string, year: number, order: number) => {
@@ -180,6 +176,7 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
         <main className="min-h-0 flex-1">
           <ProblemViewer
             solutionUrl={solutionUrl}
+            problemId={selectedEntry?.id ?? null}
             document={selectedDocument}
             order={selectedProblem}
             category={selectedEntry?.category ?? null}

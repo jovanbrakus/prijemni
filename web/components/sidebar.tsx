@@ -37,12 +37,9 @@ export function Sidebar({
   onSelectProblem,
 }: SidebarProps) {
   // Build a set for O(1) report lookups
-  const reportSet = new Set(
-    reports.map((r) => `${r.document}:${r.order}`)
-  );
+  const reportSet = new Set(reports.map((r) => r.problemId));
 
-  const hasReport = (document: string, order: number) =>
-    reportSet.has(`${document}:${order}`);
+  const hasReport = (problemId: string) => reportSet.has(problemId);
 
   // Count reports per faculty/year
   const facultyReportCounts = new Map<string, number>();
@@ -52,7 +49,7 @@ export function Sidebar({
     for (const year of faculty.years) {
       let yearCount = 0;
       for (const p of year.problems) {
-        if (hasReport(p.document, p.order)) {
+        if (hasReport(p.id)) {
           yearCount++;
         }
       }
@@ -79,11 +76,13 @@ export function Sidebar({
             .map((y) => ({
               ...y,
               problems: y.problems.filter((p) =>
-                hasReport(p.document, p.order)
+                hasReport(p.id)
               ),
             })),
         }))
     : faculties;
+
+
 
   return (
     <ScrollArea className="h-full">
@@ -223,10 +222,7 @@ export function Sidebar({
                                 selectedFaculty === faculty.slug &&
                                 selectedYear === yearEntry.year &&
                                 selectedProblem === problem.order;
-                              const isReported = hasReport(
-                                problem.document,
-                                problem.order
-                              );
+                              const isReported = hasReport(problem.id);
 
                               return (
                                 <button

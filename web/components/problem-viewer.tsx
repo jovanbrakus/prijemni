@@ -7,6 +7,7 @@ import type { Report, CategoryOption } from "@/lib/types";
 
 interface ProblemViewerProps {
   solutionUrl: string | null;
+  problemId: string | null;
   document: string | null;
   order: number | null;
   category: string | null;
@@ -20,6 +21,7 @@ interface ProblemViewerProps {
 
 export function ProblemViewer({
   solutionUrl,
+  problemId,
   document,
   order,
   category,
@@ -37,20 +39,21 @@ export function ProblemViewer({
   const [error, setError] = useState<string | null>(null);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [savingCategory, setSavingCategory] = useState(false);
+  const [pendingCategory, setPendingCategory] = useState<string | null | undefined>(undefined);
 
   if (!solutionUrl) {
     return <EmptyState />;
   }
 
   const handleSubmitReport = async () => {
-    if (!description.trim() || !document || !order) return;
+    if (!description.trim() || !problemId) return;
     setSubmitting(true);
     setError(null);
     try {
       const res = await fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ document, order, description }),
+        body: JSON.stringify({ problemId, description }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -67,14 +70,14 @@ export function ProblemViewer({
   };
 
   const handleMarkFixed = async () => {
-    if (!document || !order) return;
+    if (!problemId) return;
     setSubmitting(true);
     setError(null);
     try {
       const res = await fetch("/api/reports", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ document, order }),
+        body: JSON.stringify({ problemId }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -88,8 +91,6 @@ export function ProblemViewer({
       setSubmitting(false);
     }
   };
-
-  const [pendingCategory, setPendingCategory] = useState<string | null | undefined>(undefined);
 
   const handleCategorySelect = (newCategory: string | null) => {
     if (!document || !order) return;

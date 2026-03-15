@@ -47,9 +47,10 @@ export interface ProblemEntry {
 }
 
 export interface Report {
-  document: string;
-  order: number;
+  problemId: string;
   description: string;
+  file?: string;
+  issues?: string[];
 }
 
 export interface YearEntry {

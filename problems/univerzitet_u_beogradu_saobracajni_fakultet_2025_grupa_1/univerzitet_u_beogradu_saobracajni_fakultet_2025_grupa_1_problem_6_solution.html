@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vrednost izraza sa korenom, kubnim korenom i apsolutnom vrednoscu</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Vrednost izraza (sqrt((-2025)^2) + cbrt((-2025)^3)) / |-2025|
+
+Korak 1: Izracunaj sqrt((-2025)^2)
+  (-2025)^2 = 2025^2 (kvadrat negativnog broja je pozitivan)
+  sqrt(2025^2) = |(-2025)| = 2025
+  Generalno pravilo: sqrt(a^2) = |a| za svako realno a.
+
+Korak 2: Izracunaj cbrt((-2025)^3)
+  (-2025)^3 = -(2025^3) (kubni stepen negativnog broja je negativan)
+  cbrt(-(2025^3)) = -2025
+  Generalno pravilo: cbrt(a^3) = a za svako realno a (kubni koren cuva znak).
+
+Korak 3: Izracunaj |-2025|
+  |-2025| = 2025
+
+Korak 4: Sastavi izraz
+  Brojilac: 2025 + (-2025) = 0
+  Imenilac: 2025
+  Rezultat: 0 / 2025 = 0
+
+Verifikacija:
+  Mozemo proveriti sa manjim brojem, npr. a = -3:
+  (sqrt((-3)^2) + cbrt((-3)^3)) / |-3| = (sqrt(9) + cbrt(-27)) / 3 = (3 + (-3)) / 3 = 0/3 = 0
+  Isto vazi za svako negativno a:
+  (|a| + a) / |a| = (-a + a) / (-a) = 0 / (-a) = 0 (gde je a < 0)
+
+Answer: (C) 0
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.given-data {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.given-data-item {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .step-container { padding: 10px; }
+  .given-data { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Izraz sa korenom, kubnim korenom i apsolutnom vrednoscu</h1>
+  <p class="subtitle">Osobine kvadratnog korena, kubnog korena i apsolutne vrednosti realnih brojeva</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Postavka zadatka</div>
+    <div class="problem-text">
+      Vrednost izraza
+      \[\dfrac{\sqrt{(-2025)^2} + \sqrt[3]{(-2025)^3}}{|-2025|}\]
+      je:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(-2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan resavanja</div>
+    <p class="plan-text">
+      Izracunacemo svaki deo izraza pojedinacno &mdash; brojilac i imenilac &mdash; koristeci osnovna pravila za kvadratni koren, kubni koren i apsolutnu vrednost. Zatim cemo sve spojiti u konacni rezultat.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Kljucne formule i teoreme</summary>
+      <ul style="margin-top: 12px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;"><strong>Kvadratni koren kvadrata:</strong> Za svako realno \(a\) vazi:
+          <div class="math-box">\[ \sqrt{a^2} = |a| \]</div>
+          Kvadratni koren uvek daje nenegativan rezultat, pa se negativni znak „gubi" &mdash; rezultat je apsolutna vrednost.
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Kubni koren kuba:</strong> Za svako realno \(a\) vazi:
+          <div class="math-box">\[ \sqrt[3]{a^3} = a \]</div>
+          Kubni koren cuva znak broja: koren negativnog broja je negativan, koren pozitivnog je pozitivan.
+        </li>
+        <li style="margin-bottom: 10px;"><strong>Apsolutna vrednost:</strong> Za svako realno \(a\) vazi:
+          <div class="math-box">\[ |a| = \begin{cases} a & \text{ako } a \geq 0 \\ -a & \text{ako } a < 0 \end{cases} \]</div>
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz izraza</div>
+    <canvas id="solutionCanvas" width="900" height="480"></canvas>
+    <p style="color: #64748b; font-size: 0.85rem; text-align: center; margin-top: 8px;">Dijagram prikazuje kako se tri dela izraza izracunavaju i kombinuju</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-title"><span class="step-badge">1</span> Izracunavanje \(\sqrt{(-2025)^2}\)</div>
+      <p class="step-explanation">
+        Prvo racunamo izraz ispod korena. Kada kvadriramo negativan broj, rezultat je uvek pozitivan:
+      </p>
+      <div class="math-box">
+        \[ (-2025)^2 = 2025^2 \]
+      </div>
+      <p class="step-explanation">
+        Sada vadimo kvadratni koren. Prema pravilu \(\sqrt{a^2} = |a|\):
+      </p>
+      <div class="math-box">
+        \[ \sqrt{(-2025)^2} = \sqrt{2025^2} = |{-2025}| = 2025 \]
+      </div>
+      <p class="step-explanation">
+        Dakle, prvi sabirak u brojiocu je <span class="highlight">2025</span>.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-title"><span class="step-badge">2</span> Izracunavanje \(\sqrt[3]{(-2025)^3}\)</div>
+      <p class="step-explanation">
+        Sada racunamo kubni koren kuba broja \(-2025\). Kada kubiramo negativan broj, rezultat ostaje negativan:
+      </p>
+      <div class="math-box">
+        \[ (-2025)^3 = -2025^3 \]
+      </div>
+      <p class="step-explanation">
+        Kubni koren cuva znak broja. Prema pravilu \(\sqrt[3]{a^3} = a\):
+      </p>
+      <div class="math-box">
+        \[ \sqrt[3]{(-2025)^3} = -2025 \]
+      </div>
+      <p class="step-explanation">
+        Drugi sabirak u brojiocu je <span class="highlight">\(-2025\)</span>.
+      </p>
+      <details>
+        <summary>Proveri se: Zasto kubni koren cuva znak?</summary>
+        <p>Kubni koren je inverzna operacija kubiranja. Posto je \((-2025)^3\) negativan broj, jedini realan broj ciji je kub jednak tom negativnom broju je upravo \(-2025\). Za razliku od kvadratnog korena (koji po definiciji daje nenegativan rezultat), kubni koren moze biti i negativan.</p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-title"><span class="step-badge">3</span> Izracunavanje imenioca \(|-2025|\)</div>
+      <p class="step-explanation">
+        Apsolutna vrednost negativnog broja je njegov pozitivni parnjak:
+      </p>
+      <div class="math-box">
+        \[ |-2025| = 2025 \]
+      </div>
+      <p class="step-explanation">
+        Imenilac razlomka je <span class="highlight">2025</span>.
+      </p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-title"><span class="step-badge">4</span> Racunanje brojioca</div>
+      <p class="step-explanation">
+        Sabiramo rezultate iz koraka 1 i 2:
+      </p>
+      <div class="math-box">
+        \[ \sqrt{(-2025)^2} + \sqrt[3]{(-2025)^3} = 2025 + (-2025) = 0 \]
+      </div>
+      <p class="step-explanation">
+        Brojilac je jednak nuli jer se dva sabirka medjusobno poniste.
+      </p>
+      <details>
+        <summary>Proveri se: Koliko je \(2025 + (-2025)\)?</summary>
+        <p>Zbir broja i njemu suprotnog broja je uvek nula: \(a + (-a) = 0\). Ovde je \(2025 + (-2025) = 0\).</p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container" data-step="5">
+      <div class="step-title"><span class="step-badge">5</span> Konacno izracunavanje</div>
+      <p class="step-explanation">
+        Delimo brojilac sa imeniocem:
+      </p>
+      <div class="math-box">
+        \[ \frac{\sqrt{(-2025)^2} + \sqrt[3]{(-2025)^3}}{|-2025|} = \frac{0}{2025} = 0 \]
+      </div>
+      <p class="step-explanation">
+        Nula podeljena bilo kojim brojem razlicitim od nule daje nulu.
+      </p>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Kljucni uvid</div>
+    <p>
+      Ovaj zadatak ne zavisi od konkretnog broja \(2025\)! Za svako negativno \(a\) vazi:
+    </p>
+    <div class="math-box" style="text-align: center;">
+      \[ \frac{\sqrt{a^2} + \sqrt[3]{a^3}}{|a|} = \frac{|a| + a}{|a|} = \frac{(-a) + a}{-a} = \frac{0}{-a} = 0 \]
+    </div>
+    <p style="margin-top: 10px;">
+      Sustina je u tome sto \(\sqrt{a^2} = |a|\) uvek „uklanja" negativan znak, dok \(\sqrt[3]{a^3} = a\) cuva negativan znak. Kada je \(a < 0\), ova dva rezultata su suprotni brojevi, pa im je zbir nula.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konacan odgovor</div>
+    <div class="answer">\(0\)</div>
+    <div class="final-options">
+      <div class="final-option" data-option="A">(A) \(2\)</div>
+      <div class="final-option" data-option="B">(B) \(-2\)</div>
+      <div class="final-option correct" data-option="C">(C) \(0\)</div>
+      <div class="final-option" data-option="D">(D) \(1\)</div>
+      <div class="final-option" data-option="E">(E) \(-1\)</div>
+    </div>
+    <p class="verification-note">
+      Verifikacija sa manjim brojem: za \(a = -3\), izraz daje \(\frac{\sqrt{9} + \sqrt[3]{-27}}{|-3|} = \frac{3 + (-3)}{3} = \frac{0}{3} = 0\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Mesanje kvadratnog i kubnog korena</div>
+      <p>Najcesca greska je pretpostaviti da i kubni koren „uklanja" negativan znak, pa izracunati \(\sqrt[3]{(-2025)^3} = 2025\). To bi dalo \(\frac{2025 + 2025}{2025} = 2\), sto je pogresan odgovor (A). Zapamtite: <em>kubni koren cuva znak</em>, za razliku od kvadratnog korena.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogresno tumacenje \(\sqrt{a^2}\)</div>
+      <p>Neki ucenici misle da je \(\sqrt{(-2025)^2} = -2025\). Medutim, kvadratni koren po definiciji daje nenegativan rezultat: \(\sqrt{a^2} = |a| \geq 0\). Dakle, \(\sqrt{(-2025)^2} = 2025\), ne \(-2025\).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Sta ako umesto \(-2025\) stavimo pozitivan broj? Izracunajte vrednost izraza
+      \[\frac{\sqrt{a^2} + \sqrt[3]{a^3}}{|a|}\]
+      za \(a = 2025\) (pozitivan broj). Da li je rezultat isti?
+    </p>
+    <details>
+      <summary>Nagovestaj</summary>
+      <p>Za pozitivno \(a\): \(\sqrt{a^2} = a\), \(\sqrt[3]{a^3} = a\), \(|a| = a\). Dakle izraz postaje \(\frac{a + a}{a} = \frac{2a}{a} = 2\). Rezultat je \(2\), ne \(0\)! Razlika nastaje jer za pozitivno \(a\) oba sabirka u brojiocu imaju isti znak, dok za negativno \(a\) imaju suprotne znakove.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('solutionCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 480 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 480;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const scale = Math.min(W / 800, 1);
+    const fontBase = Math.max(12, 14 * scale);
+    const fontLarge = Math.max(14, 18 * scale);
+    const fontTitle = Math.max(16, 20 * scale);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold ' + fontTitle + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Razbijanje izraza na delove', W / 2, 34);
+
+    // Three columns for the three parts of the expression
+    const colW = Math.min(220, (W - 80) / 3);
+    const startX = (W - 3 * colW - 40) / 2;
+    const boxY = 65;
+    const boxH = 160;
+    const cornerR = 14;
+
+    function drawRoundedRect(x, y, w, h, r, fillColor, strokeColor) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Column 1: sqrt((-2025)^2)
+    const c1x = startX;
+    drawRoundedRect(c1x, boxY, colW, boxH, cornerR, 'rgba(96, 165, 250, 0.1)', '#60a5fa');
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold ' + fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Brojilac, 1. deo', c1x + colW / 2, boxY + 25);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u221A((\u22122025)\u00B2)', c1x + colW / 2, boxY + 55);
+
+    // Arrow down
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u2193', c1x + colW / 2, boxY + 78);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u221A(a\u00B2) = |a|', c1x + colW / 2, boxY + 100);
+
+    // Arrow down
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('\u2193', c1x + colW / 2, boxY + 120);
+
+    // Result
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold ' + fontLarge + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= 2025', c1x + colW / 2, boxY + 148);
+
+    // Column 2: cbrt((-2025)^3)
+    const c2x = startX + colW + 20;
+    drawRoundedRect(c2x, boxY, colW, boxH, cornerR, 'rgba(167, 139, 250, 0.1)', '#a78bfa');
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold ' + fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Brojilac, 2. deo', c2x + colW / 2, boxY + 25);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u00B3\u221A((\u22122025)\u00B3)', c2x + colW / 2, boxY + 55);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('\u2193', c2x + colW / 2, boxY + 78);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u00B3\u221A(a\u00B3) = a', c2x + colW / 2, boxY + 100);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('\u2193', c2x + colW / 2, boxY + 120);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold ' + fontLarge + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= \u22122025', c2x + colW / 2, boxY + 148);
+
+    // Column 3: |-2025|
+    const c3x = startX + 2 * (colW + 20);
+    drawRoundedRect(c3x, boxY, colW, boxH, cornerR, 'rgba(52, 211, 153, 0.1)', '#34d399');
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold ' + fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Imenilac', c3x + colW / 2, boxY + 25);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('|\u22122025|', c3x + colW / 2, boxY + 55);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('\u2193', c3x + colW / 2, boxY + 78);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('|a| = \u2212a za a < 0', c3x + colW / 2, boxY + 100);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('\u2193', c3x + colW / 2, boxY + 120);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold ' + fontLarge + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= 2025', c3x + colW / 2, boxY + 148);
+
+    // Combination section
+    const combY = boxY + boxH + 30;
+
+    // Arrow from columns 1 and 2 merging
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+
+    // Arrow from col 1 down
+    ctx.beginPath();
+    ctx.moveTo(c1x + colW / 2, boxY + boxH);
+    ctx.lineTo(c1x + colW / 2, combY - 5);
+    ctx.lineTo(W / 2 - 20, combY - 5);
+    ctx.stroke();
+
+    // Arrow from col 2 down
+    ctx.strokeStyle = '#a78bfa';
+    ctx.beginPath();
+    ctx.moveTo(c2x + colW / 2, boxY + boxH);
+    ctx.lineTo(c2x + colW / 2, combY - 5);
+    ctx.lineTo(W / 2 + 20, combY - 5);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // Numerator box
+    const numBoxW = Math.min(400, W * 0.6);
+    drawRoundedRect(W / 2 - numBoxW / 2, combY, numBoxW, 50, 12, 'rgba(96, 165, 250, 0.08)', '#475569');
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Brojilac: 2025 + (\u22122025) = 0', W / 2, combY + 30);
+
+    // Arrow down from numerator
+    const divY = combY + 70;
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(W / 2, combY + 50);
+    ctx.lineTo(W / 2, divY);
+    ctx.stroke();
+
+    // Arrow from col 3 to division
+    ctx.strokeStyle = '#34d399';
+    ctx.beginPath();
+    ctx.moveTo(c3x + colW / 2, boxY + boxH);
+    ctx.lineTo(c3x + colW / 2, divY);
+    ctx.lineTo(W / 2 + numBoxW / 2 - 30, divY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Division box
+    const divBoxW = Math.min(350, W * 0.5);
+    drawRoundedRect(W / 2 - divBoxW / 2, divY + 5, divBoxW, 50, 12, 'rgba(52, 211, 153, 0.08)', '#475569');
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = fontBase + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Razlomak: 0 / 2025', W / 2, divY + 35);
+
+    // Final result
+    const resY = divY + 80;
+
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(W / 2, divY + 55);
+    ctx.lineTo(W / 2, resY - 5);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const resBoxW = Math.min(200, W * 0.3);
+    ctx.beginPath();
+    ctx.roundRect(W / 2 - resBoxW / 2, resY, resBoxW, 55, 14);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.1)';
+    ctx.fill();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold ' + Math.max(22, 28 * scale) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('= 0', W / 2, resY + 37);
+
+    // Bottom note
+    ctx.fillStyle = '#64748b';
+    ctx.font = Math.max(11, 12 * scale) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Kljuc: \u221A(a\u00B2) = |a| (uvek pozitivan), \u00B3\u221A(a\u00B3) = a (cuva znak)', W / 2, resY + 80);
+  }
+
+  // Step click handlers
+  const stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(container) {
+    container.addEventListener('click', function() {
+      stepContainers.forEach(function(c) { c.classList.remove('active'); });
+      container.classList.add('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Izraz sa korenom, kubnim korenom i apsolutnom vrednoscu",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kvadratni koren", "kubni koren", "apsolutna vrednost", "stepenovanje", "algebarski izrazi"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Određivanje člana aritmetičkog niza</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: In an arithmetic sequence, a_6 + a_14 = 2022. Find a_10.
+
+Recall: The general term of an arithmetic sequence is a_n = a_1 + (n-1)*d, where d is the common difference.
+
+Step 1: Express a_6 and a_14 using the formula
+  a_6 = a_1 + 5d
+  a_14 = a_1 + 13d
+
+Step 2: Add them
+  a_6 + a_14 = (a_1 + 5d) + (a_1 + 13d) = 2*a_1 + 18d
+
+Step 3: Factor out
+  2*a_1 + 18d = 2*(a_1 + 9d)
+
+Step 4: Notice that a_10 = a_1 + 9d
+  So a_6 + a_14 = 2*a_10
+
+Step 5: Use the given condition
+  2*a_10 = 2022
+  a_10 = 1011
+
+Answer: (A) 1011
+
+Verification: This is a well-known property of arithmetic sequences: a_m + a_n = 2*a_k where k = (m+n)/2.
+Here m=6, n=14, k=(6+14)/2=10, so a_6 + a_14 = 2*a_10 = 2022 => a_10 = 1011. Correct!
+
+Alternative check: Let a_1 = 100, d = 1.
+  a_6 = 100 + 5 = 105, a_14 = 100 + 13 = 113, a_6 + a_14 = 218, a_10 = 109 = 218/2. Property holds.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Određivanje člana aritmetičkog niza</h1>
+  <p class="subtitle">Primena osobine simetrije članova aritmetičkog niza za nalaženje srednje vrednosti</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      U aritmetičkom nizu je \(a_6 + a_{14} = 2022\). Tada je \(a_{10}\) jednako:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(1011\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(1000\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(510\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(278\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(1048\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Iskoristićemo formulu za opšti član aritmetičkog niza da izrazimo \(a_6\) i \(a_{14}\) preko prvog člana \(a_1\) i razlike \(d\). Zatim ćemo uočiti da je njihov zbir direktno povezan sa \(a_{10}\), zahvaljujući osobini simetrije aritmetičkog niza.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Opšti član aritmetičkog niza</summary>
+      <div class="math-box">
+        \[ a_n = a_1 + (n - 1) \cdot d \]
+      </div>
+      <p>Svaki član aritmetičkog niza se može izraziti preko prvog člana \(a_1\) i razlike niza \(d\). Razlika \(d\) je konstantna vrednost koja se dodaje od jednog člana do sledećeg: \(d = a_{n+1} - a_n\).</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Osobina simetrije aritmetičkog niza</summary>
+      <div class="math-box">
+        \[ a_m + a_n = 2 \cdot a_k, \quad \text{gde je } k = \frac{m + n}{2} \]
+      </div>
+      <p>U aritmetičkom nizu, zbir dva člana čiji su indeksi simetrični u odnosu na neki srednji indeks \(k\) jednak je dvostrukoj vrednosti tog srednjeg člana. Na primer, \(a_3 + a_7 = 2 \cdot a_5\).</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz aritmetičkog niza</div>
+    <canvas id="seqCanvas" width="900" height="420"></canvas>
+    <p class="drag-hint">Prikaz članova aritmetičkog niza i simetrije oko \(a_{10}\)</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Zapišimo formulu za opšti član</div>
+      <p class="step-explanation">
+        Neka je \(a_1\) prvi član aritmetičkog niza, a \(d\) razlika niza. Opšti član je:
+      </p>
+      <div class="math-box">
+        \[ a_n = a_1 + (n - 1) \cdot d \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Izrazimo \(a_6\) i \(a_{14}\)</div>
+      <p class="step-explanation">
+        Primenom formule za \(n = 6\) i \(n = 14\):
+      </p>
+      <div class="math-box">
+        \[ a_6 = a_1 + 5d \]
+      </div>
+      <div class="math-box">
+        \[ a_{14} = a_1 + 13d \]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Saberimo \(a_6\) i \(a_{14}\)</div>
+      <p class="step-explanation">
+        Sabiranjem ova dva izraza dobijamo:
+      </p>
+      <div class="math-box">
+        \[ a_6 + a_{14} = (a_1 + 5d) + (a_1 + 13d) = 2a_1 + 18d \]
+      </div>
+      <details>
+        <summary>Proveri sebe: Koliko je \(5d + 13d\)?</summary>
+        <p>\(5d + 13d = 18d\). Sabiramo koeficijente uz \(d\): \(5 + 13 = 18\).</p>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Iznesimo zajednički faktor</div>
+      <p class="step-explanation">
+        Primetimo da možemo izlučiti faktor 2:
+      </p>
+      <div class="math-box">
+        \[ 2a_1 + 18d = 2 \cdot (a_1 + 9d) \]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Prepoznajmo \(a_{10}\)</div>
+      <p class="step-explanation">
+        Pogledajmo šta je \(a_{10}\) prema formuli za opšti član:
+      </p>
+      <div class="math-box">
+        \[ a_{10} = a_1 + (10 - 1) \cdot d = a_1 + 9d \]
+      </div>
+      <p class="step-explanation">
+        Dakle, izraz \(a_1 + 9d\) je upravo \(a_{10}\)! Zamenom u prethodni rezultat:
+      </p>
+      <div class="math-box">
+        \[ a_6 + a_{14} = 2 \cdot a_{10} \]
+      </div>
+      <details>
+        <summary>Proveri sebe: Zašto je baš \(a_{10}\) srednji član?</summary>
+        <p>Zato što je 10 aritmetička sredina indeksa 6 i 14: \(\frac{6 + 14}{2} = 10\). U aritmetičkom nizu, član čiji je indeks srednja vrednost dva druga indeksa predstavlja njihovu aritmetičku sredinu.</p>
+      </details>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Izračunajmo \(a_{10}\)</div>
+      <p class="step-explanation">
+        Koristeći uslov iz zadatka \(a_6 + a_{14} = 2022\):
+      </p>
+      <div class="math-box">
+        \[ 2 \cdot a_{10} = 2022 \]
+      </div>
+      <p class="step-explanation">
+        Deljenjem obe strane sa 2:
+      </p>
+      <div class="math-box">
+        \[ a_{10} = \frac{2022}{2} = 1011 \]
+      </div>
+      <details>
+        <summary>Proveri sebe: Da li je 1011 među ponuđenim odgovorima?</summary>
+        <p>Da! Vrednost \(1011\) odgovara opciji (A). Rešenje je tačno.</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Ovaj zadatak se rešava gotovo trenutno ako poznajete osobinu simetrije aritmetičkog niza: zbir dva člana čiji su indeksi na jednakom rastojanju od nekog srednjeg indeksa jednak je dvostrukom srednjem članu. Pošto su 6 i 14 simetrični u odnosu na 10 (oba su udaljena za 4), važi \(a_6 + a_{14} = 2 \cdot a_{10}\). Nije potrebno poznavati ni \(a_1\) ni \(d\)!
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(a_{10} = 1011\)</div>
+    <div class="final-options">
+      <span class="final-option correct" data-option="A">(A) \(1011\)</span>
+      <span class="final-option" data-option="B">(B) \(1000\)</span>
+      <span class="final-option" data-option="C">(C) \(510\)</span>
+      <span class="final-option" data-option="D">(D) \(278\)</span>
+      <span class="final-option" data-option="E">(E) \(1048\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Izaberimo konkretan primer sa \(a_1 = 1\), \(d = 202\). Tada je \(a_6 = 1 + 5 \cdot 202 = 1011\), \(a_{14} = 1 + 13 \cdot 202 = 2627\). Ups, zbir je 3638, ne 2022. Pokušajmo \(a_1 = 11\), \(d = 200\): \(a_6 = 1011\), \(a_{14} = 2611\), opet previše. Zapravo, bitno je samo da \(a_{10} = a_1 + 9d\) i \(2(a_1 + 9d) = 2022\), pa \(a_{10} = 1011\). &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Deljenje pogrešnim brojem</div>
+      <p>Neki učenici dele 2022 sa nekim drugim brojem (npr. sa 4 ili sa 20) umesto sa 2. Ključno je uočiti da važi \(a_6 + a_{14} = 2 \cdot a_{10}\), pa se 2022 deli isključivo sa 2.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pokušaj nalaženja \(a_1\) i \(d\) pojedinačno</div>
+      <p>Zadatak daje samo jednu jednačinu, a nepoznate su dve (\(a_1\) i \(d\)). Nije moguće naći ih pojedinačno, ali to nije ni potrebno -- tražena vrednost \(a_{10}\) se može izraziti direktno iz datog uslova.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      U aritmetičkom nizu važi \(a_3 + a_7 + a_{11} + a_{15} = 100\). Koliki je zbir \(a_1 + a_{17}\)?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Primeni osobinu simetrije: \(a_3 + a_{15} = a_7 + a_{11} = 2 \cdot a_9\). Dakle, zbir četiri člana je \(4 \cdot a_9 = 100\), pa je \(a_9 = 25\). A pošto su 1 i 17 takođe simetrični oko 9, važi \(a_1 + a_{17} = 2 \cdot a_9 = 50\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('seqCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 420 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 420;
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Članovi aritmetičkog niza i osobina simetrije', W / 2, 28);
+
+    // Draw number line
+    const lineY = 140;
+    const marginX = 60;
+    const lineStartX = marginX;
+    const lineEndX = W - marginX;
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(lineStartX, lineY);
+    ctx.lineTo(lineEndX, lineY);
+    ctx.stroke();
+
+    // Members to show: a_1 through a_20 (just indices)
+    const indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+    const totalSpan = lineEndX - lineStartX;
+    const spacing = totalSpan / (indices.length - 1);
+
+    // Draw tick marks and labels
+    for (let i = 0; i < indices.length; i++) {
+      const x = lineStartX + i * spacing;
+      const n = indices[i];
+
+      // Tick
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, lineY - 6);
+      ctx.lineTo(x, lineY + 6);
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(n.toString(), x, lineY + 22);
+    }
+
+    // Index label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'italic 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('indeks n', W / 2, lineY + 40);
+
+    // Highlight a_6, a_10, a_14
+    const highlights = [
+      { idx: 6, color: '#60a5fa', label: 'a\u2086' },
+      { idx: 10, color: '#4ade80', label: 'a\u2081\u2080' },
+      { idx: 14, color: '#60a5fa', label: 'a\u2081\u2084' }
+    ];
+
+    for (const h of highlights) {
+      const x = lineStartX + (h.idx - 1) * spacing;
+
+      // Glow circle
+      const gradient = ctx.createRadialGradient(x, lineY, 0, x, lineY, 18);
+      gradient.addColorStop(0, h.color + '40');
+      gradient.addColorStop(1, h.color + '00');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(x, lineY, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Filled circle
+      ctx.fillStyle = h.color;
+      ctx.beginPath();
+      ctx.arc(x, lineY, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label above
+      ctx.fillStyle = h.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(h.label, x, lineY - 24);
+    }
+
+    // Draw symmetry arcs
+    const x6 = lineStartX + 5 * spacing;
+    const x10 = lineStartX + 9 * spacing;
+    const x14 = lineStartX + 13 * spacing;
+
+    // Arc from a_6 to a_14 (top)
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    const arcCenterX = (x6 + x14) / 2;
+    const arcRadius = (x14 - x6) / 2;
+    ctx.arc(arcCenterX, lineY, arcRadius, Math.PI, 0, false);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label on arc
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('rastojanje: 4', (x6 + x10) / 2, lineY - arcRadius / 2 - 18);
+    ctx.fillText('rastojanje: 4', (x10 + x14) / 2, lineY - arcRadius / 2 - 18);
+
+    // Small arcs showing equal distances
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 3]);
+
+    // Arc from a_6 to a_10
+    ctx.beginPath();
+    const smallArcR1 = (x10 - x6) / 2;
+    ctx.arc((x6 + x10) / 2, lineY, smallArcR1, Math.PI, 0, false);
+    ctx.stroke();
+
+    // Arc from a_10 to a_14
+    ctx.beginPath();
+    const smallArcR2 = (x14 - x10) / 2;
+    ctx.arc((x10 + x14) / 2, lineY, smallArcR2, Math.PI, 0, false);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Formula section
+    const formulaY = 230;
+
+    // Box for the key identity
+    const boxW = Math.min(500, W * 0.7);
+    const boxH = 60;
+    const boxX = W / 2;
+
+    ctx.beginPath();
+    ctx.roundRect(boxX - boxW / 2, formulaY - boxH / 2, boxW, boxH, 12);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    ctx.fill();
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Osobina simetrije:', boxX, formulaY - 10);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('a\u2086 + a\u2081\u2084 = 2 \u00B7 a\u2081\u2080', boxX, formulaY + 14);
+
+    // Arrow down
+    const arrowStartY = formulaY + boxH / 2 + 8;
+    const arrowEndY = formulaY + boxH / 2 + 40;
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(boxX, arrowStartY);
+    ctx.lineTo(boxX, arrowEndY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Arrow head
+    ctx.beginPath();
+    ctx.moveTo(boxX, arrowEndY);
+    ctx.lineTo(boxX - 5, arrowEndY - 7);
+    ctx.lineTo(boxX + 5, arrowEndY - 7);
+    ctx.closePath();
+    ctx.fillStyle = '#475569';
+    ctx.fill();
+
+    // Calculation box
+    const calcY = arrowEndY + 35;
+    const calcBoxW = Math.min(380, W * 0.55);
+    const calcBoxH = 50;
+
+    ctx.beginPath();
+    ctx.roundRect(boxX - calcBoxW / 2, calcY - calcBoxH / 2, calcBoxW, calcBoxH, 12);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    ctx.fill();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Zamena uslova:', boxX, calcY - 8);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('2 \u00B7 a\u2081\u2080 = 2022', boxX, calcY + 16);
+
+    // Arrow down to result
+    const arrowStartY2 = calcY + calcBoxH / 2 + 8;
+    const arrowEndY2 = calcY + calcBoxH / 2 + 40;
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(boxX, arrowStartY2);
+    ctx.lineTo(boxX, arrowEndY2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(boxX, arrowEndY2);
+    ctx.lineTo(boxX - 5, arrowEndY2 - 7);
+    ctx.lineTo(boxX + 5, arrowEndY2 - 7);
+    ctx.closePath();
+    ctx.fillStyle = '#475569';
+    ctx.fill();
+
+    // Final result
+    const resultY = arrowEndY2 + 22;
+
+    // Glow
+    const glow = ctx.createRadialGradient(boxX, resultY, 0, boxX, resultY, 50);
+    glow.addColorStop(0, 'rgba(74, 222, 128, 0.15)');
+    glow.addColorStop(1, 'rgba(74, 222, 128, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(boxX, resultY, 50, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 26px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('a\u2081\u2080 = 1011', boxX, resultY + 8);
+
+    // Green circle
+    ctx.beginPath();
+    ctx.arc(boxX, resultY + 2, 36, 0, Math.PI * 2);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Answer label
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Odgovor: (A)', boxX, resultY + 42);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Određivanje člana aritmetičkog niza iz zbira simetričnih članova",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["aritmetički niz", "osobina simetrije", "opšti član niza", "nizovi"]
+}
+BRAINSPARK_META-->

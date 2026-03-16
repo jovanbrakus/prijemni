@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uzastopno procentualno poskupljenje</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Roba je poskupela dva puta u toku godine: u februaru 10% i u aprilu 10%.
+Pitanje: Koliko je ukupno poskupljenje?
+
+Poznato:
+  Prvo poskupljenje: 10% (februar)
+  Drugo poskupljenje: 10% (april)
+
+Ključni uvid: Poskupljenja se NE sabiraju prosto (10% + 10% ≠ 20%).
+Svako poskupljenje se primenjuje na NOVU (već povećanu) cenu.
+
+Neka je početna cena P₀.
+
+Korak 1: Posle prvog poskupljenja (10% u februaru)
+  P₁ = P₀ · (1 + 10/100) = P₀ · 1,10
+
+Korak 2: Posle drugog poskupljenja (10% u aprilu)
+  P₂ = P₁ · (1 + 10/100) = P₁ · 1,10 = P₀ · 1,10 · 1,10 = P₀ · 1,21
+
+Korak 3: Ukupno poskupljenje
+  P₂ = P₀ · 1,21
+  Odnos: P₂/P₀ = 1,21
+  Procentualno povećanje: (1,21 - 1) · 100% = 0,21 · 100% = 21%
+
+Verifikacija sa konkretnim brojem:
+  Neka P₀ = 100 din
+  Posle februara: 100 · 1,10 = 110 din
+  Posle aprila: 110 · 1,10 = 121 din
+  Razlika: 121 - 100 = 21 din
+  Procenat: 21/100 · 100% = 21%
+
+Odgovor: (E) 21%
+
+Zašto nije 20%? Jer se drugi porast od 10% primenjuje na već povećanu cenu (110),
+a ne na originalnu (100). Taj dodatni 1% je "kamata na kamatu" efekat.
+  10% od 100 = 10
+  10% od 110 = 11
+  Ukupno: 10 + 11 = 21, ne 20.
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #a78bfa;
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+  margin-top: 8px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 12px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 100px;
+  flex: 1;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.answer-option {
+  cursor: default;
+  transition: border-color 0.2s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step {
+  position: relative;
+  padding-left: 40px;
+  margin-bottom: 24px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  position: absolute;
+  left: 8px;
+  top: 4px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.step p {
+  margin-bottom: 8px;
+}
+
+.checkpoint {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 15px 0;
+  font-size: 0.95rem;
+  color: #34d399;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.checkpoint summary::-webkit-details-marker { display: none; }
+
+.badge {
+  display: inline-block;
+  background: rgba(167, 139, 250, 0.15);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 6px;
+  padding: 2px 10px;
+  font-size: 0.8rem;
+  color: #a78bfa;
+  margin-bottom: 6px;
+}
+
+.insight-box {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer {
+  background: rgba(52, 211, 153, 0.1);
+  border: 2px solid rgba(52, 211, 153, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer h2 {
+  color: #34d399;
+  justify-content: center;
+}
+
+.final-answer .answer-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 12px 0;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.opt {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 90px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.opt.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+  color: #4ade80;
+}
+
+.pitfall-box {
+  background: rgba(224, 148, 104, 0.08);
+  border: 1px solid rgba(224, 148, 104, 0.25);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.pitfall-box h2 {
+  color: #e09468;
+}
+
+.pitfall-box ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.pitfall-box li {
+  padding: 6px 0 6px 24px;
+  position: relative;
+  color: #e2e8f0;
+}
+
+.pitfall-box li::before {
+  content: '\26A0';
+  position: absolute;
+  left: 0;
+}
+
+.challenge-box {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.challenge-box h2 {
+  color: #60a5fa;
+}
+
+details {
+  margin: 15px 0 24px 0;
+}
+
+details summary {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  color: #e2e8f0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details[open] summary {
+  border-radius: 12px 12px 0 0;
+  margin-bottom: 0;
+}
+
+details .details-content {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+details .details-content ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+details .details-content li {
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+  touch-action: none;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 80px; padding: 10px 12px; }
+  .step { padding-left: 34px; }
+  .final-answer .answer-value { font-size: 1.5rem; }
+  .answer-options { gap: 6px; }
+  .opt { min-width: 70px; padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Uzastopno procentualno poskupljenje</h1>
+  <p class="subtitle">Procentni račun, uzastopni procenti, složeni rast</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      U toku jedne godine roba je poskupela <span class="highlight">dva puta</span>: u februaru <span class="highlight-blue">\(10\%\)</span> i u aprilu <span class="highlight-blue">\(10\%\)</span>. Ukupno poskupljenje je:
+    </p>
+
+    <h3>Poznate veličine</h3>
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Prvo poskupljenje</div>
+        <div class="value">\(10\%\) (februar)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Drugo poskupljenje</div>
+        <div class="value">\(10\%\) (april)</div>
+      </div>
+    </div>
+
+    <h3>Ponuđeni odgovori</h3>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(20\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(10\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(15\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(25\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(21\%\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Uzastopna procentualna povećanja se ne sabiraju, već se <span class="highlight-blue">množe odgovarajući koeficijenti</span>. Označićemo početnu cenu sa \( P_0 \), primeniti oba poskupljenja jedno za drugim, i izračunati ukupan procenat promene.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <details>
+    <summary>Ključne formule i teoreme</summary>
+    <div class="details-content">
+      <ul>
+        <li>
+          <strong>Procentualno povećanje:</strong> Ako veličina raste za \( p\% \), nova vrednost je \( V_{\text{nova}} = V_{\text{stara}} \cdot \left(1 + \dfrac{p}{100}\right) \).
+        </li>
+        <li>
+          <strong>Uzastopni procenti:</strong> Ako se primene dva uzastopna povećanja od \( p\% \) i \( q\% \), ukupan koeficijent je \( k = \left(1 + \dfrac{p}{100}\right) \cdot \left(1 + \dfrac{q}{100}\right) \), a ukupan procenat povećanja je \( (k - 1) \cdot 100\% \).
+        </li>
+        <li>
+          <strong>Razlika od prostog sabiranja:</strong> Ukupno poskupljenje nije \( p + q \), jer se drugi procenat primenjuje na <em>već povećanu</em> vrednost. Razlika iznosi \( \dfrac{p \cdot q}{100}\%\) (tzv. "procenat na procenat").
+        </li>
+      </ul>
+    </div>
+  </details>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="mainCanvas" height="440"></canvas>
+    <p style="color: #94a3b8; font-size: 0.85rem; text-align: center; margin-top: 10px;">
+      Pomerajte klizač da menjate procenat svakog poskupljenja i vidite kako se menja ukupno povećanje
+    </p>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 12px;">
+      <span style="color: #94a3b8; font-size: 0.9rem;">Procenat:</span>
+      <input type="range" id="pctSlider" min="1" max="50" value="10" style="width: 200px; accent-color: #60a5fa;">
+      <span id="pctLabel" style="color: #60a5fa; font-weight: 700; font-size: 1rem; min-width: 40px;">10%</span>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step" id="step1">
+      <div class="step-number">1</div>
+      <span class="badge">Postavka</span>
+      <p><strong>Označavamo početnu cenu</strong></p>
+      <p>
+        Neka je početna cena robe (pre bilo kakvog poskupljenja) jednaka \( P_0 \).
+      </p>
+      <p style="color: #94a3b8; font-size: 0.9rem;">
+        Nije bitno kolika je konkretna vrednost \( P_0 \) -- rezultat (procenat) ne zavisi od nje.
+      </p>
+    </div>
+
+    <div class="step" id="step2">
+      <div class="step-number">2</div>
+      <span class="badge">Februar</span>
+      <p><strong>Primenjujemo prvo poskupljenje od 10%</strong></p>
+      <p>
+        Povećanje za \(10\%\) znači da se cena množi koeficijentom \(1{,}10\):
+      </p>
+      <div class="math-box">
+        \[ P_1 = P_0 \cdot \left(1 + \frac{10}{100}\right) = P_0 \cdot 1{,}10 \]
+      </div>
+      <p>
+        Posle februara, cena je <span class="highlight-green">\( P_1 = 1{,}10 \cdot P_0 \)</span>.
+      </p>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Ako je \( P_0 = 100 \) din, kolika je cena posle prvog poskupljenja?</summary>
+      <p style="margin-top: 8px;">\( P_1 = 100 \cdot 1{,}10 = 110 \) din. Povećanje od 10% na 100 daje 110.</p>
+    </details>
+
+    <div class="step" id="step3">
+      <div class="step-number">3</div>
+      <span class="badge">April</span>
+      <p><strong>Primenjujemo drugo poskupljenje od 10%</strong></p>
+      <p>
+        Sada se \(10\%\) primenjuje na <span class="highlight">novu cenu</span> \( P_1 \), a ne na početnu:
+      </p>
+      <div class="math-box">
+        \[ P_2 = P_1 \cdot 1{,}10 = (P_0 \cdot 1{,}10) \cdot 1{,}10 \]
+      </div>
+      <p>
+        Množimo koeficijente:
+      </p>
+      <div class="math-box">
+        \[ P_2 = P_0 \cdot 1{,}10 \cdot 1{,}10 = P_0 \cdot 1{,}21 \]
+      </div>
+      <p>
+        Posle aprila, cena je <span class="highlight-green">\( P_2 = 1{,}21 \cdot P_0 \)</span>.
+      </p>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Ako je \( P_1 = 110 \) din, koliko je \(10\%\) od te nove cene?</summary>
+      <p style="margin-top: 8px;">\( 10\% \cdot 110 = 11 \) din (ne 10!). Nova cena: \( 110 + 11 = 121 \) din. Vidimo da je taj dodatni 1 dinar upravo "procenat na procenat".</p>
+    </details>
+
+    <div class="step" id="step4">
+      <div class="step-number">4</div>
+      <span class="badge">Ukupno</span>
+      <p><strong>Računamo ukupno procentualno poskupljenje</strong></p>
+      <p>
+        Koeficijent ukupnog poskupljenja je \(1{,}21\). Procenat dobijamo oduzimanjem jedinice:
+      </p>
+      <div class="math-box">
+        \[ \text{Ukupno poskupljenje} = (1{,}21 - 1) \cdot 100\% = 0{,}21 \cdot 100\% = 21\% \]
+      </div>
+      <p>
+        Ukupno poskupljenje iznosi <span class="highlight-green">\(21\%\)</span>, a ne \(20\%\).
+      </p>
+    </div>
+
+    <div class="step" id="step5">
+      <div class="step-number">5</div>
+      <span class="badge">Verifikacija</span>
+      <p><strong>Proveravamo na konkretnom primeru</strong></p>
+      <p>
+        Neka je početna cena \( P_0 = 100 \) dinara:
+      </p>
+      <div class="math-box">
+        \[ \begin{align}
+        &\text{Posle februara:} \quad 100 + 10\% \cdot 100 = 100 + 10 = 110 \text{ din} \\[6pt]
+        &\text{Posle aprila:} \quad 110 + 10\% \cdot 110 = 110 + 11 = 121 \text{ din} \\[6pt]
+        &\text{Ukupno povećanje:} \quad \frac{121 - 100}{100} \cdot 100\% = 21\%
+        \end{align} \]
+      </div>
+      <p>
+        Potvrđujemo: ukupno poskupljenje je <span class="highlight-green">\(21\%\)</span>.
+      </p>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto rezultat nije 20%?</summary>
+      <p style="margin-top: 8px;">Zato što se drugi porast od \(10\%\) ne primenjuje na \(100\), već na \(110\). Razlika \(10\% \cdot 10\% = 1\%\) je dodatni procenat koji nastaje jer se "kamata računa na kamatu".</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>
+      Uzastopna procentualna povećanja se <strong>množe</strong>, ne sabiraju. Kada se roba poveća za \(p\%\) pa zatim za \(q\%\), ukupan koeficijent je proizvod pojedinačnih koeficijenata. Razlika u odnosu na prosto sabiranje je upravo \(\frac{p \cdot q}{100}\%\) -- u našem slučaju \(\frac{10 \cdot 10}{100} = 1\%\), što objašnjava zašto je rezultat \(21\%\) a ne \(20\%\).
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.1rem;">
+      \[ 1{,}10 \times 1{,}10 = 1{,}21 \quad \Longrightarrow \quad \text{ukupno poskupljenje} = 21\% \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\( 21\% \)</div>
+    <p style="color: #94a3b8; margin-bottom: 12px;">Tačan odgovor je <strong style="color:#4ade80;">(E)</strong></p>
+    <div class="answer-options">
+      <span class="opt">(A) \(20\%\)</span>
+      <span class="opt">(B) \(10\%\)</span>
+      <span class="opt">(C) \(15\%\)</span>
+      <span class="opt">(D) \(25\%\)</span>
+      <span class="opt correct">(E) \(21\%\)</span>
+    </div>
+    <p class="verification">
+      Verifikacija: \(1{,}10 \times 1{,}10 = 1{,}21\). Za \(P_0 = 100\): nakon februara cena je 110, nakon aprila 121. Razlika 121 - 100 = 21, što je 21% od početne cene.
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="pitfall-box">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>
+        <strong>Prosto sabiranje procenata:</strong> Mnogi učenici pomisle da je \(10\% + 10\% = 20\%\). Ovo bi bilo tačno samo ako bi se oba poskupljenja računala od iste (početne) cene, ali se svako naredno primenjuje na već promenjenu cenu.
+      </li>
+      <li>
+        <strong>Zanemarivanje "procenta na procenat":</strong> Dodatni \(1\%\) nastaje jer se drugo poskupljenje primenjuje na već uvećanu cenu. Ovo je isti princip kao složena kamata u bankarstvu.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Roba je u toku godine poskupela tri puta po \(10\%\). Koliko je ukupno procentualno poskupljenje?
+    </p>
+    <details style="margin: 15px 0;">
+      <summary style="background: rgba(96,165,250,0.12); border-color: rgba(96,165,250,0.25); font-size: 0.95rem;">Nagoveštaj</summary>
+      <div class="details-content" style="background: rgba(96,165,250,0.06); border-color: rgba(96,165,250,0.15);">
+        <p>Primeni isti princip: \(1{,}10 \times 1{,}10 \times 1{,}10 = 1{,}10^3\). Izračunaj \(1{,}10^3\) i oduzmi 1 da dobiješ procenat. Rezultat je veći od \(30\%\)!</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  /* Step click highlighting */
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  /* Canvas visualization - Interactive bar chart for compound percentage increase */
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('pctSlider');
+  const pctLabel = document.getElementById('pctLabel');
+
+  let pct = 10;
+
+  slider.addEventListener('input', () => {
+    pct = parseInt(slider.value, 10);
+    pctLabel.textContent = pct + '%';
+    draw();
+  });
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 440 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 440;
+
+    ctx.clearRect(0, 0, W, H);
+
+    /* Dark background */
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    /* Calculations */
+    const k1 = 1 + pct / 100;
+    const k2 = k1 * k1;
+    const totalPct = (k2 - 1) * 100;
+    const simpleSumPct = pct * 2;
+    const extraPct = totalPct - simpleSumPct;
+
+    const P0 = 100;
+    const P1 = P0 * k1;
+    const P2 = P0 * k2;
+
+    /* Bar chart layout */
+    const marginLeft = 80;
+    const marginRight = 40;
+    const marginTop = 60;
+    const marginBottom = 80;
+    const chartW = W - marginLeft - marginRight;
+    const chartH = H - marginTop - marginBottom;
+
+    /* Max value for scaling */
+    const maxVal = Math.max(P2, 200);
+    const barWidth = Math.min(chartW / 5, 100);
+    const gap = (chartW - barWidth * 3) / 4;
+
+    function yPos(val) {
+      return marginTop + chartH * (1 - val / maxVal);
+    }
+
+    /* Draw horizontal grid lines */
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 0.5;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+
+    for (let v = 0; v <= maxVal; v += 20) {
+      const y = yPos(v);
+      if (y < marginTop - 5 || y > marginTop + chartH + 5) continue;
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, y);
+      ctx.lineTo(W - marginRight, y);
+      ctx.stroke();
+      ctx.fillText(v.toFixed(0), marginLeft - 8, y + 4);
+    }
+
+    /* Draw axes */
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, marginTop);
+    ctx.lineTo(marginLeft, marginTop + chartH);
+    ctx.lineTo(W - marginRight, marginTop + chartH);
+    ctx.stroke();
+
+    /* Y-axis label */
+    ctx.save();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.translate(20, marginTop + chartH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Cena (din)', 0, 0);
+    ctx.restore();
+
+    /* Bar positions */
+    const barX0 = marginLeft + gap;
+    const barX1 = barX0 + barWidth + gap;
+    const barX2 = barX1 + barWidth + gap;
+
+    /* Bar 1: P0 */
+    const y0 = yPos(P0);
+    const h0 = marginTop + chartH - y0;
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.25)';
+    ctx.beginPath();
+    ctx.roundRect(barX0, y0, barWidth, h0, [6, 6, 0, 0]);
+    ctx.fill();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(barX0, y0, barWidth, h0, [6, 6, 0, 0]);
+    ctx.stroke();
+
+    /* Bar 2: P1 */
+    const y1 = yPos(P1);
+    const h1 = marginTop + chartH - y1;
+
+    /* Base portion (P0) */
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.25)';
+    ctx.fillRect(barX1, y0, barWidth, h0);
+
+    /* Increase portion (P1 - P0) */
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.35)';
+    ctx.fillRect(barX1, y1, barWidth, y0 - y1);
+
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(barX1, y1, barWidth, h1, [6, 6, 0, 0]);
+    ctx.stroke();
+
+    /* Bar 3: P2 */
+    const y2 = yPos(P2);
+    const h2 = marginTop + chartH - y2;
+
+    /* Base portion (P0) */
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.25)';
+    ctx.fillRect(barX2, y0, barWidth, h0);
+
+    /* First increase portion (P1 - P0) */
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.35)';
+    ctx.fillRect(barX2, y1, barWidth, y0 - y1);
+
+    /* Second increase portion (P2 - P1) — this includes the extra % */
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.35)';
+    ctx.fillRect(barX2, y2, barWidth, y1 - y2);
+
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(barX2, y2, barWidth, h2, [6, 6, 0, 0]);
+    ctx.stroke();
+
+    /* Value labels on top of bars */
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText(P0.toFixed(0) + ' din', barX0 + barWidth / 2, y0 - 10);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText(P1.toFixed(1).replace('.', ',') + ' din', barX1 + barWidth / 2, y1 - 10);
+
+    ctx.fillStyle = '#34d399';
+    ctx.fillText(P2.toFixed(2).replace('.', ',') + ' din', barX2 + barWidth / 2, y2 - 10);
+
+    /* X-axis labels */
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'center';
+    const barBaseY = marginTop + chartH + 20;
+    ctx.fillText('Početna cena', barX0 + barWidth / 2, barBaseY);
+    ctx.fillText('Posle I poskupljenja', barX1 + barWidth / 2, barBaseY);
+    ctx.fillText('Posle II poskupljenja', barX2 + barWidth / 2, barBaseY);
+
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('(P\u2080)', barX0 + barWidth / 2, barBaseY + 16);
+    ctx.fillText('(+' + pct + '%)', barX1 + barWidth / 2, barBaseY + 16);
+    ctx.fillText('(+' + pct + '%)', barX2 + barWidth / 2, barBaseY + 16);
+
+    /* Annotation arrows and labels for increases */
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+
+    /* First increase annotation */
+    const inc1 = P1 - P0;
+    const midY1 = (y0 + y1) / 2;
+    ctx.fillStyle = '#a78bfa';
+    ctx.textAlign = 'left';
+    ctx.fillText('+' + inc1.toFixed(1).replace('.', ',') + ' din', barX1 + barWidth + 6, midY1 + 4);
+
+    /* Second increase annotation */
+    const inc2 = P2 - P1;
+    const midY2 = (y1 + y2) / 2;
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('+' + inc2.toFixed(2).replace('.', ',') + ' din', barX2 + barWidth + 6, midY2 + 4);
+
+    /* Title info box */
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    const boxW = 360;
+    const boxH = 42;
+    const boxX = W / 2 - boxW / 2;
+    const boxY = 8;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 10);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    const totalStr = totalPct.toFixed(2).replace('.', ',');
+    const simpleStr = simpleSumPct.toFixed(0);
+    const extraStr = extraPct.toFixed(2).replace('.', ',');
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText(
+      'Ukupno: ' + totalStr + '%  (a ne ' + simpleStr + '%; razlika: +' + extraStr + '%)',
+      W / 2,
+      boxY + 26
+    );
+
+    /* Legend */
+    const legX = marginLeft + 4;
+    const legY = marginTop + 2;
+
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.25)';
+    ctx.fillRect(legX, legY, 14, 10);
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(legX, legY, 14, 10);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Početna cena', legX + 20, legY + 9);
+
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.35)';
+    ctx.fillRect(legX, legY + 16, 14, 10);
+    ctx.strokeStyle = '#a78bfa';
+    ctx.strokeRect(legX, legY + 16, 14, 10);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('I poskupljenje', legX + 20, legY + 25);
+
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.35)';
+    ctx.fillRect(legX, legY + 32, 14, 10);
+    ctx.strokeStyle = '#34d399';
+    ctx.strokeRect(legX, legY + 32, 14, 10);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('II poskupljenje', legX + 20, legY + 41);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Uzastopno procentualno poskupljenje",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["procentni_račun", "uzastopni_procenti", "složeni_rast", "množenje_koeficijenata"]
+}
+BRAINSPARK_META-->

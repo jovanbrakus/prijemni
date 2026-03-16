@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poluprečnik opisanog kruga trougla</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: U trouglu ABC ugao kod temena A je 30°, dužina stranice AB je 2.
+Podnožje visine iz temena B na stranicu AC je tačka D.
+BD ⊥ AC, i AD = DC/2 (tj. AD je dva puta kraća od DC).
+Naći poluprečnik R opisanog kruga.
+
+Known facts:
+- Triangle ABC with angle A = 30°
+- AB = 2
+- D is the foot of the altitude from B to AC, so BD ⊥ AC
+- AD = DC/2, meaning DC = 2·AD
+
+Geometric strategy candidates:
+1. Use right triangle ABD to find BD and AD, then use AD:DC ratio to find DC and AC,
+   then find BC from right triangle BDC, then apply sine rule.
+2. Direct application of sine rule after finding BC.
+
+Strategy 1 (most promising):
+
+Step 1: In right triangle ABD (angle BDA = 90°, angle BAD = 30°):
+  BD = AB · sin(30°) = 2 · 1/2 = 1
+  AD = AB · cos(30°) = 2 · √3/2 = √3
+
+Step 2: Since AD = DC/2:
+  DC = 2 · AD = 2√3
+
+Step 3: Full side AC:
+  AC = AD + DC = √3 + 2√3 = 3√3
+
+Step 4: In right triangle BDC (angle BDC = 90°):
+  BC² = BD² + DC² = 1² + (2√3)² = 1 + 12 = 13
+  BC = √13
+
+Step 5: Apply the sine rule: BC / sin(A) = 2R
+  √13 / sin(30°) = 2R
+  √13 / (1/2) = 2R
+  2√13 = 2R
+  R = √13
+
+Answer: (C) √13
+
+Verification:
+- BD = 1, AD = √3, DC = 2√3 — check AD = DC/2: √3 = 2√3/2 = √3 ✓
+- AC = 3√3 ≈ 5.196
+- BC = √13 ≈ 3.606
+- Sine rule check: BC/sin A = √13/(1/2) = 2√13
+  Also AB/sin C: need to find angle C first.
+  In triangle BDC: tan(C) = BD/DC = 1/(2√3) = 1/(2√3)
+  sin(C) = BD/BC = 1/√13
+  AB/sin C = 2/(1/√13) = 2√13 ✓ — consistent with 2R = 2√13, so R = √13 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.checkpoint {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 15px 0;
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.highlight-term {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Poluprečnik opisanog kruga trougla</h1>
+  <p class="subtitle">Određivanje poluprečnika opisanog kruga primenom visine trougla, Pitagorine teoreme i sinusne teoreme</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      U trouglu \(ABC\) ugao kod temena \(A\) je \(30°\), dužina stranice \(AB\) je \(2\), podnožje visine iz temena \(B\) na stranicu \(AC\) je tačka \(D\), a duž \(AD\) je dva puta kraća od duži \(DC\). Poluprečnik \(R\) opisanog kruga oko ovog trougla je:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\sqrt{7}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2\sqrt{3}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\sqrt{13}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\sqrt{11}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\sqrt{15}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Iskoristićemo pravougli trougao \(ABD\) (gde je \(BD\) visina na \(AC\)) da odredimo dužine \(BD\) i \(AD\). Zatim iz uslova \(AD = \frac{DC}{2}\) nalazimo \(DC\), pa Pitagorinom teoremom u trouglu \(BDC\) izračunavamo stranicu \(BC\). Na kraju, sinusnom teoremom određujemo poluprečnik opisanog kruga \(R\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <ul style="margin-top: 10px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;">
+          <strong>Pravougli trougao:</strong> Ako je ugao \(\alpha\) pri hipotenuzi \(c\), tada je naspramna kateta \(a = c \cdot \sin \alpha\), a priležeća kateta \(b = c \cdot \cos \alpha\).
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Pitagorina teorema:</strong> U pravouglom trouglu sa katetama \(a\) i \(b\) i hipotenuzom \(c\): \(c^2 = a^2 + b^2\).
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Sinusna teorema:</strong> \(\dfrac{a}{\sin A} = \dfrac{b}{\sin B} = \dfrac{c}{\sin C} = 2R\), gde je \(R\) poluprečnik opisanog kruga.
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Poznate vrednosti:</strong> \(\sin 30° = \dfrac{1}{2}\), \(\cos 30° = \dfrac{\sqrt{3}}{2}\).
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128208;</span> Dijagram trougla sa opisanim krugom</div>
+    <canvas id="triangleCanvas" width="800" height="560"></canvas>
+    <p class="drag-hint">Prevucite tačku B da vidite kako se menja trougao (visina ostaje na AC)</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Postavljanje: šta znamo?</div>
+      <p class="step-explanation">
+        Dat je trougao \(ABC\) sa sledećim podacima:
+      </p>
+      <ul style="padding-left: 20px; color: #cbd5e1; margin-bottom: 12px;">
+        <li>Ugao \(\angle BAC = 30°\)</li>
+        <li>Stranica \(AB = 2\)</li>
+        <li>Tačka \(D\) je podnožje visine iz \(B\) na \(AC\), pa je \(BD \perp AC\)</li>
+        <li>Duž \(AD\) je dva puta kraća od \(DC\), tj. \(AD = \dfrac{DC}{2}\)</li>
+      </ul>
+      <p class="step-explanation">
+        Trougao \(ABD\) je <span class="highlight-term">pravougli</span> sa pravim uglom kod \(D\), jer je \(BD\) visina na \(AC\).
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Određivanje stranica u pravouglom trouglu \(ABD\)</div>
+      <p class="step-explanation">
+        U pravouglom trouglu \(ABD\), hipotenuza je \(AB = 2\), a ugao kod \(A\) je \(30°\). Primenjujemo definicije sinusa i kosinusa:
+      </p>
+      <div class="math-box">
+        \[ BD = AB \cdot \sin 30° = 2 \cdot \frac{1}{2} = 1 \]
+      </div>
+      <div class="math-box">
+        \[ AD = AB \cdot \cos 30° = 2 \cdot \frac{\sqrt{3}}{2} = \sqrt{3} \]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Određivanje dužine \(DC\)</div>
+      <p class="step-explanation">
+        Iz uslova zadatka \(AD = \dfrac{DC}{2}\), sledi:
+      </p>
+      <div class="math-box">
+        \[ DC = 2 \cdot AD = 2\sqrt{3} \]
+      </div>
+      <p class="step-explanation">
+        Ukupna dužina stranice \(AC\) je:
+      </p>
+      <div class="math-box">
+        \[ AC = AD + DC = \sqrt{3} + 2\sqrt{3} = 3\sqrt{3} \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Koliko je \(AD\) i \(DC\)?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        \(AD = \sqrt{3} \approx 1{,}732\) i \(DC = 2\sqrt{3} \approx 3{,}464\). Zaista, \(AD = \frac{DC}{2}\), jer je \(\sqrt{3} = \frac{2\sqrt{3}}{2}\). Sve se slaže.
+      </p>
+    </details>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px; margin-top: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Izračunavanje stranice \(BC\) Pitagorinom teoremom</div>
+      <p class="step-explanation">
+        Trougao \(BDC\) je takođe pravougli (ugao kod \(D\) je \(90°\)). Katete su \(BD = 1\) i \(DC = 2\sqrt{3}\), a \(BC\) je hipotenuza:
+      </p>
+      <div class="math-box">
+        \[ BC^2 = BD^2 + DC^2 = 1^2 + (2\sqrt{3})^2 = 1 + 12 = 13 \]
+      </div>
+      <div class="math-box">
+        \[ BC = \sqrt{13} \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Da li je \((2\sqrt{3})^2 = 12\)?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Da: \((2\sqrt{3})^2 = 4 \cdot 3 = 12\). Dakle \(BC^2 = 1 + 12 = 13\), što daje \(BC = \sqrt{13}\).
+      </p>
+    </details>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px; margin-top: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Primena sinusne teoreme za poluprečnik \(R\)</div>
+      <p class="step-explanation">
+        <span class="highlight-term">Sinusna teorema</span> kaže da za svaki trougao važi:
+      </p>
+      <div class="math-box">
+        \[ \frac{a}{\sin A} = 2R \]
+      </div>
+      <p class="step-explanation">
+        gde je \(a\) stranica naspram ugla \(A\). U našem slučaju, stranica naspram ugla \(A = 30°\) je \(BC = \sqrt{13}\):
+      </p>
+      <div class="math-box">
+        \[ \frac{BC}{\sin A} = 2R \]
+      </div>
+      <div class="math-box">
+        \[ \frac{\sqrt{13}}{\sin 30°} = 2R \]
+      </div>
+      <p class="step-explanation">
+        Pošto je \(\sin 30° = \frac{1}{2}\):
+      </p>
+      <div class="math-box">
+        \[ \frac{\sqrt{13}}{\dfrac{1}{2}} = 2R \]
+      </div>
+      <div class="math-box">
+        \[ 2\sqrt{13} = 2R \]
+      </div>
+      <div class="math-box">
+        \[ R = \sqrt{13} \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Zašto deljenje sa \(\frac{1}{2}\) daje množenje sa \(2\)?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Deljenje brojem \(\frac{1}{2}\) je isto što i množenje sa \(2\): \(\dfrac{\sqrt{13}}{\frac{1}{2}} = \sqrt{13} \cdot 2 = 2\sqrt{13}\). To je osnovno pravilo rada sa razlomcima.
+      </p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Visina \(BD\) deli trougao \(ABC\) na <span class="highlight-term">dva pravougla trougla</span> (\(ABD\) i \(BDC\)). Iz prvog dobijamo katete pomoću sinusa i kosinusa ugla od \(30°\), a uslov \(AD = \frac{DC}{2}\) nam daje \(DC\). Pitagorina teorema u drugom pravouglom trouglu direktno daje \(BC = \sqrt{13}\), a sinusna teorema sa \(\sin 30° = \frac{1}{2}\) čini da se poluprečnik opisanog kruga upravo poklopi sa \(BC\), tj. \(R = \sqrt{13}\).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\( R = \sqrt{13} \)</div>
+    <div class="final-options">
+      <span class="final-option" data-option="A">(A) \(\sqrt{7}\)</span>
+      <span class="final-option" data-option="B">(B) \(2\sqrt{3}\)</span>
+      <span class="final-option correct" data-option="C">(C) \(\sqrt{13}\)</span>
+      <span class="final-option" data-option="D">(D) \(\sqrt{11}\)</span>
+      <span class="final-option" data-option="E">(E) \(\sqrt{15}\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(BD = 1\), \(AD = \sqrt{3}\), \(DC = 2\sqrt{3}\), \(BC = \sqrt{13}\). Sinusna teorema: \(\frac{\sqrt{13}}{1/2} = 2\sqrt{13} = 2R\), dakle \(R = \sqrt{13}\). Provera sa drugom stranicom: \(\frac{AB}{\sin C} = \frac{2}{1/\sqrt{13}} = 2\sqrt{13} = 2R\) &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zamena \(AD\) i \(DC\) u uslovu</div>
+      <p>Tekst kaže da je \(AD\) dva puta <strong>kraća</strong> od \(DC\), što znači \(AD = \frac{DC}{2}\), tj. \(DC = 2 \cdot AD\). Česta greška je obrnuto tumačenje, gde se uzme \(DC = \frac{AD}{2}\). To bi dalo pogrešnu vrednost za \(BC\) i samim tim pogrešan \(R\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešna primena sinusne teoreme</div>
+      <p>U sinusnoj teoremi \(\frac{a}{\sin A} = 2R\), stranica \(a\) mora biti <strong>naspram</strong> ugla \(A\). Stranica naspram ugla \(A\) je \(BC\) (ne \(AB\) ili \(AC\)). Ako se uzme pogrešna stranica, rezultat neće biti tačan.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Šta bi se desilo sa poluprečnikom opisanog kruga da je umesto uslova \(AD = \frac{DC}{2}\) bio dat uslov \(AD = DC\) (tj. da \(D\) polovi stranicu \(AC\))? Koliki bi tada bio \(R\)?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Ako je \(AD = DC = \sqrt{3}\), onda je \(BC^2 = 1 + 3 = 4\), pa je \(BC = 2\). Sinusnom teoremom: \(R = \frac{BC}{2\sin 30°} = \frac{2}{1} = 2\). Uporedite sa originalnim rezultatom \(R = \sqrt{13} \approx 3{,}606\) — veće \(DC\) daje veći opisani krug.
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('triangleCanvas');
+  const ctx = canvas.getContext('2d');
+
+  /* Actual triangle data (fixed geometry) */
+  const AD_len = Math.sqrt(3);
+  const DC_len = 2 * Math.sqrt(3);
+  const BD_len = 1;
+  const BC_len = Math.sqrt(13);
+  const AC_len = 3 * Math.sqrt(3);
+  const AB_len = 2;
+  const R = Math.sqrt(13);
+
+  /* Draggable point B offset (delta from default) */
+  let dragOffsetY = 0;
+  let isDragging = false;
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 560 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 560;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    /* Scale and position */
+    const scale = Math.min(W / 10, H / 8.5);
+    const offsetX = W * 0.15;
+    const offsetY = H * 0.55;
+
+    /* Y-up coordinate system */
+    function toCanvas(x, y) {
+      return { x: offsetX + x * scale, y: offsetY - y * scale };
+    }
+
+    /* Triangle vertices in math coords */
+    /* A at origin, AC along x-axis, D on AC, B above D */
+    const A = { x: 0, y: 0 };
+    const D = { x: AD_len, y: 0 };
+    const C = { x: AC_len, y: 0 };
+    const B = { x: AD_len, y: BD_len + dragOffsetY * 0.005 };
+
+    /* Circumscribed circle center: find circumcenter */
+    const ax = A.x, ay = A.y;
+    const bx = B.x, by = B.y;
+    const cx = C.x, cy = C.y;
+    const dVal = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+    let Ox, Oy;
+    if (Math.abs(dVal) > 1e-10) {
+      Ox = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / dVal;
+      Oy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / dVal;
+    } else {
+      Ox = (ax + cx) / 2;
+      Oy = (ay + cy) / 2;
+    }
+    const Rreal = Math.sqrt((Ox - ax) * (Ox - ax) + (Oy - ay) * (Oy - ay));
+
+    /* Convert all points to canvas coords */
+    const pA = toCanvas(A.x, A.y);
+    const pB = toCanvas(B.x, B.y);
+    const pC = toCanvas(C.x, C.y);
+    const pD = toCanvas(D.x, D.y);
+    const pO = toCanvas(Ox, Oy);
+
+    /* Draw circumscribed circle */
+    ctx.beginPath();
+    ctx.arc(pO.x, pO.y, Rreal * scale, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.35)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Fill triangle lightly */
+    ctx.beginPath();
+    ctx.moveTo(pA.x, pA.y);
+    ctx.lineTo(pB.x, pB.y);
+    ctx.lineTo(pC.x, pC.y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.06)';
+    ctx.fill();
+
+    /* Draw triangle sides */
+    ctx.beginPath();
+    ctx.moveTo(pA.x, pA.y);
+    ctx.lineTo(pB.x, pB.y);
+    ctx.lineTo(pC.x, pC.y);
+    ctx.closePath();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    /* Draw altitude BD (dashed) */
+    ctx.beginPath();
+    ctx.moveTo(pB.x, pB.y);
+    ctx.lineTo(pD.x, pD.y);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Right angle marker at D */
+    const raSize = 12;
+    ctx.beginPath();
+    ctx.moveTo(pD.x - raSize, pD.y);
+    ctx.lineTo(pD.x - raSize, pD.y - raSize);
+    ctx.lineTo(pD.x, pD.y - raSize);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    /* Angle arc at A (30 degrees) */
+    const angleRadius = 35;
+    ctx.beginPath();
+    const startAngle = -Math.atan2(B.y - A.y, B.x - A.x);
+    const endAngle = 0;
+    ctx.arc(pA.x, pA.y, angleRadius, -Math.atan2(B.y - A.y, B.x - A.x), 0);
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    /* 30 degree label */
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const angleMid = -Math.atan2(B.y - A.y, B.x - A.x) / 2;
+    ctx.fillText('30\u00B0', pA.x + (angleRadius + 16) * Math.cos(angleMid), pA.y + (angleRadius + 16) * Math.sin(angleMid));
+
+    /* Tick marks: AD has 1 tick, DC has 2 ticks (showing DC = 2·AD) */
+    /* AD tick */
+    const adMid = { x: (pA.x + pD.x) / 2, y: (pA.y + pD.y) / 2 };
+    ctx.beginPath();
+    ctx.moveTo(adMid.x, adMid.y - 8);
+    ctx.lineTo(adMid.x, adMid.y + 8);
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    /* DC ticks */
+    const dcMid = { x: (pD.x + pC.x) / 2, y: (pD.y + pC.y) / 2 };
+    ctx.beginPath();
+    ctx.moveTo(dcMid.x - 4, dcMid.y - 8);
+    ctx.lineTo(dcMid.x - 4, dcMid.y + 8);
+    ctx.moveTo(dcMid.x + 4, dcMid.y - 8);
+    ctx.lineTo(dcMid.x + 4, dcMid.y + 8);
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    /* Radius from O to A (dashed) */
+    ctx.beginPath();
+    ctx.moveTo(pO.x, pO.y);
+    ctx.lineTo(pA.x, pA.y);
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Labels */
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    /* Point A */
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('A', pA.x - 18, pA.y + 18);
+
+    /* Point B */
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('B', pB.x - 18, pB.y - 10);
+
+    /* Point C */
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('C', pC.x + 18, pC.y + 18);
+
+    /* Point D */
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('D', pD.x + 16, pD.y + 20);
+
+    /* Point O (circumcenter) */
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('O', pO.x + 14, pO.y - 12);
+
+    /* Draw dots at vertices */
+    [pA, pB, pC, pD].forEach((p, i) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = i === 3 ? '#f472b6' : '#60a5fa';
+      ctx.fill();
+    });
+
+    /* Draw circumcenter dot */
+    ctx.beginPath();
+    ctx.arc(pO.x, pO.y, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = '#34d399';
+    ctx.fill();
+
+    /* Side labels */
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    /* AB = 2 */
+    const abMid = { x: (pA.x + pB.x) / 2, y: (pA.y + pB.y) / 2 };
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('AB = 2', abMid.x - 32, abMid.y);
+
+    /* BD = 1 */
+    const bdMid = { x: (pB.x + pD.x) / 2, y: (pB.y + pD.y) / 2 };
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('BD = 1', bdMid.x + 35, bdMid.y);
+
+    /* AD = \u221A3 */
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('AD = \u221A3', adMid.x, adMid.y + 24);
+
+    /* DC = 2\u221A3 */
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('DC = 2\u221A3', dcMid.x, dcMid.y + 24);
+
+    /* BC = \u221A13 */
+    const bcMid = { x: (pB.x + pC.x) / 2, y: (pB.y + pC.y) / 2 };
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('BC = \u221A13', bcMid.x + 40, bcMid.y - 10);
+
+    /* R label */
+    const rMid = { x: (pO.x + pA.x) / 2, y: (pO.y + pA.y) / 2 };
+    ctx.fillStyle = '#34d399';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('R = \u221A13', rMid.x - 10, rMid.y - 14);
+
+    /* Legend */
+    const legX = W - 180;
+    const legY = 30;
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(legX, legY, 14, 3);
+    ctx.fillText('Stranice trougla', legX + 20, legY + 4);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(legX, legY + 20);
+    ctx.lineTo(legX + 14, legY + 20);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillText('Visina BD', legX + 20, legY + 24);
+
+    ctx.beginPath();
+    ctx.arc(legX + 7, legY + 42, 5, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.35)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Opisani krug', legX + 20, legY + 46);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Poluprečnik opisanog kruga trougla sa visinom i sinusnom teoremom",
+  "subject": "math",
+  "unit": "geometry",
+  "topic_tags": ["opisani krug", "sinusna teorema", "Pitagorina teorema", "visina trougla", "pravougli trougao"]
+}
+BRAINSPARK_META-->

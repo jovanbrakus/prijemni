@@ -202,6 +202,18 @@ if (answerOptions.length > 0) {
   }
 }
 
+// ── 11. CSS for final answer options ──
+const finalOptionsEls = $(".final-options");
+if (finalOptionsEls.length > 0) {
+  const styleText2 = $("style").text();
+  if (!styleText2.includes(".final-options")) {
+    errors.push('Missing CSS for ".final-options" — final answer options will stack vertically without grid/flex layout.');
+  }
+  if (!styleText2.includes(".final-option") && !styleText2.includes(".opt")) {
+    errors.push('Missing CSS for ".final-option" / ".opt" — final answer chips will be unstyled.');
+  }
+}
+
 // ── Output ──
 if (errors.length === 0 && warnings.length === 0) {
   console.log("OK: All validation checks passed.");

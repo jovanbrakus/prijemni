@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rastojanje temena kocke od središta ivice</title>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  options: {
+    enableMenu: false
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<script type="text/info" id="logic-scratchpad">
+Kocka ABCDA₁B₁C₁D₁ sa ivicom a = 1
+Koordinatni sistem: A = (0,0,0), B = (1,0,0), C = (1,1,0), D = (0,1,0)
+                    A₁= (0,0,1), B₁= (1,0,1), C₁= (1,1,1), D₁= (0,1,1)
+M = središte B₁C₁ = (1, 0.5, 1)
+AM = sqrt((1-0)^2 + (0.5-0)^2 + (1-0)^2) = sqrt(1 + 0.25 + 1) = sqrt(2.25) = sqrt(9/4) = 3/2
+Odgovor: C) 3/2
+Provera: (3/2)^2 = 9/4 = 1 + 1/4 + 1 = 9/4 -- tacno
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1.5rem;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #34d399);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 2rem;
+  padding: 1rem 0;
+}
+
+h2 {
+  color: #60a5fa;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+h2 .icon { font-size: 1.3rem; }
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #60a5fa;
+}
+
+.problem-statement p {
+  font-size: 1.05rem;
+  margin-bottom: 1rem;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #273548;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.given-item.answer-option {
+  cursor: default;
+  transition: border-color 0.2s;
+}
+
+.given-item.answer-option.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  background: #60a5fa;
+  color: #0f172a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.collapsible-header {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.collapsible-header .arrow {
+  transition: transform 0.3s;
+  font-size: 0.9rem;
+}
+
+.collapsible-header.active .arrow {
+  transform: rotate(180deg);
+}
+
+.collapsible-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.collapsible-body.open {
+  max-height: 1200px;
+}
+
+.collapsible-body .content {
+  padding-top: 1rem;
+}
+
+.theory-box {
+  background: #273548;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.theory-box h3 {
+  color: #34d399;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 10px;
+  background: #111827;
+  max-width: 100%;
+}
+
+.step {
+  margin-bottom: 1.25rem;
+  padding-left: 0.5rem;
+  border-left: 3px solid #334155;
+}
+
+.step .badge {
+  display: inline-block;
+  background: #60a5fa;
+  color: #0f172a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  margin-bottom: 0.4rem;
+}
+
+.step p, .step ul { margin-top: 0.3rem; }
+
+.checkpoint {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid #34d399;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.75rem;
+  color: #4ade80;
+  font-weight: 500;
+}
+
+.key-insight {
+  border-left: 4px solid #facc15;
+  background: rgba(250, 204, 21, 0.06);
+}
+
+.key-insight h2 { color: #facc15; }
+
+.final-answer {
+  border: 2px solid #34d399;
+  background: rgba(52, 211, 153, 0.08);
+  text-align: center;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin: 0.5rem 0;
+}
+
+.pitfall {
+  background: #2a1a1a;
+  border-left: 4px solid #f87171;
+  padding: 0.75rem 1rem;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong { color: #f87171; }
+
+.challenge {
+  border: 1px dashed #a78bfa;
+}
+
+.challenge h2 { color: #a78bfa; }
+
+@media (max-width: 600px) {
+  body { padding: 1rem; }
+  h1 { font-size: 1.35rem; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+  canvas { height: 350px; }
+}
+</style>
+</head>
+<body>
+
+<h1>Rastojanje temena kocke od središta ivice</h1>
+
+<!-- Problem Statement -->
+<div class="card problem-statement">
+  <h2><span class="icon">📋</span> Tekst zadatka</h2>
+  <p>
+    Rastojanje temena \(A\) kocke \(ABCDA_1B_1C_1D_1\) ivice \(1\) od središta njene ivice \(B_1C_1\) iznosi:
+  </p>
+  <div class="given-grid">
+    <div class="given-item answer-option" data-option="A"><div class="label">(A)</div><div class="value">\(\sqrt{3}\)</div></div>
+    <div class="given-item answer-option" data-option="B"><div class="label">(B)</div><div class="value">\(\dfrac{\sqrt{3}}{2}\)</div></div>
+    <div class="given-item answer-option" data-option="C"><div class="label">(C)</div><div class="value">\(\dfrac{3}{2}\)</div></div>
+    <div class="given-item answer-option" data-option="D"><div class="label">(D)</div><div class="value">\(\sqrt{2}\)</div></div>
+    <div class="given-item answer-option" data-option="E"><div class="label">(E)</div><div class="value">\(2\)</div></div>
+  </div>
+</div>
+
+<!-- Plan -->
+<div class="card">
+  <h2><span class="icon">🗺️</span> Plan rešavanja</h2>
+  <ol class="plan-list">
+    <li>Postaviti koordinatni sistem sa temenom \(A\) u koordinatnom početku</li>
+    <li>Odrediti koordinate svih temena kocke</li>
+    <li>Naći središte \(M\) ivice \(B_1C_1\)</li>
+    <li>Izračunati rastojanje \(AM\) koristeći formulu za rastojanje u prostoru</li>
+  </ol>
+</div>
+
+<!-- Theory Refresher -->
+<div class="card">
+  <div class="collapsible-header" id="theory-toggle">
+    <h2><span class="icon">📖</span> Teorijsko podsetnik</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="collapsible-body">
+    <div class="content">
+      <div class="theory-box">
+        <h3>Rastojanje dveju tačaka u prostoru</h3>
+        <p>
+          Za dve tačke \(P(x_1, y_1, z_1)\) i \(Q(x_2, y_2, z_2)\) u trodimenzionalnom prostoru,
+          rastojanje između njih je:
+        </p>
+        \[d(P, Q) = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2 + (z_2 - z_1)^2}\]
+      </div>
+      <div class="theory-box">
+        <h3>Središte duži</h3>
+        <p>
+          Središte \(M\) duži \(\overline{PQ}\) ima koordinate:
+        </p>
+        \[M = \left(\frac{x_1 + x_2}{2},\; \frac{y_1 + y_2}{2},\; \frac{z_1 + z_2}{2}\right)\]
+      </div>
+      <div class="theory-box">
+        <h3>Kocka u koordinatnom sistemu</h3>
+        <p>
+          Kocka \(ABCDA_1B_1C_1D_1\) sa ivicom dužine \(a\) i temenom \(A\) u koordinatnom početku
+          ima temena na koordinatnim osama i ravnima paralelnim sa koordinatnim ravnima.
+          Ivice su paralelne koordinatnim osama.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Visual Aid -->
+<div class="card">
+  <h2><span class="icon">🎨</span> Vizuelni prikaz</h2>
+  <canvas id="cubeCanvas" width="560" height="480"></canvas>
+  <p style="text-align:center; margin-top:0.5rem; color:#94a3b8; font-size:0.85rem;">
+    3D prikaz kocke — tačka \(A\) i središte \(M\) ivice \(B_1C_1\) su označeni
+  </p>
+</div>
+
+<!-- Step by Step -->
+<div class="card">
+  <h2><span class="icon">📐</span> Rešenje korak po korak</h2>
+
+  <div class="step">
+    <span class="badge">Korak 1</span>
+    <p><strong>Postavljamo koordinatni sistem</strong></p>
+    <p>
+      Neka je teme \(A\) u koordinatnom početku, a ivice kocke duž koordinatnih osa.
+      Ivica kocke je \(a = 1\).
+    </p>
+    <p>Koordinate temena kocke su:</p>
+    \[
+    \begin{aligned}
+    A &= (0,\; 0,\; 0) & \quad A_1 &= (0,\; 0,\; 1) \\
+    B &= (1,\; 0,\; 0) & \quad B_1 &= (1,\; 0,\; 1) \\
+    C &= (1,\; 1,\; 0) & \quad C_1 &= (1,\; 1,\; 1) \\
+    D &= (0,\; 1,\; 0) & \quad D_1 &= (0,\; 1,\; 1)
+    \end{aligned}
+    \]
+    <div class="checkpoint">✓ Provera: sve ivice imaju dužinu 1, svi uglovi su pravi — kocka je ispravno postavljena.</div>
+  </div>
+
+  <div class="step">
+    <span class="badge">Korak 2</span>
+    <p><strong>Nalazimo središte \(M\) ivice \(B_1C_1\)</strong></p>
+    <p>
+      Tačka \(M\) je središte duži \(\overline{B_1C_1}\). Koristeći formulu za središte:
+    </p>
+    \[
+    M = \left(\frac{x_{B_1} + x_{C_1}}{2},\; \frac{y_{B_1} + y_{C_1}}{2},\; \frac{z_{B_1} + z_{C_1}}{2}\right)
+    \]
+    \[
+    M = \left(\frac{1 + 1}{2},\; \frac{0 + 1}{2},\; \frac{1 + 1}{2}\right) = \left(1,\; \frac{1}{2},\; 1\right)
+    \]
+    <div class="checkpoint">✓ Provera: \(M\) leži na ivici \(B_1C_1\), i jednako je udaljeno od \(B_1\) i \(C_1\) — tačno \(\frac{1}{2}\).</div>
+  </div>
+
+  <div class="step">
+    <span class="badge">Korak 3</span>
+    <p><strong>Računamo rastojanje \(AM\)</strong></p>
+    <p>
+      Primenjujemo formulu za rastojanje u prostoru:
+    </p>
+    \[
+    AM = \sqrt{(x_M - x_A)^2 + (y_M - y_A)^2 + (z_M - z_A)^2}
+    \]
+    <p>Zamenjujemo koordinate \(A = (0, 0, 0)\) i \(M = \left(1, \frac{1}{2}, 1\right)\):</p>
+    \[
+    AM = \sqrt{(1 - 0)^2 + \left(\frac{1}{2} - 0\right)^2 + (1 - 0)^2}
+    \]
+    \[
+    AM = \sqrt{1 + \frac{1}{4} + 1} = \sqrt{2 + \frac{1}{4}} = \sqrt{\frac{8 + 1}{4}} = \sqrt{\frac{9}{4}}
+    \]
+    \[
+    AM = \frac{\sqrt{9}}{\sqrt{4}} = \frac{3}{2}
+    \]
+    <div class="checkpoint">✓ Provera: \(\left(\frac{3}{2}\right)^2 = \frac{9}{4} = 1 + \frac{1}{4} + 1\) — tačno!</div>
+  </div>
+</div>
+
+<!-- Key Insight -->
+<div class="card key-insight">
+  <h2><span class="icon">💡</span> Ključni uvid</h2>
+  <p>
+    Duž \(AM\) je prostorna dijagonala pravougaonog paralelopipeda dimenzija \(1 \times \frac{1}{2} \times 1\).
+    Njeno rastojanje se računa kao koren zbira kvadrata tih dimenzija:
+  </p>
+  \[AM = \sqrt{1^2 + \left(\tfrac{1}{2}\right)^2 + 1^2} = \sqrt{\tfrac{9}{4}} = \frac{3}{2}\]
+  <p>
+    Ovo je elegantan rezultat — dobijamo tačnu racionalnu vrednost jer se pod korenom
+    pojavljuje potpun kvadrat \(\frac{9}{4}\).
+  </p>
+</div>
+
+<!-- Final Answer -->
+<div class="card final-answer">
+  <h2><span class="icon">🎯</span> Konačan odgovor</h2>
+  <div class="answer-value">\(\displaystyle AM = \frac{3}{2}\)</div>
+  <p><span class="opt correct">(C)</span> Tačan odgovor je \(\dfrac{3}{2}\)</p>
+</div>
+
+<!-- Common Pitfalls -->
+<div class="card">
+  <h2><span class="icon">⚠️</span> Najčešće greške</h2>
+  <div class="pitfall">
+    <strong>Pogrešan raspored temena kocke.</strong>
+    Kod oznake \(ABCDA_1B_1C_1D_1\), temena \(ABCD\) su redom u osnovi kocke, a \(A_1B_1C_1D_1\) su
+    odgovarajuća temena gornje osnove (\(A_1\) je iznad \(A\), \(B_1\) iznad \(B\) itd.).
+    Pogrešno postavljanje temena menja rezultat.
+  </div>
+  <div class="pitfall">
+    <strong>Zaboravljanje treće dimenzije.</strong>
+    Greška je računati rastojanje u ravni umesto u prostoru. Tačka \(A\) je u donjoj osnovi, a \(M\)
+    je u gornjoj — razlika po \(z\)-osi je \(1\) i mora se uključiti u račun.
+  </div>
+  <div class="pitfall">
+    <strong>Greška pri sabiranju razlomaka pod korenom.</strong>
+    Česta greška: \(1 + \frac{1}{4} + 1 = \frac{6}{4}\) umesto tačnog \(\frac{9}{4}\). Uvek svesti na zajednički imenilac:
+    \(\frac{4}{4} + \frac{1}{4} + \frac{4}{4} = \frac{9}{4}\).
+  </div>
+</div>
+
+<!-- Optional Challenge -->
+<div class="card challenge">
+  <h2><span class="icon">🏆</span> Dodatni izazov</h2>
+  <p>
+    Odrediti rastojanje temena \(A\) kocke ivice \(a\) od središta dijagonale \(B_1D_1\) gornje osnove.
+    Kako se menja odnos tog rastojanja prema dijagonali kocke sa promenom ivice?
+  </p>
+</div>
+
+<!-- Canvas Drawing Script -->
+<script>
+(function() {
+  var canvas = document.getElementById('cubeCanvas');
+  var ctx = canvas.getContext('2d');
+
+  // 3D to 2D projection (isometric-like)
+  var scale = 160;
+  var ox = 240, oy = 340;
+  var ax = -0.7, ay = 0.4;  // x-axis projection
+  var bx = 0.9, by = 0.2;   // y-axis projection
+  var cx = 0, cy = -1;       // z-axis projection
+
+  function project(x, y, z) {
+    return {
+      x: ox + scale * (x * ax + y * bx + z * cx),
+      y: oy + scale * (x * ay + y * by + z * cy)
+    };
+  }
+
+  // Cube vertices
+  var vertices = {
+    A:  {x:0, y:0, z:0},
+    B:  {x:1, y:0, z:0},
+    C:  {x:1, y:1, z:0},
+    D:  {x:0, y:1, z:0},
+    A1: {x:0, y:0, z:1},
+    B1: {x:1, y:0, z:1},
+    C1: {x:1, y:1, z:1},
+    D1: {x:0, y:1, z:1}
+  };
+
+  // Midpoint M of B1C1
+  var M = {x:1, y:0.5, z:1};
+
+  var proj = {};
+  for (var k in vertices) {
+    proj[k] = project(vertices[k].x, vertices[k].y, vertices[k].z);
+  }
+  var pM = project(M.x, M.y, M.z);
+
+  // Draw edges
+  function drawEdge(a, b, color, width, dash) {
+    ctx.beginPath();
+    ctx.strokeStyle = color || '#475569';
+    ctx.lineWidth = width || 1.5;
+    ctx.setLineDash(dash || []);
+    ctx.moveTo(proj[a].x, proj[a].y);
+    ctx.lineTo(proj[b].x, proj[b].y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Background
+  ctx.fillStyle = '#111827';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Back edges (dashed)
+  drawEdge('A', 'D', '#334155', 1.2, [5, 5]);
+  drawEdge('A', 'A1', '#334155', 1.2, [5, 5]);
+  drawEdge('D', 'D1', '#334155', 1.2, [5, 5]);
+
+  // Bottom face
+  drawEdge('A', 'B', '#60a5fa', 1.8);
+  drawEdge('B', 'C', '#60a5fa', 1.8);
+  drawEdge('C', 'D', '#60a5fa', 1.8);
+
+  // Top face
+  drawEdge('A1', 'B1', '#60a5fa', 1.8);
+  drawEdge('B1', 'C1', '#60a5fa', 1.8);
+  drawEdge('C1', 'D1', '#60a5fa', 1.8);
+  drawEdge('D1', 'A1', '#60a5fa', 1.8);
+
+  // Vertical edges (front)
+  drawEdge('B', 'B1', '#60a5fa', 1.8);
+  drawEdge('C', 'C1', '#60a5fa', 1.8);
+
+  // Highlight edge B1C1
+  ctx.beginPath();
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 3;
+  ctx.moveTo(proj.B1.x, proj.B1.y);
+  ctx.lineTo(proj.C1.x, proj.C1.y);
+  ctx.stroke();
+
+  // Draw diagonal AM
+  ctx.beginPath();
+  ctx.strokeStyle = '#f87171';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([8, 4]);
+  ctx.moveTo(proj.A.x, proj.A.y);
+  ctx.lineTo(pM.x, pM.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw helper lines (right-angle path A -> B1 -> M)
+  ctx.beginPath();
+  ctx.strokeStyle = '#34d399';
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([4, 4]);
+  ctx.moveTo(proj.A.x, proj.A.y);
+  ctx.lineTo(proj.B.x, proj.B.y);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(proj.B.x, proj.B.y);
+  ctx.lineTo(proj.B1.x, proj.B1.y);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(proj.B1.x, proj.B1.y);
+  ctx.lineTo(pM.x, pM.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw vertices
+  function drawVertex(p, label, color, offX, offY, big) {
+    var r = big ? 6 : 4;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.font = big ? 'bold 16px Segoe UI' : '13px Segoe UI';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(label, p.x + (offX || 0), p.y + (offY || 0));
+  }
+
+  // Label all vertices
+  drawVertex(proj.A, 'A', '#f87171', -16, 12, true);
+  drawVertex(proj.B, 'B', '#e2e8f0', -14, 14);
+  drawVertex(proj.C, 'C', '#e2e8f0', 16, 14);
+  drawVertex(proj.D, 'D', '#e2e8f0', 16, 12);
+  drawVertex(proj.A1, 'A₁', '#e2e8f0', -20, -8);
+  drawVertex(proj.B1, 'B₁', '#facc15', -18, -8);
+  drawVertex(proj.C1, 'C₁', '#facc15', 18, -8);
+  drawVertex(proj.D1, 'D₁', '#e2e8f0', 18, -8);
+
+  // Midpoint M
+  ctx.beginPath();
+  ctx.arc(pM.x, pM.y, 6, 0, 2 * Math.PI);
+  ctx.fillStyle = '#f87171';
+  ctx.fill();
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.font = 'bold 16px Segoe UI';
+  ctx.fillStyle = '#f87171';
+  ctx.textAlign = 'center';
+  ctx.fillText('M', pM.x + 18, pM.y - 4);
+
+  // Length label on AM
+  var midAM = {
+    x: (proj.A.x + pM.x) / 2,
+    y: (proj.A.y + pM.y) / 2
+  };
+  ctx.font = 'bold 15px Segoe UI';
+  ctx.fillStyle = '#f87171';
+  ctx.fillText('AM = 3/2', midAM.x - 45, midAM.y - 10);
+
+  // Dimension labels along helper path
+  var midAB = { x: (proj.A.x + proj.B.x) / 2, y: (proj.A.y + proj.B.y) / 2 };
+  ctx.font = '12px Segoe UI';
+  ctx.fillStyle = '#34d399';
+  ctx.fillText('1', midAB.x, midAB.y + 18);
+
+  var midBB1 = { x: (proj.B.x + proj.B1.x) / 2, y: (proj.B.y + proj.B1.y) / 2 };
+  ctx.fillText('1', midBB1.x - 16, midBB1.y);
+
+  var midB1M = { x: (proj.B1.x + pM.x) / 2, y: (proj.B1.y + pM.y) / 2 };
+  ctx.fillText('1/2', midB1M.x, midB1M.y - 10);
+
+  // Legend
+  ctx.font = '13px Segoe UI';
+  var ly = 30;
+
+  ctx.fillStyle = '#f87171';
+  ctx.fillRect(380, ly, 20, 3);
+  ctx.fillText('AM = 3/2 (traženo rastojanje)', 408, ly + 5);
+
+  ctx.fillStyle = '#facc15';
+  ctx.fillRect(380, ly + 22, 20, 3);
+  ctx.fillText('Ivica B₁C₁', 408, ly + 27);
+
+  ctx.fillStyle = '#34d399';
+  ctx.fillRect(380, ly + 44, 20, 3);
+  ctx.fillText('Pomoćne duži (1, 1, ½)', 408, ly + 49);
+
+})();
+</script>
+
+<!-- Collapsible Logic -->
+<script>
+(function() {
+  function toggleCollapsible(header) {
+    header.classList.toggle('active');
+    var body = header.nextElementSibling;
+    body.classList.toggle('open');
+  }
+  window.toggleCollapsible = toggleCollapsible;
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Rastojanje temena kocke od središta ivice","subject":"math","unit":"analitička geometrija u prostoru","topic_tags":["kocka","rastojanje u prostoru","koordinatni sistem","središte duži","stereometrija"]}
+BRAINSPARK_META-->

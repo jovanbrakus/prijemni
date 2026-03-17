@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eksponencijalna jednačina - faktorizacija i supstitucija</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Find the number of distinct real solutions of
+    18^x + 5 * 8^x = 27^x + 5 * 12^x
+
+  Step 1: Factor the bases into primes.
+    18 = 2 * 3^2,  8 = 2^3,  27 = 3^3,  12 = 2^2 * 3
+
+  Rewrite:
+    (2 * 3^2)^x + 5 * (2^3)^x = (3^3)^x + 5 * (2^2 * 3)^x
+    = 2^x * 3^(2x) + 5 * 2^(3x) = 3^(3x) + 5 * 2^(2x) * 3^x
+
+  Step 2: Rearrange — move terms to isolate a common factor.
+    2^x * 3^(2x) - 3^(3x) = 5 * 2^(2x) * 3^x - 5 * 2^(3x)
+
+  Left side:
+    3^(2x) * (2^x - 3^x)
+
+  Right side:
+    5 * 2^(2x) * (3^x - 2^x) = -5 * 2^(2x) * (2^x - 3^x)
+
+  So:
+    3^(2x) * (2^x - 3^x) + 5 * 2^(2x) * (2^x - 3^x) = 0
+    (2^x - 3^x) * [3^(2x) + 5 * 2^(2x)] = 0
+
+  Step 3: Analyze each factor.
+  Factor 1: 3^(2x) + 5 * 2^(2x) = (3^x)^2 + 5 * (2^x)^2
+    This is a sum of two positive quantities (exponentials are always positive).
+    So 3^(2x) + 5 * 2^(2x) > 0 for all real x. Never zero.
+
+  Factor 2: 2^x - 3^x = 0
+    => 2^x = 3^x
+    => (2/3)^x = 1
+    => x = 0
+
+  Step 4: Verify x = 0.
+    LHS = 18^0 + 5 * 8^0 = 1 + 5 = 6
+    RHS = 27^0 + 5 * 12^0 = 1 + 5 = 6
+    LHS = RHS. Confirmed!
+
+  Answer: There is exactly 1 distinct real solution (x = 0).
+  Answer choice: D) 1. CONFIRMED.
+
+  Alternative approach via substitution t = (3/2)^x:
+    Divide both sides by 2^(3x):
+    18^x / 8^x + 5 = 27^x / 8^x + 5 * 12^x / 8^x
+    (18/8)^x + 5 = (27/8)^x + 5 * (12/8)^x
+    (9/4)^x + 5 = (27/8)^x + 5 * (3/2)^x
+
+    Let t = (3/2)^x, then:
+    (9/4)^x = ((3/2)^2)^x = t^2
+    (27/8)^x = ((3/2)^3)^x = t^3
+
+    t^2 + 5 = t^3 + 5t
+    t^3 - t^2 + 5t - 5 = 0
+    t^2(t - 1) + 5(t - 1) = 0
+    (t - 1)(t^2 + 5) = 0
+
+    t^2 + 5 > 0 always, so t = 1.
+    (3/2)^x = 1 => x = 0.
+
+  Both approaches confirm exactly one solution: x = 0.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-text {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.15rem;
+  color: #a78bfa;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.theory-card summary:hover {
+  color: #c4b5fd;
+}
+
+.theory-content {
+  padding: 16px 0 8px 0;
+  line-height: 1.9;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border-left: 4px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step-container:hover,
+.step-container.active {
+  background: rgba(51, 65, 85, 0.3);
+  border-left-color: #4ade80;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.step-body {
+  padding-left: 42px;
+}
+
+.step-body p {
+  margin-bottom: 10px;
+  color: #cbd5e1;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 14px 20px;
+  margin: 12px 0;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+}
+
+.checkpoint details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+.checkpoint .answer {
+  padding-top: 10px;
+  color: #4ade80;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(167, 139, 250, 0.15));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  text-align: center;
+}
+
+.insight-card .big-formula {
+  font-size: 1.3rem;
+  margin: 16px 0;
+  color: #4ade80;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  text-align: center;
+}
+
+.final-answer-text {
+  font-size: 1.8rem;
+  color: #34d399;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.final-option {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 24px;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #4ade80;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.verification {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 10px;
+  padding: 14px 20px;
+  margin-top: 16px;
+  text-align: left;
+}
+
+.verification-title {
+  color: #34d399;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.pitfall-card {
+  border-left: 4px solid #e09468;
+}
+
+.pitfall-card .pitfall-title {
+  color: #e09468;
+}
+
+.pitfall-card ul {
+  list-style: disc;
+  padding-left: 24px;
+  color: #cbd5e1;
+}
+
+.pitfall-card li {
+  margin-bottom: 8px;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-size: 1.05rem;
+  user-select: none;
+}
+
+canvas {
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid {
+    gap: 8px;
+  }
+  .given-item {
+    padding: 8px 12px;
+    min-width: 60px;
+  }
+  .step-body {
+    padding-left: 0;
+  }
+  .final-answer-text {
+    font-size: 1.4rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- a. Title -->
+  <h1>Eksponencijalna jednačina sa faktorizacijom</h1>
+  <p class="subtitle">Rastavljanje na činioce, supstitucija i analiza broja rešenja</p>
+
+  <!-- b. Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title"><span class="icon">&#128220;</span> Postavka zadatka</h2>
+    <div class="problem-text">
+      <p>Broj različitih realnih rešenja jednačine:</p>
+      <div class="highlight-box">
+        \[ 18^x + 5 \cdot 8^x = 27^x + 5 \cdot 12^x \]
+      </div>
+      <p>je:</p>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- c. Plan -->
+  <div class="card plan-card">
+    <h2 class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</h2>
+    <p>Rastavićemo osnove \(18, 8, 27, 12\) na proste činioce (stepene dvojke i trojke), prebaciti sve članove na jednu stranu, a zatim izvući zajednički faktor \((2^x - 3^x)\). Alternativno, podelićemo obe strane sa \(8^x\) i uvesti supstituciju \(t = \left(\frac{3}{2}\right)^x\) kako bismo dobili polinomsku jednačinu po \(t\).</p>
+  </div>
+
+  <!-- d. Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>&#128208; Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Stepen proizvoda:</strong> \((a \cdot b)^x = a^x \cdot b^x\) za \(a, b > 0\).</li>
+          <li><strong>Stepen stepena:</strong> \((a^m)^x = a^{mx}\).</li>
+          <li><strong>Eksponencijalna funkcija:</strong> \(a^x > 0\) za svako realno \(x\) i \(a > 0\). Nikada ne dostiže nulu.</li>
+          <li><strong>Jednakost eksponenata:</strong> Ako je \(\left(\frac{a}{b}\right)^x = 1\) za \(a \neq b\), tada je \(x = 0\).</li>
+          <li><strong>Faktorizacija polinoma:</strong> \(t^3 - t^2 + 5t - 5 = t^2(t-1) + 5(t-1) = (t-1)(t^2+5)\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- e. Visual Aid -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">&#128202;</span> Grafički prikaz</h2>
+    <canvas id="mainCanvas" width="800" height="450"></canvas>
+    <p class="canvas-hint">Grafik prikazuje levu stranu \(L(x) = 18^x + 5 \cdot 8^x\) (plavo) i desnu stranu \(D(x) = 27^x + 5 \cdot 12^x\) (zeleno). Krive se seku u tačno jednoj tački: \(x = 0\).</p>
+  </div>
+
+  <!-- f. Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">&#128221;</span> Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <h3 class="step-title">Rastavljanje osnova na proste činioce</h3>
+      </div>
+      <div class="step-body">
+        <p>Rastavimo sve osnove koristeći proste faktore 2 i 3:</p>
+        <div class="math-block">
+          \[ 18 = 2 \cdot 3^2, \quad 8 = 2^3, \quad 27 = 3^3, \quad 12 = 2^2 \cdot 3 \]
+        </div>
+        <p>Jednačina postaje:</p>
+        <div class="math-block">
+          \[ (2 \cdot 3^2)^x + 5 \cdot (2^3)^x = (3^3)^x + 5 \cdot (2^2 \cdot 3)^x \]
+        </div>
+        <p>Primenom pravila o stepenu proizvoda:</p>
+        <div class="math-block">
+          \[ 2^x \cdot 3^{2x} + 5 \cdot 2^{3x} = 3^{3x} + 5 \cdot 2^{2x} \cdot 3^x \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <h3 class="step-title">Prebacivanje i grupisanje članova</h3>
+      </div>
+      <div class="step-body">
+        <p>Prebacimo sve na levu stranu:</p>
+        <div class="math-block">
+          \[ 2^x \cdot 3^{2x} - 3^{3x} + 5 \cdot 2^{3x} - 5 \cdot 2^{2x} \cdot 3^x = 0 \]
+        </div>
+        <p>Grupišemo po dva člana:</p>
+        <div class="math-block">
+          \[ \underbrace{(2^x \cdot 3^{2x} - 3^{3x})}_{\text{prva grupa}} + \underbrace{(5 \cdot 2^{3x} - 5 \cdot 2^{2x} \cdot 3^x)}_{\text{druga grupa}} = 0 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <h3 class="step-title">Izvlačenje zajedničkih faktora</h3>
+      </div>
+      <div class="step-body">
+        <p>Iz prve grupe izvlačimo \(3^{2x}\), a iz druge \(5 \cdot 2^{2x}\):</p>
+        <div class="math-block">
+          \[ 3^{2x}(2^x - 3^x) + 5 \cdot 2^{2x}(2^x - 3^x) = 0 \]
+        </div>
+        <p>Sada izvlačimo zajednički faktor \((2^x - 3^x)\):</p>
+        <div class="math-block">
+          \[ (2^x - 3^x)\bigl(3^{2x} + 5 \cdot 2^{2x}\bigr) = 0 \]
+        </div>
+        <p class="note">Ovo je ključni korak rešenja &mdash; cela jednačina se svodi na proizvod dva faktora.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <div class="checkpoint">
+      <details>
+        <summary>&#9989; Proveri se: Zašto je \(3^{2x} + 5 \cdot 2^{2x} > 0\)?</summary>
+        <div class="answer">Zato što su \(3^{2x} = (3^x)^2 > 0\) i \(2^{2x} = (2^x)^2 > 0\) za svako realno \(x\) (eksponencijalna funkcija je uvek pozitivna). Zbir dva pozitivna broja je strogo pozitivan, pa ovaj faktor nikada ne može biti nula.</div>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <h3 class="step-title">Analiza faktora</h3>
+      </div>
+      <div class="step-body">
+        <p>Proizvod dva faktora je nula ako je bar jedan od njih nula:</p>
+        <p><strong>Faktor \(3^{2x} + 5 \cdot 2^{2x}\):</strong> Kao što smo videli, ovo je uvek strogo pozitivno. Nikada nije nula.</p>
+        <p><strong>Faktor \(2^x - 3^x\):</strong> Rešavamo \(2^x - 3^x = 0\):</p>
+        <div class="math-block">
+          \[ 2^x = 3^x \]
+        </div>
+        <p>Delimo obe strane sa \(3^x > 0\):</p>
+        <div class="math-block">
+          \[ \left(\frac{2}{3}\right)^x = 1 \]
+        </div>
+        <p>Pošto je \(\frac{2}{3} \neq 1\), jednakost \(\left(\frac{2}{3}\right)^x = 1\) važi samo za:</p>
+        <div class="math-block">
+          \[ \boxed{x = 0} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <div class="checkpoint">
+      <details>
+        <summary>&#9989; Proveri se: Kako znamo da je \(x = 0\) jedino rešenje \((2/3)^x = 1\)?</summary>
+        <div class="answer">Funkcija \(f(x) = \left(\frac{2}{3}\right)^x\) je strogo opadajuća (jer je osnova \(\frac{2}{3} \in (0,1)\)). Strogo monotona funkcija prolazi kroz svaku vrednost tačno jednom. Pošto \(f(0) = 1\), to je jedina tačka gde funkcija ima vrednost 1.</div>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">5</div>
+        <h3 class="step-title">Verifikacija rešenja \(x = 0\)</h3>
+      </div>
+      <div class="step-body">
+        <p>Uvrstimo \(x = 0\) u polaznu jednačinu:</p>
+        <div class="math-block">
+          \[ \text{Leva strana:} \quad 18^0 + 5 \cdot 8^0 = 1 + 5 \cdot 1 = 6 \]
+        </div>
+        <div class="math-block">
+          \[ \text{Desna strana:} \quad 27^0 + 5 \cdot 12^0 = 1 + 5 \cdot 1 = 6 \]
+        </div>
+        <p>Leva strana = Desna strana = 6. Rešenje je potvrđeno!</p>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-header">
+        <div class="step-badge">6</div>
+        <h3 class="step-title">Alternativni pristup: supstitucija</h3>
+      </div>
+      <div class="step-body">
+        <p>Podelimo obe strane jednačine sa \(8^x = 2^{3x} > 0\):</p>
+        <div class="math-block">
+          \[ \frac{18^x}{8^x} + 5 = \frac{27^x}{8^x} + 5 \cdot \frac{12^x}{8^x} \]
+        </div>
+        <p>Pojednostavimo količnike:</p>
+        <div class="math-block">
+          \[ \left(\frac{18}{8}\right)^x + 5 = \left(\frac{27}{8}\right)^x + 5 \cdot \left(\frac{12}{8}\right)^x \]
+        </div>
+        <div class="math-block">
+          \[ \left(\frac{9}{4}\right)^x + 5 = \left(\frac{27}{8}\right)^x + 5 \cdot \left(\frac{3}{2}\right)^x \]
+        </div>
+        <p>Uvedemo supstituciju \(t = \left(\frac{3}{2}\right)^x\), pri čemu je \(t > 0\). Tada:</p>
+        <div class="math-block">
+          \[ \left(\frac{9}{4}\right)^x = \left(\left(\frac{3}{2}\right)^2\right)^x = t^2, \qquad \left(\frac{27}{8}\right)^x = \left(\left(\frac{3}{2}\right)^3\right)^x = t^3 \]
+        </div>
+        <p>Jednačina postaje:</p>
+        <div class="math-block">
+          \[ t^2 + 5 = t^3 + 5t \]
+        </div>
+        <div class="math-block">
+          \[ t^3 - t^2 + 5t - 5 = 0 \]
+        </div>
+        <p>Faktorizujemo grupisanjem:</p>
+        <div class="math-block">
+          \[ t^2(t - 1) + 5(t - 1) = 0 \implies (t - 1)(t^2 + 5) = 0 \]
+        </div>
+        <p>Pošto je \(t^2 + 5 \geq 5 > 0\) uvek, ostaje \(t = 1\), tj. \(\left(\frac{3}{2}\right)^x = 1\), odakle \(x = 0\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <div class="checkpoint">
+      <details>
+        <summary>&#9989; Proveri se: Zašto jednačina \(t^2 + 5 = 0\) nema realnih rešenja?</summary>
+        <div class="answer">Jednačina \(t^2 + 5 = 0\) daje \(t^2 = -5\). Kvadrat realnog broja ne može biti negativan, pa ova jednačina nema rešenja u skupu realnih brojeva. (U skupu kompleksnih brojeva, rešenja bi bila \(t = \pm i\sqrt{5}\), ali nas zanimaju samo realna rešenja.)</div>
+      </details>
+    </div>
+  </div>
+
+  <!-- g. Key Insight -->
+  <div class="card insight-card">
+    <h2 class="card-title"><span class="icon">&#128161;</span> Ključni uvid</h2>
+    <p>Jednačina se elegantno faktorizuje na oblik gde je jedan faktor uvek pozitivan, a drugi se svodi na pitanje: kada su \(2^x\) i \(3^x\) jednaki? Odgovor je isključivo za \(x = 0\), jer za svako drugo \(x\), eksponencijalne funkcije sa različitim osnovama daju različite vrednosti.</p>
+    <div class="big-formula">
+      \[ (2^x - 3^x)\underbrace{(3^{2x} + 5 \cdot 2^{2x})}_{>\ 0} = 0 \implies 2^x = 3^x \implies x = 0 \]
+    </div>
+  </div>
+
+  <!-- h. Final Answer -->
+  <div class="card final-answer-card">
+    <h2 class="card-title"><span class="icon">&#127919;</span> Konačni odgovor</h2>
+    <div class="final-answer-text">Broj različitih realnih rešenja: \(1\) &nbsp; (rešenje je \(x = 0\))</div>
+    <div class="final-options">
+      <div class="final-option">(A) \(4\)</div>
+      <div class="final-option">(B) \(3\)</div>
+      <div class="final-option">(C) \(0\)</div>
+      <div class="final-option correct">(D) \(1\)</div>
+      <div class="final-option">(E) \(2\)</div>
+    </div>
+    <div class="verification">
+      <div class="verification-title">&#9989; Verifikacija</div>
+      <p>Za \(x = 0\): leva strana \(= 18^0 + 5 \cdot 8^0 = 1 + 5 = 6\), desna strana \(= 27^0 + 5 \cdot 12^0 = 1 + 5 = 6\). Jednakost važi. Oba pristupa (faktorizacija i supstitucija) potvrđuju da je ovo jedino rešenje, jer se drugi faktor/drugi koren nikada ne poništava u skupu realnih brojeva.</p>
+    </div>
+  </div>
+
+  <!-- i. Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2 class="card-title pitfall-title"><span class="icon">&#9888;&#65039;</span> Česte greške</h2>
+    <ul>
+      <li><strong>Logaritmovanje obe strane:</strong> Neki učenici pokušaju da logaritmuju obe strane jednačine, ali to nije moguće jer strane sadrže zbir &mdash; logaritam zbira nije jednak zbiru logaritama.</li>
+      <li><strong>Pogrešno grupisanje:</strong> Pri faktorizaciji je važno pravilno uočiti zajednički faktor \((2^x - 3^x)\). Pogrešno grupisanje članova vodi u ćorsokak.</li>
+      <li><strong>Zaboravljanje da se proveri drugi faktor:</strong> Neki zaključe da postoji više rešenja ne proveravši da je \(3^{2x} + 5 \cdot 2^{2x}\) uvek pozitivno, pa odaberu pogrešan odgovor.</li>
+      <li><strong>Pogrešna supstitucija:</strong> Kod alternativnog pristupa, važno je proveriti da su svi eksponenti zaista stepeni iste osnove \(\left(\frac{3}{2}\right)\) nakon deljenja sa \(8^x\).</li>
+    </ul>
+  </div>
+
+  <!-- j. Optional Challenge -->
+  <div class="card challenge-card">
+    <h2 class="card-title"><span class="icon">&#127941;</span> Dodatni izazov</h2>
+    <p>Odredite sva realna rešenja jednačine \(6^x + 5 \cdot 4^x = 2 \cdot 9^x + 5 \cdot 6^x\). (Savet: podelite sa \(4^x\) i uvedite supstituciju \(t = \left(\frac{3}{2}\right)^x\).)</p>
+    <details>
+      <summary>&#128273; Otkrij nagovještaj</summary>
+      <p style="padding-top: 10px; color: #cbd5e1;">Posle deljenja sa \(4^x\) dobijate: \(\left(\frac{3}{2}\right)^x + 5 = 2\left(\frac{3}{2}\right)^{2x} + 5\left(\frac{3}{2}\right)^x\). Uz \(t = \left(\frac{3}{2}\right)^x\) imate \(t + 5 = 2t^2 + 5t\), tj. \(2t^2 + 4t - 5 = 0\). Rešite po \(t\) i zadržite samo pozitivno rešenje (jer \(t > 0\)).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const xMin = -2.5;
+  const xMax = 2.5;
+  const yMin = -2;
+  const yMax = 80;
+
+  const marginLeft = 65;
+  const marginRight = 30;
+  const marginTop = 30;
+  const marginBottom = 40;
+
+  const plotW = W - marginLeft - marginRight;
+  const plotH = H - marginTop - marginBottom;
+
+  function toCanvasX(x) {
+    return marginLeft + (x - xMin) / (xMax - xMin) * plotW;
+  }
+
+  function toCanvasY(y) {
+    return marginTop + (yMax - y) / (yMax - yMin) * plotH;
+  }
+
+  function drawGrid() {
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+
+    for (let x = Math.ceil(xMin); x <= xMax; x += 0.5) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(x), marginTop);
+      ctx.lineTo(toCanvasX(x), H - marginBottom);
+      ctx.stroke();
+    }
+
+    for (let y = 0; y <= yMax; y += 10) {
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, toCanvasY(y));
+      ctx.lineTo(W - marginRight, toCanvasY(y));
+      ctx.stroke();
+    }
+  }
+
+  function drawAxes() {
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+
+    if (yMin <= 0 && yMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, toCanvasY(0));
+      ctx.lineTo(W - marginRight, toCanvasY(0));
+      ctx.stroke();
+    }
+
+    if (xMin <= 0 && xMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(0), marginTop);
+      ctx.lineTo(toCanvasX(0), H - marginBottom);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    for (let x = Math.ceil(xMin); x <= xMax; x += 1) {
+      ctx.fillText(x.toString(), toCanvasX(x), H - marginBottom + 18);
+    }
+
+    ctx.textAlign = 'right';
+    for (let y = 0; y <= yMax; y += 10) {
+      if (y === 0) continue;
+      ctx.fillText(y.toString(), marginLeft - 8, toCanvasY(y) + 4);
+    }
+
+    ctx.textAlign = 'center';
+    ctx.fillText('x', W - marginRight + 10, toCanvasY(0) + 16);
+  }
+
+  function leftSide(x) {
+    return Math.pow(18, x) + 5 * Math.pow(8, x);
+  }
+
+  function rightSide(x) {
+    return Math.pow(27, x) + 5 * Math.pow(12, x);
+  }
+
+  function drawCurve(fn, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    var started = false;
+    var step = 0.005;
+
+    for (var x = xMin; x <= xMax; x += step) {
+      var y = fn(x);
+      if (!isFinite(y) || y < yMin - 5 || y > yMax + 5) {
+        started = false;
+        continue;
+      }
+      var cx = toCanvasX(x);
+      var cy = toCanvasY(y);
+      if (!started) {
+        ctx.moveTo(cx, cy);
+        started = true;
+      } else {
+        ctx.lineTo(cx, cy);
+      }
+    }
+    ctx.stroke();
+  }
+
+  function drawIntersection() {
+    var ix = 0;
+    var iy = leftSide(0);
+    var cx = toCanvasX(ix);
+    var cy = toCanvasY(iy);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('x = 0, y = 6', cx + 12, cy - 6);
+    ctx.fillText('(jedino presecište)', cx + 12, cy + 12);
+  }
+
+  function drawLegend() {
+    var lx = W - marginRight - 240;
+    var ly = marginTop + 15;
+
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(lx, ly, 230, 78, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(lx + 12, ly + 22);
+    ctx.lineTo(lx + 40, ly + 22);
+    ctx.stroke();
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'left';
+    ctx.fillText('L(x) = 18\u02E3 + 5\u00B78\u02E3', lx + 48, ly + 26);
+
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(lx + 12, ly + 52);
+    ctx.lineTo(lx + 40, ly + 52);
+    ctx.stroke();
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('D(x) = 27\u02E3 + 5\u00B712\u02E3', lx + 48, ly + 56);
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    drawGrid();
+    drawAxes();
+    drawCurve(leftSide, '#60a5fa');
+    drawCurve(rightSide, '#4ade80');
+    drawIntersection();
+    drawLegend();
+  }
+
+  draw();
+
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Eksponencijalna jednačina sa faktorizacijom",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["eksponencijalne jednačine", "faktorizacija", "supstitucija", "stepeni", "analiza broja rešenja"]
+}
+BRAINSPARK_META-->

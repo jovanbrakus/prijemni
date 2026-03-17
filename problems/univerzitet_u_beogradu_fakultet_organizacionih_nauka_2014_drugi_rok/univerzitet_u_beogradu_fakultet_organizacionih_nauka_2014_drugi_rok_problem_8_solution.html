@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deljivost polinoma i odredjivanje koeficijenata</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Ako je polinom P(x) = x^3 + 3x^2 + 2bx + a deljiv polinomom Q(x) = x^2 + x + a,
+tada je vrednost izraza a - b jednaka:
+A) -3; B) 3; C) 5; D) -1; E) 1
+
+STRATEGIJA: Ako je P(x) deljiv sa Q(x), onda postoji polinom R(x) takav da P(x) = Q(x) * R(x).
+Posto je deg(P) = 3 i deg(Q) = 2, R(x) mora biti linearan: R(x) = x + c.
+
+KORAK 1: Pomnozimo Q(x) * R(x):
+(x^2 + x + a)(x + c) =
+= x^3 + cx^2 + x^2 + cx + ax + ac
+= x^3 + (c + 1)x^2 + (c + a)x + ac
+
+KORAK 2: Izjednacimo koeficijente sa P(x) = x^3 + 3x^2 + 2bx + a:
+
+Koeficijent uz x^2: c + 1 = 3 => c = 2
+Slobodni clan: ac = a => a * 2 = a => 2a = a => a = 0
+Koeficijent uz x: c + a = 2b => 2 + 0 = 2b => b = 1
+
+KORAK 3: Izracunamo a - b:
+a - b = 0 - 1 = -1
+
+VERIFIKACIJA:
+Sa a = 0, b = 1: P(x) = x^3 + 3x^2 + 2x, Q(x) = x^2 + x
+P(x) = x(x^2 + 3x + 2) = x(x + 1)(x + 2)
+Q(x) = x(x + 1)
+P(x) / Q(x) = x + 2. DELJIVO! TACNO!
+
+VERIFIKACIJA KOEFICIJENATA:
+Q(x) * R(x) = (x^2 + x)(x + 2) = x^3 + 2x^2 + x^2 + 2x = x^3 + 3x^2 + 2x
+Uporedimo: P(x) = x^3 + 3x^2 + 2*1*x + 0 = x^3 + 3x^2 + 2x. SLAZE SE!
+
+ODGOVOR: (D) -1
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.card.problem-statement {
+  border: 2px solid #a78bfa;
+  font-size: 1.05rem;
+}
+
+.card.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.given-item .value {
+  font-size: 1rem;
+  color: #e2e8f0;
+}
+
+.given-item.answer-option {
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin: 15px 0;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.final-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.final-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.final-option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.verification-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin: 0.75rem 0;
+}
+
+.verification-box.valid {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.05);
+}
+
+.verify-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #4ade80;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 700px) {
+  body { padding: 0.5rem; }
+  .card, .card.problem-statement, details .detail-content,
+  .final-answer, .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: 1fr 1fr; }
+  .final-options { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Deljivost polinoma i odredjivanje koeficijenata</h1>
+  <p class="subtitle">Nalazenje vrednosti \(a - b\) iz uslova deljivosti dva polinoma</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Ako je polinom \(P(x) = x^3 + 3x^2 + 2bx + a\) deljiv polinomom \(Q(x) = x^2 + x + a\), tada je vrednost izraza \(a - b\) jednaka:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(-3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(5\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(1\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan resavanja</div>
+    <ol class="plan-list">
+      <li>Postaviti jednakost \(P(x) = Q(x) \cdot R(x)\), gde je \(R(x)\) linearan polinom</li>
+      <li>Razmnoziti desnu stranu i izjednaciti koeficijente uz odgovarajuce stepene od \(x\)</li>
+      <li>Resiti dobijeni sistem jednacina za \(a\), \(b\) i koeficijent linearnog polinoma</li>
+      <li>Izracunati vrednost \(a - b\)</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>Podsetnik iz teorije</summary>
+    <div class="detail-content">
+      <p><strong>Deljivost polinoma:</strong></p>
+      <p>Kazemo da je polinom \(P(x)\) deljiv polinomom \(Q(x)\) ako postoji polinom \(R(x)\) takav da:</p>
+      \[P(x) = Q(x) \cdot R(x)\]
+      <p class="muted" style="margin-top: 0.5rem;">Ovo znaci da pri deljenju \(P(x)\) sa \(Q(x)\) nema ostatka.</p>
+
+      <p style="margin-top: 0.75rem;"><strong>Stepen rezultata:</strong></p>
+      \[\deg(P) = \deg(Q) + \deg(R)\]
+      <p class="muted" style="margin-top: 0.5rem;">Ako je \(\deg(P) = 3\) i \(\deg(Q) = 2\), tada je \(\deg(R) = 1\), tj. \(R(x)\) je linearan polinom oblika \(x + c\).</p>
+
+      <p style="margin-top: 0.75rem;"><strong>Metod neodredjenih koeficijenata:</strong></p>
+      <p>Kada razmnozimo \(Q(x) \cdot R(x)\) i izjednacimo sa \(P(x)\), dobijamo sistem jednacina uporedjivanjem koeficijenata uz iste stepene od \(x\).</p>
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Vizuelni prikaz</div>
+    <p class="muted" style="margin-bottom: 0.75rem;">Dijagram prikazuje postupak: od postavljanja jednakosti polinoma, preko izjednacavanja koeficijenata, do konacnog resenja.</p>
+    <div class="canvas-wrap">
+      <canvas id="graphCanvas" width="700" height="440"></canvas>
+      <p class="canvas-hint">Tok resavanja: od deljivosti polinoma do sistema jednacina i konacnog rezultata.</p>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Postavljamo jednakost polinoma</div>
+      <p>Ako je \(P(x)\) deljiv sa \(Q(x)\), postoji polinom \(R(x)\) takav da:</p>
+      <div class="math-block">
+        \[P(x) = Q(x) \cdot R(x)\]
+      </div>
+      <p>Posto je \(\deg(P) = 3\) i \(\deg(Q) = 2\), sledi \(\deg(R) = 1\), pa:</p>
+      <div class="math-block">
+        \[R(x) = x + c\]
+      </div>
+      <p>Vodeci koeficijent mora biti 1, jer je vodeci koeficijent od \(P(x)\) jednak 1, a vodeci koeficijent od \(Q(x)\) je takodje 1.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Razmnozavamo \(Q(x) \cdot R(x)\)</div>
+      <p>Razmnozimo \((x^2 + x + a)(x + c)\):</p>
+      <div class="math-block">
+        \[(x^2 + x + a)(x + c) = x^3 + cx^2 + x^2 + cx + ax + ac\]
+      </div>
+      <p>Sredimo po stepenima od \(x\):</p>
+      <div class="math-block">
+        \[= x^3 + (c + 1)x^2 + (c + a)x + ac\]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Izjednacavamo koeficijente</div>
+      <p>Uporedjujemo koeficijente sa \(P(x) = x^3 + 3x^2 + 2bx + a\):</p>
+      <div class="math-block">
+        \[\begin{aligned}
+        x^3&: \quad 1 = 1 \quad \checkmark \\[4pt]
+        x^2&: \quad c + 1 = 3 \\[4pt]
+        x^1&: \quad c + a = 2b \\[4pt]
+        x^0&: \quad ac = a
+        \end{aligned}\]
+      </div>
+    </div>
+
+    <div class="verification-box valid">
+      <div class="verify-label">Kontrolna tacka</div>
+      <p>Dobili smo sistem od tri jednacine sa tri nepoznate (\(a\), \(b\), \(c\)). Sistem je resiv jer jedna jednacina daje \(c\) direktno.</p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Resavamo sistem jednacina</div>
+      <p><strong>Iz jednacine za \(x^2\):</strong></p>
+      <div class="math-block">
+        \[c + 1 = 3 \quad \Rightarrow \quad c = 2\]
+      </div>
+      <p><strong>Iz jednacine za slobodni clan:</strong></p>
+      <div class="math-block">
+        \[ac = a \quad \Rightarrow \quad a \cdot 2 = a \quad \Rightarrow \quad 2a = a \quad \Rightarrow \quad a = 0\]
+      </div>
+      <p><strong>Iz jednacine za \(x\):</strong></p>
+      <div class="math-block">
+        \[c + a = 2b \quad \Rightarrow \quad 2 + 0 = 2b \quad \Rightarrow \quad b = 1\]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-title">Korak 5: Racunamo trazenu vrednost</div>
+      <div class="math-block">
+        \[a - b = 0 - 1 = -1\]
+      </div>
+    </div>
+
+    <details style="margin: 15px 0;">
+      <summary>Proveri se: Verifikacija deljivosti</summary>
+      <div class="detail-content">
+        <p>Sa \(a = 0\) i \(b = 1\) imamo:</p>
+        \[P(x) = x^3 + 3x^2 + 2x = x(x^2 + 3x + 2) = x(x + 1)(x + 2)\]
+        \[Q(x) = x^2 + x = x(x + 1)\]
+        <p>Delimo:</p>
+        \[\frac{P(x)}{Q(x)} = \frac{x(x + 1)(x + 2)}{x(x + 1)} = x + 2\]
+        <p>Dobili smo polinom bez ostatka, sto potvrdjuje da \(R(x) = x + 2\), tj. \(c = 2\). \(\checkmark\)</p>
+      </div>
+    </details>
+
+    <details style="margin: 15px 0;">
+      <summary>Proveri se: Verifikacija razmnozavanjem</summary>
+      <div class="detail-content">
+        <p>Proverimo da li vazi \(Q(x) \cdot R(x) = P(x)\):</p>
+        \[(x^2 + x)(x + 2) = x^3 + 2x^2 + x^2 + 2x = x^3 + 3x^2 + 2x\]
+        <p>A \(P(x) = x^3 + 3x^2 + 2 \cdot 1 \cdot x + 0 = x^3 + 3x^2 + 2x\).</p>
+        <p>Jednakost vazi! \(\checkmark\)</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Kljucni uvid</div>
+    <p>Jednacina slobodnog clana \(ac = a\) se moze zapisati kao \(a(c - 1) = 0\). Posto smo iz koeficijenta uz \(x^2\) vec odredili da je \(c = 2 \neq 1\), sledi da <strong>mora biti \(a = 0\)</strong>. Ovo je kljucni momenat resenja &mdash; slobodni clan polaznog polinoma je nula, sto znacajno pojednostavljuje ceo problem.</p>
+    <div class="math-block" style="text-align: center; font-size: 1.05rem; margin-top: 0.75rem;">
+      \[ac = a \;\;\wedge\;\; c = 2 \quad \Longrightarrow \quad a = 0\]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konacan odgovor</div>
+    <div class="value">(D) \(a - b = -1\)</div>
+    <div class="final-options">
+      <div class="final-option">(A) \(-3\)</div>
+      <div class="final-option">(B) \(3\)</div>
+      <div class="final-option">(C) \(5\)</div>
+      <div class="final-option correct">(D) \(-1\)</div>
+      <div class="final-option">(E) \(1\)</div>
+    </div>
+    <p class="muted" style="margin-top: 1rem; font-size: 0.9rem;"><strong>Verifikacija:</strong> \(a = 0,\; b = 1,\; c = 2\). Polinom \(P(x) = x^3 + 3x^2 + 2x = x(x+1)(x+2)\) je deljiv sa \(Q(x) = x^2 + x = x(x+1)\), kolicnik je \(x + 2\). Vrednost \(a - b = 0 - 1 = -1\).</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Ceste greske</div>
+    <div class="pitfall">
+      <strong>Pogresno resavanje jednacine \(ac = a\):</strong> Mnogi ucenici dele obe strane sa \(a\), dobijaju \(c = 1\), i zanemaruju mogucnost da je \(a = 0\). Deljenje nulom nije dozvoljeno! Ispravno je prebaciti sve na jednu stranu: \(a(c - 1) = 0\), pa razmotriti oba slucaja.
+    </div>
+    <div class="pitfall">
+      <strong>Zaboravljanje da vodeci koeficijent \(R(x)\) mora biti 1:</strong> Posto je vodeci koeficijent i kod \(P(x)\) i kod \(Q(x)\) jednak 1, kolicnik \(R(x)\) mora biti oblika \(x + c\), a ne \(kx + c\) sa proizvoljnim \(k\).
+    </div>
+    <div class="pitfall">
+      <strong>Mesanje koeficijenata pri izjednacavanju:</strong> Pazljivo raspisati proizvod \((x^2 + x + a)(x + c)\) i grupisati clanove po stepenima. Cesta greska je propustiti jedan od clanova pri mnozenju.
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Polinom \(P(x) = x^4 + 2x^3 + kx^2 + mx + 6\) je deljiv polinomom \(Q(x) = x^2 + x + 2\). Odredite vrednost \(k + m\).</p>
+    <details style="margin: 15px 0; background: transparent; border: 1px solid #34d399;">
+      <summary style="color: #34d399;">Savet</summary>
+      <div class="detail-content">
+        <p>Koristite isti pristup: \(R(x) = x^2 + cx + d\). Razmnozite \(Q(x) \cdot R(x)\) i izjednacite koeficijente. Iz koeficijenta uz \(x^3\): \(c + 1 = 2 \Rightarrow c = 1\). Iz slobodnog clana: \(2d = 6 \Rightarrow d = 3\). Iz koeficijenta uz \(x^2\): \(k = d + c + 2 = 3 + 1 + 2 = 6\). Iz koeficijenta uz \(x\): \(m = 2c + d = 2 + 3 = 5\). Dakle \(k + m = 11\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('graphCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const colors = {
+    bg: '#0f172a',
+    card: '#1e293b',
+    border: '#334155',
+    blue: '#60a5fa',
+    purple: '#a78bfa',
+    green: '#4ade80',
+    pink: '#f472b6',
+    cyan: '#38bdf8',
+    text: '#e2e8f0',
+    muted: '#94a3b8',
+    orange: '#fb923c'
+  };
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function drawBox(x, y, w, h, borderColor, lines, textColor, fontSize) {
+    roundRect(x, y, w, h, 8);
+    ctx.fillStyle = colors.card;
+    ctx.fill();
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = textColor || colors.text;
+    ctx.font = (fontSize || 13) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    if (typeof lines === 'string') lines = lines.split('\n');
+    var lineH = (fontSize || 13) * 1.5;
+    var startY = y + h / 2 - (lines.length - 1) * lineH / 2;
+    for (var i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], x + w / 2, startY + i * lineH);
+    }
+  }
+
+  function drawArrow(x1, y1, x2, y2, color) {
+    ctx.strokeStyle = color || colors.muted;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    var headLen = 10;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fillStyle = color || colors.muted;
+    ctx.fill();
+  }
+
+  // Clear canvas
+  ctx.fillStyle = colors.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Title
+  ctx.fillStyle = colors.muted;
+  ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('Postupak resavanja: deljivost polinoma', W / 2, 8);
+
+  // Row 0: P(x) = Q(x) * R(x)
+  var topW = 480, topH = 42;
+  var topX = (W - topW) / 2, topY = 32;
+  drawBox(topX, topY, topW, topH, colors.purple, 'P(x) = Q(x) \u00B7 R(x),  gde je R(x) = x + c', colors.purple, 14);
+
+  // Arrow down
+  drawArrow(W / 2, topY + topH, W / 2, topY + topH + 25, colors.blue);
+
+  // Row 1: Expansion
+  var r1Y = topY + topH + 28;
+  var r1W = 540, r1H = 42;
+  var r1X = (W - r1W) / 2;
+  drawBox(r1X, r1Y, r1W, r1H, colors.blue, '(x\u00B2 + x + a)(x + c) = x\u00B3 + (c+1)x\u00B2 + (c+a)x + ac', colors.blue, 13);
+
+  // Arrow down
+  drawArrow(W / 2, r1Y + r1H, W / 2, r1Y + r1H + 25, colors.cyan);
+
+  // Row 2: Coefficient equations - title
+  var r2Y = r1Y + r1H + 28;
+  ctx.fillStyle = colors.orange;
+  ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Izjednacavanje koeficijenata sa x\u00B3 + 3x\u00B2 + 2bx + a', W / 2, r2Y);
+
+  // Three equation boxes
+  var eqW = 180, eqH = 38, eqGap = 20;
+  var totalEqW = 3 * eqW + 2 * eqGap;
+  var eqStartX = (W - totalEqW) / 2;
+  var eqY = r2Y + 16;
+
+  drawBox(eqStartX, eqY, eqW, eqH, colors.cyan, 'x\u00B2: c + 1 = 3', colors.text, 13);
+  drawBox(eqStartX + eqW + eqGap, eqY, eqW, eqH, colors.cyan, 'x\u00B0: ac = a', colors.text, 13);
+  drawBox(eqStartX + 2 * (eqW + eqGap), eqY, eqW, eqH, colors.cyan, 'x\u00B9: c + a = 2b', colors.text, 13);
+
+  // Arrows from equations to solutions
+  var solY = eqY + eqH + 30;
+  drawArrow(eqStartX + eqW / 2, eqY + eqH, eqStartX + eqW / 2, solY, colors.green);
+  drawArrow(eqStartX + eqW + eqGap + eqW / 2, eqY + eqH, eqStartX + eqW + eqGap + eqW / 2, solY, colors.green);
+  drawArrow(eqStartX + 2 * (eqW + eqGap) + eqW / 2, eqY + eqH, eqStartX + 2 * (eqW + eqGap) + eqW / 2, solY, colors.green);
+
+  // Solution boxes
+  drawBox(eqStartX, solY, eqW, eqH, colors.green, 'c = 2', colors.green, 15);
+  drawBox(eqStartX + eqW + eqGap, solY, eqW, eqH, colors.green, 'a = 0', colors.green, 15);
+  drawBox(eqStartX + 2 * (eqW + eqGap), solY, eqW, eqH, colors.green, 'b = 1', colors.green, 15);
+
+  // Arrows converging to final result
+  var finalW = 240, finalH = 50;
+  var finalX = (W - finalW) / 2;
+  var finalY = solY + eqH + 35;
+
+  drawArrow(eqStartX + eqW / 2, solY + eqH, finalX + finalW / 3, finalY, colors.green);
+  drawArrow(eqStartX + eqW + eqGap + eqW / 2, solY + eqH, finalX + finalW / 2, finalY, colors.green);
+  drawArrow(eqStartX + 2 * (eqW + eqGap) + eqW / 2, solY + eqH, finalX + 2 * finalW / 3, finalY, colors.green);
+
+  // Final result box
+  roundRect(finalX, finalY, finalW, finalH, 10);
+  ctx.fillStyle = 'rgba(74, 222, 128, 0.12)';
+  ctx.fill();
+  ctx.strokeStyle = colors.green;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  ctx.fillStyle = colors.green;
+  ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('a \u2212 b = 0 \u2212 1 = \u22121', finalX + finalW / 2, finalY + finalH / 2);
+
+  // Annotation: dependency arrows between solution boxes
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = colors.orange;
+  ctx.lineWidth = 1.5;
+
+  // c=2 feeds into a=0
+  ctx.beginPath();
+  ctx.moveTo(eqStartX + eqW, solY + eqH / 2);
+  ctx.lineTo(eqStartX + eqW + eqGap, solY + eqH / 2);
+  ctx.stroke();
+
+  // a=0 feeds into b=1
+  ctx.beginPath();
+  ctx.moveTo(eqStartX + eqW + eqGap + eqW, solY + eqH / 2);
+  ctx.lineTo(eqStartX + 2 * (eqW + eqGap), solY + eqH / 2);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+
+  // Labels for dependency
+  ctx.fillStyle = colors.orange;
+  ctx.font = 'italic 10px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('c=2', eqStartX + eqW + eqGap / 2, solY + eqH / 2 - 8);
+  ctx.fillText('c=2, a=0', eqStartX + 2 * eqW + 1.5 * eqGap, solY + eqH / 2 - 8);
+
+  // Make steps clickable
+  var stepElements = document.querySelectorAll('.step');
+  stepElements.forEach(function(el) {
+    el.addEventListener('click', function() {
+      stepElements.forEach(function(s) { s.classList.remove('active'); });
+      el.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Deljivost polinoma i odredjivanje koeficijenata","subject":"math","unit":"polynomials","topic_tags":["polinomi","deljivost polinoma","metod neodredjenih koeficijenata","sistemi jednacina"]}
+BRAINSPARK_META-->

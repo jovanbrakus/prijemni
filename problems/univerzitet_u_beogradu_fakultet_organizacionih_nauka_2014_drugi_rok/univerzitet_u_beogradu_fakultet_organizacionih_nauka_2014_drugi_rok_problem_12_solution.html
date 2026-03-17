@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logaritamska nejednačina i proizvod rešenja</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Find the product of the smallest and largest solution of x^(log_5 x) <= 625.
+
+DOMAIN: x > 0 (logarithm and power require positive base).
+
+STEP 1: Take log_5 of both sides.
+x^(log_5 x) <= 625
+Let t = log_5 x, so x = 5^t.
+
+Then x^(log_5 x) = (5^t)^t = 5^(t^2).
+
+The inequality becomes:
+5^(t^2) <= 5^4    (since 625 = 5^4)
+
+STEP 2: Since base 5 > 1, the exponential function is increasing, so:
+t^2 <= 4
+
+STEP 3: Solve t^2 <= 4
+-2 <= t <= 2
+
+STEP 4: Convert back to x using x = 5^t:
+When t = -2: x = 5^(-2) = 1/25
+When t = 2: x = 5^2 = 25
+
+Since 5^t is an increasing function, and -2 <= t <= 2:
+x_min = 5^(-2) = 1/25
+x_max = 5^2 = 25
+
+Solution set: [1/25, 25]
+
+STEP 5: Calculate the product of smallest and largest solutions:
+x_min * x_max = (1/25) * 25 = 1
+
+VERIFICATION:
+- x = 1/25: (1/25)^(log_5(1/25)) = (1/25)^(-2) = 25^2 = 625 <= 625 ✓
+- x = 25: 25^(log_5 25) = 25^2 = 625 <= 625 ✓
+- x = 1: 1^(log_5 1) = 1^0 = 1 <= 625 ✓ (interior point)
+- x = 1/26 < 1/25: (1/26)^(log_5(1/26)) = (1/26)^(log_5(1/26))
+  log_5(1/26) ≈ -2.024, so (1/26)^(-2.024) = 26^(2.024) ≈ 700 > 625 ✗ (outside)
+
+ANSWER: B) 1. Matches the expected answer. ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  border: 2px solid #a78bfa;
+  font-size: 1.08rem;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+}
+
+.given-item .value {
+  font-size: 1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin: 15px 0;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  font-size: 0.95rem;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkpoint summary::-webkit-details-marker { display: none; }
+
+.checkpoint summary::before {
+  content: '\25B6';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+
+.checkpoint[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.checkpoint .checkpoint-content {
+  padding: 0 1rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.final-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.final-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.final-option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.verification {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 700px) {
+  body { padding: 0.5rem; }
+  .card, .problem-statement, details .detail-content, .final-answer,
+  .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: repeat(2, 1fr); }
+  .final-options { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Logaritamska nejednačina i proizvod rešenja</h1>
+  <p class="subtitle">Logaritamske nejednačine, supstitucija i svojstva eksponencijalnih funkcija</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Proizvod najmanjeg i najvećeg rešenja nejednačine \(x^{\log_5 x} \leq 625\) je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(25\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(6\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(5\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</div>
+    <ol class="plan-list">
+      <li>Uvedemo smenu \(t = \log_5 x\) i transformišemo nejednačinu u oblik sa bazom 5.</li>
+      <li>Iskoristimo monotonost eksponencijalne funkcije da svedemo na kvadratnu nejednačinu po \(t\).</li>
+      <li>Rešimo nejednačinu po \(t\), vratimo se na \(x\) i nađemo proizvod ekstremnih rešenja.</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>Podsetnik iz teorije</summary>
+    <div class="detail-content">
+      <p><strong>Logaritamska identičnost:</strong> Ako je \(x = 5^t\), onda je \(\log_5 x = t\). Ovo omogućava zamenu promenljive.</p>
+
+      <p style="margin-top:0.75rem"><strong>Stepenovanje sa bazom 5:</strong> Ako \(x = 5^t\), tada:</p>
+      \[x^{\log_5 x} = (5^t)^t = 5^{t^2}\]
+
+      <p style="margin-top:0.75rem"><strong>Monotonost eksponencijalne funkcije:</strong> Za bazu \(a > 1\):</p>
+      \[a^u \leq a^v \iff u \leq v\]
+
+      <p style="margin-top:0.75rem"><strong>Domen:</strong> Izraz \(x^{\log_5 x}\) ima smisla samo za \(x > 0\), jer logaritam zahteva pozitivan argument.</p>
+
+      <p style="margin-top:0.75rem"><strong>Korisna osobina:</strong> Za \(x_1 = 5^{-t}\) i \(x_2 = 5^{t}\) važi:</p>
+      \[x_1 \cdot x_2 = 5^{-t} \cdot 5^t = 5^0 = 1\]
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Vizuelni prikaz - Funkcija \(f(x) = x^{\log_5 x}\) i prag 625</div>
+    <p class="muted" style="margin-bottom:0.75rem;">Grafik prikazuje funkciju \(f(x) = x^{\log_5 x}\) i horizontalnu liniju \(y = 625\). Oblast gde je \(f(x) \leq 625\) je osenčena.</p>
+    <div class="canvas-wrap">
+      <canvas id="ineq-canvas" width="700" height="450"></canvas>
+      <p class="canvas-hint">Funkcija dodiruje prag 625 u tačkama \(x = \frac{1}{25}\) i \(x = 25\)</p>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Odredimo domen i uvedemo smenu</div>
+      <p>Nejednačina \(x^{\log_5 x} \leq 625\) ima smisla samo za \(x > 0\). Uvedemo smenu:</p>
+      <div class="math-block">
+        \[t = \log_5 x \quad \Longrightarrow \quad x = 5^t\]
+      </div>
+      <p>Ova smena pokriva ceo domen jer za svako \(x > 0\) postoji odgovarajuće \(t \in \mathbb{R}\).</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Transformišemo levu stranu</div>
+      <p>Uvrstimo \(x = 5^t\) u izraz \(x^{\log_5 x}\):</p>
+      <div class="math-block">
+        \[x^{\log_5 x} = (5^t)^t = 5^{t \cdot t} = 5^{t^2}\]
+      </div>
+      <p>Desna strana je \(625 = 5^4\), pa nejednačina postaje:</p>
+      <div class="math-block">
+        \[5^{t^2} \leq 5^4\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto je \((5^t)^t = 5^{t^2}\)?</summary>
+      <div class="checkpoint-content">
+        <p>Po pravilu za stepenovanje stepena: \((a^m)^n = a^{m \cdot n}\). Ovde je \(a = 5\), \(m = t\), \(n = t\), pa dobijamo \((5^t)^t = 5^{t \cdot t} = 5^{t^2}\).</p>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Primenimo monotonost eksponencijalne funkcije</div>
+      <p>Pošto je baza \(5 > 1\), eksponencijalna funkcija \(5^u\) je <span class="highlight-blue">strogo rastuća</span>. Zato važi:</p>
+      <div class="math-block">
+        \[5^{t^2} \leq 5^4 \quad \Longleftrightarrow \quad t^2 \leq 4\]
+      </div>
+      <p>Ovo je ključan korak — monotonost baze veće od 1 čuva smer nejednakosti.</p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Rešimo kvadratnu nejednačinu</div>
+      <p>Nejednačina \(t^2 \leq 4\) je ekvivalentna:</p>
+      <div class="math-block">
+        \[t^2 - 4 \leq 0\]
+      </div>
+      <p>Faktorizujemo:</p>
+      <div class="math-block">
+        \[(t - 2)(t + 2) \leq 0\]
+      </div>
+      <p>Proizvod dva faktora je negativan ili nula kada su različitog znaka (ili bar jedan je nula), što daje:</p>
+      <div class="math-block">
+        \[\boxed{-2 \leq t \leq 2}\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Kako rešavamo nejednačinu oblika \(t^2 \leq a^2\)?</summary>
+      <div class="checkpoint-content">
+        <p>Nejednačina \(t^2 \leq a^2\) za \(a > 0\) je ekvivalentna sa \(|t| \leq a\), odnosno \(-a \leq t \leq a\). Geometrijski, tražimo sve tačke na brojevnoj pravoj čije je rastojanje od nule najviše \(a\).</p>
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-title">Korak 5: Vratimo se na promenljivu \(x\)</div>
+      <p>Iz smene \(t = \log_5 x\) i rezultata \(-2 \leq t \leq 2\), dobijamo:</p>
+      <div class="math-block">
+        \[-2 \leq \log_5 x \leq 2\]
+      </div>
+      <p>Pošto je \(5^u\) rastuća funkcija, primenimo je na sve tri strane:</p>
+      <div class="math-block">
+        \[5^{-2} \leq x \leq 5^2\]
+      </div>
+      <div class="math-block">
+        \[\boxed{\frac{1}{25} \leq x \leq 25}\]
+      </div>
+      <p>Dakle, skup rešenja je segment \(\left[\frac{1}{25}{,}\ 25\right]\).</p>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-title">Korak 6: Izračunamo proizvod najmanjeg i najvećeg rešenja</div>
+      <p>Najmanje rešenje je \(x_{\min} = \frac{1}{25}\), a najveće je \(x_{\max} = 25\). Njihov proizvod je:</p>
+      <div class="math-block">
+        \[x_{\min} \cdot x_{\max} = \frac{1}{25} \cdot 25 = \color{#4ade80}{1}\]
+      </div>
+      <p class="muted">Napomena: ovo nije slučajnost! Važi \(x_{\min} = 5^{-2}\) i \(x_{\max} = 5^2\), pa je \(5^{-2} \cdot 5^2 = 5^0 = 1\). Simetričnost granica u logaritamskom prostoru garantuje da je proizvod 1.</p>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-title">Korak 7: Verifikacija graničnih tačaka</div>
+      <p>Proverimo da granične tačke zaista zadovoljavaju jednakost:</p>
+      <p><strong>Za \(x = \frac{1}{25}\):</strong></p>
+      <div class="math-block">
+        \[\left(\frac{1}{25}\right)^{\log_5 \frac{1}{25}} = \left(\frac{1}{25}\right)^{-2} = 25^2 = 625 \leq 625 \quad \checkmark\]
+      </div>
+      <p><strong>Za \(x = 25\):</strong></p>
+      <div class="math-block">
+        \[25^{\log_5 25} = 25^2 = 625 \leq 625 \quad \checkmark\]
+      </div>
+      <p><strong>Za \(x = 1\) (unutrašnja tačka):</strong></p>
+      <div class="math-block">
+        \[1^{\log_5 1} = 1^0 = 1 \leq 625 \quad \checkmark\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto je \(\log_5 \frac{1}{25} = -2\)?</summary>
+      <div class="checkpoint-content">
+        <p>Jer \(5^{-2} = \frac{1}{5^2} = \frac{1}{25}\), pa po definiciji logaritma: \(\log_5 \frac{1}{25} = -2\).</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Ključni uvid</div>
+    <p>Smena \(t = \log_5 x\) pretvara komplikovanu nejednačinu sa promenljivom u eksponentu i bazi u jednostavnu <strong>kvadratnu nejednačinu</strong>. Ključna osobina je da su granice po \(t\) simetrične oko nule (\(-2\) i \(2\)), što automatski znači da je proizvod odgovarajućih \(x\)-granica jednak 1, jer \(5^{-a} \cdot 5^{a} = 5^0 = 1\).</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konačan odgovor</div>
+    <div class="value">\(\dfrac{1}{25} \cdot 25 = 1\)</div>
+    <div class="final-options">
+      <div class="final-option">(A) \(25\)</div>
+      <div class="final-option correct">(B) \(1\)</div>
+      <div class="final-option">(C) \(6\)</div>
+      <div class="final-option">(D) \(2\)</div>
+      <div class="final-option">(E) \(5\)</div>
+    </div>
+    <p class="verification">Verifikacija: Za \(x = \frac{1}{25}\) i \(x = 25\), funkcija dostiže vrednost tačno 625 (granični slučaj). Proizvod: \(\frac{1}{25} \cdot 25 = 1\).</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall">
+      <strong>Zaboravljanje na domen:</strong> Izraz \(x^{\log_5 x}\) ima smisla samo za \(x > 0\). Ako se ovo previdi, mogu se pojaviti lažna rešenja sa negativnim \(x\) vrednostima.
+    </div>
+    <div class="pitfall">
+      <strong>Pogrešan smer nejednačine pri logaritmovanju:</strong> Ako bismo logaritmovali sa bazom manjom od 1, smer nejednačine bi se obrnuo. Ovde koristimo bazu 5 > 1, pa se smer čuva.
+    </div>
+    <div class="pitfall">
+      <strong>Zaboravljanje donje granice:</strong> Mnogi studenti nađu samo \(x \leq 25\) i zaborave da postoji i donja granica \(x \geq \frac{1}{25}\). Kvadratna nejednačina \(t^2 \leq 4\) daje <em>dve</em> granice!
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Rešiti nejednačinu \(x^{\log_3 x} \leq 81\) i naći <em>zbir</em> najmanjeg i najvećeg rešenja.</p>
+    <details style="background: transparent; border: 1px solid #34d399; margin: 15px 0;">
+      <summary style="color: #34d399;">Prikaži nagoveštaj</summary>
+      <div class="detail-content">
+        <p>Postupak je analogan: smena \(t = \log_3 x\) daje \(3^{t^2} \leq 3^4\), odakle \(t^2 \leq 4\), tj. \(-2 \leq t \leq 2\). Dakle \(\frac{1}{9} \leq x \leq 9\) i zbir je \(\frac{1}{9} + 9 = \frac{82}{9}\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('ineq-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const padL = 60;
+  const padR = 30;
+  const padT = 30;
+  const padB = 50;
+
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  const xMinLog = -2.5;
+  const xMaxLog = 2.5;
+  const yMin = 0;
+  const yMax = 1200;
+
+  function toCanvasX(logX) {
+    return padL + ((logX - xMinLog) / (xMaxLog - xMinLog)) * plotW;
+  }
+
+  function toCanvasY(y) {
+    return padT + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
+  }
+
+  function f(x) {
+    if (x <= 0) return 0;
+    var logVal = Math.log(x) / Math.log(5);
+    return Math.pow(x, logVal);
+  }
+
+  function roundRect(context, x, y, w, h, r) {
+    context.beginPath();
+    context.moveTo(x + r, y);
+    context.lineTo(x + w - r, y);
+    context.arcTo(x + w, y, x + w, y + r, r);
+    context.lineTo(x + w, y + h - r);
+    context.arcTo(x + w, y + h, x + w - r, y + h, r);
+    context.lineTo(x + r, y + h);
+    context.arcTo(x, y + h, x, y + h - r, r);
+    context.lineTo(x, y + r);
+    context.arcTo(x, y, x + r, y, r);
+    context.closePath();
+    context.fill();
+    context.stroke();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    var thresholdY = toCanvasY(625);
+    var leftBound = toCanvasX(Math.log(1/25) / Math.log(5));
+    var rightBound = toCanvasX(Math.log(25) / Math.log(5));
+
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.06)';
+    ctx.fillRect(leftBound, thresholdY, rightBound - leftBound, toCanvasY(0) - thresholdY);
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 0.5;
+    var yTicks = [0, 200, 400, 625, 800, 1000];
+    for (var i = 0; i < yTicks.length; i++) {
+      var yy = toCanvasY(yTicks[i]);
+      if (yy >= padT && yy <= padT + plotH) {
+        ctx.beginPath();
+        ctx.moveTo(padL, yy);
+        ctx.lineTo(W - padR, yy);
+        ctx.stroke();
+      }
+    }
+
+    var xTickVals = [-2, -1, 0, 1, 2];
+    for (var i = 0; i < xTickVals.length; i++) {
+      var xx = toCanvasX(xTickVals[i]);
+      ctx.beginPath();
+      ctx.moveTo(xx, padT);
+      ctx.lineTo(xx, padT + plotH);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    var zeroY = toCanvasY(0);
+    ctx.beginPath();
+    ctx.moveTo(padL, zeroY);
+    ctx.lineTo(W - padR, zeroY);
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    var xLabels = [
+      { logV: -2, label: '1/25' },
+      { logV: -1, label: '1/5' },
+      { logV: 0, label: '1' },
+      { logV: 1, label: '5' },
+      { logV: 2, label: '25' }
+    ];
+    for (var i = 0; i < xLabels.length; i++) {
+      var xx = toCanvasX(xLabels[i].logV);
+      ctx.fillText(xLabels[i].label, xx, zeroY + 6);
+    }
+
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (var i = 0; i < yTicks.length; i++) {
+      var yy = toCanvasY(yTicks[i]);
+      if (yy >= padT + 5 && yy <= padT + plotH - 5) {
+        ctx.fillText(String(yTicks[i]), padL - 8, yy);
+      }
+    }
+
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(padL, thresholdY);
+    ctx.lineTo(W - padR, thresholdY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('y = 625', W - padR - 55, thresholdY - 5);
+
+    ctx.beginPath();
+    var started = false;
+    var steps = 500;
+    for (var i = 0; i <= steps; i++) {
+      var logX = xMinLog + (xMaxLog - xMinLog) * i / steps;
+      var x = Math.pow(5, logX);
+      var y = f(x);
+      if (y > yMax * 1.2) {
+        started = false;
+        continue;
+      }
+      var cx = toCanvasX(logX);
+      var cy = toCanvasY(y);
+      if (!started) {
+        ctx.moveTo(cx, cy);
+        started = true;
+      } else {
+        ctx.lineTo(cx, cy);
+      }
+    }
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    started = false;
+    for (var i = 0; i <= steps; i++) {
+      var logX = xMinLog + (xMaxLog - xMinLog) * i / steps;
+      if (logX < -2 || logX > 2) continue;
+      var x = Math.pow(5, logX);
+      var y = f(x);
+      var cx = toCanvasX(logX);
+      var cy = toCanvasY(y);
+      if (!started) {
+        ctx.moveTo(cx, cy);
+        started = true;
+      } else {
+        ctx.lineTo(cx, cy);
+      }
+    }
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    var points = [
+      { logV: -2, label: 'x = 1/25', color: '#4ade80', above: true },
+      { logV: 2, label: 'x = 25', color: '#4ade80', above: true },
+      { logV: 0, label: 'x = 1, f = 1', color: '#a78bfa', above: false }
+    ];
+
+    for (var i = 0; i < points.length; i++) {
+      var p = points[i];
+      var x = Math.pow(5, p.logV);
+      var y = f(x);
+      var cx = toCanvasX(p.logV);
+      var cy = toCanvasY(y);
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = p.color;
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      if (p.above) {
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(p.label, cx, cy - 10);
+      } else {
+        ctx.textBaseline = 'top';
+        ctx.fillText(p.label, cx, cy + 10);
+      }
+    }
+
+    var panelX = padL + 8;
+    var panelY = padT + 8;
+    var panelW = 200;
+    var panelH = 70;
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, panelX, panelY, panelW, panelH, 10);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('f(x) = x^(log\u2085 x)', panelX + 12, panelY + 10);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Rešenje: [1/25, 25]', panelX + 12, panelY + 30);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('Proizvod: 1/25 \u00D7 25 = 1', panelX + 12, panelY + 48);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('x (logaritamska skala, baza 5)', W / 2, H - 5);
+
+    ctx.save();
+    ctx.translate(14, padT + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('f(x) = x^(log\u2085 x)', 0, 0);
+    ctx.restore();
+  }
+
+  draw();
+})();
+</script>
+
+<script>
+(() => {
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Logaritamska nejednačina i proizvod rešenja","subject":"math","unit":"logaritmi","topic_tags":["logaritamske nejednačine","supstitucija","eksponencijalna funkcija","kvadratna nejednačina","logaritam"]}
+BRAINSPARK_META-->

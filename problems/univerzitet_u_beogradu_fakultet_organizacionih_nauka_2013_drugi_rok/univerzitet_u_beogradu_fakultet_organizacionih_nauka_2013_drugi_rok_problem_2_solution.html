@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepen kompleksnog broja i konjugat</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Ako je z = ((1-i)/(1+i))^2013, gde je i^2 = -1, onda je Re(z̄) + Im(z̄) jednako:
+A) 1  B) -1  C) 0  D) -2  E) 2
+
+REŠENJE:
+1. Pojednostavimo (1-i)/(1+i).
+   Množimo brojilac i imenilac konjugatom imenioca (1-i):
+   (1-i)/(1+i) × (1-i)/(1-i) = (1-i)^2 / ((1+i)(1-i))
+
+2. Brojilac: (1-i)^2 = 1 - 2i + i^2 = 1 - 2i - 1 = -2i
+   Imenilac: (1+i)(1-i) = 1 - i^2 = 1 - (-1) = 2
+
+3. Dakle: (1-i)/(1+i) = -2i/2 = -i
+
+4. Sada: z = (-i)^2013
+   Stepenujemo -i:
+   (-i)^1 = -i
+   (-i)^2 = (-i)(-i) = i^2 = -1
+   (-i)^3 = (-i)^2 × (-i) = -1 × (-i) = i
+   (-i)^4 = (-i)^3 × (-i) = i × (-i) = -i^2 = 1
+
+   Dakle, period je 4: (-i)^n zavisi od n mod 4.
+
+5. 2013 = 4 × 503 + 1, dakle 2013 mod 4 = 1
+   z = (-i)^2013 = (-i)^1 = -i
+
+6. Konjugat od z: z̄ = konjugat(-i) = i (menjamo znak imaginarnog dela)
+
+7. Re(z̄) = Re(i) = 0
+   Im(z̄) = Im(i) = 1
+
+8. Re(z̄) + Im(z̄) = 0 + 1 = 1
+
+VERIFIKACIJA:
+- (1-i)/(1+i) = -i ✓ (možemo proveriti: -i × (1+i) = -i - i^2 = -i + 1 = 1 - i ✓)
+- (-i)^4 = 1, pa (-i)^2013 = (-i)^(4×503+1) = (-i)^1 = -i ✓
+- Konjugat od -i je i ✓
+- Re(i) + Im(i) = 0 + 1 = 1 ✓
+
+Tačan odgovor: A) 1 ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.2rem;
+  margin: 30px 0 10px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  font-size: 1.1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(167, 139, 250, 0.15));
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  justify-content: center;
+}
+
+.final-answer {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.1));
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer h2 {
+  color: #4ade80;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.answer-value {
+  font-size: 1.6rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.answer-options .opt {
+  padding: 8px 18px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid #334155;
+  font-size: 1.05rem;
+  transition: all 0.3s;
+}
+
+.answer-options .opt.correct {
+  background: rgba(52, 211, 153, 0.2);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 248, 0.15);
+  list-style: none;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: '▶ ';
+  font-size: 0.8rem;
+}
+
+details[open] summary::before {
+  content: '▼ ';
+}
+
+details .details-content {
+  padding: 16px;
+  margin-top: 8px;
+  background: rgba(96, 165, 250, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(96, 165, 250, 0.1);
+}
+
+.pitfall {
+  color: #e09468;
+  margin-bottom: 8px;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #334155;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.theory-list {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.theory-list li:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { padding: 12px; gap: 12px; }
+  .answer-options { gap: 8px; }
+  .answer-options .opt { padding: 6px 12px; font-size: 0.95rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Stepen kompleksnog broja i konjugat</h1>
+  <p class="subtitle">Kompleksni brojevi — stepenovanje, konjugovanje i periodičnost</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Ako je \( z = \left(\dfrac{1-i}{1+i}\right)^{2013} \), gde je \( i^2 = -1 \), onda je \( \text{Re}(\overline{z}) + \text{Im}(\overline{z}) \) jednako:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p>Prvo ćemo pojednostaviti razlomak \(\frac{1-i}{1+i}\) množenjem konjugatom imenioca, zatim iskoristiti periodičnost stepena imaginarne jedinice da nađemo \(z\), pa odrediti konjugat \(\overline{z}\) i izračunati traženi zbir.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="details-content">
+        <ul class="theory-list">
+          <li><strong>Množenje konjugatom:</strong> Da bismo pojednostavili \(\frac{a+bi}{c+di}\), množimo brojilac i imenilac sa \(c - di\). Posebno: \((1+i)(1-i) = 1 - i^2 = 2\).</li>
+          <li><strong>Periodičnost stepena od \(i\):</strong>
+            \[ i^0 = 1,\quad i^1 = i,\quad i^2 = -1,\quad i^3 = -i,\quad i^4 = 1, \quad \ldots \]
+            Period je 4, pa za \(i^n\) gledamo ostatak pri deljenju \(n\) sa 4.</li>
+          <li><strong>Konjugat kompleksnog broja:</strong> Ako je \(z = a + bi\), onda je \(\overline{z} = a - bi\). Realni deo se ne menja, a imaginarni menja znak.</li>
+          <li><strong>Realni i imaginarni deo:</strong> Za \(z = a + bi\) važi \(\text{Re}(z) = a\) i \(\text{Im}(z) = b\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz na kompleksnoj ravni</h2>
+    <canvas id="complexPlane" width="500" height="500"></canvas>
+    <p class="canvas-hint">Prikaz stepena od \(-i\) na jediničnom krugu u kompleksnoj ravni</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Pojednostavimo razlomak \(\frac{1-i}{1+i}\)</h3>
+        <p>Množimo i brojilac i imenilac konjugatom imenioca, tj. sa \((1-i)\):</p>
+        <div class="math-block">
+          \[ \frac{1-i}{1+i} = \frac{(1-i)(1-i)}{(1+i)(1-i)} = \frac{(1-i)^2}{1 - i^2} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Izračunamo brojilac i imenilac</h3>
+        <p><strong>Brojilac:</strong></p>
+        <div class="math-block">
+          \[ (1-i)^2 = 1 - 2i + i^2 = 1 - 2i + (-1) = -2i \]
+        </div>
+        <p><strong>Imenilac:</strong></p>
+        <div class="math-block">
+          \[ (1+i)(1-i) = 1 - i^2 = 1 - (-1) = 2 \]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[ \frac{1-i}{1+i} = \frac{-2i}{2} = -i \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko je \(\frac{1-i}{1+i}\)?</summary>
+      <div class="details-content">
+        <p>Odgovor: \(\frac{1-i}{1+i} = -i\). Možemo proveriti: \(-i \cdot (1+i) = -i - i^2 = -i + 1 = 1 - i\) — tačno!</p>
+      </div>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Izračunamo \(z = (-i)^{2013}\)</h3>
+        <p>Stepeni od \(-i\) se ponavljaju sa periodom 4:</p>
+        <div class="math-block">
+          \[ \begin{align}
+          (-i)^1 &= -i \\
+          (-i)^2 &= (-i)(-i) = i^2 = -1 \\
+          (-i)^3 &= (-1)(-i) = i \\
+          (-i)^4 &= (i)(-i) = -i^2 = 1
+          \end{align} \]
+        </div>
+        <p class="note">Posle svaka 4 koraka, vraćamo se na 1. Zato dovoljno da nađemo ostatak 2013 : 4.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Nađemo ostatak \(2013 \div 4\)</h3>
+        <div class="math-block">
+          \[ 2013 = 4 \times 503 + 1 \]
+        </div>
+        <p>Ostatak je <span class="highlight">1</span>, pa:</p>
+        <div class="math-block">
+          \[ z = (-i)^{2013} = (-i)^1 = -i \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko je \(z\)?</summary>
+      <div class="details-content">
+        <p>Odgovor: \(z = -i\), tj. \(z = 0 + (-1)i\). Realni deo je 0, imaginarni deo je \(-1\).</p>
+      </div>
+    </details>
+
+    <div class="step-container" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Odredimo konjugat \(\overline{z}\)</h3>
+        <p>Konjugat kompleksnog broja dobijamo tako što promenimo znak imaginarnog dela:</p>
+        <div class="math-block">
+          \[ z = -i = 0 + (-1)i \quad \Rightarrow \quad \overline{z} = 0 + 1 \cdot i = i \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step6">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Izračunamo \(\text{Re}(\overline{z}) + \text{Im}(\overline{z})\)</h3>
+        <p>Pošto je \(\overline{z} = i = 0 + 1 \cdot i\):</p>
+        <div class="math-block">
+          \[ \text{Re}(\overline{z}) = 0, \qquad \text{Im}(\overline{z}) = 1 \]
+        </div>
+        <p>Konačno:</p>
+        <div class="math-block">
+          \[ \text{Re}(\overline{z}) + \text{Im}(\overline{z}) = 0 + 1 = \boxed{1} \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Zašto nije odgovor 0?</summary>
+      <div class="details-content">
+        <p>Česta greška je da se pomešaju \(z\) i \(\overline{z}\). Za \(z = -i\) važi \(\text{Re}(z) + \text{Im}(z) = 0 + (-1) = -1\). Ali zadatak traži konjugat \(\overline{z} = i\), pa je \(\text{Re}(\overline{z}) + \text{Im}(\overline{z}) = 0 + 1 = 1\).</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Razlomak \(\frac{1-i}{1+i}\) je zapravo \(-i\), a stepeni od \(-i\) se ciklično ponavljaju sa periodom 4. Za bilo koji visok stepen dovoljno je naći ostatak pri deljenju eksponenta sa 4!</p>
+    <div class="math-block" style="text-align: center; font-size: 1.2rem;">
+      \[ \frac{1-i}{1+i} = -i \quad \Rightarrow \quad (-i)^{2013} = (-i)^{4 \times 503 + 1} = -i \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">
+      \( \text{Re}(\overline{z}) + \text{Im}(\overline{z}) = 1 \)
+    </div>
+    <div class="answer-options">
+      <span class="opt correct">(A) \(1\)</span>
+      <span class="opt">(B) \(-1\)</span>
+      <span class="opt">(C) \(0\)</span>
+      <span class="opt">(D) \(-2\)</span>
+      <span class="opt">(E) \(2\)</span>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Proverimo: \(-i \cdot (1+i) = -i - i^2 = 1 - i\), dakle \(\frac{1-i}{1+i} = -i\). Zatim \((-i)^{2013} = -i\), \(\overline{-i} = i\), i konačno \(\text{Re}(i) + \text{Im}(i) = 0 + 1 = 1\). Sve se poklapa.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <p class="pitfall"><strong>Zaboravljen konjugat:</strong> Zadatak traži \(\text{Re}(\overline{z}) + \text{Im}(\overline{z})\), a ne \(\text{Re}(z) + \text{Im}(z)\). Bez konjugovanja bismo dobili \(-1\) umesto \(1\).</p>
+    <p class="pitfall"><strong>Pogrešan ostatak:</strong> Ako pogrešno izračunamo \(2013 \bmod 4\), dobijamo pogrešan stepen. Pažljivo: \(2013 = 4 \times 503 + 1\), dakle ostatak je 1, a ne 3.</p>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2>Izazov za razmišljanje</h2>
+    <p>Koliko bi iznosilo \(\text{Re}(\overline{z}) + \text{Im}(\overline{z})\) da je eksponent bio 2014 umesto 2013?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="details-content">
+        <p>Razmisli: \(2014 = 4 \times 503 + 2\), pa je \((-i)^{2014} = (-i)^2 = -1\). Konjugat od \(-1\) je \(-1\) (jer je \(-1\) realan broj). Koliko je onda \(\text{Re}(-1) + \text{Im}(-1)\)?</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('complexPlane');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const cx = W / 2;
+  const cy = H / 2;
+  const R = 160;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = -3; i <= 3; i++) {
+      const x = cx + i * (R / 2);
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+      const y = cy + i * (R / 2);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, cy);
+    ctx.lineTo(W, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, 0);
+    ctx.lineTo(cx, H);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Re', W - 30, cy - 10);
+    ctx.textAlign = 'center';
+    ctx.fillText('Im', cx + 15, 20);
+
+    // Unit circle
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Scale labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('1', cx + R, cy + 18);
+    ctx.fillText('-1', cx - R, cy + 18);
+    ctx.fillText('i', cx + 12, cy - R - 5);
+    ctx.fillText('-i', cx + 14, cy + R + 16);
+
+    // Points for powers of -i
+    const powers = [
+      { exp: 1, x: 0, y: -1, label: '(-i)^1 = -i', color: '#f472b6' },
+      { exp: 2, x: -1, y: 0, label: '(-i)^2 = -1', color: '#a78bfa' },
+      { exp: 3, x: 0, y: 1, label: '(-i)^3 = i', color: '#60a5fa' },
+      { exp: 4, x: 1, y: 0, label: '(-i)^4 = 1', color: '#34d399' }
+    ];
+
+    // Draw arrows showing rotation (clockwise)
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 4; i++) {
+      const startAngle = Math.PI / 2 + i * (Math.PI / 2);
+      const endAngle = startAngle + Math.PI / 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R - 20, startAngle + 0.15, endAngle - 0.15);
+      ctx.stroke();
+      // Arrowhead
+      const ax = cx + (R - 20) * Math.cos(endAngle - 0.15);
+      const ay = cy + (R - 20) * Math.sin(endAngle - 0.15);
+      const angle = endAngle - 0.15 + Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax + 8 * Math.cos(angle - 0.4), ay + 8 * Math.sin(angle - 0.4));
+      ctx.lineTo(ax + 8 * Math.cos(angle + 0.4), ay + 8 * Math.sin(angle + 0.4));
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+      ctx.fill();
+    }
+
+    // Draw points
+    powers.forEach(function(p) {
+      const px = cx + p.x * R;
+      const py = cy - p.y * R;
+
+      // Glow
+      const grad = ctx.createRadialGradient(px, py, 0, px, py, 20);
+      grad.addColorStop(0, p.color + '66');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(px, py, 20, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Dot
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Label
+      ctx.fillStyle = p.color;
+      ctx.font = 'bold 13px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      let labelX = px;
+      let labelY = py;
+      if (p.y === -1) labelY += 28;
+      else if (p.y === 1) labelY -= 18;
+      else if (p.x === -1) { labelX -= 10; labelY -= 18; }
+      else if (p.x === 1) { labelX += 10; labelY -= 18; }
+      ctx.fillText(p.label, labelX, labelY);
+    });
+
+    // Highlight z = -i and conjugate z̄ = i
+    ctx.font = 'bold 15px "Segoe UI", sans-serif';
+
+    // z = -i (bottom)
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('z = -i', cx + 55, cy + R + 5);
+
+    // z̄ = i (top)
+    ctx.fillStyle = '#4ade80';
+    const conjPx = cx;
+    const conjPy = cy - R;
+    // Green ring for conjugate
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(conjPx, conjPy, 10, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('z̄ = i', cx + 50, cy - R - 5);
+
+    // Arrow showing conjugation (vertical reflection)
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cx + 3, cy + R - 14);
+    ctx.lineTo(cx + 3, cy - R + 14);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Arrow tip
+    ctx.beginPath();
+    ctx.moveTo(cx + 3, cy - R + 14);
+    ctx.lineTo(cx - 3, cy - R + 22);
+    ctx.lineTo(cx + 9, cy - R + 22);
+    ctx.closePath();
+    ctx.fillStyle = '#4ade80';
+    ctx.fill();
+
+    // Conjugation label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '12px "Segoe UI", sans-serif';
+    ctx.fillText('konjugat', cx + 40, cy + 5);
+  }
+
+  draw();
+
+  // Step click interactions
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepen kompleksnog broja i konjugat",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "stepenovanje", "konjugat", "imaginarna jedinica", "periodičnost"]
+}
+BRAINSPARK_META-->

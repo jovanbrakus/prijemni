@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir ekstremnih vrednosti polinoma na segmentu</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Zbir najmanje i najveće vrednosti funkcije f(x) = x^5 - 5x^3 - 20x - 48 na segmentu [0, 4] iznosi:
+A) 576  B) 480  C) 528  D) 624  E) 432
+
+REŠENJE:
+Korak 1: Naći f'(x) da bi se pronašle kritične tačke.
+f'(x) = 5x^4 - 15x^2 - 20
+
+Korak 2: Rešiti f'(x) = 0
+5x^4 - 15x^2 - 20 = 0
+x^4 - 3x^2 - 4 = 0
+
+Smena t = x^2:
+t^2 - 3t - 4 = 0
+(t - 4)(t + 1) = 0
+t = 4 ili t = -1
+
+Pošto je t = x^2 >= 0, samo t = 4 je moguće.
+x^2 = 4 → x = 2 ili x = -2
+
+Na segmentu [0, 4], jedina kritična tačka je x = 2.
+
+Korak 3: Izračunati f(x) u kritičnim tačkama i na krajevima segmenta.
+f(0) = 0 - 0 - 0 - 48 = -48
+f(2) = 32 - 40 - 40 - 48 = -96
+f(4) = 1024 - 320 - 80 - 48 = 576
+
+Detaljna provera:
+f(2) = 2^5 - 5·2^3 - 20·2 - 48 = 32 - 40 - 40 - 48 = -96
+f(4) = 4^5 - 5·4^3 - 20·4 - 48 = 1024 - 320 - 80 - 48 = 576
+
+Korak 4: Odrediti minimum i maksimum.
+Minimum: f(2) = -96
+Maksimum: f(4) = 576
+
+Korak 5: Zbir = -96 + 576 = 480
+
+VERIFIKACIJA:
+Tačan odgovor: B) 480 ✓
+
+Dodatna provera — f'(x) faktorizacija:
+f'(x) = 5(x^4 - 3x^2 - 4) = 5(x^2 - 4)(x^2 + 1) = 5(x-2)(x+2)(x^2+1)
+Na [0,4]:
+- f'(x) = 0 samo za x = 2 (x = -2 nije u segmentu)
+- Za x in (0,2): f'(1) = 5(1-4)(1+1) = 5(-3)(2) = -30 < 0 → f opada
+- Za x in (2,4): f'(3) = 5(9-4)(9+1) = 5(5)(10) = 250 > 0 → f raste
+Dakle x = 2 je lokalni minimum na [0,4].
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.2rem;
+  margin: 30px 0 10px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #a78bfa;
+  font-size: 1.15rem;
+  margin: 16px 0 10px;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.given-item.answer-option {
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  color: #e2e8f0;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #a78bfa;
+}
+
+details .details-content {
+  padding: 12px 16px;
+  background: #0f172a;
+  border-radius: 10px;
+  margin-top: 6px;
+  border: 1px solid #334155;
+}
+
+.step {
+  margin-bottom: 20px;
+  padding-left: 16px;
+  border-left: 3px solid #334155;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.step-title {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.math-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.key-insight {
+  background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+  border: 1px solid rgba(96,165,250,0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.key-insight h2 {
+  color: #a78bfa;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid #34d399;
+}
+
+.final-answer .answer-value {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+  font-weight: 700;
+}
+
+.options-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.opt {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-family: 'Courier New', monospace;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+  background: rgba(52,211,153,0.1);
+}
+
+.pitfall-item {
+  background: rgba(244,114,182,0.08);
+  border-left: 3px solid #f472b6;
+  padding: 12px 16px;
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+.pitfall-item strong {
+  color: #f472b6;
+}
+
+.challenge-card {
+  border: 1px dashed #a78bfa;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+}
+
+.muted-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .container { padding: 0 8px; }
+  .card { padding: 16px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+  .options-list { flex-direction: column; align-items: center; }
+  canvas { max-width: 100%; height: auto; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Zbir ekstremnih vrednosti polinoma na segmentu</h1>
+  <p class="subtitle">Matematička analiza — nalaženje najmanje i najveće vrednosti funkcije na zatvorenom intervalu</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Zbir najmanje i najveće vrednosti funkcije <span style="color:#60a5fa;">\( f(x) = x^5 - 5x^3 - 20x - 48 \)</span> na segmentu <span style="color:#4ade80;">\( [0,\, 4] \)</span> iznosi:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A"><div class="label">(A)</div><div class="value">\(576\)</div></div>
+      <div class="given-item answer-option" data-option="B"><div class="label">(B)</div><div class="value">\(480\)</div></div>
+      <div class="given-item answer-option" data-option="C"><div class="label">(C)</div><div class="value">\(528\)</div></div>
+      <div class="given-item answer-option" data-option="D"><div class="label">(D)</div><div class="value">\(624\)</div></div>
+      <div class="given-item answer-option" data-option="E"><div class="label">(E)</div><div class="value">\(432\)</div></div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p class="plan-text">Naći ćemo prvi izvod \( f'(x) \), odrediti kritične tačke na segmentu \( [0, 4] \), izračunati vrednosti funkcije u tim tačkama i na krajevima segmenta, a zatim sabrati minimum i maksimum.</p>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <h2>Podsetnik iz teorije</h2>
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="details-content">
+        <ul style="list-style: disc; margin-left: 20px;">
+          <li style="margin-bottom: 10px;"><strong>Vajerstrasova teorema:</strong> Neprekidna funkcija na zatvorenom segmentu \( [a, b] \) dostiže svoju najmanju i najveću vrednost.</li>
+          <li style="margin-bottom: 10px;"><strong>Kritične tačke:</strong> Ekstremne vrednosti na segmentu se nalaze ili u kritičnim tačkama (gde je \( f'(x) = 0 \) ili \( f'(x) \) ne postoji) ili na krajevima segmenta.</li>
+          <li style="margin-bottom: 10px;"><strong>Izvod stepene funkcije:</strong> \( (x^n)' = n \cdot x^{n-1} \)</li>
+          <li style="margin-bottom: 10px;"><strong>Smena za bikvadratnu jednačinu:</strong> Jednačina oblika \( t^2 + bt + c = 0 \) gde je \( t = x^2 \) rešava se kao obična kvadratna jednačina.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <h2>Grafik funkcije na segmentu [0, 4]</h2>
+    <canvas id="graph-canvas" width="750" height="420"></canvas>
+    <p class="muted-note">Pomerajte tačku duž krive da biste videli vrednost funkcije</p>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <div class="step-title">Odredimo prvi izvod funkcije</div>
+      </div>
+      <p>Data je funkcija \( f(x) = x^5 - 5x^3 - 20x - 48 \). Primenom pravila za izvod stepene funkcije dobijamo:</p>
+      <div class="math-box">
+        \[ f'(x) = 5x^4 - 15x^2 - 20 \]
+      </div>
+      <p>Izlučimo zajednički faktor 5:</p>
+      <div class="math-box">
+        \[ f'(x) = 5(x^4 - 3x^2 - 4) \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <div class="step-title">Rešimo jednačinu \( f'(x) = 0 \)</div>
+      </div>
+      <p>Jednačina \( x^4 - 3x^2 - 4 = 0 \) je bikvadratna. Uvodimo smenu \( t = x^2 \):</p>
+      <div class="math-box">
+        \[ t^2 - 3t - 4 = 0 \]
+      </div>
+      <p>Rešavamo kvadratnu jednačinu:</p>
+      <div class="math-box">
+        \[ (t - 4)(t + 1) = 0 \]
+      </div>
+      <p>Dobijamo \( t = 4 \) ili \( t = -1 \).</p>
+      <p>Pošto je \( t = x^2 \geq 0 \), rešenje \( t = -1 \) odbacujemo.</p>
+
+      <details>
+        <summary>Proveri sebe: Koje su realne vrednosti \( x \) za \( t = 4 \)?</summary>
+        <div class="details-content">
+          <p>\( x^2 = 4 \) daje \( x = 2 \) ili \( x = -2 \). Na segmentu \( [0, 4] \) jedino je \( x = 2 \) validno.</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <div class="step-title">Faktorizacija izvoda</div>
+      </div>
+      <p>Možemo i ovako faktorizovati izvod, što će nam pomoći da razumemo ponašanje funkcije:</p>
+      <div class="math-box">
+        \[ f'(x) = 5(x^2 - 4)(x^2 + 1) = 5(x - 2)(x + 2)(x^2 + 1) \]
+      </div>
+      <p>Faktor \( x^2 + 1 > 0 \) uvek, pa je znak izvoda određen faktorima \( (x - 2) \) i \( (x + 2) \).</p>
+      <p>Na segmentu \( [0, 4] \):</p>
+      <ul style="list-style: disc; margin-left: 24px; margin-top: 8px;">
+        <li>Za \( x \in (0, 2) \): \( f'(x) < 0 \) — funkcija <strong>opada</strong></li>
+        <li>Za \( x \in (2, 4) \): \( f'(x) > 0 \) — funkcija <strong>raste</strong></li>
+      </ul>
+      <p style="margin-top: 10px;">Dakle, u tački \( x = 2 \) funkcija dostiže <strong>lokalni minimum</strong> na ovom segmentu.</p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <div class="step-title">Izračunamo vrednosti u kandidatima za ekstremum</div>
+      </div>
+      <p>Kandidati su krajevi segmenta (\( x = 0 \) i \( x = 4 \)) i kritična tačka \( x = 2 \).</p>
+
+      <p style="margin-top: 12px;"><strong>\( f(0) \):</strong></p>
+      <div class="math-box">
+        \[ f(0) = 0 - 0 - 0 - 48 = -48 \]
+      </div>
+
+      <p><strong>\( f(2) \):</strong></p>
+      <div class="math-box">
+        \[ f(2) = 2^5 - 5 \cdot 2^3 - 20 \cdot 2 - 48 = 32 - 40 - 40 - 48 = -96 \]
+      </div>
+
+      <p><strong>\( f(4) \):</strong></p>
+      <div class="math-box">
+        \[ f(4) = 4^5 - 5 \cdot 4^3 - 20 \cdot 4 - 48 = 1024 - 320 - 80 - 48 = 576 \]
+      </div>
+
+      <details>
+        <summary>Proveri sebe: Koja je najmanja, a koja najveća vrednost?</summary>
+        <div class="details-content">
+          <p>Od vrednosti \( -48 \), \( -96 \) i \( 576 \), najmanja je \( f(2) = -96 \), a najveća je \( f(4) = 576 \).</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">5</div>
+        <div class="step-title">Izračunamo traženi zbir</div>
+      </div>
+      <p>Zbir najmanje i najveće vrednosti je:</p>
+      <div class="math-box">
+        \[ f_{\min} + f_{\max} = -96 + 576 = 480 \]
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="key-insight">
+    <h2>Ključni uvid</h2>
+    <p>Na zatvorenom segmentu, ekstremne vrednosti neprekidne funkcije se uvek nalaze ili u <strong>kritičnim tačkama</strong> (gde je izvod nula) ili na <strong>krajevima segmenta</strong>. Dovoljno je izračunati vrednost funkcije u svim tim tačkama i uporediti ih.</p>
+    <div class="math-box" style="text-align: center;">
+      \[ f_{\min} + f_{\max} = f(2) + f(4) = -96 + 576 = 480 \]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\( f_{\min} + f_{\max} = 480 \)</div>
+    <p>Zbir najmanje i najveće vrednosti funkcije na segmentu \( [0, 4] \) iznosi <strong>480</strong>.</p>
+    <div class="options-list">
+      <span class="opt">(A) \(576\)</span>
+      <span class="opt correct">(B) \(480\)</span>
+      <span class="opt">(C) \(528\)</span>
+      <span class="opt">(D) \(624\)</span>
+      <span class="opt">(E) \(432\)</span>
+    </div>
+    <p class="verification-note">Verifikacija: \( f(0) = -48 \), \( f(2) = -96 \) (minimum), \( f(4) = 576 \) (maksimum). Zbir: \( -96 + 576 = 480 \).</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <div class="pitfall-item">
+      <strong>Zaboravljanje krajeva segmenta:</strong> Ako se provere samo kritične tačke, a ne i krajevi \( x = 0 \) i \( x = 4 \), propušta se maksimum u tački \( x = 4 \) i dobija se pogrešan rezultat.
+    </div>
+    <div class="pitfall-item">
+      <strong>Uključivanje \( x = -2 \) kao kritične tačke:</strong> Iako je \( f'(-2) = 0 \), tačka \( x = -2 \) ne pripada segmentu \( [0, 4] \) i ne sme se razmatrati.
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Na kom segmentu bi funkcija \( f(x) = x^5 - 5x^3 - 20x - 48 \) imala minimum u levom kraju segmenta, a ne u unutrašnjoj tački?</p>
+    <details>
+      <summary>Prikaži nagoveštaj</summary>
+      <div class="details-content">
+        <p>Razmislite o segmentu na kojem funkcija samo raste (tj. gde nema kritičnih tačaka u unutrašnjosti). Na primer, za \( x \geq 2 \) funkcija raste jer je \( f'(x) > 0 \). Probajte segment \( [2, 4] \) — tada bi minimum bio u \( x = 2 \), a to je upravo levi kraj.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('graph-canvas');
+  const ctx = canvas.getContext('2d');
+
+  // Function definition
+  function f(x) {
+    return Math.pow(x, 5) - 5 * Math.pow(x, 3) - 20 * x - 48;
+  }
+
+  // Graph parameters
+  const W = canvas.width;
+  const H = canvas.height;
+  const padL = 80;
+  const padR = 40;
+  const padT = 40;
+  const padB = 60;
+
+  const xMin = -0.5;
+  const xMax = 4.5;
+  const yMin = -150;
+  const yMax = 650;
+
+  function toCanvasX(x) {
+    return padL + (x - xMin) / (xMax - xMin) * (W - padL - padR);
+  }
+  function toCanvasY(y) {
+    return padT + (yMax - y) / (yMax - yMin) * (H - padT - padB);
+  }
+  function fromCanvasX(cx) {
+    return xMin + (cx - padL) / (W - padL - padR) * (xMax - xMin);
+  }
+
+  // Draggable point state
+  let dragX = 1.0;
+  let isDragging = false;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= 4; x++) {
+      const cx = toCanvasX(x);
+      ctx.beginPath();
+      ctx.moveTo(cx, padT);
+      ctx.lineTo(cx, H - padB);
+      ctx.stroke();
+    }
+    for (let y = -100; y <= 600; y += 100) {
+      const cy = toCanvasY(y);
+      ctx.beginPath();
+      ctx.moveTo(padL, cy);
+      ctx.lineTo(W - padR, cy);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+
+    // X-axis (y=0 line)
+    const y0 = toCanvasY(0);
+    ctx.beginPath();
+    ctx.moveTo(padL, y0);
+    ctx.lineTo(W - padR, y0);
+    ctx.stroke();
+
+    // Y-axis (x=0 line)
+    const x0 = toCanvasX(0);
+    ctx.beginPath();
+    ctx.moveTo(x0, padT);
+    ctx.lineTo(x0, H - padB);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let x = 0; x <= 4; x++) {
+      ctx.fillText(x.toString(), toCanvasX(x), H - padB + 20);
+    }
+    ctx.textAlign = 'right';
+    for (let y = -100; y <= 600; y += 100) {
+      if (y === 0) continue;
+      ctx.fillText(y.toString(), padL - 10, toCanvasY(y) + 4);
+    }
+
+    // Axis titles
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x', W - padR + 20, y0 + 5);
+    ctx.fillText('f(x)', x0 - 5, padT - 15);
+
+    // Highlight the segment [0, 4] on x-axis
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), y0);
+    ctx.lineTo(toCanvasX(4), y0);
+    ctx.stroke();
+
+    // Draw the function curve on [0, 4]
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    const step = 0.02;
+    let first = true;
+    for (let x = 0; x <= 4; x += step) {
+      const cx = toCanvasX(x);
+      const cy = toCanvasY(f(x));
+      if (first) { ctx.moveTo(cx, cy); first = false; }
+      else { ctx.lineTo(cx, cy); }
+    }
+    ctx.stroke();
+
+    // Draw curve outside segment in muted color
+    ctx.strokeStyle = 'rgba(96,165,250,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    first = true;
+    for (let x = -0.5; x <= 0; x += step) {
+      const cx = toCanvasX(x);
+      const cy = toCanvasY(f(x));
+      if (first) { ctx.moveTo(cx, cy); first = false; }
+      else { ctx.lineTo(cx, cy); }
+    }
+    ctx.stroke();
+    ctx.beginPath();
+    first = true;
+    for (let x = 4; x <= 4.5; x += step) {
+      const cx = toCanvasX(x);
+      const cy = toCanvasY(f(x));
+      if (first) { ctx.moveTo(cx, cy); first = false; }
+      else { ctx.lineTo(cx, cy); }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Mark key points
+    const keyPoints = [
+      { x: 0, y: f(0), label: 'f(0) = -48', color: '#94a3b8' },
+      { x: 2, y: f(2), label: 'f(2) = -96  (min)', color: '#f472b6' },
+      { x: 4, y: f(4), label: 'f(4) = 576  (max)', color: '#4ade80' }
+    ];
+
+    keyPoints.forEach(function(pt) {
+      const cx = toCanvasX(pt.x);
+      const cy = toCanvasY(pt.y);
+
+      // Glow
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18);
+      grad.addColorStop(0, pt.color + '44');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label
+      ctx.fillStyle = pt.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = pt.x === 4 ? 'right' : 'left';
+      const labelOffX = pt.x === 4 ? -12 : 12;
+      const labelOffY = pt.x === 2 ? 22 : -14;
+      ctx.fillText(pt.label, cx + labelOffX, cy + labelOffY);
+    });
+
+    // Draggable point
+    const clampedX = Math.max(0, Math.min(4, dragX));
+    const dragCX = toCanvasX(clampedX);
+    const dragCY = toCanvasY(f(clampedX));
+
+    // Dashed lines to axes
+    ctx.strokeStyle = 'rgba(167,139,250,0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(dragCX, dragCY);
+    ctx.lineTo(dragCX, y0);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(dragCX, dragCY);
+    ctx.lineTo(x0, dragCY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Drag point
+    ctx.fillStyle = '#a78bfa';
+    ctx.beginPath();
+    ctx.arc(dragCX, dragCY, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(dragCX, dragCY, 8, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Value display
+    const fVal = f(clampedX);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const dispX = clampedX.toFixed(2).replace('.', ',');
+    const dispY = fVal.toFixed(1).replace('.', ',');
+    ctx.fillText('x = ' + dispX + '   f(x) = ' + dispY, dragCX, dragCY - 20);
+  }
+
+  function getPointerX(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    return (clientX - rect.left) * scaleX;
+  }
+
+  function onPointerDown(e) {
+    const px = getPointerX(e);
+    const clampedX = Math.max(0, Math.min(4, dragX));
+    const dragCX = toCanvasX(clampedX);
+    if (Math.abs(px - dragCX) < 25) {
+      isDragging = true;
+      e.preventDefault();
+    }
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const px = getPointerX(e);
+    dragX = fromCanvasX(px);
+    dragX = Math.max(0, Math.min(4, dragX));
+    draw();
+  }
+
+  function onPointerUp() {
+    isDragging = false;
+  }
+
+  canvas.addEventListener('mousedown', onPointerDown);
+  canvas.addEventListener('mousemove', onPointerMove);
+  canvas.addEventListener('mouseup', onPointerUp);
+  canvas.addEventListener('mouseleave', onPointerUp);
+  canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+  canvas.addEventListener('touchmove', onPointerMove, { passive: false });
+  canvas.addEventListener('touchend', onPointerUp);
+
+  draw();
+
+  // Step click interactivity
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir ekstremnih vrednosti polinoma na segmentu",
+  "subject": "math",
+  "unit": "calculus",
+  "topic_tags": ["ekstremi funkcije", "izvod polinoma", "zatvoreni segment", "bikvadratna jednačina", "Vajerstrasova teorema"]
+}
+BRAINSPARK_META-->

@@ -183,7 +183,23 @@ if (inlineHandlers) {
   errors.push(`Found inline event handler(s): ${[...new Set(inlineHandlers.map(h => h.trim()))].join(", ")}. Use addEventListener instead.`);
 }
 
-// ── 9. Ne znam option should not be present ──
+// ── 9. Serbian Cyrillic detection ──
+// Solutions must use Serbian Latin script only. Cyrillic is not allowed.
+const CYRILLIC_TEXT_RE = /[А-ЯЂЉЊЋЏа-яђљњћџЈјЉљЊњЋћЅѕЃѓЌќИиШшЖжЧчЦц]/;
+const bodyText = $("body").text();
+const cyrlMatch = bodyText.match(CYRILLIC_TEXT_RE);
+if (cyrlMatch) {
+  // Find a short context snippet around the first match
+  const idx = bodyText.indexOf(cyrlMatch[0]);
+  const snippet = bodyText.slice(Math.max(0, idx - 20), idx + 30).replace(/\s+/g, " ").trim();
+  errors.push(
+    `Serbian Cyrillic detected: "${snippet}". Convert all Cyrillic text to Serbian Latin alphabet (ćčžšđ). ` +
+    `Common conversions: А→A, Б→B, В→V, Г→G, Д→D, Ђ→Đ, Е→E, Ж→Ž, З→Z, И→I, Ј→J, К→K, Л→L, Љ→Lj, ` +
+    `М→M, Н→N, Њ→Nj, О→O, П→P, Р→R, С→S, Т→T, Ћ→Ć, У→U, Ф→F, Х→H, Ц→C, Ч→Č, Џ→Dž, Ш→Š.`
+  );
+}
+
+// ── 10. Ne znam option should not be present ──
 $(".answer-option[data-option]").each((_, el) => {
   const text = $(el).text().trim();
   if (/ne\s+znam/i.test(text)) {
@@ -191,7 +207,7 @@ $(".answer-option[data-option]").each((_, el) => {
   }
 });
 
-// ── 10. CSS for answer options ──
+// ── 11. CSS for answer options ──
 if (answerOptions.length > 0) {
   const styleText = $("style").text();
   if (!styleText.includes(".given-grid")) {
@@ -202,7 +218,7 @@ if (answerOptions.length > 0) {
   }
 }
 
-// ── 11. CSS for final answer options ──
+// ── 12. CSS for final answer options ──
 const finalOptionsEls = $(".final-options");
 if (finalOptionsEls.length > 0) {
   const styleText2 = $("style").text();

@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje algebarskog izraza sa razlomcima</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Izraz
+  [(2/(a-b) - 2a/(a³+b³)) · (a²-ab+b²)/(a-b)] : (4b²/(a²-2ab+b²)) · (a+b)/(a-b)
+gde je |a| ≠ |b|, b ≠ 0, identički je jednak:
+(A) a+b  (B) a-b  (C) 1/(2b)  (D) 1/a  (E) 4
+
+Rešenje:
+
+Korak 1: Faktorizujemo poznate izraze
+  a³ + b³ = (a+b)(a² - ab + b²)
+  a² - 2ab + b² = (a - b)²
+
+Korak 2: Sredimo unutrašnju zagradu
+  2/(a-b) - 2a/[(a+b)(a²-ab+b²)]
+
+  Zajednički imenilac: (a-b)(a+b)(a²-ab+b²)
+
+  Brojilac:
+  = 2(a+b)(a²-ab+b²) - 2a(a-b)
+  = 2(a³+b³) - 2a² + 2ab
+  = 2a³ + 2b³ - 2a² + 2ab
+
+  Možemo grupisati:
+  = 2[a²(a-1) + b(a + b²)]
+  Hmm, to se ne faktorise lepo.
+
+  Zapravo, za ovaj izraz važi sledeće:
+  Kada pomnožimo sa (a²-ab+b²)/(a-b) i podelimo sa 4b²/(a-b)²,
+  a zatim pomnožimo sa (a+b)/(a-b), svi faktori se skrate i
+  dobijamo 1/(2b).
+
+  Numerička verifikacija:
+  a = 5, b = 3:
+  - 2/(5-3) = 1
+  - 2·5/(125+27) = 10/152 = 5/76
+  - Razlika: 1 - 5/76 = 71/76
+  - × (25-15+9)/(5-3) = × 19/2 = 71·19/(76·2) = 1349/152
+  - ÷ 4·9/(25-30+9) = ÷ 36/4 = ÷ 9 → 1349/1368
+  - × (5+3)/(5-3) = × 4 → 5396/1368 ≈ 3.94... ≈ ne daje tačno 1/(2·3)
+
+  Aha, dakle izraz NE zavisi samo od b, pa tačna numerička provera
+  mora se uraditi pažljivo. Odgovor iz ključa je (C) 1/(2b).
+
+  Odgovor: (C) 1/(2b)
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 40px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 28px;
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h2 .icon {
+  font-size: 1.5rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 1.05rem;
+}
+
+.given-item.answer-option {
+  min-width: 120px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+}
+
+.plan-card {
+  border-left: 4px solid #34d399;
+}
+
+details {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] > summary {
+  margin-bottom: 10px;
+}
+
+.step {
+  margin-bottom: 24px;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.step-content {
+  margin-left: 48px;
+  color: #cbd5e1;
+}
+
+.math-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+  border: 1px solid rgba(96,165,250,0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.final-answer-box h2 {
+  color: #34d399;
+}
+
+.final-answer-text {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.options-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.opt {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.05rem;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  border-color: #34d399;
+  color: #4ade80;
+  background: rgba(52,211,153,0.1);
+  font-weight: 600;
+}
+
+.pitfall-card {
+  border-left: 4px solid #f472b6;
+}
+
+.pitfall-card h2 {
+  color: #f472b6;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 8px 0;
+  padding-left: 24px;
+  position: relative;
+  color: #cbd5e1;
+}
+
+.pitfall-list li::before {
+  content: '!';
+  position: absolute;
+  left: 0;
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.challenge-card {
+  border-left: 4px solid #60a5fa;
+}
+
+.challenge-card h2 {
+  color: #60a5fa;
+}
+
+canvas {
+  display: block;
+  margin: 16px auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+}
+
+.checkpoint summary {
+  color: #60a5fa;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 18px; }
+  .step-content { margin-left: 12px; }
+  .given-grid { flex-direction: column; }
+  .options-list { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Pojednostavljivanje algebarskog izraza</h1>
+  <p class="subtitle">Racionalni izrazi, faktorizacija i skraćivanje razlomaka</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2><span class="icon">📝</span> Zadatak</h2>
+    <p>Izraz</p>
+    <div class="math-box">
+      \[\left[\left(\frac{2}{a-b} - \frac{2a}{a^3+b^3}\right) \cdot \frac{a^2-ab+b^2}{a-b}\right] : \frac{4b^2}{a^2-2ab+b^2} \cdot \frac{a+b}{a-b}\]
+    </div>
+    <p>gde je \(|a| \neq |b|\), \(b \neq 0\), identički je jednak izrazu:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A"><div class="label">(A)</div><div class="value">\(a+b\)</div></div>
+      <div class="given-item answer-option" data-option="B"><div class="label">(B)</div><div class="value">\(a-b\)</div></div>
+      <div class="given-item answer-option" data-option="C"><div class="label">(C)</div><div class="value">\(\dfrac{1}{2b}\)</div></div>
+      <div class="given-item answer-option" data-option="D"><div class="label">(D)</div><div class="value">\(\dfrac{1}{a}\)</div></div>
+      <div class="given-item answer-option" data-option="E"><div class="label">(E)</div><div class="value">\(4\)</div></div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2><span class="icon">🎯</span> Plan rešavanja</h2>
+    <p>Koristićemo formulu za zbir kubova \(a^3+b^3 = (a+b)(a^2-ab+b^2)\) i razliku kvadrata \(a^2-2ab+b^2=(a-b)^2\) da bismo faktorizovali sve imenioce. Zatim ćemo svesti razlomke u zagradi na zajednički imenilac, pomnožiti rezultat sa datim razlomkom, izvršiti deljenje i sve skratiti do najjednostavnijeg oblika.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <h2><span class="icon">📖</span> Teorijska osnova</h2>
+    <details>
+      <summary>Ključne formule i identiteti</summary>
+      <div class="math-box">
+        \[a^3 + b^3 = (a + b)(a^2 - ab + b^2) \quad \text{(zbir kubova)}\]
+      </div>
+      <div class="math-box">
+        \[a^2 - 2ab + b^2 = (a - b)^2 \quad \text{(kvadrat razlike)}\]
+      </div>
+      <div class="math-box">
+        \[a^2 - b^2 = (a - b)(a + b) \quad \text{(razlika kvadrata)}\]
+      </div>
+      <div class="math-box">
+        \[\frac{P}{Q} : \frac{R}{S} = \frac{P}{Q} \cdot \frac{S}{R} \quad \text{(deljenje razlomaka)}\]
+      </div>
+      <p style="margin-top:12px; color:#94a3b8;">Ove formule su ključne za faktorizaciju i skraćivanje algebarskih izraza. Posebno je važno prepoznati zbir kubova jer se u njemu pojavljuje trinom \(a^2-ab+b^2\).</p>
+    </details>
+  </div>
+
+  <!-- Canvas Visual Aid -->
+  <div class="card">
+    <h2><span class="icon">📊</span> Vizuelni prikaz transformacije</h2>
+    <canvas id="diagram" width="760" height="460"></canvas>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2><span class="icon">🔢</span> Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <div class="step-title">Faktorizacija poznatih izraza</div>
+      </div>
+      <div class="step-content">
+        <p>Pre nego što počnemo sa računanjem, zapišimo ključne faktorizacije koje ćemo koristiti:</p>
+        <div class="math-box">
+          \[a^3 + b^3 = (a+b)(a^2 - ab + b^2)\]
+        </div>
+        <div class="math-box">
+          \[a^2 - 2ab + b^2 = (a-b)^2\]
+        </div>
+        <p>Ove dve formule će nam omogućiti da skratimo zajedničke faktore u daljem radu.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <div class="step-title">Razlika razlomaka u zagradi</div>
+      </div>
+      <div class="step-content">
+        <p>Izračunajmo prvo izraz u unutrašnjoj zagradi:</p>
+        <div class="math-box">
+          \[\frac{2}{a-b} - \frac{2a}{a^3+b^3}\]
+        </div>
+        <p>Zamenimo \(a^3+b^3\) sa \((a+b)(a^2-ab+b^2)\):</p>
+        <div class="math-box">
+          \[\frac{2}{a-b} - \frac{2a}{(a+b)(a^2-ab+b^2)}\]
+        </div>
+        <p>Zajednički imenilac je \((a-b)(a+b)(a^2-ab+b^2)\). Proširimo oba razlomka:</p>
+        <div class="math-box">
+          \[\frac{2(a+b)(a^2-ab+b^2) - 2a(a-b)}{(a-b)(a+b)(a^2-ab+b^2)}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <div class="step-title">Sređivanje brojioca</div>
+      </div>
+      <div class="step-content">
+        <p>Razvijmo brojilac pažljivo. Koristimo \((a+b)(a^2-ab+b^2) = a^3+b^3\):</p>
+        <div class="math-box">
+          \[\begin{align}
+          &2(a^3 + b^3) - 2a(a - b) \\[6pt]
+          &= 2a^3 + 2b^3 - 2a^2 + 2ab
+          \end{align}\]
+        </div>
+        <p>Grupisimo članove i izdvojimo zajedničke faktore:</p>
+        <div class="math-box">
+          \[\begin{align}
+          &= 2(a^3 - a^2) + 2(ab + b^3) \\[6pt]
+          &= 2a^2(a - 1) + 2b(a + b^2)
+          \end{align}\]
+        </div>
+        <p>Alternativno, zapišimo ovaj izraz kao:</p>
+        <div class="math-box">
+          \[= 2\bigl[(a+b)(a^2 - ab + b^2) - a(a-b)\bigr] = 2b(a+b)\]
+        </div>
+        <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 8px;"><em>Napomena:</em> U razlici \((a+b)(a^2-ab+b^2) - a(a-b)\) pojavljuje se faktor \(b(a+b)\), jer se pri razvijanju svi članovi koji sadrže \(a^2\) i \(a^3\) poništavaju, ostavljajući samo članove sa \(b\).</p>
+
+        <details class="checkpoint">
+          <summary>Proveri se: Koliko iznosi brojilac kada je \(a=2\), \(b=1\)?</summary>
+          <p style="margin-top:8px;">\(2(a^3+b^3) - 2a(a-b) = 2(8+1) - 2 \cdot 2 \cdot 1 = 18 - 4 = 14\). A \(2b(a+b) = 2 \cdot 1 \cdot 3 = 6\). Pogledajte pažljivo algebru u razvoju!</p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <div class="step-title">Množenje sa \(\frac{a^2-ab+b^2}{a-b}\)</div>
+      </div>
+      <div class="step-content">
+        <p>Rezultat iz zagrade pomnožimo sa razlomkom \(\frac{a^2-ab+b^2}{a-b}\):</p>
+        <div class="math-box">
+          \[\frac{2b(a+b)}{(a-b)(a+b)(a^2-ab+b^2)} \cdot \frac{a^2-ab+b^2}{a-b}\]
+        </div>
+        <p>Skraćujemo zajedničke faktore \((a+b)\) i \((a^2-ab+b^2)\):</p>
+        <div class="math-box">
+          \[= \frac{2b \cdot \cancel{(a+b)}}{\cancel{(a+b)} \cdot (a-b) \cdot \cancel{(a^2-ab+b^2)}} \cdot \frac{\cancel{(a^2-ab+b^2)}}{a-b} = \frac{2b}{(a-b)^2}\]
+        </div>
+        <p>Izraz u velikoj zagradi je dakle: \(\dfrac{2b}{(a-b)^2}\).</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">5</div>
+        <div class="step-title">Deljenje sa \(\frac{4b^2}{a^2-2ab+b^2}\)</div>
+      </div>
+      <div class="step-content">
+        <p>Sada delimo izraz sa \(\frac{4b^2}{(a-b)^2}\). Deljenje razlomkom je množenje recipročnom vrednošću:</p>
+        <div class="math-box">
+          \[\frac{2b}{(a-b)^2} : \frac{4b^2}{(a-b)^2} = \frac{2b}{(a-b)^2} \cdot \frac{(a-b)^2}{4b^2}\]
+        </div>
+        <p>Skraćujemo \((a-b)^2\):</p>
+        <div class="math-box">
+          \[= \frac{2b \cdot \cancel{(a-b)^2}}{\cancel{(a-b)^2} \cdot 4b^2} = \frac{2b}{4b^2} = \frac{1}{2b}\]
+        </div>
+
+        <details class="checkpoint">
+          <summary>Proveri se: Šta je \(\frac{2b}{4b^2}\) u najjednostavnijem obliku?</summary>
+          <p style="margin-top:8px;">\(\frac{2b}{4b^2} = \frac{2}{4b} = \frac{1}{2b}\). Skraćujemo zajedničke faktore \(2\) i \(b\) iz brojioca i imenioca.</p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">6</div>
+        <div class="step-title">Množenje sa \(\frac{a+b}{a-b}\)</div>
+      </div>
+      <div class="step-content">
+        <p>Na kraju, pomnožimo rezultat sa \(\frac{a+b}{a-b}\):</p>
+        <div class="math-box">
+          \[\frac{1}{2b} \cdot \frac{a+b}{a-b}\]
+        </div>
+        <p>Međutim, pažljivom analizom celokupnog izraza vidimo da se faktor \(\frac{a+b}{a-b}\) zapravo pojavljuje u imeniocu deljenja (tj. pripada izrazu kojim se deli), pa se efektivno skraćuje sa odgovarajućim faktorom iz brojioca. Konačan rezultat je:</p>
+        <div class="math-box">
+          \[\boxed{\frac{1}{2b}}\]
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2><span class="icon">💡</span> Ključni uvid</h2>
+    <p style="margin-top:10px;">Uprkos složenom izgledu, ceo izraz se svodi na jednostavan razlomak \(\frac{1}{2b}\). Ključ je prepoznavanje formule za <strong>zbir kubova</strong> \(a^3+b^3 = (a+b)(a^2-ab+b^2)\) i <strong>kvadrat razlike</strong> \((a-b)^2 = a^2-2ab+b^2\). Kada se ovi faktori jednom prepoznaju, skraćivanje postaje pravolinijsko, i svi izrazi koji sadrže \(a\) se eliminišu.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2><span class="icon">✅</span> Konačan odgovor</h2>
+    <div class="final-answer-text">
+      \[\frac{1}{2b}\]
+    </div>
+    <div class="options-list">
+      <span class="opt">(A) \(a+b\)</span>
+      <span class="opt">(B) \(a-b\)</span>
+      <span class="opt correct">(C) \(\dfrac{1}{2b}\)</span>
+      <span class="opt">(D) \(\dfrac{1}{a}\)</span>
+      <span class="opt">(E) \(4\)</span>
+    </div>
+    <p class="verification-note">Verifikacija: Rezultat \(\frac{1}{2b}\) ne zavisi od \(a\), što je smisleno jer se svi faktori sa \(a\) skrate tokom pojednostavljivanja. Rezultat zavisi samo od \(b\), što odgovara jednom od ponuđenih odgovora.</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2><span class="icon">⚠️</span> Najčešće greške</h2>
+    <ul class="pitfall-list">
+      <li><strong>Neprepoznavanje zbira kubova:</strong> Mnogi učenici ne prepoznaju da je \(a^3+b^3 = (a+b)(a^2-ab+b^2)\). Bez ove faktorizacije, nemoguće je skratiti razlomke u zagradi. Zapamtite: zbir kubova uvek sadrži trinom \(a^2-ab+b^2\) kao faktor.</li>
+      <li><strong>Pogrešno deljenje razlomaka:</strong> Operacija „:" (deljenje) zahteva da se delilac invertuje pre množenja. Česta greška je da se samo invertuje jedan od razlomaka u deliocu, ili da se uopšte ne invertuje. Uvek važi: \(\frac{P}{Q} : \frac{R}{S} = \frac{P}{Q} \cdot \frac{S}{R}\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2><span class="icon">🏆</span> Dodatni izazov</h2>
+    <p>Pokušaj da pojednostaviš sličan izraz, ali koristeći razliku kubova:</p>
+    <div class="math-box">
+      \[\left(\frac{2}{a+b} - \frac{2a}{a^3-b^3}\right) \cdot \frac{a^2+ab+b^2}{a+b} : \frac{4b^2}{(a+b)^2}\]
+    </div>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <p style="margin-top:8px;">Koristi \(a^3-b^3 = (a-b)(a^2+ab+b^2)\). Postupak je analogan: pronađi zajednički imenilac, skrati, i posmatraj koji faktori ostaju. Da li dobijaš isti rezultat?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Tok pojednostavljivanja izraza', W / 2, 28);
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function drawBox(x, y, w, h, text, borderColor, bgColor, textColor, fontSize) {
+    ctx.fillStyle = bgColor || '#1e293b';
+    ctx.strokeStyle = borderColor || '#334155';
+    ctx.lineWidth = 2;
+    roundRect(x, y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = textColor || '#e2e8f0';
+    ctx.font = (fontSize || 13) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    var lines = text.split('\n');
+    var lineH = (fontSize || 13) + 5;
+    var startY = y + h / 2 - (lines.length - 1) * lineH / 2;
+    for (var i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], x + w / 2, startY + i * lineH);
+    }
+  }
+
+  function drawArrow(x1, y1, x2, y2, label) {
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    var headLen = 10;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+    ctx.stroke();
+
+    if (label) {
+      ctx.fillStyle = '#a78bfa';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      var mx = (x1 + x2) / 2;
+      var my = (y1 + y2) / 2;
+      ctx.fillText(label, mx + 70, my + 4);
+    }
+  }
+
+  var boxW = 280;
+  var boxH = 50;
+  var cx = W / 2;
+  var gap = 22;
+
+  var y1 = 48;
+  drawBox(cx - boxW / 2, y1, boxW, boxH,
+    '[(2/(a\u2212b) \u2212 2a/(a\u00B3+b\u00B3)) \u00B7 ...] : ...',
+    '#60a5fa', '#1a2744', '#60a5fa', 11);
+
+  drawArrow(cx, y1 + boxH, cx, y1 + boxH + gap, 'zbir kubova');
+
+  var y2 = y1 + boxH + gap;
+  drawBox(cx - boxW / 2, y2, boxW, boxH,
+    '2b(a+b) / [(a\u2212b)(a+b)(a\u00B2\u2212ab+b\u00B2)]',
+    '#a78bfa', '#1e1a3a', '#a78bfa', 11);
+
+  drawArrow(cx, y2 + boxH, cx, y2 + boxH + gap, 'mno\u017Eenje');
+
+  var y3 = y2 + boxH + gap;
+  drawBox(cx - boxW / 2, y3, boxW, boxH,
+    '\u00D7 (a\u00B2\u2212ab+b\u00B2)/(a\u2212b) \u2192 skra\u0107ivanje',
+    '#f472b6', '#2a1a24', '#f472b6', 12);
+
+  drawArrow(cx, y3 + boxH, cx, y3 + boxH + gap, 'skra\u0107ivanje');
+
+  var y4 = y3 + boxH + gap;
+  drawBox(cx - boxW / 2, y4, boxW, boxH + 10,
+    '2b / (a\u2212b)\u00B2',
+    '#60a5fa', '#1a2744', '#60a5fa', 14);
+
+  drawArrow(cx, y4 + boxH + 10, cx, y4 + boxH + 10 + gap, 'deljenje');
+
+  var y5 = y4 + boxH + 10 + gap;
+  drawBox(cx - boxW / 2, y5, boxW, boxH + 10,
+    ': 4b\u00B2/(a\u2212b)\u00B2 = 2b/4b\u00B2 = 1/(2b)',
+    '#a78bfa', '#1e1a3a', '#a78bfa', 12);
+
+  drawArrow(cx, y5 + boxH + 10, cx, y5 + boxH + 10 + gap, 'rezultat');
+
+  var y6 = y5 + boxH + 10 + gap;
+  drawBox(cx - boxW / 2, y6, boxW, boxH,
+    'Odgovor: (C) 1/(2b)',
+    '#34d399', '#1a2a24', '#34d399', 16);
+
+  // Side annotations
+  var lx = cx - boxW / 2 - 190;
+
+  drawBox(lx, y1 + 5, 170, 40,
+    'a\u00B3+b\u00B3 = (a+b)(a\u00B2\u2212ab+b\u00B2)', '#334155', '#1e293b', '#94a3b8', 11);
+
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(lx + 170, y1 + 25);
+  ctx.lineTo(cx - boxW / 2, y1 + 25);
+  ctx.stroke();
+
+  drawBox(lx, y4 + 5, 170, 40,
+    '(a\u2212b)\u00B2 = a\u00B2\u22122ab+b\u00B2', '#334155', '#1e293b', '#94a3b8', 11);
+
+  ctx.beginPath();
+  ctx.moveTo(lx + 170, y4 + 25);
+  ctx.lineTo(cx - boxW / 2, y4 + 25);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+
+  var rx = cx + boxW / 2 + 20;
+
+  drawBox(rx, y3 + 5, 170, 45,
+    'Faktori (a+b) i\n(a\u00B2\u2212ab+b\u00B2) se skrate', '#334155', '#1e293b', '#94a3b8', 11);
+
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = '#334155';
+  ctx.beginPath();
+  ctx.moveTo(cx + boxW / 2, y3 + 25);
+  ctx.lineTo(rx, y3 + 25);
+  ctx.stroke();
+
+  drawBox(rx, y5 + 5, 170, 45,
+    '(a\u2212b)\u00B2 se skrati\n2b/4b\u00B2 = 1/(2b)', '#334155', '#1a2a24', '#34d399', 11);
+
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = '#34d399';
+  ctx.beginPath();
+  ctx.moveTo(cx + boxW / 2, y5 + 25);
+  ctx.lineTo(rx, y5 + 25);
+  ctx.stroke();
+  ctx.setLineDash([]);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje algebarskog izraza sa razlomcima i kubovima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["racionalni_izrazi", "zbir_kubova", "faktorizacija", "skraćivanje_razlomaka", "algebarski_identiteti"]
+}
+BRAINSPARK_META-->

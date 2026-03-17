@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rastojanje temena pravougaonika od dijagonale</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Rectangle ABCD with AB = a, BC = b. Find the distance from vertex D to diagonal AC.
+
+This is a geometry problem about a rectangle. We need to find the perpendicular distance
+from point D to line AC.
+
+Strategy: Use the area of triangle ACD. The area can be computed two ways:
+1) As half the area of the rectangle (since diagonal AC splits ABCD into two equal triangles)
+2) As (1/2) * base * height, where base = AC and height = distance from D to AC
+
+Step 1: Area of rectangle ABCD = a * b
+Step 2: Area of triangle ACD = (1/2) * a * b
+Step 3: Diagonal AC by Pythagorean theorem: AC = sqrt(a^2 + b^2)
+Step 4: Area of triangle ACD = (1/2) * AC * d(D, AC)
+        (1/2) * a * b = (1/2) * sqrt(a^2 + b^2) * d
+        a * b = sqrt(a^2 + b^2) * d
+        d = ab / sqrt(a^2 + b^2)
+
+Answer: (C) ab / sqrt(a^2 + b^2)
+
+Verification: This matches the given correct answer (C).
+
+Dimensional check: a and b are lengths, so ab has dimension length^2,
+sqrt(a^2 + b^2) has dimension length, so ab/sqrt(a^2+b^2) has dimension length. Correct.
+
+Special case check: If a = b (square), d = a^2 / (a*sqrt(2)) = a/sqrt(2) = a*sqrt(2)/2.
+This is the distance from corner to diagonal in a square, which is half the other diagonal length.
+For a square with side a, diagonal = a*sqrt(2), and the distance from any vertex to the other
+diagonal is indeed a*sqrt(2)/2. Confirmed.
+
+Note on geometry strategy: The prompt says to use synthetic geometry for geometry problems.
+However, this problem is actually an algebra/distance calculation problem presented in geometric
+context. The solution uses the area method which is a synthetic geometric approach - we use
+the property that the area of a triangle can be expressed as (1/2)*base*height, combined with
+the Pythagorean theorem for the diagonal length. No coordinate geometry is needed.
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.card h3 {
+  color: #a78bfa;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+.highlight-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  text-align: center;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.step-container {
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border-left: 3px solid #334155;
+  border-radius: 0 10px 10px 0;
+  background: rgba(30,41,59,0.5);
+  cursor: pointer;
+  transition: border-color 0.3s, background 0.3s;
+}
+.step-container:hover,
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+.step-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.step-header h3 {
+  margin-bottom: 0;
+}
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 8px;
+}
+.checkpoint {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 0;
+}
+.checkpoint summary {
+  padding: 12px 16px;
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.checkpoint summary:hover {
+  color: #c4b5fd;
+}
+.checkpoint .answer {
+  padding: 4px 16px 14px;
+  color: #4ade80;
+  font-weight: 500;
+}
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+.insight-formula {
+  font-size: 1.4rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(74,222,128,0.3);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.final-answer-box h2 {
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+.final-answer-value {
+  font-size: 1.6rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+.answer-options .opt {
+  background: rgba(51,65,85,0.6);
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #94a3b8;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+.answer-options .opt.correct {
+  background: rgba(74,222,128,0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 12px;
+  font-style: italic;
+}
+.pitfalls {
+  background: rgba(224,148,104,0.06);
+  border: 1px solid rgba(224,148,104,0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.pitfalls h2 {
+  color: #e09468;
+  margin-bottom: 12px;
+}
+.pitfalls ul {
+  list-style: none;
+  padding: 0;
+}
+.pitfalls li {
+  padding: 6px 0;
+  padding-left: 20px;
+  position: relative;
+  color: #cbd5e1;
+}
+.pitfalls li::before {
+  content: "!";
+  position: absolute;
+  left: 0;
+  color: #e09468;
+  font-weight: 700;
+}
+.challenge-box {
+  background: rgba(244,114,182,0.06);
+  border: 1px solid rgba(244,114,182,0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.challenge-box h2 {
+  color: #f472b6;
+  margin-bottom: 12px;
+}
+.challenge-box details {
+  margin: 15px 0;
+}
+.challenge-box summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-weight: 600;
+}
+.challenge-box .hint {
+  padding: 10px 0 4px;
+  color: #e2e8f0;
+}
+.theory-card details {
+  margin: 15px 0;
+}
+.theory-card summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 4px 0;
+}
+.theory-card summary:hover {
+  color: #93c5fd;
+}
+.theory-content {
+  padding: 16px 0 4px;
+}
+.theory-content ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+.theory-content li {
+  margin-bottom: 10px;
+  color: #cbd5e1;
+}
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+  max-width: 100%;
+}
+.canvas-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  text-align: center;
+}
+.canvas-card h2 {
+  color: #60a5fa;
+  margin-bottom: 12px;
+}
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+.plan-text {
+  color: #cbd5e1;
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 80px; padding: 8px 12px; }
+  .answer-options { gap: 6px; }
+  .answer-options .opt { padding: 6px 10px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Rastojanje temena pravougaonika od dijagonale</h1>
+  <p class="subtitle">Geometrija u ravni — svojstva pravougaonika, Pitagorina teorema i površina trougla</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako su \(AB = a\) i \(BC = b\) dužine stranica pravougaonika \(ABCD\), tada je rastojanje temena \(D\) od dijagonale \(AC\) jednako:</p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Stranica</div>
+        <div class="value">\(AB = a\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Stranica</div>
+        <div class="value">\(BC = b\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Figura</div>
+        <div class="value">Pravougaonik \(ABCD\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Traži se</div>
+        <div class="value">\(d(D, AC)\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top: 20px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\sqrt{a^2 - b^2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(ab\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{ab}{\sqrt{a^2 + b^2}}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(b - a\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{a - b}{a + b}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p class="plan-text">Iskoristićemo metod dvostrukog računanja površine trougla \(ACD\). Površinu tog trougla možemo izraziti na dva načina: kao polovinu površine pravougaonika i kao \(\frac{1}{2} \cdot AC \cdot h\), gde je \(h\) traženo rastojanje. Izjednačavanjem ovih izraza dobijamo rešenje.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Pitagorina teorema:</strong> U pravouglom trouglu sa katetama \(a\) i \(b\) i hipotenuzom \(c\) važi \(c = \sqrt{a^2 + b^2}\).</li>
+          <li><strong>Površina trougla:</strong> \(P = \frac{1}{2} \cdot \text{osnova} \cdot h\), gde je \(h\) visina na tu osnovu.</li>
+          <li><strong>Dijagonala pravougaonika:</strong> Dijagonala deli pravougaonik na dva sukladna pravougla trougla jednake površine.</li>
+          <li><strong>Rastojanje tačke od prave:</strong> Najkraće rastojanje od tačke do prave je dužina normale (uspravnice) spuštene iz te tačke na pravu.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Interactive Diagram -->
+  <div class="canvas-card">
+    <h2>Interaktivni dijagram</h2>
+    <canvas id="mainCanvas" width="700" height="450"></canvas>
+    <p class="drag-hint">Prevucite tačku C da menjate dimenzije pravougaonika i posmatrate kako se rastojanje h menja</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-header">
+        <span class="step-badge">1</span>
+        <h3>Identifikujemo trougao \(ACD\)</h3>
+      </div>
+      <p>Dijagonala \(AC\) deli pravougaonik \(ABCD\) na dva sukladna trougla: \(\triangle ABC\) i \(\triangle ACD\).</p>
+      <p>Oba trougla imaju jednaku površinu, i svaki od njih ima površinu jednaku <strong>polovini površine pravougaonika</strong>.</p>
+      <div class="highlight-box">
+        \[P_{\triangle ACD} = \frac{1}{2} \cdot P_{ABCD} = \frac{1}{2} \cdot a \cdot b = \frac{ab}{2}\]
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-header">
+        <span class="step-badge">2</span>
+        <h3>Izračunamo dužinu dijagonale \(AC\)</h3>
+      </div>
+      <p>Pravougaonik \(ABCD\) ima stranice \(AB = CD = a\) i \(BC = AD = b\).</p>
+      <p>Trougao \(\triangle ABC\) je pravougli (ugao kod \(B\) je \(90°\)), pa primenom Pitagorine teoreme:</p>
+      <div class="highlight-box">
+        \[AC = \sqrt{AB^2 + BC^2} = \sqrt{a^2 + b^2}\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Kolika je dijagonala pravougaonika sa stranicama 3 i 4?</summary>
+      <div class="answer">\(\sqrt{9 + 16} = \sqrt{25} = 5\). Ovo je poznati Pitagorin trougao 3-4-5!</div>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-header">
+        <span class="step-badge">3</span>
+        <h3>Izrazimo površinu trougla \(ACD\) preko visine na \(AC\)</h3>
+      </div>
+      <p>Neka je \(h\) rastojanje tačke \(D\) od prave \(AC\), tj. dužina visine trougla \(\triangle ACD\) na stranicu \(AC\).</p>
+      <p>Tada površinu trougla \(ACD\) možemo izraziti i ovako:</p>
+      <div class="highlight-box">
+        \[P_{\triangle ACD} = \frac{1}{2} \cdot AC \cdot h = \frac{1}{2} \cdot \sqrt{a^2 + b^2} \cdot h\]
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-header">
+        <span class="step-badge">4</span>
+        <h3>Izjednačimo dva izraza za površinu</h3>
+      </div>
+      <p>Iz koraka 1 i koraka 3 imamo dva izraza za istu površinu. Izjednačimo ih:</p>
+      <div class="highlight-box">
+        \[\frac{ab}{2} = \frac{1}{2} \cdot \sqrt{a^2 + b^2} \cdot h\]
+      </div>
+      <p>Skraćujemo \(\frac{1}{2}\) sa obe strane:</p>
+      <div class="highlight-box">
+        \[ab = \sqrt{a^2 + b^2} \cdot h\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Šta dobijamo kad iz poslednjeg izraza izrazimo \(h\)?</summary>
+      <div class="answer">Podelimo obe strane sa \(\sqrt{a^2 + b^2}\) i dobijamo: \(h = \dfrac{ab}{\sqrt{a^2 + b^2}}\).</div>
+    </details>
+
+    <div class="step-container" id="step5">
+      <div class="step-header">
+        <span class="step-badge">5</span>
+        <h3>Izrazimo rastojanje \(h\)</h3>
+      </div>
+      <p>Podelimo obe strane jednačine sa \(\sqrt{a^2 + b^2}\):</p>
+      <div class="highlight-box">
+        \[h = \frac{ab}{\sqrt{a^2 + b^2}}\]
+      </div>
+      <p>Ovo je traženo rastojanje temena \(D\) od dijagonale \(AC\).</p>
+    </div>
+
+    <div class="step-container" id="step6">
+      <div class="step-header">
+        <span class="step-badge">6</span>
+        <h3>Provera za konkretne vrednosti</h3>
+      </div>
+      <p>Proverimo za pravougaonik sa stranicama \(a = 3\) i \(b = 4\):</p>
+      <div class="highlight-box">
+        \[h = \frac{3 \cdot 4}{\sqrt{9 + 16}} = \frac{12}{\sqrt{25}} = \frac{12}{5} = 2{,}4\]
+      </div>
+      <p class="note">Rastojanje je 2,4, što je manje od obe stranice — logično, jer visina trougla ne može biti veća od kateta.</p>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Za kvadrat sa stranicom \(a = b\), koliko iznosi rastojanje?</summary>
+      <div class="answer">\(h = \dfrac{a \cdot a}{\sqrt{a^2 + a^2}} = \dfrac{a^2}{a\sqrt{2}} = \dfrac{a}{\sqrt{2}} = \dfrac{a\sqrt{2}}{2}\). To je polovina dijagonale kvadrata, što ima smisla iz razloga simetrije!</div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Metod dvostrukog računanja površine je moćna tehnika: istu površinu izrazimo na dva različita načina i iz jednačine dobijemo nepoznatu veličinu.</p>
+    <div class="insight-formula">
+      \[\boxed{d(D, AC) = \frac{ab}{\sqrt{a^2 + b^2}}}\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">
+      \[d(D, AC) = \frac{ab}{\sqrt{a^2 + b^2}}\]
+    </div>
+    <div class="answer-options">
+      <span class="opt">(A) \(\sqrt{a^2 - b^2}\)</span>
+      <span class="opt">(B) \(ab\)</span>
+      <span class="opt correct">(C) \(\dfrac{ab}{\sqrt{a^2 + b^2}}\)</span>
+      <span class="opt">(D) \(b - a\)</span>
+      <span class="opt">(E) \(\dfrac{a - b}{a + b}\)</span>
+    </div>
+    <p class="verification-note">Provera dimenzija: \(ab\) ima dimenziju dužina\(^2\), a \(\sqrt{a^2 + b^2}\) ima dimenziju dužine, pa je rezultat dimenzije dužine. Za \(a = 3, b = 4\) dobijamo \(\frac{12}{5} = 2{,}4\), što je manje od obe stranice — tačno, jer normala na hipotenuzu pravouglog trougla je uvek kraća od obe katete.</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="pitfalls">
+    <h2>Najčešće greške</h2>
+    <ul>
+      <li>Mešanje Pitagorine teoreme: pisanje \(\sqrt{a^2 - b^2}\) umesto \(\sqrt{a^2 + b^2}\) za dijagonalu. Dijagonala je <em>hipotenuza</em>, dakle sabiramo kvadrate stranica, ne oduzimamo ih. Odgovor (A) je upravo ta zamka.</li>
+      <li>Odgovor (B) \(ab\) je površina pravougaonika, ne rastojanje. Rastojanje je linearna veličina (dužina), ne kvadratna.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Neka je \(E\) podnožje normale iz \(D\) na dijagonalu \(AC\). Izrazite dužine \(AE\) i \(EC\) preko \(a\) i \(b\).</p>
+    <details>
+      <summary>Hint</summary>
+      <div class="hint">Koristite sličnost pravouglih trouglova \(\triangle AED\) i \(\triangle ABC\). U trouglu \(\triangle ACD\), visina \(DE\) na hipotenuzu \(AC\) deli je na segmente \(AE\) i \(EC\). Primenite odnos: \(AE = \frac{AD^2}{AC}\) i \(EC = \frac{CD^2}{AC}\).</div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let dragging = false;
+  let rectW = 300;
+  let rectH = 190;
+  const MIN_DIM = 80;
+  const MAX_W = 440;
+  const MAX_H = 310;
+
+  const ORIGIN_X = 100;
+  const ORIGIN_Y = 380;
+
+  function corners() {
+    return {
+      A: { x: ORIGIN_X, y: ORIGIN_Y },
+      B: { x: ORIGIN_X + rectW, y: ORIGIN_Y },
+      C: { x: ORIGIN_X + rectW, y: ORIGIN_Y - rectH },
+      D: { x: ORIGIN_X, y: ORIGIN_Y - rectH }
+    };
+  }
+
+  function d(p, q) {
+    return Math.sqrt((p.x - q.x) ** 2 + (p.y - q.y) ** 2);
+  }
+
+  function footPerp(P, L1, L2) {
+    const dx = L2.x - L1.x;
+    const dy = L2.y - L1.y;
+    const t = ((P.x - L1.x) * dx + (P.y - L1.y) * dy) / (dx * dx + dy * dy);
+    return { x: L1.x + t * dx, y: L1.y + t * dy };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const { A, B, C, D } = corners();
+    const E = footPerp(D, A, C);
+
+    // Subtle grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 0.5;
+    for (let gx = 0; gx < canvas.width; gx += 40) {
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke();
+    }
+    for (let gy = 0; gy < canvas.height; gy += 40) {
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width, gy); ctx.stroke();
+    }
+
+    // Fill rectangle
+    ctx.fillStyle = 'rgba(96,165,250,0.05)';
+    ctx.beginPath();
+    ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y);
+    ctx.lineTo(C.x, C.y); ctx.lineTo(D.x, D.y);
+    ctx.closePath(); ctx.fill();
+
+    // Fill triangle ACD
+    ctx.fillStyle = 'rgba(167,139,250,0.1)';
+    ctx.beginPath();
+    ctx.moveTo(A.x, A.y); ctx.lineTo(C.x, C.y); ctx.lineTo(D.x, D.y);
+    ctx.closePath(); ctx.fill();
+
+    // Rectangle edges
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y);
+    ctx.lineTo(C.x, C.y); ctx.lineTo(D.x, D.y);
+    ctx.closePath(); ctx.stroke();
+
+    // Diagonal AC
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(C.x, C.y); ctx.stroke();
+
+    // Perpendicular DE (dashed green)
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(D.x, D.y); ctx.lineTo(E.x, E.y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Right-angle marker at E
+    var hDE = d(D, E);
+    if (hDE > 1) {
+      var rSz = 10;
+      var ux = (D.x - E.x) / hDE * rSz;
+      var uy = (D.y - E.y) / hDE * rSz;
+      var acLen = d(A, C);
+      var vx = (C.x - A.x) / acLen * rSz;
+      var vy = (C.y - A.y) / acLen * rSz;
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(E.x + ux, E.y + uy);
+      ctx.lineTo(E.x + ux + vx, E.y + uy + vy);
+      ctx.lineTo(E.x + vx, E.y + vy);
+      ctx.stroke();
+    }
+
+    // Right-angle marker at B
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(B.x - 12, B.y);
+    ctx.lineTo(B.x - 12, B.y - 12);
+    ctx.lineTo(B.x, B.y - 12);
+    ctx.stroke();
+
+    // Point labels
+    ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('A', A.x - 16, A.y + 22);
+    ctx.fillText('B', B.x + 16, B.y + 22);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('C', C.x + 16, C.y - 12);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('D', D.x - 16, D.y - 12);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('E', E.x + 14, E.y + 18);
+
+    // Side labels
+    ctx.font = '15px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'center';
+    ctx.fillText('a', (A.x + B.x) / 2, A.y + 26);
+    ctx.fillText('b', B.x + 20, (B.y + C.y) / 2 + 5);
+    ctx.fillText('a', (C.x + D.x) / 2, D.y - 14);
+    ctx.fillText('b', A.x - 20, (A.y + D.y) / 2 + 5);
+
+    // Diagonal label
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'italic 13px "Segoe UI", system-ui, sans-serif';
+    var acMid = { x: (A.x + C.x) / 2, y: (A.y + C.y) / 2 };
+    ctx.fillText('AC = \u221A(a\u00B2+b\u00B2)', acMid.x + 60, acMid.y + 18);
+
+    // Height label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+    var hMid = { x: (D.x + E.x) / 2, y: (D.y + E.y) / 2 };
+    ctx.fillText('h', hMid.x - 14, hMid.y - 8);
+
+    // Dots for vertices
+    [[A, '#60a5fa'], [B, '#60a5fa'], [C, '#f472b6'], [D, '#60a5fa'], [E, '#4ade80']].forEach(function(pair) {
+      ctx.beginPath();
+      ctx.arc(pair[0].x, pair[0].y, pair[0] === E ? 4 : 5, 0, Math.PI * 2);
+      ctx.fillStyle = pair[1];
+      ctx.fill();
+    });
+
+    // Glow on C (draggable)
+    var grd = ctx.createRadialGradient(C.x, C.y, 0, C.x, C.y, 22);
+    grd.addColorStop(0, 'rgba(244,114,182,0.35)');
+    grd.addColorStop(1, 'rgba(244,114,182,0)');
+    ctx.beginPath();
+    ctx.arc(C.x, C.y, 22, 0, Math.PI * 2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+
+    // Numeric values
+    var aNum = (rectW / 50).toFixed(1).replace('.', ',');
+    var bNum = (rectH / 50).toFixed(1).replace('.', ',');
+    var acNum = (Math.sqrt(rectW * rectW + rectH * rectH) / 50).toFixed(2).replace('.', ',');
+    var hNum = (rectW * rectH / Math.sqrt(rectW * rectW + rectH * rectH) / 50).toFixed(2).replace('.', ',');
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('a = ' + aNum + '   b = ' + bNum, 15, 24);
+    ctx.fillText('AC = ' + acNum, 15, 44);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('h = ' + hNum, 15, 64);
+
+    // Formula display
+    ctx.fillStyle = 'rgba(74,222,128,0.15)';
+    ctx.fillRect(10, 72, 210, 24);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('h = ab / \u221A(a\u00B2+b\u00B2) = ' + hNum, 16, 88);
+
+    // Legend
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    var lx = canvas.width - 210;
+    var ly = 18;
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(lx, ly, 16, 3);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Stranice pravougaonika', lx + 22, ly + 5);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillRect(lx, ly + 18, 16, 3);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Dijagonala AC', lx + 22, ly + 23);
+
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(lx, ly + 38); ctx.lineTo(lx + 16, ly + 38); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Rastojanje h (traženo)', lx + 22, ly + 42);
+
+    ctx.beginPath();
+    ctx.arc(lx + 8, ly + 56, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#f472b6';
+    ctx.fill();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Prevuci tačku C', lx + 22, ly + 60);
+  }
+
+  function canvasPos(e) {
+    var r = canvas.getBoundingClientRect();
+    var sx = canvas.width / r.width;
+    var sy = canvas.height / r.height;
+    var cx = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+    var cy = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
+    return { x: (cx - r.left) * sx, y: (cy - r.top) * sy };
+  }
+
+  canvas.addEventListener('mousedown', function(e) {
+    var pos = canvasPos(e);
+    var c = corners().C;
+    if (d(pos, c) < 28) { dragging = true; }
+  });
+
+  canvas.addEventListener('mousemove', function(e) {
+    var pos = canvasPos(e);
+    var c = corners().C;
+    if (d(pos, c) < 28) {
+      canvas.style.cursor = 'grab';
+    } else if (!dragging) {
+      canvas.style.cursor = 'default';
+    }
+    if (dragging) {
+      canvas.style.cursor = 'grabbing';
+      var newW = Math.max(MIN_DIM, Math.min(MAX_W, pos.x - ORIGIN_X));
+      var newH = Math.max(MIN_DIM, Math.min(MAX_H, ORIGIN_Y - pos.y));
+      rectW = newW;
+      rectH = newH;
+      draw();
+    }
+  });
+
+  canvas.addEventListener('mouseup', function() { dragging = false; });
+  canvas.addEventListener('mouseleave', function() { dragging = false; });
+
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var pos = canvasPos(e);
+    var c = corners().C;
+    if (d(pos, c) < 35) { dragging = true; }
+  });
+
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (dragging) {
+      var pos = canvasPos(e);
+      var newW = Math.max(MIN_DIM, Math.min(MAX_W, pos.x - ORIGIN_X));
+      var newH = Math.max(MIN_DIM, Math.min(MAX_H, ORIGIN_Y - pos.y));
+      rectW = newW;
+      rectH = newH;
+      draw();
+    }
+  });
+
+  canvas.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    dragging = false;
+  });
+
+  // Step click highlighting
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Rastojanje temena pravougaonika od dijagonale",
+  "subject": "math",
+  "unit": "geometry",
+  "topic_tags": ["pravougaonik", "dijagonala", "rastojanje tačke od prave", "Pitagorina teorema", "površina trougla"]
+}
+BRAINSPARK_META-->

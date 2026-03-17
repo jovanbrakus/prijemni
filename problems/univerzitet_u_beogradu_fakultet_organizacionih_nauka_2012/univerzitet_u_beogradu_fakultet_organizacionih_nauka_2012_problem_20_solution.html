@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Celi članovi binomnog razvoja — BrainSpark</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+U razvoju (⁴√3 + ³√2)^2012 naći broj članova koji su celi brojevi.
+
+APPROACH: Binomial theorem
+General term T_k = C(2012, k) * (4th-root-of-3)^(2012-k) * (cube-root-of-2)^k
+           = C(2012, k) * 3^((2012-k)/4) * 2^(k/3)
+
+For T_k to be an integer:
+1) C(2012, k) is always an integer (binomial coefficient)
+2) 3^((2012-k)/4) must be an integer => (2012-k)/4 must be a non-negative integer
+   => 2012 - k ≡ 0 (mod 4)
+   => k ≡ 2012 (mod 4)
+   Since 2012 = 4 * 503, we have 2012 ≡ 0 (mod 4)
+   => k ≡ 0 (mod 4)
+
+3) 2^(k/3) must be an integer => k/3 must be a non-negative integer
+   => k ≡ 0 (mod 3)
+
+So k must satisfy:
+  k ≡ 0 (mod 4) AND k ≡ 0 (mod 3)
+  => k ≡ 0 (mod lcm(4,3))
+  => k ≡ 0 (mod 12)
+
+Range of k: 0 ≤ k ≤ 2012
+k = 12m, where m = 0, 1, 2, ..., floor(2012/12) = floor(167.666...) = 167
+
+So m goes from 0 to 167 inclusive.
+Number of values = 167 - 0 + 1 = 168.
+
+VERIFICATION:
+- k=0: 3^(2012/4) * 2^0 = 3^503 * 1 = integer ✓
+- k=12: 3^(2000/4) * 2^(12/3) = 3^500 * 2^4 = integer ✓
+- k=2012: not divisible by 12 since 2012/12 = 167.666... so k=2012 is NOT included ✓
+- k=2004 = 12*167: 3^((2012-2004)/4) * 2^(2004/3) = 3^2 * 2^668 = integer ✓
+- k=2004 is the largest valid k. Correct.
+
+Count = 168 = answer E ✓
+
+Cross-check with answer options:
+A) 503 — this is 2012/4, number of multiples of 4 from 0 to 2012
+B) 504 — this is 503+1
+C) 671 — this is ceil(2012/3)+1?
+D) 167 — off by one (forgot to count m=0)
+E) 168 — CORRECT ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h2 .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #e2e8f0;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.05rem;
+  color: #e2e8f0;
+}
+
+.given-item.answer-option {
+  min-width: 100px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+.given-item.answer-option .label {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.given-item.answer-option .value {
+  color: #e2e8f0;
+}
+
+.plan-card {
+  border-left: 4px solid #60a5fa;
+}
+
+.plan-card p {
+  font-size: 1.05rem;
+  color: #94a3b8;
+}
+
+details {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1rem;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+.step {
+  margin-bottom: 20px;
+  padding: 8px 12px;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 0.9rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.step-content {
+  margin-left: 44px;
+  color: #cbd5e1;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.key-insight {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.key-insight h2 {
+  color: #60a5fa;
+  justify-content: center;
+}
+
+.final-answer-card {
+  border: 2px solid #34d399;
+  text-align: center;
+}
+
+.final-answer-card h2 {
+  color: #34d399;
+  justify-content: center;
+}
+
+.final-answer-text {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.opt {
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 10px;
+  padding: 10px 24px;
+  font-size: 1.1rem;
+  color: #94a3b8;
+  min-width: 100px;
+  text-align: center;
+}
+
+.opt.correct {
+  border-color: #34d399;
+  color: #4ade80;
+  background: rgba(52, 211, 153, 0.1);
+  font-weight: 700;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 0 10px 10px 0;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  color: #f9a8d4;
+}
+
+.challenge-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(52, 211, 153, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+canvas {
+  display: block;
+  margin: 16px auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.checkpoint summary {
+  color: #34d399;
+}
+
+ul {
+  margin-left: 20px;
+  margin-bottom: 8px;
+}
+
+ul li {
+  margin-bottom: 4px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .given-grid { flex-direction: column; }
+  .step-content { margin-left: 0; margin-top: 8px; }
+  .answer-options { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Celi članovi binomnog razvoja</h1>
+  <p class="subtitle">Binomna teorema — određivanje celih članova u razvoju iracionalnog izraza</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2><span class="icon">📘</span> Tekst zadatka</h2>
+    <p>
+      U razvoju \(\left(\sqrt[4]{3} + \sqrt[3]{2}\right)^{2012}\) broj članova koji su celi brojevi jednak je:
+    </p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A"><div class="label">(A)</div><div class="value">503</div></div>
+      <div class="given-item answer-option" data-option="B"><div class="label">(B)</div><div class="value">504</div></div>
+      <div class="given-item answer-option" data-option="C"><div class="label">(C)</div><div class="value">671</div></div>
+      <div class="given-item answer-option" data-option="D"><div class="label">(D)</div><div class="value">167</div></div>
+      <div class="given-item answer-option" data-option="E"><div class="label">(E)</div><div class="value">168</div></div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <h2><span class="icon">🎯</span> Plan rešavanja</h2>
+    <p>
+      Primenićemo binomnu teoremu da zapišemo opšti član razvoja. Zatim ćemo odrediti za koje vrednosti
+      indeksa \(k\) su eksponenti oba korena celi brojevi — to je uslov da član bude ceo broj.
+      Problem se svodi na nalaženje broja višekratnika broja 12 u datom opsegu.
+    </p>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <div class="card">
+    <h2><span class="icon">📐</span> Teorijska osnova</h2>
+    <details>
+      <summary>Binomna teorema i koreni — osvežavanje</summary>
+      <p style="margin-top: 10px; color: #cbd5e1;">
+        <strong>Binomna teorema:</strong> Za svako \(n \in \mathbb{N}\):
+      </p>
+      \[
+      (a + b)^n = \sum_{k=0}^{n} \binom{n}{k} \, a^{n-k} \, b^k
+      \]
+      <p style="margin-top: 10px; color: #cbd5e1;">
+        <strong>Opšti član:</strong> \(T_k = \binom{n}{k} \, a^{n-k} \, b^k\), gde je \(k = 0, 1, \ldots, n\).
+      </p>
+      <p style="margin-top: 10px; color: #cbd5e1;">
+        <strong>Korenovanje i stepenovanje:</strong>
+      </p>
+      <ul style="margin-top: 6px; color: #cbd5e1;">
+        <li>\(\sqrt[4]{3} = 3^{1/4}\), pa je \(\left(3^{1/4}\right)^m = 3^{m/4}\)</li>
+        <li>\(\sqrt[3]{2} = 2^{1/3}\), pa je \(\left(2^{1/3}\right)^m = 2^{m/3}\)</li>
+        <li>\(3^{m/4}\) je ceo broj ako i samo ako je \(\frac{m}{4} \in \mathbb{N}_0\) (tj. \(4 \mid m\))</li>
+        <li>\(2^{m/3}\) je ceo broj ako i samo ako je \(\frac{m}{3} \in \mathbb{N}_0\) (tj. \(3 \mid m\))</li>
+      </ul>
+      <p style="margin-top: 10px; color: #cbd5e1;">
+        <strong>NZS (najmanji zajednički sadržalac):</strong> \(\text{nzs}(4, 3) = 12\)
+      </p>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <h2><span class="icon">📊</span> Vizuelni prikaz</h2>
+    <p style="color: #94a3b8; margin-bottom: 8px;">
+      Prikaz vrednosti \(k\) od 0 do 2012 — plavi označavaju deljive sa 4, crveni deljive sa 3,
+      a zeleni deljive sa 12 (celi članovi).
+    </p>
+    <canvas id="vizCanvas" width="800" height="420"></canvas>
+    <p class="canvas-hint">Zelene tačke predstavljaju vrednosti \(k\) za koje je odgovarajući član ceo broj</p>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <h2><span class="icon">📝</span> Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step" id="step1">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <div class="step-title">Zapišemo opšti član binomnog razvoja</div>
+      </div>
+      <div class="step-content">
+        <p>Primenimo binomnu teoremu na \(\left(\sqrt[4]{3} + \sqrt[3]{2}\right)^{2012}\).</p>
+        <p>Opšti (\(k\)-ti) član razvoja je:</p>
+        <div class="math-box">
+          \[ T_k = \binom{2012}{k} \cdot \left(\sqrt[4]{3}\right)^{2012-k} \cdot \left(\sqrt[3]{2}\right)^k \]
+        </div>
+        <p>gde \(k = 0, 1, 2, \ldots, 2012\).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" id="step2">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <div class="step-title">Prepišemo korene kao stepene</div>
+      </div>
+      <div class="step-content">
+        <p>Zapišemo korene u eksponencijalnom obliku:</p>
+        <div class="math-box">
+          \[ T_k = \binom{2012}{k} \cdot 3^{\frac{2012-k}{4}} \cdot 2^{\frac{k}{3}} \]
+        </div>
+        <p>Binomni koeficijent \(\binom{2012}{k}\) je uvek ceo broj. Dakle, \(T_k\) je ceo broj
+        ako i samo ako su <span class="highlight-pink">oba eksponenta celi nenegativni brojevi</span>.</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step" id="step3">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <div class="step-title">Uslov za prvi eksponent</div>
+      </div>
+      <div class="step-content">
+        <p>Eksponent \(\frac{2012 - k}{4}\) mora biti ceo nenegativan broj.</p>
+        <p>To znači da \(4 \mid (2012 - k)\), odnosno:</p>
+        <div class="math-box">
+          \[ 2012 - k \equiv 0 \pmod{4} \]
+        </div>
+        <p>Pošto je \(2012 = 4 \cdot 503\), važi \(2012 \equiv 0 \pmod{4}\), pa:</p>
+        <div class="math-box">
+          \[ k \equiv 0 \pmod{4} \]
+        </div>
+        <p>Dakle, <span class="highlight-blue">\(k\) mora biti deljivo sa 4</span>.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko je 2012 ÷ 4?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        \(2012 \div 4 = 503\), bez ostatka. Dakle, \(2012 \equiv 0 \pmod{4}\). ✓
+      </p>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step" id="step4">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <div class="step-title">Uslov za drugi eksponent</div>
+      </div>
+      <div class="step-content">
+        <p>Eksponent \(\frac{k}{3}\) mora biti ceo nenegativan broj.</p>
+        <p>To znači:</p>
+        <div class="math-box">
+          \[ k \equiv 0 \pmod{3} \]
+        </div>
+        <p>Dakle, <span class="highlight-blue">\(k\) mora biti deljivo sa 3</span>.</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step" id="step5">
+      <div class="step-header">
+        <div class="step-badge">5</div>
+        <div class="step-title">Kombinujemo oba uslova</div>
+      </div>
+      <div class="step-content">
+        <p>Potrebno je da \(k\) bude deljivo i sa 4 i sa 3 istovremeno.</p>
+        <p>Najmanji zajednički sadržalac (NZS) brojeva 4 i 3 je:</p>
+        <div class="math-box">
+          \[ \text{nzs}(4, 3) = 12 \]
+        </div>
+        <p>Dakle, uslov je:</p>
+        <div class="math-box">
+          \[ k \equiv 0 \pmod{12} \]
+        </div>
+        <p>Odnosno, <span class="highlight-pink">\(k\) mora biti višekratnik broja 12</span>.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto je NZS(4, 3) = 12?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Pošto su 4 i 3 uzajamno prosti (NZD(4, 3) = 1), važi \(\text{nzs}(4, 3) = 4 \cdot 3 = 12\). ✓
+      </p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step" id="step6">
+      <div class="step-header">
+        <div class="step-badge">6</div>
+        <div class="step-title">Nabrojimo višekratnike broja 12</div>
+      </div>
+      <div class="step-content">
+        <p>Tražimo sve vrednosti \(k = 12m\) u opsegu \(0 \leq k \leq 2012\):</p>
+        <div class="math-box">
+          \[ k \in \{0, \, 12, \, 24, \, 36, \, \ldots, \, 12m\} \quad \text{gde je} \quad 12m \leq 2012 \]
+        </div>
+        <p>Odredimo maksimalno \(m\):</p>
+        <div class="math-box">
+          \[ m \leq \frac{2012}{12} = 167{,}6\overline{6} \]
+        </div>
+        <p>Dakle, \(m_{\max} = 167\), što daje \(k_{\max} = 12 \cdot 167 = 2004\).</p>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step" id="step7">
+      <div class="step-header">
+        <div class="step-badge">7</div>
+        <div class="step-title">Izračunamo ukupan broj celih članova</div>
+      </div>
+      <div class="step-content">
+        <p>Parametar \(m\) uzima vrednosti \(m = 0, 1, 2, \ldots, 167\).</p>
+        <p>Ukupan broj vrednosti je:</p>
+        <div class="math-box">
+          \[ 167 - 0 + 1 = \boxed{168} \]
+        </div>
+        <p>U razvoju ima <span class="highlight-green">168 celih članova</span>.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Da li smo uračunali \(k = 0\)?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Da! Za \(k = 0\): \(T_0 = 3^{503}\), što jeste ceo broj. Vrednost \(m = 0\) (tj. \(k = 0\))
+        je uračunata. Poslednji je \(k = 2004\) (za \(m = 167\)). Ukupno: od 0 do 167 ima tačno 168 vrednosti. ✓
+      </p>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="key-insight">
+    <h2><span class="icon">💡</span> Ključni uvid</h2>
+    <p style="color: #cbd5e1; margin-bottom: 12px;">
+      Problem se svodi na prebrojavanje višekratnika broja 12 u opsegu od 0 do 2012:
+    </p>
+    <div class="math-box" style="display: inline-block; font-size: 1.2rem;">
+      \[ 4 \mid k \;\;\text{i}\;\; 3 \mid k \;\;\Longleftrightarrow\;\; 12 \mid k \;\;\Longrightarrow\;\; \left\lfloor \frac{2012}{12} \right\rfloor + 1 = 168 \]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="card final-answer-card">
+    <h2><span class="icon">✅</span> Konačan odgovor</h2>
+    <div class="final-answer-text">
+      \[ \text{Broj celih članova} = 168 \]
+    </div>
+    <div class="answer-options">
+      <span class="opt">(A) 503</span>
+      <span class="opt">(B) 504</span>
+      <span class="opt">(C) 671</span>
+      <span class="opt">(D) 167</span>
+      <span class="opt correct">(E) 168</span>
+    </div>
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> Za \(k = 0\): \(T_0 = 3^{503}\) — ceo broj. ✓
+      Za \(k = 2004\): \(T_{2004} = \binom{2012}{2004} \cdot 3^2 \cdot 2^{668}\) — ceo broj. ✓
+      Za \(k = 2012\): eksponent trojke je 0, ali \(\frac{2012}{3} = 670{,}\overline{6}\) — nije ceo. ✗
+      Dakle, poslednji celi član je zaista za \(k = 2004\), a ukupno ih je 168.
+    </div>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <h2><span class="icon">⚠️</span> Česte greške</h2>
+    <div class="pitfall-item">
+      <strong>Greška „off by one":</strong> Zaboravi se da se broji i \(k = 0\) (tj. \(m = 0\)).
+      Višekratnici 12 od 0 do 2004 su \(0, 12, 24, \ldots, 2004\), što daje
+      \(\frac{2004}{12} + 1 = 168\) vrednosti, ne 167.
+    </div>
+    <div class="pitfall-item">
+      <strong>Pogrešan NZS:</strong> Neki studenti koriste samo uslov deljivosti sa 4
+      (dobijaju 503 ili 504), zaboravljajući da i drugi eksponent mora biti ceo.
+      Potrebno je zadovoljiti <em>oba</em> uslova istovremeno.
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card challenge-card">
+    <h2><span class="icon">🏆</span> Dodatni izazov</h2>
+    <p style="color: #cbd5e1;">
+      Koliko članova u razvoju \(\left(\sqrt[6]{5} + \sqrt[4]{3}\right)^{600}\) su celi brojevi?
+    </p>
+    <details>
+      <summary>Pomoć za rešavanje</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Opšti član: \(\binom{600}{k} \cdot 5^{(600-k)/6} \cdot 3^{k/4}\).
+        Potrebno je \(6 \mid (600 - k)\) i \(4 \mid k\).
+        Iz prvog uslova: \(k \equiv 600 \equiv 0 \pmod{6}\), dakle \(6 \mid k\).
+        Kombinovano: \(\text{nzs}(6, 4) = 12\), pa \(k = 12m\), gde \(0 \leq m \leq 50\).
+        Odgovor: 51 član.
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+
+  // Canvas visualization
+  const canvas = document.getElementById('vizCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const pad = { left: 70, right: 30, top: 50, bottom: 60 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Distribucija višekratnika u opsegu k = 0 do 2012', W / 2, 25);
+
+    // Draw number line representation
+    // We'll show a bar chart: number of multiples of 4, 3, and 12
+    const data = [
+      { label: 'Deljivi sa 4', count: Math.floor(2012 / 4) + 1, color: '#60a5fa', desc: '(4 | k)' },
+      { label: 'Deljivi sa 3', count: Math.floor(2012 / 3) + 1, color: '#f472b6', desc: '(3 | k)' },
+      { label: 'Deljivi sa 12', count: Math.floor(2012 / 12) + 1, color: '#4ade80', desc: '(12 | k) = Celi članovi' }
+    ];
+
+    const barW = 140;
+    const gap = 80;
+    const totalBarWidth = data.length * barW + (data.length - 1) * gap;
+    const startX = pad.left + (plotW - totalBarWidth) / 2;
+
+    // Y axis
+    const maxCount = 700;
+    const scaleY = plotH / maxCount;
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    for (let v = 0; v <= maxCount; v += 100) {
+      const y = pad.top + plotH - v * scaleY;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(W - pad.right, y);
+      ctx.stroke();
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px Segoe UI, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(v.toString(), pad.left - 10, y + 4);
+    }
+    ctx.setLineDash([]);
+
+    // Y-axis label
+    ctx.save();
+    ctx.translate(18, pad.top + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Broj vrednosti k', 0, 0);
+    ctx.restore();
+
+    // Draw bars
+    data.forEach((d, i) => {
+      const x = startX + i * (barW + gap);
+      const barH = d.count * scaleY;
+      const y = pad.top + plotH - barH;
+
+      // Bar shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(x + 4, y + 4, barW, barH);
+
+      // Bar
+      ctx.fillStyle = d.color;
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(x, y, barW, barH);
+      ctx.globalAlpha = 1;
+
+      // Bar border
+      ctx.strokeStyle = d.color;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, barW, barH);
+
+      // Count label
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(d.count.toString(), x + barW / 2, y - 12);
+
+      // Category label
+      ctx.fillStyle = d.color;
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.fillText(d.label, x + barW / 2, pad.top + plotH + 22);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px Segoe UI, sans-serif';
+      ctx.fillText(d.desc, x + barW / 2, pad.top + plotH + 40);
+    });
+
+    // Highlight arrow from 12 bar
+    const arrowX = startX + 2 * (barW + gap) + barW / 2;
+    const arrowY = pad.top + plotH - data[2].count * scaleY - 40;
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Odgovor: 168', arrowX, arrowY);
+
+    // Small arrow down
+    ctx.beginPath();
+    ctx.moveTo(arrowX, arrowY + 4);
+    ctx.lineTo(arrowX, arrowY + 16);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(arrowX - 5, arrowY + 12);
+    ctx.lineTo(arrowX, arrowY + 18);
+    ctx.lineTo(arrowX + 5, arrowY + 12);
+    ctx.fillStyle = '#4ade80';
+    ctx.fill();
+
+    // Bottom axis line
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, pad.top + plotH);
+    ctx.lineTo(W - pad.right, pad.top + plotH);
+    ctx.stroke();
+
+    // Explanation box at top-right
+    const boxX = W - pad.right - 230;
+    const boxY = pad.top + 10;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, 220, 80, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('NZS(4, 3) = 12', boxX + 12, boxY + 22);
+    ctx.fillText('k = 0, 12, 24, ..., 2004', boxX + 12, boxY + 42);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.fillText('Ukupno: 167 + 1 = 168', boxX + 12, boxY + 64);
+  }
+
+  draw();
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Celi članovi binomnog razvoja sa korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["binomna teorema", "korenovanje", "deljivost", "NZS", "prebrojavanje"]
+}
+BRAINSPARK_META-->

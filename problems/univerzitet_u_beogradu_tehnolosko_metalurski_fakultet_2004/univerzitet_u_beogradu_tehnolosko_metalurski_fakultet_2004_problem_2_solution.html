@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepenovanje i računanje sa negativnim eksponentima</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Izračunati vrednost izraza
+((2^(-1) : (1/4)^(-3)) * 8)^0,25
+
+Rešenje korak po korak:
+
+Korak 1: Izračunamo 2^(-1)
+2^(-1) = 1/2
+
+Korak 2: Izračunamo (1/4)^(-3)
+(1/4)^(-3) = 4^3 = 64
+
+Korak 3: Izračunamo 2^(-1) : (1/4)^(-3)
+(1/2) : 64 = (1/2) * (1/64) = 1/128
+
+Korak 4: Pomnožimo sa 8
+(1/128) * 8 = 8/128 = 1/16
+
+Korak 5: Stepenujemo sa 0,25 = 1/4
+(1/16)^(1/4) = (16)^(-1/4) = (2^4)^(-1/4) = 2^(-1) = 1/2
+
+Dakle rezultat je 1/2.
+
+Provera: 1/16 = 2^(-4), pa (2^(-4))^(1/4) = 2^(-1) = 1/2 ✓
+
+Odgovor: (E) 1/2
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 40px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 28px;
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h2 .icon {
+  font-size: 1.5rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 1.05rem;
+}
+
+.given-item.answer-option {
+  min-width: 100px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+}
+
+.plan-card {
+  border-left: 4px solid #34d399;
+}
+
+details {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 12px;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] > summary {
+  margin-bottom: 10px;
+}
+
+.step {
+  margin-bottom: 24px;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.step-content {
+  margin-left: 48px;
+  color: #cbd5e1;
+}
+
+.math-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(167,139,250,0.15));
+  border: 1px solid rgba(96,165,250,0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 28px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.final-answer-box h2 {
+  color: #34d399;
+}
+
+.final-answer-text {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.options-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.opt {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.05rem;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  border-color: #34d399;
+  color: #4ade80;
+  background: rgba(52,211,153,0.1);
+  font-weight: 600;
+}
+
+.pitfall-card {
+  border-left: 4px solid #f472b6;
+}
+
+.pitfall-card h2 {
+  color: #f472b6;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 8px 0;
+  padding-left: 24px;
+  position: relative;
+  color: #cbd5e1;
+}
+
+.pitfall-list li::before {
+  content: '!';
+  position: absolute;
+  left: 0;
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.challenge-card {
+  border-left: 4px solid #fbbf24;
+}
+
+.challenge-card h2 {
+  color: #fbbf24;
+}
+
+canvas {
+  display: block;
+  margin: 16px auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #60a5fa;
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 18px; }
+  .step-content { margin-left: 12px; }
+  .given-grid { flex-direction: column; }
+  .options-list { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Stepenovanje sa negativnim eksponentima</h1>
+  <p class="subtitle">Pravila stepenovanja i racionalni eksponenti</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2><span class="icon">📝</span> Zadatak</h2>
+    <p>Vrednost izraza:</p>
+    <div class="math-box">
+      \[\left(\left(2^{-1} : \left(\frac{1}{4}\right)^{-3}\right) \cdot 8\right)^{0{,}25}\]
+    </div>
+    <p>jednaka je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A"><div class="label">(A)</div><div class="value">\(4\)</div></div>
+      <div class="given-item answer-option" data-option="B"><div class="label">(B)</div><div class="value">\(-4\)</div></div>
+      <div class="given-item answer-option" data-option="C"><div class="label">(C)</div><div class="value">\(\dfrac{1}{4}\)</div></div>
+      <div class="given-item answer-option" data-option="D"><div class="label">(D)</div><div class="value">\(2\)</div></div>
+      <div class="given-item answer-option" data-option="E"><div class="label">(E)</div><div class="value">\(\dfrac{1}{2}\)</div></div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2><span class="icon">🎯</span> Plan rešavanja</h2>
+    <p>Izračunaćemo izraz iznutra ka spolja, primenjujući pravila stepenovanja: negativan eksponent znači recipročnu vrednost, a eksponent \(0{,}25 = \frac{1}{4}\) predstavlja četvrti koren. Koristićemo činjenicu da se svi brojevi u zadatku mogu izraziti kao stepeni dvojke.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <h2><span class="icon">📖</span> Teorijska osnova</h2>
+    <details>
+      <summary>Ključne formule stepenovanja</summary>
+      <ul style="margin-top: 12px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;">Negativan eksponent: \(a^{-n} = \dfrac{1}{a^n}\) i \(\left(\dfrac{1}{a}\right)^{-n} = a^n\)</li>
+        <li style="margin-bottom: 10px;">Racionalni eksponent: \(a^{1/n} = \sqrt[n]{a}\), pa \(a^{0{,}25} = a^{1/4} = \sqrt[4]{a}\)</li>
+        <li style="margin-bottom: 10px;">Stepen stepena: \((a^m)^n = a^{m \cdot n}\)</li>
+        <li style="margin-bottom: 10px;">Deljenje (\(:)\)) je množenje recipročnom vrednošću: \(a : b = a \cdot \dfrac{1}{b}\)</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Canvas Visual Aid -->
+  <div class="card">
+    <h2><span class="icon">📊</span> Vizuelni prikaz računanja</h2>
+    <canvas id="diagram" width="760" height="400"></canvas>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2><span class="icon">🔢</span> Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">1</div>
+        <div class="step-title">Izračunavamo \(2^{-1}\)</div>
+      </div>
+      <div class="step-content">
+        <p>Negativan eksponent znači recipročnu vrednost:</p>
+        <div class="math-box">
+          \[2^{-1} = \frac{1}{2}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">2</div>
+        <div class="step-title">Izračunavamo \(\left(\frac{1}{4}\right)^{-3}\)</div>
+      </div>
+      <div class="step-content">
+        <p>Kada razlomak stepenujemo negativnim eksponentom, „prevrnemo" razlomak i stepenujemo pozitivnim eksponentom:</p>
+        <div class="math-box">
+          \[\left(\frac{1}{4}\right)^{-3} = 4^3 = 64\]
+        </div>
+        <p style="color: #94a3b8;">Alternativno: \(\left(\frac{1}{4}\right)^{-3} = \frac{1^{-3}}{4^{-3}} = \frac{4^3}{1^3} = 64\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(\left(\frac{1}{2}\right)^{-2}\)?</summary>
+      <p style="margin-top: 8px;">\(\left(\frac{1}{2}\right)^{-2} = 2^2 = 4\). Isti princip: negativan eksponent „prevrće" razlomak.</p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <div class="step-title">Delimo \(2^{-1}\) sa \(\left(\frac{1}{4}\right)^{-3}\)</div>
+      </div>
+      <div class="step-content">
+        <p>Deljenje (\(:\)) pretvaramo u množenje recipročnom vrednošću:</p>
+        <div class="math-box">
+          \[\frac{1}{2} : 64 = \frac{1}{2} \cdot \frac{1}{64} = \frac{1}{128}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">4</div>
+        <div class="step-title">Množimo sa \(8\)</div>
+      </div>
+      <div class="step-content">
+        <p>Sada množimo dobijeni rezultat sa \(8\):</p>
+        <div class="math-box">
+          \[\frac{1}{128} \cdot 8 = \frac{8}{128} = \frac{1}{16}\]
+        </div>
+        <p>U zagradama sada imamo \(\frac{1}{16}\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Izrazi \(\frac{1}{16}\) kao stepen dvojke</summary>
+      <p style="margin-top: 8px;">\(\frac{1}{16} = \frac{1}{2^4} = 2^{-4}\). Ovo će nam koristiti u sledećem koraku!</p>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-header">
+        <div class="step-badge">5</div>
+        <div class="step-title">Stepenujemo sa \(0{,}25\)</div>
+      </div>
+      <div class="step-content">
+        <p>Eksponent \(0{,}25\) je isto što i \(\frac{1}{4}\), dakle tražimo četvrti koren:</p>
+        <div class="math-box">
+          \[\left(\frac{1}{16}\right)^{0{,}25} = \left(\frac{1}{16}\right)^{1/4} = \sqrt[4]{\frac{1}{16}}\]
+        </div>
+        <p>Pošto je \(\frac{1}{16} = 2^{-4}\):</p>
+        <div class="math-box">
+          \[\left(2^{-4}\right)^{1/4} = 2^{-4 \cdot \frac{1}{4}} = 2^{-1} = \frac{1}{2}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \(\sqrt[4]{16}\)?</summary>
+      <p style="margin-top: 8px;">\(\sqrt[4]{16} = \sqrt[4]{2^4} = 2\), jer \(2^4 = 16\). Dakle \(\sqrt[4]{\frac{1}{16}} = \frac{1}{\sqrt[4]{16}} = \frac{1}{2}\).</p>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2><span class="icon">💡</span> Ključni uvid</h2>
+    <p style="margin-top: 10px;">Ceo izraz se može elegantno rešiti tako što sve brojeve izrazimo kao stepene dvojke:</p>
+    <div class="math-box">
+      \[\left(\left(2^{-1} : 2^6\right) \cdot 2^3\right)^{1/4} = \left(2^{-1-6} \cdot 2^3\right)^{1/4} = \left(2^{-7+3}\right)^{1/4} = \left(2^{-4}\right)^{1/4} = 2^{-1} = \frac{1}{2}\]
+    </div>
+    <p style="margin-top: 10px;">Kada su sve osnove stepeni istog broja, možemo koristiti pravila za množenje i deljenje stepena sa istom osnovom i dobiti rezultat mnogo brže.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2><span class="icon">✅</span> Konačan odgovor</h2>
+    <div class="final-answer-text">
+      \[\frac{1}{2}\]
+    </div>
+    <div class="options-list">
+      <span class="opt">(A) \(4\)</span>
+      <span class="opt">(B) \(-4\)</span>
+      <span class="opt">(C) \(\dfrac{1}{4}\)</span>
+      <span class="opt">(D) \(2\)</span>
+      <span class="opt correct">(E) \(\dfrac{1}{2}\)</span>
+    </div>
+    <p style="margin-top: 16px; color: #94a3b8;">Verifikacija: \(\left(\frac{1}{2}\right)^4 = \frac{1}{16}\), a vrednost u zagradi je upravo \(\frac{1}{16}\), što potvrđuje da je \(\frac{1}{2}\) četvrti koren od \(\frac{1}{16}\).</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2><span class="icon">⚠️</span> Najčešće greške</h2>
+    <ul class="pitfall-list">
+      <li><strong>Pogrešna primena negativnog eksponenta:</strong> Česta greška je da se \(\left(\frac{1}{4}\right)^{-3}\) izračuna kao \(\frac{1}{4^3} = \frac{1}{64}\) umesto kao \(4^3 = 64\). Negativan eksponent „prevrće" razlomak, ne samo da ga stepenuje.</li>
+      <li><strong>Pogrešan redosled operacija:</strong> Operacija deljenja (\(:\)) se mora izvršiti pre množenja sa \(8\). Ako se prvo pomnoži \(\left(\frac{1}{4}\right)^{-3} \cdot 8 = 512\) pa tek onda deli, dobija se pogrešan rezultat.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2><span class="icon">🏆</span> Dodatni izazov</h2>
+    <p>Pokušaj da izračunaš vrednost sličnog izraza:</p>
+    <div class="math-box">
+      \[\left(\left(3^{-2} : \left(\frac{1}{9}\right)^{-1}\right) \cdot 27\right)^{0{,}5}\]
+    </div>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <p style="margin-top: 8px;">Sve izrazi kao stepene trojke: \(3^{-2} = \frac{1}{9}\), \(\left(\frac{1}{9}\right)^{-1} = 9 = 3^2\), \(27 = 3^3\), a eksponent \(0{,}5 = \frac{1}{2}\). Primeni pravila stepenovanja sa istom osnovom i dobićeš \(3^{(-2-2+3) \cdot \frac{1}{2}} = 3^{-1/2} = \frac{1}{\sqrt{3}}\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Tok računanja — sve kao stepeni dvojke', W / 2, 28);
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function drawBox(x, y, w, h, lines, borderColor, bgColor, textColor, fontSize) {
+    ctx.fillStyle = bgColor || '#1e293b';
+    ctx.strokeStyle = borderColor || '#334155';
+    ctx.lineWidth = 2;
+    roundRect(x, y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = textColor || '#e2e8f0';
+    ctx.font = (fontSize || 13) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const lineArr = lines.split('\n');
+    const lineH = (fontSize || 13) + 5;
+    const startY = y + h / 2 - (lineArr.length - 1) * lineH / 2;
+    for (let i = 0; i < lineArr.length; i++) {
+      ctx.fillText(lineArr[i], x + w / 2, startY + i * lineH);
+    }
+  }
+
+  function drawArrow(x1, y1, x2, y2, label) {
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const headLen = 10;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+    ctx.stroke();
+
+    if (label) {
+      ctx.fillStyle = '#a78bfa';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+      ctx.fillText(label, mx + 50, my + 4);
+    }
+  }
+
+  const boxW = 170;
+  const boxH = 50;
+  const startX = W / 2 - boxW / 2;
+  const gap = 22;
+
+  // Row 1
+  const y1 = 48;
+  drawBox(startX, y1, boxW, boxH, '2\u207B\u00B9 = 1/2', '#60a5fa', '#1a2744', '#60a5fa', 14);
+
+  // Right annotation for step 1
+  drawBox(startX + boxW + 40, y1, 180, boxH, '(1/4)\u207B\u00B3 = 4\u00B3 = 64', '#60a5fa', '#1a2744', '#60a5fa', 14);
+
+  // Arrow from both down to row 2
+  drawArrow(startX + boxW / 2, y1 + boxH, startX + boxW / 2, y1 + boxH + gap + 8, '');
+  drawArrow(startX + boxW + 40 + 90, y1 + boxH, startX + boxW / 2, y1 + boxH + gap + 8, '');
+
+  // Label between row 1 and row 2
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = '11px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('deljenje (:)', startX + boxW / 2 + 60, y1 + boxH + gap / 2 + 4);
+
+  // Row 2: after division
+  const y2 = y1 + boxH + gap + 10;
+  drawBox(startX, y2, boxW, boxH, '1/2 : 64 = 1/128', '#a78bfa', '#1e1a3a', '#a78bfa', 14);
+
+  // Left annotation
+  drawBox(startX - 210, y2, 180, boxH, '1/128 = 2\u207B\u2077', '#334155', '#1e293b', '#94a3b8', 13);
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(startX - 30, y2 + boxH / 2);
+  ctx.lineTo(startX, y2 + boxH / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  drawArrow(startX + boxW / 2, y2 + boxH, startX + boxW / 2, y2 + boxH + gap + 8, '');
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = '11px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('množenje sa 8', startX + boxW / 2 + 70, y2 + boxH + gap / 2 + 4);
+
+  // Row 3: after multiplication
+  const y3 = y2 + boxH + gap + 10;
+  drawBox(startX, y3, boxW, boxH, '1/128 \u00B7 8 = 1/16', '#f472b6', '#2a1a24', '#f472b6', 14);
+
+  // Right annotation
+  drawBox(startX + boxW + 40, y3, 180, boxH, '1/16 = 2\u207B\u2074', '#334155', '#1e293b', '#94a3b8', 13);
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(startX + boxW, y3 + boxH / 2);
+  ctx.lineTo(startX + boxW + 40, y3 + boxH / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  drawArrow(startX + boxW / 2, y3 + boxH, startX + boxW / 2, y3 + boxH + gap + 8, '');
+  ctx.fillStyle = '#a78bfa';
+  ctx.font = '11px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('eksponent 0,25 = 1/4', startX + boxW / 2 + 80, y3 + boxH + gap / 2 + 4);
+
+  // Row 4: final
+  const y4 = y3 + boxH + gap + 10;
+  drawBox(startX, y4, boxW, boxH, '(1/16)^(1/4) = 1/2', '#34d399', '#1a2a24', '#34d399', 15);
+
+  // Right annotation for final
+  drawBox(startX + boxW + 40, y4, 180, boxH, '(2\u207B\u2074)^(1/4) = 2\u207B\u00B9 = 1/2', '#334155', '#1a2a24', '#34d399', 13);
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = '#34d399';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(startX + boxW, y4 + boxH / 2);
+  ctx.lineTo(startX + boxW + 40, y4 + boxH / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Answer label
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Odgovor: (E) 1/2', startX + boxW / 2, y4 + boxH + 25);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje sa negativnim eksponentima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["stepenovanje", "negativni_eksponenti", "racionalni_eksponenti", "stepeni_dvojke"]
+}
+BRAINSPARK_META-->

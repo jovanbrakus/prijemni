@@ -1,10 +1,21 @@
 #!/bin/bash
 
 files=(
-  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2014_drugi_rok.pdf"
-  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2013_drugi_rok.pdf"
-  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2013.pdf"
-  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2012.pdf"
+  "univerzitet_u_beogradu_saobracajni_fakultet_2016.pdf"
+  "univerzitet_u_beogradu_saobracajni_fakultet_2015.pdf"
+  "univerzitet_u_beogradu_saobracajni_fakultet_2014.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2013.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2011.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2010.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2009.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2008.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2007.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2006.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2005.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2004.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2003.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2002.pdf"
+#  "univerzitet_u_beogradu_saobracajni_fakultet_2001.pdf"
 )
 
 for file in "${files[@]}"; do

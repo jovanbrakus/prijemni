@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brojanje trocifrenih brojeva deljivih sa 5</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Različitih trocifrenih prirodnih brojeva deljivih sa 5 čije su sve cifre
+različite i pripadaju skupu {0, 2, 3, 4, 5} ima:
+(A) 12  (B) 60  (C) 30  (D) 21  (E) 50
+
+Constraints:
+- Three-digit natural number → first digit ≠ 0
+- Divisible by 5 → last digit ∈ {0, 5}
+- All digits different
+- Digits from {0, 2, 3, 4, 5}
+
+Case 1: Last digit = 0
+  - First digit: choose from {2, 3, 4, 5} → 4 choices
+  - Middle digit: choose from remaining 3 of {2, 3, 4, 5} → 3 choices
+  - Count: 4 × 3 = 12
+
+Case 2: Last digit = 5
+  - First digit: choose from {0, 2, 3, 4} \ {0} = {2, 3, 4} → 3 choices
+    (can't be 0 since three-digit, can't be 5 since last digit is 5)
+  - Middle digit: choose from {0, 2, 3, 4} \ {first digit} → 3 choices
+    (4 elements minus the one used as first digit)
+  - Count: 3 × 3 = 9
+
+Total: 12 + 9 = 21
+
+Answer: (D) 21 ✓
+
+Verification by enumeration:
+
+Case 1 (last digit 0):
+  230, 240, 250, 320, 340, 350, 420, 430, 450, 520, 530, 540
+  Count: 12 ✓
+
+Case 2 (last digit 5):
+  205, 235, 245, 305, 325, 345, 405, 425, 435
+  Count: 9 ✓
+
+Total: 12 + 9 = 21 ✓
+
+All 21 numbers: 205, 230, 235, 240, 245, 250, 305, 320, 325, 340, 345, 350,
+405, 420, 425, 430, 435, 450, 520, 530, 540
+
+Check other options:
+(A) 12 — only Case 1, forgetting Case 2
+(B) 60 — overcounting, ignoring constraints
+(C) 30 — possibly 5 × 4 × 3 ÷ 2, wrong approach
+(E) 50 — wrong approach
+
+Only (D) = 21 is correct. Confirmed.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+}
+
+.checkpoint details {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.number-line-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.given-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.given-data-item {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 10px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.given-data-item .data-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-data-item .data-value {
+  color: #60a5fa;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.enum-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.enum-table th {
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #334155;
+}
+
+.enum-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid #334155;
+  color: #cbd5e1;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.95rem;
+}
+
+.enum-table tr:hover td {
+  background: rgba(96, 165, 250, 0.05);
+}
+
+.case-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.case-badge.case1 {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.case-badge.case2 {
+  background: rgba(167, 139, 250, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 6px 14px; font-size: 0.95rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Brojanje trocifrenih brojeva deljivih sa 5</h1>
+  <p class="subtitle">Kombinatorika -- sistematično prebrojavanje uz uslove deljivosti i jedinstvenosti cifara</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Različitih trocifrenih prirodnih brojeva deljivih sa 5 čije su sve cifre različite i pripadaju skupu \(\{0,\, 2,\, 3,\, 4,\, 5\}\) ima:
+    </div>
+    <div class="given-data-grid">
+      <div class="given-data-item">
+        <div class="data-label">Skup cifara</div>
+        <div class="data-value">\(\{0, 2, 3, 4, 5\}\)</div>
+      </div>
+      <div class="given-data-item">
+        <div class="data-label">Broj cifara</div>
+        <div class="data-value">Trocifreni (\(\overline{abc}\))</div>
+      </div>
+      <div class="given-data-item">
+        <div class="data-label">Deljivost</div>
+        <div class="data-value">Deljiv sa 5</div>
+      </div>
+      <div class="given-data-item">
+        <div class="data-label">Uslov</div>
+        <div class="data-value">Sve cifre različite</div>
+      </div>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">12</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">60</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">30</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">21</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Broj je deljiv sa 5 ako mu je poslednja cifra 0 ili 5. Razmatramo <strong>dva slučaja</strong> prema poslednjoj cifri, a u svakom slučaju biramo preostale dve cifre tako da budu različite, iz datog skupa, i da prva cifra nije nula. Na kraju sabiramo rezultate oba slučaja.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Ključne činjenice i pravila</summary>
+      <ul style="margin-top: 10px; list-style: disc; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;">
+          <strong>Deljivost sa 5:</strong> Prirodan broj je deljiv sa 5 ako i samo ako mu je poslednja cifra \(0\) ili \(5\).
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Trocifreni broj:</strong> Broj oblika \(\overline{abc}\) gde je \(a \neq 0\), tj. prva cifra mora biti različita od nule.
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Princip množenja:</strong> Ako prvi izbor ima \(m\) mogućnosti, a drugi (nezavisno od prvog) ima \(n\) mogućnosti, ukupan broj načina je \(m \cdot n\).
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Razbijanje na slučajeve:</strong> Kada se uslovi razlikuju u zavisnosti od vrednosti jedne promenljive (ovde: poslednja cifra), prebrojavanje delimo na disjunktne slučajeve i sabiramo rezultate.
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz: stablo izbora</div>
+    <canvas id="mainCanvas" width="900" height="520"></canvas>
+    <p class="drag-hint">Dijagram prikazuje razdvajanje na dva slučaja prema poslednjoj cifri i brojanje kombinacija</p>
+    <div class="number-line-legend">
+      <div class="legend-item"><span class="legend-dot" style="background: #60a5fa;"></span> Slučaj 1: poslednja cifra = 0</div>
+      <div class="legend-item"><span class="legend-dot" style="background: #a78bfa;"></span> Slučaj 2: poslednja cifra = 5</div>
+      <div class="legend-item"><span class="legend-dot" style="background: #4ade80;"></span> Ukupno</div>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Identifikuj uslove zadatka</div>
+      <p class="step-explanation">
+        Tražimo trocifrene prirodne brojeve \(\overline{abc}\) koji zadovoljavaju tri uslova istovremeno:
+      </p>
+      <ul style="list-style: disc; padding-left: 24px; color: #cbd5e1; margin-bottom: 12px;">
+        <li>\(a, b, c \in \{0, 2, 3, 4, 5\}\) -- cifre pripadaju datom skupu</li>
+        <li>\(a \neq 0\) -- broj je trocifreni</li>
+        <li>\(a, b, c\) su sve međusobno različite</li>
+        <li>Broj je deljiv sa 5, što znači \(c \in \{0, 5\}\)</li>
+      </ul>
+      <p class="step-explanation">
+        Pošto poslednja cifra \(c\) mora biti 0 ili 5, a ta dva slučaja se međusobno isključuju, razdvajamo prebrojavanje na dva slučaja.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> <span class="case-badge case1">Slučaj 1</span> Poslednja cifra \(c = 0\)</div>
+      <p class="step-explanation">
+        Fiksiramo \(c = 0\). Preostale cifre \(a\) i \(b\) biramo iz skupa \(\{2, 3, 4, 5\}\) (jer su različite od \(c = 0\) i međusobno različite).
+      </p>
+      <div class="math-box">
+        \[\text{Izbor za } a: \quad \{2, 3, 4, 5\} \quad \Rightarrow \quad 4 \text{ mogućnosti}\]
+      </div>
+      <p class="step-explanation">
+        Pošto je \(a \neq 0\), a cifra 0 je već iskorišćena za \(c\), svaka od preostalih 4 cifre može biti prva. Nema dodatnog ograničenja.
+      </p>
+      <div class="math-box">
+        \[\text{Izbor za } b: \quad \{2, 3, 4, 5\} \setminus \{a\} \quad \Rightarrow \quad 3 \text{ mogućnosti}\]
+      </div>
+      <p class="step-explanation">
+        Primenom principa množenja:
+      </p>
+      <div class="math-box">
+        \[\text{Slučaj 1:} \quad 4 \times 3 = \boldsymbol{12} \text{ brojeva}\]
+      </div>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri sebe: Nabrojimo svih 12 brojeva iz Slučaja 1</summary>
+          <p style="font-family: 'Consolas', monospace; color: #cbd5e1; line-height: 2;">
+            230, 240, 250, 320, 340, 350, 420, 430, 450, 520, 530, 540
+          </p>
+          <p style="margin-top: 6px;">Zaista 12 brojeva -- svaki se završava na 0, ima tri različite cifre iz \(\{0,2,3,4,5\}\).</p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> <span class="case-badge case2">Slučaj 2</span> Poslednja cifra \(c = 5\)</div>
+      <p class="step-explanation">
+        Fiksiramo \(c = 5\). Sada \(a\) i \(b\) biramo iz skupa \(\{0, 2, 3, 4\}\) (sve cifre iz skupa osim 5). Ali pažnja: <strong>prva cifra \(a\) ne sme biti 0!</strong>
+      </p>
+      <div class="math-box">
+        \[\text{Izbor za } a: \quad \{0, 2, 3, 4\} \setminus \{0\} = \{2, 3, 4\} \quad \Rightarrow \quad 3 \text{ mogućnosti}\]
+      </div>
+      <p class="step-explanation">
+        Za srednju cifru \(b\), preostaju cifre iz \(\{0, 2, 3, 4\}\) osim izabranog \(a\):
+      </p>
+      <div class="math-box">
+        \[\text{Izbor za } b: \quad \{0, 2, 3, 4\} \setminus \{a\} \quad \Rightarrow \quad 3 \text{ mogućnosti}\]
+      </div>
+      <p class="step-explanation">
+        Primenom principa množenja:
+      </p>
+      <div class="math-box">
+        \[\text{Slučaj 2:} \quad 3 \times 3 = \boldsymbol{9} \text{ brojeva}\]
+      </div>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri sebe: Nabrojimo svih 9 brojeva iz Slučaja 2</summary>
+          <p style="font-family: 'Consolas', monospace; color: #cbd5e1; line-height: 2;">
+            205, 235, 245, 305, 325, 345, 405, 425, 435
+          </p>
+          <p style="margin-top: 6px;">Zaista 9 brojeva -- svaki se završava na 5, ima tri različite cifre iz \(\{0,2,3,4,5\}\), i nijedan ne počinje nulom.</p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Saberi oba slučaja</div>
+      <p class="step-explanation">
+        Slučajevi su disjunktni (broj ne može istovremeno da se završava na 0 i na 5), pa primenjujemo princip sabiranja:
+      </p>
+      <div class="math-box">
+        \[\text{Ukupno} = \underbrace{12}_{\text{Slučaj 1}} + \underbrace{9}_{\text{Slučaj 2}} = \boldsymbol{21}\]
+      </div>
+      <p class="step-explanation">
+        Poredimo sa ponuđenim odgovorima -- ovo je tačno <span class="highlight-green">odgovor (D)</span>.
+      </p>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri sebe: Kompletna lista svih 21 broja</summary>
+          <p style="font-family: 'Consolas', monospace; color: #cbd5e1; line-height: 2;">
+            205, 230, 235, 240, 245, 250, 305, 320, 325, 340, 345, 350, 405, 420, 425, 430, 435, 450, 520, 530, 540
+          </p>
+          <p style="margin-top: 6px;">Ukupno 21 broj. Svaki je trocifreni, deljiv sa 5, sa svim ciframa različitim i iz skupa \(\{0,2,3,4,5\}\).</p>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Zadatak zahteva <strong>pažljivo razdvajanje na slučajeve prema poslednjoj cifri</strong>. Kritična razlika između dva slučaja je u ograničenju za prvu cifru: kada je poslednja cifra 0, nula je „potrošena" i ne može biti prva cifra -- pa nema dodatnog ograničenja. Ali kada je poslednja cifra 5, nula ostaje u skupu dostupnih cifara i <strong>mora se isključiti iz izbora za prvu cifru</strong>. Zbog toga Slučaj 2 daje manje kombinacija (9 umesto 12).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">21</div>
+    <div class="final-options">
+      <span class="final-option" data-option="A">(A) 12</span>
+      <span class="final-option" data-option="B">(B) 60</span>
+      <span class="final-option" data-option="C">(C) 30</span>
+      <span class="final-option correct" data-option="D">(D) 21</span>
+      <span class="final-option" data-option="E">(E) 50</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Nabrajanjem svih trocifrenih brojeva iz skupa cifara \(\{0,2,3,4,5\}\) deljivih sa 5 potvrđujemo tačno 21 takav broj: 12 sa poslednjom cifrom 0 i 9 sa poslednjom cifrom 5. &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboraviti Slučaj 2 (poslednja cifra = 5)</div>
+      <p>Mnogi učenici obrade samo slučaj kada je poslednja cifra 0, dobiju 12, i izaberu odgovor (A). Deljivost sa 5 dozvoljava i poslednju cifru 5 -- ovaj slučaj daje dodatnih 9 brojeva.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Ne isključiti nulu iz prvog mesta u Slučaju 2</div>
+      <p>Kada je poslednja cifra 5, preostale cifre su iz \(\{0,2,3,4\}\). Ako se ne isključi 0 iz izbora za prvu cifru, dobija se \(4 \times 3 = 12\) umesto \(3 \times 3 = 9\), što daje pogrešan zbir od 24.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Prebrojavanje svih permutacija bez uslova deljivosti</div>
+      <p>Bez uslova deljivosti, od 5 cifara biramo 3 na \(P(5,3) = 60\) načina (minus one koje počinju nulom). Odgovor (B) = 60 je zamka za one koji zanemare uslov deljivosti sa 5.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Koliko ima različitih trocifrenih prirodnih brojeva deljivih sa 5 čije su sve cifre različite i pripadaju skupu \(\{0, 1, 2, 3, 4, 5\}\)?
+    </p>
+    <details>
+      <summary>Nagoveštaj i rešenje</summary>
+      <p style="margin-top: 8px;">
+        Primenjujemo isti pristup sa dva slučaja:
+      </p>
+      <p style="margin-top: 6px;">
+        <strong>Slučaj 1</strong> (\(c = 0\)): Prva cifra iz \(\{1,2,3,4,5\}\) -- 5 izbora. Druga cifra iz preostalih 4 -- 4 izbora. Ukupno: \(5 \times 4 = 20\).
+      </p>
+      <p style="margin-top: 6px;">
+        <strong>Slučaj 2</strong> (\(c = 5\)): Prva cifra iz \(\{1,2,3,4\}\) -- 4 izbora (ne sme 0 ni 5). Druga cifra iz \(\{0,1,2,3,4\} \setminus \{a\}\) -- 4 izbora. Ukupno: \(4 \times 4 = 16\).
+      </p>
+      <p style="margin-top: 6px;">
+        <strong>Ukupno:</strong> \(20 + 16 = 36\) brojeva.
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 520;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const colL = W * 0.28;
+    const colR = W * 0.72;
+    const boxW = Math.min(220, W * 0.28);
+    const boxH = 46;
+
+    /* Title */
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Stablo izbora: trocifreni brojevi deljivi sa 5', W / 2, 24);
+
+    /* Top node: divisibility condition */
+    drawBox(W / 2, 58, boxW * 2, 48, 'Deljiv sa 5 \u2192 poslednja cifra', 'c \u2208 {0, 5}', '#94a3b8');
+
+    /* Arrows down to two cases */
+    drawArrow(W / 2 - 50, 84, colL, 120);
+    drawArrow(W / 2 + 50, 84, colR, 120);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('c = 0', colL, 117);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('c = 5', colR, 117);
+
+    /* Case 1: c = 0 */
+    var y1 = 148;
+    drawBox(colL, y1, boxW, boxH, 'Poslednja cifra: 0', 'Fiksirana', '#60a5fa');
+
+    var y2 = 218;
+    drawArrow(colL, y1 + boxH / 2 + 2, colL, y2 - boxH / 2);
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'italic 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('a \u2208 {2,3,4,5}', colL - boxW / 2 - 4, (y1 + y2) / 2 + 2);
+    drawBox(colL, y2, boxW, boxH, 'Prva cifra: 4 izbora', '{2, 3, 4, 5}', '#60a5fa');
+
+    var y3 = 288;
+    drawArrow(colL, y2 + boxH / 2 + 2, colL, y3 - boxH / 2);
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'italic 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('b: preostale 3', colL - boxW / 2 - 4, (y2 + y3) / 2 + 2);
+    drawBox(colL, y3, boxW, boxH, 'Srednja cifra: 3 izbora', 'Preostale iz {2,3,4,5}', '#60a5fa');
+
+    var y4 = 358;
+    drawArrow(colL, y3 + boxH / 2 + 2, colL, y4 - boxH / 2);
+    drawBox(colL, y4, boxW, boxH, '4 \u00D7 3 = 12', 'Slučaj 1', '#60a5fa');
+
+    /* Case 2: c = 5 */
+    var ry1 = 148;
+    drawBox(colR, ry1, boxW, boxH, 'Poslednja cifra: 5', 'Fiksirana', '#a78bfa');
+
+    var ry2 = 218;
+    drawArrow(colR, ry1 + boxH / 2 + 2, colR, ry2 - boxH / 2);
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'italic 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('a \u2208 {2,3,4}', colR + boxW / 2 + 4, (ry1 + ry2) / 2 + 2);
+    drawBox(colR, ry2, boxW, boxH, 'Prva cifra: 3 izbora', '{2, 3, 4} (ne 0, ne 5)', '#a78bfa');
+
+    var ry3 = 288;
+    drawArrow(colR, ry2 + boxH / 2 + 2, colR, ry3 - boxH / 2);
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'italic 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('b: preostale 3', colR + boxW / 2 + 4, (ry2 + ry3) / 2 + 2);
+    drawBox(colR, ry3, boxW, boxH, 'Srednja cifra: 3 izbora', '{0,2,3,4} \\ {a}', '#a78bfa');
+
+    var ry4 = 358;
+    drawArrow(colR, ry3 + boxH / 2 + 2, colR, ry4 - boxH / 2);
+    drawBox(colR, ry4, boxW, boxH, '3 \u00D7 3 = 9', 'Slučaj 2', '#a78bfa');
+
+    /* Merge arrows */
+    var finalY = 440;
+    drawArrow(colL, y4 + boxH / 2 + 2, W / 2 - 30, finalY - 28);
+    drawArrow(colR, ry4 + boxH / 2 + 2, W / 2 + 30, finalY - 28);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('+', W / 2, (y4 + finalY) / 2 + 8);
+
+    /* Final result */
+    drawBox(W / 2, finalY, boxW * 1.9, 54, '12 + 9 = 21', 'Odgovor: (D) 21', '#4ade80');
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tačno 21 trocifreni broj deljiv sa 5', W / 2, finalY + 44);
+  }
+
+  function drawBox(x, y, w, h, title, sub, color) {
+    var r = 10;
+    ctx.beginPath();
+    ctx.roundRect(x - w / 2, y - h / 2, w, h, r);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.roundRect(x - w / 2, y - h / 2, w, h, r);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = color;
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(title, x, y - 4);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(sub, x, y + 14);
+  }
+
+  function drawArrow(x1, y1, x2, y2) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    var size = 7;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - size * Math.cos(angle - 0.4), y2 - size * Math.sin(angle - 0.4));
+    ctx.lineTo(x2 - size * Math.cos(angle + 0.4), y2 - size * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fillStyle = '#475569';
+    ctx.fill();
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Brojanje trocifrenih brojeva deljivih sa 5 — kombinatorika sa ograničenjima",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "prebrojavanje", "deljivost sa 5", "trocifreni brojevi", "princip množenja", "razbijanje na slučajeve"]
+}
+BRAINSPARK_META-->

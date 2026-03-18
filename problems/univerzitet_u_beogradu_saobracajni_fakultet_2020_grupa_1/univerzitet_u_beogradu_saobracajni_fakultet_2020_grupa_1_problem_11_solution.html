@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Petocifreni brojevi sa parnim ciframa</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Koliko ima petocifrenih prirodnih brojeva čije su sve cifre parne?
+
+Parne cifre su: 0, 2, 4, 6, 8 — ukupno 5 cifara.
+
+Petocifren broj ima oblik: d1 d2 d3 d4 d5
+
+Ograničenja:
+- d1 (prva cifra) ne može biti 0 jer onda broj ne bi bio petocifren.
+  Dakle d1 može biti: 2, 4, 6, 8 — to je 4 izbora.
+- d2, d3, d4, d5 (preostale 4 cifre) mogu biti bilo koja parna cifra: 0, 2, 4, 6, 8 — to je 5 izbora za svaku.
+
+Primenjujemo pravilo proizvoda (multiplikativno pravilo broјanja):
+Ukupan broј = 4 × 5 × 5 × 5 × 5
+            = 4 × 5^4
+            = 4 × 625
+            = 2500
+
+Opcije:
+(A) 2500
+(B) 3715
+(C) 4500
+(D) 2000
+(E) 10000
+
+Odgovor: (A) 2500
+
+Verifikacija:
+- Ako bi sve cifre (uključujući prvu) imale 5 izbora, to bi bilo 5^5 = 3125.
+  Ali mi smo eliminisali slučajeve gde je d1 = 0, kojih ima 1 × 5^4 = 625.
+  Dakle 3125 - 625 = 2500. Potvrda!
+
+- Alternativna verifikacija: najmanji petocifren broj sa svim parnim ciframa je 20000,
+  najveći je 88888. Opseg je razuman za rezultat od 2500 brojeva.
+
+Analiza pogrešnih odgovora:
+- (D) 2000 = bi mogao nastati ako neko računa 4 × 5^3 = 500 × 4 = 2000 (zaboravi jednu poziciju)
+- (B) 3715 — nema jasne logike, mamac
+- (C) 4500 — moglo bi biti ako neko računa sa 9 parnih cifara umesto 5 ili neko slično pogrešno razmišljanje
+- (E) 10000 — to bi bilo ako se računa 10^5/10 ili neka druga gruba procena
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.math-box {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #60a5fa;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.plan-card h2 { color: #a78bfa; }
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 14px;
+  background: rgba(96,165,250,0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(96,165,250,0.12);
+  list-style: none;
+  user-select: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B8 ';
+  display: inline;
+}
+
+details[open] summary::before {
+  content: '\25BE ';
+}
+
+details .details-content {
+  padding: 14px 18px;
+  margin-top: 8px;
+  background: rgba(96,165,250,0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(96,165,250,0.08);
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+  cursor: pointer;
+  padding: 8px;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.step-container:hover {
+  background: rgba(96,165,250,0.04);
+  border-left-color: #4ade80;
+}
+
+.step-container.active {
+  background: rgba(52,211,153,0.06);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  min-width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 { color: #a78bfa; }
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.08));
+  border: 2px solid rgba(52,211,153,0.35);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-value {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 18px 0;
+}
+
+.option-chip {
+  background: rgba(96,165,250,0.08);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 1.05rem;
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+
+.option-chip.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(52,211,153,0.15);
+}
+
+.pitfall-box {
+  border-left: 4px solid #e09468;
+}
+
+.pitfall-box h2 { color: #e09468; }
+
+.challenge-box {
+  border-left: 4px solid #a78bfa;
+}
+
+.challenge-box h2 { color: #a78bfa; }
+
+.canvas-wrapper {
+  background: #0c1222;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  overflow: hidden;
+  margin: 14px 0;
+}
+
+canvas {
+  width: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.provera-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(52,211,153,0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(52,211,153,0.12);
+}
+
+.formula-list {
+  list-style: none;
+  padding: 0;
+}
+
+.formula-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+}
+
+.formula-list li:last-child { border-bottom: none; }
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.step-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+.digit-slots {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+
+.digit-slot {
+  background: rgba(96,165,250,0.06);
+  border: 2px solid rgba(96,165,250,0.2);
+  border-radius: 12px;
+  padding: 14px 18px;
+  min-width: 90px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.digit-slot .slot-label {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.digit-slot .slot-count {
+  color: #60a5fa;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.digit-slot .slot-digits {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+.digit-slot.first-digit {
+  border-color: rgba(244,114,182,0.35);
+}
+
+.digit-slot.first-digit .slot-count {
+  color: #f472b6;
+}
+
+.multiply-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.multiply-sign {
+  color: #94a3b8;
+  font-size: 1.6rem;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(96,165,250,0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(96,165,250,0.12);
+  flex-wrap: wrap;
+}
+
+.slider-container label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.slider-container input[type="range"] {
+  flex: 1;
+  min-width: 120px;
+  accent-color: #60a5fa;
+}
+
+.slider-container .slider-value {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.05rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .given-grid { flex-direction: column; }
+  .options-grid { flex-direction: column; align-items: center; }
+  .final-answer-box .answer-value { font-size: 1.8rem; }
+  .digit-slots { gap: 8px; }
+  .digit-slot { min-width: 70px; padding: 10px 12px; }
+  .digit-slot .slot-count { font-size: 1.3rem; }
+  .slider-container { flex-direction: column; align-items: stretch; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Title -->
+  <h1>Petocifreni brojevi sa parnim ciframa</h1>
+  <p class="subtitle">Kombinatorika - pravilo proizvoda i brojanje sa ograničenjima</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Koliko ima <span class="highlight">petocifrenih</span> prirodnih brojeva čije su <span class="highlight">sve cifre parne</span>?</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(2500\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(3715\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(4500\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(2000\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(10000\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Najpre ćemo identifikovati sve parne cifre, a zatim primeniti <strong>pravilo proizvoda</strong> (multiplikativno pravilo brojanja). Ključni detalj je da prva cifra petocifrenog broja ne sme biti nula, pa ima manje izbora za nju nego za ostale pozicije.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="details-content">
+        <ul class="formula-list">
+          <li><strong>Pravilo proizvoda (multiplikativno pravilo):</strong> Ako se prvi izbor može napraviti na \(n_1\) načina, drugi na \(n_2\) načina, ..., \(k\)-ti na \(n_k\) načina, onda se ukupan broj kombinovanih izbora dobija kao:
+            \[ N = n_1 \times n_2 \times \cdots \times n_k \]</li>
+          <li><strong>Parne cifre:</strong> To su cifre koje su deljive sa 2. U dekadnom sistemu to su: \(\{0, 2, 4, 6, 8\}\) — ukupno 5 cifara.</li>
+          <li><strong>Petocifren broj:</strong> Prirodan broj iz opsega od \(10\,000\) do \(99\,999\). Prva cifra (cifra desetohiljada) mora biti od 1 do 9 (ne sme biti 0).</li>
+          <li><strong>Nezavisnost izbora:</strong> Kada su izbori na pojedinim pozicijama međusobno nezavisni (kao u ovom zadatku gde se cifre mogu ponavljati), pravilo proizvoda se direktno primenjuje.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz - struktura petocifrenog broja</h2>
+    <p style="color: #94a3b8; margin-bottom: 8px;">Koristite klizač da promenite broj cifara i vidite kako ukupan broj raste. Prva pozicija uvek ima za jedan izbor manje jer cifra 0 nije dozvoljena.</p>
+    <div class="canvas-wrapper">
+      <canvas id="mainCanvas" width="900" height="520"></canvas>
+    </div>
+    <div class="slider-container">
+      <label>Broj cifara:</label>
+      <input type="range" id="digitSlider" min="1" max="8" step="1" value="5">
+      <span class="slider-value" id="digitValue">5</span>
+    </div>
+    <p class="drag-hint">Pomerajte klizač da vidite formulu za različit broj cifara</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Identifikujemo parne cifre</h3>
+        <p>Parne cifre u dekadnom sistemu su one deljive sa 2:</p>
+        <div class="math-box" style="text-align: center;">
+          \[ \{0,\; 2,\; 4,\; 6,\; 8\} \]
+        </div>
+        <p>Ukupno ima <span class="highlight">5 parnih cifara</span>.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Analiziramo prvu cifru (pozicija desetohiljada)</h3>
+        <p>Petocifren broj ima oblik \(\overline{d_1\, d_2\, d_3\, d_4\, d_5}\), gde je \(d_1\) cifra desetohiljada.</p>
+        <p>Da bi broj bio petocifren, <span class="highlight">prva cifra \(d_1\) ne sme biti 0</span>.</p>
+        <p>Od 5 parnih cifara \(\{0, 2, 4, 6, 8\}\), eliminišemo 0. Ostaju:</p>
+        <div class="math-box" style="text-align: center;">
+          \[ d_1 \in \{2,\; 4,\; 6,\; 8\} \quad \Rightarrow \quad \textbf{4 izbora} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Analiziramo preostale četiri cifre</h3>
+        <p>Za svaku od pozicija \(d_2, d_3, d_4, d_5\) važi:</p>
+        <ul style="list-style: disc; padding-left: 20px; margin: 8px 0;">
+          <li>Cifra može biti <strong>bilo koja parna cifra</strong>, uključujući 0.</li>
+          <li>Cifre se mogu ponavljati (nema ograničenja).</li>
+        </ul>
+        <div class="math-box" style="text-align: center;">
+          \[ d_2, d_3, d_4, d_5 \in \{0,\; 2,\; 4,\; 6,\; 8\} \quad \Rightarrow \quad \textbf{5 izbora za svaku} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details>
+      <summary>Proveri se: Zašto \(d_2\) može biti 0, a \(d_1\) ne može?</summary>
+      <div class="details-content">
+        <p>Zato što je \(d_1\) vodeca cifra. Ako bi \(d_1 = 0\), broj ne bi bio petocifren vec četvorocifren (ili manji). Na primer, 02468 je zapravo 2468 — četvorcifren broj.</p>
+        <p>Cifra \(d_2\) je na poziciji hiljada i može biti 0 bez problema — na primer, 20468 je validni petocifreni broj.</p>
+      </div>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Primenjujemo pravilo proizvoda</h3>
+        <p>Pošto su izbori cifara na svim pozicijama <strong>međusobno nezavisni</strong> (svaka cifra se bira nezavisno od ostalih), ukupan broj petocifrenih brojeva sa svim parnim ciframa je:</p>
+        <div class="math-box" style="text-align: center;">
+          \[ N = \underbrace{4}_{d_1} \times \underbrace{5}_{d_2} \times \underbrace{5}_{d_3} \times \underbrace{5}_{d_4} \times \underbrace{5}_{d_5} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Izračunavamo rezultat</h3>
+        <p>Najpre izračunamo \(5^4\):</p>
+        <div class="math-box">
+          \[ 5^4 = 5 \times 5 \times 5 \times 5 = 25 \times 25 = 625 \]
+        </div>
+        <p>Zatim množimo sa 4:</p>
+        <div class="math-box" style="border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.06);">
+          \[ N = 4 \times 625 = 2500 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details>
+      <summary>Proveri se: Kako se rezultat može dobiti i alternativnim putem?</summary>
+      <div class="details-content">
+        <p>Alternativni pristup: Zamislimo da na sve pozicije (uključujući prvu) stavimo bilo koju od 5 parnih cifara. To daje \(5^5 = 3125\) kombinacija.</p>
+        <p>Od toga oduzmemo one gde je \(d_1 = 0\) (jer tada broj nije petocifren). Kad je \(d_1 = 0\), preostale 4 cifre se biraju na \(5^4 = 625\) načina.</p>
+        <p>\[ N = 5^5 - 5^4 = 3125 - 625 = 2500 \]</p>
+        <p>Isti rezultat! Ovaj pristup koristi <strong>metod komplementa</strong>.</p>
+      </div>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Verifikacija</h3>
+        <p>Proverimo da rezultat ima smisla:</p>
+        <ul style="list-style: disc; padding-left: 20px; margin: 8px 0;">
+          <li>Ukupno petocifrenih brojeva: \(99\,999 - 10\,000 + 1 = 90\,000\).</li>
+          <li>Naš rezultat \(2\,500\) je oko \(2{,}8\%\) od toga.</li>
+          <li>Verovatnoća da je jedna cifra parna je \(\frac{5}{10} = \frac{1}{2}\), a za prvu cifru (1-9) je \(\frac{4}{9}\).</li>
+          <li>Procena: \(90\,000 \times \frac{4}{9} \times \left(\frac{1}{2}\right)^4 = 90\,000 \times \frac{4}{9} \times \frac{1}{16} = 2\,500\). Tačno se poklapa!</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details>
+      <summary>Proveri se: Koji je najmanji, a koji najveci petocifreni broj sa svim parnim ciframa?</summary>
+      <div class="details-content">
+        <p>Najmanji: \(20\,000\) (prva cifra 2, ostale sve 0).</p>
+        <p>Najveci: \(88\,888\) (sve cifre 8).</p>
+        <p>Ovaj opseg je dovoljno veliki da sadrži 2500 takvih brojeva — rezultat je razuman.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Ceo zadatak se svodi na prepoznavanje da je prva cifra posebna — ona ne može biti 0. Ovo smanjuje broj izbora za prvu poziciju sa 5 na 4, dok sve ostale pozicije imaju punu slobodu od 5 izbora. Primena pravila proizvoda daje elegantan izraz:</p>
+    <div class="math-box" style="text-align: center; font-size: 1.15rem; border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.06);">
+      \[ N = 4 \times 5^4 = 4 \times 625 = \boxed{2500} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <h2 style="color: #34d399; margin-bottom: 10px;">Konačan odgovor</h2>
+    <div class="answer-value">\(2500\)</div>
+    <div class="options-grid">
+      <span class="option-chip correct">(A) \(2500\)</span>
+      <span class="option-chip">(B) \(3715\)</span>
+      <span class="option-chip">(C) \(4500\)</span>
+      <span class="option-chip">(D) \(2000\)</span>
+      <span class="option-chip">(E) \(10000\)</span>
+    </div>
+    <div class="provera-note">
+      <strong>Verifikacija:</strong> Alternativnim pristupom: \(5^5 - 5^4 = 3125 - 625 = 2500\). Takođe, procenom verovatnoće: \(90\,000 \times \frac{4}{9} \times \frac{1}{16} = 2\,500\). Svi putevi daju isti rezultat.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-box">
+    <h2>Česte greške</h2>
+    <ul style="list-style: disc; padding-left: 20px; color: #e2e8f0;">
+      <li style="margin-bottom: 10px;"><strong>Zaboraviti ograničenje za prvu cifru:</strong> Ako se računa \(5^5 = 3125\), uključuju se i „brojevi" koji počinju nulom (npr. 02468), a to nisu petocifreni brojevi. Mora se oduzeti \(5^4 = 625\) takvih slučajeva, ili jednostavno staviti 4 izbora za prvu cifru od početka.</li>
+      <li style="margin-bottom: 10px;"><strong>Mešanje sa zadacima bez ponavljanja:</strong> U ovom zadatku cifre se <em>mogu ponavljati</em> (npr. 22222 je validan petocifreni broj sa svim parnim ciframa). Zadatak ne traži da cifre budu <em>različite</em>. Da se traže različite cifre, rezultat bi bio \(4 \times 4 \times 3 \times 2 \times 1 = 96\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-box">
+    <h2>Bonus izazov</h2>
+    <p>Koliko ima petocifrenih prirodnih brojeva kod kojih su sve cifre <strong>neparne</strong>?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="details-content">
+        <p>Neparne cifre su: \(\{1, 3, 5, 7, 9\}\) — ukupno 5 cifara. Ključna razlika: <strong>nijedna od njih nije 0</strong>, pa nema ograničenja za prvu cifru!</p>
+        <p>Svaka od 5 pozicija ima 5 izbora, dakle \(N = 5^5 = 3125\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('digitSlider');
+  const digitValueSpan = document.getElementById('digitValue');
+
+  const evenDigits = [0, 2, 4, 6, 8];
+  const nonZeroEven = [2, 4, 6, 8];
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    canvas.style.height = '520px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width;
+    const H = 520;
+
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const numDigits = parseInt(slider.value);
+    digitValueSpan.textContent = numDigits;
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(numDigits + '-cifreni brojevi sa svim parnim ciframa', W / 2, 30);
+
+    // Draw digit slots
+    const slotW = Math.min(90, (W - 60) / numDigits - 12);
+    const slotH = 140;
+    const totalSlotsW = numDigits * slotW + (numDigits - 1) * 12;
+    const startX = (W - totalSlotsW) / 2;
+    const slotY = 60;
+
+    for (let i = 0; i < numDigits; i++) {
+      const x = startX + i * (slotW + 12);
+      const isFirst = i === 0;
+      const choices = isFirst ? 4 : 5;
+      const digits = isFirst ? '2, 4, 6, 8' : '0, 2, 4, 6, 8';
+
+      // Slot background
+      const grad = ctx.createLinearGradient(x, slotY, x, slotY + slotH);
+      if (isFirst) {
+        grad.addColorStop(0, 'rgba(244,114,182,0.12)');
+        grad.addColorStop(1, 'rgba(244,114,182,0.04)');
+      } else {
+        grad.addColorStop(0, 'rgba(96,165,250,0.12)');
+        grad.addColorStop(1, 'rgba(96,165,250,0.04)');
+      }
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(x, slotY, slotW, slotH, 10);
+      ctx.fill();
+
+      // Slot border
+      ctx.strokeStyle = isFirst ? 'rgba(244,114,182,0.35)' : 'rgba(96,165,250,0.25)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, slotY, slotW, slotH, 10);
+      ctx.stroke();
+
+      // Position label
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      const posLabel = 'd' + (i + 1);
+      ctx.fillText(posLabel, x + slotW / 2, slotY + 22);
+
+      // Choice count
+      ctx.fillStyle = isFirst ? '#f472b6' : '#60a5fa';
+      ctx.font = 'bold 32px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(choices.toString(), x + slotW / 2, slotY + 62);
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(choices === 4 ? 'izbora' : 'izbora', x + slotW / 2, slotY + 80);
+
+      // Available digits
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px Courier New, monospace';
+      if (slotW >= 70) {
+        ctx.fillText(digits, x + slotW / 2, slotY + 105);
+      } else {
+        const parts = digits.split(', ');
+        const line1 = parts.slice(0, 3).join(', ');
+        const line2 = parts.slice(3).join(', ');
+        ctx.fillText(line1, x + slotW / 2, slotY + 100);
+        if (line2) ctx.fillText(line2, x + slotW / 2, slotY + 114);
+      }
+
+      // Special label for first digit
+      if (isFirst) {
+        ctx.fillStyle = '#f472b6';
+        ctx.font = 'bold 10px Segoe UI, system-ui, sans-serif';
+        ctx.fillText('bez 0!', x + slotW / 2, slotY + 132);
+      }
+
+      // Multiply signs
+      if (i < numDigits - 1) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+        ctx.fillText('\u00D7', x + slotW + 6, slotY + slotH / 2 + 4);
+      }
+    }
+
+    // Formula section
+    const formulaY = slotY + slotH + 40;
+
+    // Formula background
+    ctx.fillStyle = 'rgba(96,165,250,0.06)';
+    ctx.beginPath();
+    ctx.roundRect(40, formulaY - 10, W - 80, 60, 10);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(96,165,250,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(40, formulaY - 10, W - 80, 60, 10);
+    ctx.stroke();
+
+    // Build formula string
+    const total = 4 * Math.pow(5, numDigits - 1);
+    let formulaStr = 'N = 4';
+    for (let i = 1; i < numDigits; i++) {
+      formulaStr += ' \u00D7 5';
+    }
+    formulaStr += ' = 4 \u00D7 5';
+    if (numDigits - 1 > 1) {
+      formulaStr += superscript(numDigits - 1);
+    }
+    formulaStr += ' = ' + total.toLocaleString('sr-RS');
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(formulaStr, W / 2, formulaY + 24);
+
+    // Result highlight
+    const resultY = formulaY + 80;
+
+    // Glow effect
+    const glow = ctx.createRadialGradient(W / 2, resultY + 10, 0, W / 2, resultY + 10, 200);
+    glow.addColorStop(0, 'rgba(52,211,153,0.12)');
+    glow.addColorStop(1, 'rgba(52,211,153,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, resultY - 30, W, 80);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 36px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(total.toLocaleString('sr-RS'), W / 2, resultY + 18);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(numDigits + '-cifrenih brojeva sa svim parnim ciframa', W / 2, resultY + 42);
+
+    // Comparison bar chart at the bottom
+    const chartY = resultY + 70;
+    const chartH = H - chartY - 30;
+    const barW = Math.min(100, (W - 120) / 3);
+    const barGap = 20;
+    const totalBarsW = 3 * barW + 2 * barGap;
+    const barStartX = (W - totalBarsW) / 2;
+
+    const totalAll = Math.pow(10, numDigits) - Math.pow(10, numDigits - 1); // all n-digit numbers
+    const totalEven = total;
+    const totalOdd = Math.pow(5, numDigits); // all digits odd (no 0 restriction for first digit since all odd)
+
+    const maxVal = totalAll;
+    const scale = maxVal > 0 ? (chartH - 30) / maxVal : 1;
+
+    const bars = [
+      { label: 'Svi ' + numDigits + '-cifreni', value: totalAll, color: '#475569' },
+      { label: 'Sve parne', value: totalEven, color: '#60a5fa' },
+      { label: 'Sve neparne', value: totalOdd, color: '#a78bfa' }
+    ];
+
+    bars.forEach(function(bar, i) {
+      const bx = barStartX + i * (barW + barGap);
+      const bh = Math.max(2, bar.value * scale);
+      const by = chartY + chartH - 20 - bh;
+
+      // Bar
+      const barGrad = ctx.createLinearGradient(bx, by, bx, by + bh);
+      barGrad.addColorStop(0, bar.color);
+      barGrad.addColorStop(1, bar.color + '88');
+      ctx.fillStyle = barGrad;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, barW, bh, [6, 6, 0, 0]);
+      ctx.fill();
+
+      // Value on top
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(bar.value.toLocaleString('sr-RS'), bx + barW / 2, by - 6);
+
+      // Label below
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(bar.label, bx + barW / 2, chartY + chartH - 4);
+    });
+  }
+
+  function superscript(n) {
+    const sups = {
+      '0': '\u2070', '1': '\u00B9', '2': '\u00B2', '3': '\u00B3',
+      '4': '\u2074', '5': '\u2075', '6': '\u2076', '7': '\u2077',
+      '8': '\u2078', '9': '\u2079'
+    };
+    return String(n).split('').map(function(c) { return sups[c] || c; }).join('');
+  }
+
+  slider.addEventListener('input', draw);
+
+  // Step click highlighting
+  document.querySelectorAll('.step-container').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      step.classList.toggle('active');
+    });
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Petocifreni brojevi sa parnim ciframa",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "pravilo proizvoda", "brojanje", "parne cifre", "petocifreni brojevi"]
+}
+BRAINSPARK_META-->

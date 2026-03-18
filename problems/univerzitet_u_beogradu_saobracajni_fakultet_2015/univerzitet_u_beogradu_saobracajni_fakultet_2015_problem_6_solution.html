@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algebarski izrazi — razlika stepena i kub zbira</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem:
+  Given a = 1,251 and b = 0,749, compute:
+    (a^6 - b^6) / (a^3 - b^3) + 3ab(a + b)
+
+Step 1: Observe key relationship
+  a + b = 1,251 + 0,749 = 2,000 = 2
+
+Step 2: Simplify the fraction (a^6 - b^6) / (a^3 - b^3)
+  Using difference of squares factorization:
+    a^6 - b^6 = (a^3)^2 - (b^3)^2 = (a^3 - b^3)(a^3 + b^3)
+  Therefore:
+    (a^6 - b^6) / (a^3 - b^3) = (a^3 - b^3)(a^3 + b^3) / (a^3 - b^3) = a^3 + b^3
+  (valid since a ≠ b, so a^3 - b^3 ≠ 0)
+
+Step 3: Combine
+  Expression = a^3 + b^3 + 3ab(a + b)
+
+Step 4: Recognize the identity
+  Recall: (a + b)^3 = a^3 + 3a^2*b + 3a*b^2 + b^3
+                     = a^3 + b^3 + 3ab(a + b)
+  This is exactly our expression!
+
+Step 5: Compute
+  Expression = (a + b)^3 = 2^3 = 8
+
+Answer: (B) 8
+
+Verification: The answer matches the exam key (B) 8. Confirmed.
+
+Alternative verification by direct computation:
+  a*b = 1,251 * 0,749 = 0,936999
+  3ab(a+b) = 3 * 0,936999 * 2 = 5,621994
+  a^3 = 1,251^3 ≈ 1,957816...
+  b^3 = 0,749^3 ≈ 0,420190...
+  a^3 + b^3 ≈ 2,378006...
+  Total ≈ 2,378006 + 5,621994 = 8,000000. Confirmed.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step-container:hover,
+.step-container.active {
+  background: rgba(96,165,250,0.05);
+  border-left: 3px solid #4ade80;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.step-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 10px 14px;
+  background: rgba(96,165,250,0.08);
+  border-radius: 8px;
+  list-style: none;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: '▸ ';
+}
+
+details[open] summary::before {
+  content: '▾ ';
+}
+
+details .details-content {
+  padding: 14px;
+  margin-top: 8px;
+  background: rgba(96,165,250,0.04);
+  border-radius: 8px;
+  border-left: 3px solid #60a5fa;
+}
+
+.checkpoint {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.2);
+  border-radius: 10px;
+  padding: 14px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #34d399;
+  background: rgba(52,211,153,0.1);
+}
+
+.checkpoint .details-content {
+  border-left-color: #34d399;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box .insight-formula {
+  font-size: 1.3rem;
+  margin: 14px 0;
+}
+
+.final-answer {
+  text-align: center;
+  padding: 30px;
+}
+
+.final-answer .answer-value {
+  font-size: 2rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.answer-options .opt {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  font-size: 1.1rem;
+  transition: all 0.2s;
+}
+
+.answer-options .opt.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(52,211,153,0.05);
+  border-radius: 8px;
+  border-left: 3px solid #34d399;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: rgba(224,148,104,0.08);
+  border-left: 3px solid #e09468;
+  border-radius: 6px;
+  color: #e2e8f0;
+}
+
+.pitfall-list li strong {
+  color: #e09468;
+}
+
+.plan-text {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+canvas {
+  touch-action: none;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .step-container { padding: 12px; }
+  .answer-options { gap: 8px; }
+  .answer-options .opt { padding: 8px 14px; font-size: 1rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Algebarski izrazi — razlika stepena i kub zbira</h1>
+  <p class="subtitle">Pojednostavljivanje algebarskog izraza pomoću faktorizacije i formule za kub zbira</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako je \( a = 1{,}251 \) i \( b = 0{,}749 \), onda izraz</p>
+    <div class="math-block">
+      \[ \frac{a^6 - b^6}{a^3 - b^3} + 3ab(a + b) \]
+    </div>
+    <p>ima vrednost:</p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">\(a\)</div>
+        <div class="value">\(1{,}251\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">\(b\)</div>
+        <div class="value">\(0{,}749\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top: 16px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(8\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(27\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(16\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2>Plan rešavanja</h2>
+    <p class="plan-text">
+      Primetićemo da je \( a + b = 2 \). Zatim ćemo faktorizovati razliku \( a^6 - b^6 \) kao razliku kvadrata,
+      skratiti razlomak, i prepoznati da ceo izraz ima oblik <span class="highlight">kuba zbira</span> \( (a+b)^3 \).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="details-content">
+        <ul style="list-style: disc; padding-left: 20px;">
+          <li><strong>Razlika kvadrata:</strong> \( x^2 - y^2 = (x - y)(x + y) \)</li>
+          <li><strong>Kub zbira:</strong> \( (a + b)^3 = a^3 + 3a^2b + 3ab^2 + b^3 = a^3 + b^3 + 3ab(a + b) \)</li>
+          <li><strong>Primena na šeste stepene:</strong> \( a^6 - b^6 = (a^3)^2 - (b^3)^2 = (a^3 - b^3)(a^3 + b^3) \)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color: #94a3b8; margin-bottom: 12px;">Grafički prikaz kako se izraz transformiše korak po korak</p>
+    <canvas id="diagram" width="700" height="320" style="width:100%; border-radius:10px; background:#0c1222;"></canvas>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Uočimo ključnu vezu</h3>
+        <p>Pre nego što krenemo u računanje, pogledajmo zbir datih brojeva:</p>
+        <div class="math-block">
+          \[ a + b = 1{,}251 + 0{,}749 = 2 \]
+        </div>
+        <p class="step-note">Ovo je „lepa" vrednost — znak da treba tražiti algebarsku formulu.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Faktorizujmo brojilac razlomka</h3>
+        <p>Izraz \( a^6 - b^6 \) možemo shvatiti kao razliku kvadrata, gde je \( x = a^3 \) i \( y = b^3 \):</p>
+        <div class="math-block">
+          \[ a^6 - b^6 = (a^3)^2 - (b^3)^2 = (a^3 - b^3)(a^3 + b^3) \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Skratimo razlomak</h3>
+        <p>Pošto je \( a \neq b \), važi \( a^3 - b^3 \neq 0 \), pa možemo skratiti:</p>
+        <div class="math-block">
+          \[ \frac{a^6 - b^6}{a^3 - b^3} = \frac{(a^3 - b^3)(a^3 + b^3)}{a^3 - b^3} = a^3 + b^3 \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri se: Šta je \( \frac{a^6 - b^6}{a^3 - b^3} \) nakon skraćivanja?</summary>
+      <div class="details-content">
+        <p>Odgovor: \( a^3 + b^3 \). Razlomak se svodi na zbir kubova!</p>
+      </div>
+    </details>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Zapišimo ceo izraz</h3>
+        <p>Sada naš izraz postaje:</p>
+        <div class="math-block">
+          \[ a^3 + b^3 + 3ab(a + b) \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Prepoznajmo formulu za kub zbira</h3>
+        <p>Setimo se formule za kub zbira dva broja:</p>
+        <div class="math-block">
+          \[ (a + b)^3 = a^3 + 3a^2b + 3ab^2 + b^3 \]
+        </div>
+        <p>Izraz \( 3a^2b + 3ab^2 \) možemo grupisati:</p>
+        <div class="math-block">
+          \[ 3a^2b + 3ab^2 = 3ab(a + b) \]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[ (a + b)^3 = a^3 + b^3 + 3ab(a + b) \]
+        </div>
+        <p class="step-note">A to je upravo naš izraz!</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🔍 Proveri se: Koliko je \( (a + b)^3 \) ako je \( a + b = 2 \)?</summary>
+      <div class="details-content">
+        <p>Odgovor: \( 2^3 = 8 \).</p>
+      </div>
+    </details>
+
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Izračunajmo konačnu vrednost</h3>
+        <p>Pošto je \( a + b = 2 \), zaključujemo:</p>
+        <div class="math-block">
+          \[ \frac{a^6 - b^6}{a^3 - b^3} + 3ab(a + b) = (a + b)^3 = 2^3 = \boxed{8} \]
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2 style="color: #a78bfa; margin-bottom: 10px;">Ključni uvid</h2>
+    <p style="color: #94a3b8;">Ceo izraz je zapravo kub zbira \( (a+b)^3 \) u „prerušenom" obliku:</p>
+    <div class="insight-formula">
+      \[ \frac{a^6 - b^6}{a^3 - b^3} + 3ab(a + b) = (a+b)^3 = 2^3 = \color{#4ade80}{8} \]
+    </div>
+    <p style="color: #94a3b8;">Konkretne vrednosti \( a \) i \( b \) nisu nam ni bile potrebne — samo njihov zbir!</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\( 8 \)</div>
+
+    <div class="answer-options">
+      <span class="opt">(A) \(1\)</span>
+      <span class="opt correct">(B) \(8\)</span>
+      <span class="opt">(C) \(4\)</span>
+      <span class="opt">(D) \(27\)</span>
+      <span class="opt">(E) \(16\)</span>
+    </div>
+
+    <div class="verification">
+      <strong>Verifikacija:</strong> Možemo i numerički proveriti: \( a \cdot b = 1{,}251 \times 0{,}749 \approx 0{,}937 \),
+      pa je \( 3ab(a+b) \approx 3 \times 0{,}937 \times 2 \approx 5{,}622 \). Takođe,
+      \( a^3 + b^3 \approx 1{,}958 + 0{,}420 \approx 2{,}378 \). Ukupno: \( 5{,}622 + 2{,}378 = 8{,}000 \). Tačno!
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li><strong>Pokušaj direktnog računanja:</strong> Stepenovanje decimalnih brojeva na šesti stepen bez algebarskog pojednostavljivanja je nepotrebno komplikovano i podložno greškama u zaokruživanju.</li>
+      <li><strong>Neprepoznavanje formule:</strong> Ako ne uočimo da je \( a^3 + b^3 + 3ab(a+b) = (a+b)^3 \), zadatak izgleda mnogo teži nego što zaista jeste. Ključ je poznavati varijantu formule kuba zbira.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2>Dodatni izazov</h2>
+    <p>Ako je \( a + b = 3 \), koliko iznosi izraz \( \dfrac{a^6 - b^6}{a^3 - b^3} + 3ab(a+b) \)?</p>
+    <details>
+      <summary>Prikaži nagoveštaj</summary>
+      <div class="details-content">
+        <p>Koristi isti postupak — ceo izraz je \( (a+b)^3 \). Koliko je \( 3^3 \)?</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click highlighting
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas diagram
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Transformacija izraza', W / 2, 25);
+
+    // Box settings
+    const boxH = 52;
+    const boxR = 10;
+    const arrowColor = '#60a5fa';
+
+    // Row 1: Original expression
+    const y1 = 50;
+    drawRoundedBox(ctx, 50, y1, W - 100, boxH, '#1e293b', '#334155');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '15px Courier New, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('(a\u2076 \u2212 b\u2076) / (a\u00B3 \u2212 b\u00B3) + 3ab(a + b)', W / 2, y1 + 32);
+
+    // Arrow down
+    drawArrow(ctx, W / 2, y1 + boxH + 2, W / 2, y1 + boxH + 28, arrowColor);
+
+    // Label for arrow
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('a\u2076 \u2212 b\u2076 = (a\u00B3 \u2212 b\u00B3)(a\u00B3 + b\u00B3)', W / 2 + 20, y1 + boxH + 20);
+
+    // Row 2: After simplification
+    const y2 = y1 + boxH + 32;
+    drawRoundedBox(ctx, 50, y2, W - 100, boxH, '#1e293b', '#334155');
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '15px Courier New, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('a\u00B3 + b\u00B3 + 3ab(a + b)', W / 2, y2 + 32);
+
+    // Arrow down
+    drawArrow(ctx, W / 2, y2 + boxH + 2, W / 2, y2 + boxH + 28, arrowColor);
+
+    // Label for arrow
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Formula: (a + b)\u00B3 = a\u00B3 + b\u00B3 + 3ab(a + b)', W / 2 + 20, y2 + boxH + 20);
+
+    // Row 3: Cube of sum
+    const y3 = y2 + boxH + 32;
+    drawRoundedBox(ctx, 150, y3, W - 300, boxH, 'rgba(96,165,250,0.12)', 'rgba(167,139,250,0.4)');
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = '16px Courier New, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('(a + b)\u00B3', W / 2, y3 + 32);
+
+    // Arrow down
+    drawArrow(ctx, W / 2, y3 + boxH + 2, W / 2, y3 + boxH + 28, '#4ade80');
+
+    // Label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('a + b = 1,251 + 0,749 = 2', W / 2 + 20, y3 + boxH + 20);
+
+    // Row 4: Final result
+    const y4 = y3 + boxH + 32;
+    drawRoundedBox(ctx, 220, y4, W - 440, boxH, 'rgba(52,211,153,0.15)', '#4ade80');
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 22px Courier New, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('2\u00B3 = 8', W / 2, y4 + 34);
+  }
+
+  function drawRoundedBox(c, x, y, w, h, fill, stroke) {
+    const r = 10;
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.lineTo(x + w - r, y);
+    c.quadraticCurveTo(x + w, y, x + w, y + r);
+    c.lineTo(x + w, y + h - r);
+    c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    c.lineTo(x + r, y + h);
+    c.quadraticCurveTo(x, y + h, x, y + h - r);
+    c.lineTo(x, y + r);
+    c.quadraticCurveTo(x, y, x + r, y);
+    c.closePath();
+    c.fillStyle = fill;
+    c.fill();
+    c.strokeStyle = stroke;
+    c.lineWidth = 1.5;
+    c.stroke();
+  }
+
+  function drawArrow(c, x1, y1, x2, y2, color) {
+    c.beginPath();
+    c.moveTo(x1, y1);
+    c.lineTo(x2, y2);
+    c.strokeStyle = color;
+    c.lineWidth = 2;
+    c.stroke();
+
+    // Arrowhead
+    const size = 6;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    c.beginPath();
+    c.moveTo(x2, y2);
+    c.lineTo(x2 - size * Math.cos(angle - Math.PI / 6), y2 - size * Math.sin(angle - Math.PI / 6));
+    c.lineTo(x2 - size * Math.cos(angle + Math.PI / 6), y2 - size * Math.sin(angle + Math.PI / 6));
+    c.closePath();
+    c.fillStyle = color;
+    c.fill();
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje algebarskog izraza — kub zbira",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kub zbira", "razlika stepena", "faktorizacija", "algebarski izrazi", "polinomi"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kompleksni brojevi — stepenovanje i deljenje</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Compute the value of (1-i)^2020 / (1+i)^2018 + 2i
+
+Strategy: Simplify the fraction (1-i)/(1+i) first, then use powers of i.
+
+Step 1: Simplify (1-i)/(1+i)
+  Multiply numerator and denominator by the conjugate of the denominator (1-i):
+  (1-i)/(1+i) = (1-i)(1-i) / ((1+i)(1-i))
+              = (1-i)^2 / (1 - i^2)
+              = (1 - 2i + i^2) / (1 - (-1))
+              = (1 - 2i - 1) / 2
+              = -2i / 2
+              = -i
+
+Step 2: Rewrite the expression
+  (1-i)^2020 / (1+i)^2018
+  = ((1-i)/(1+i))^2018 * (1-i)^2
+  Factor: split (1-i)^2020 = (1-i)^2018 * (1-i)^2
+  So: (1-i)^2018 / (1+i)^2018 * (1-i)^2
+    = ((1-i)/(1+i))^2018 * (1-i)^2
+
+Step 3: Compute ((1-i)/(1+i))^2018
+  = (-i)^2018 (from Step 1)
+  2018 = 4*504 + 2
+  (-i)^4 = ((-i)^2)^2 = (-1)^2 = 1
+  So (-i)^2018 = (-i)^(4*504+2) = ((-i)^4)^504 * (-i)^2
+               = 1^504 * (-i)^2
+               = (-i)^2
+               = i^2
+               = -1
+
+Step 4: Compute (1-i)^2
+  (1-i)^2 = 1 - 2i + i^2 = 1 - 2i - 1 = -2i
+
+Step 5: Multiply
+  (-1) * (-2i) = 2i
+
+Step 6: Add 2i
+  2i + 2i = 4i
+
+Answer: (B) 4i ✓
+
+Verification: The answer matches the given correct answer (B) 4i.
+
+Alternative verification using modulus-argument form:
+  1-i = sqrt(2) * e^(-iπ/4), 1+i = sqrt(2) * e^(iπ/4)
+  (1-i)^2020 = (sqrt(2))^2020 * e^(-i*2020π/4) = 2^1010 * e^(-i*505π)
+  (1+i)^2018 = (sqrt(2))^2018 * e^(i*2018π/4) = 2^1009 * e^(i*504.5π)
+  Ratio = 2^(1010-1009) * e^(-i*505π - i*504.5π) = 2 * e^(-i*1009.5π)
+  e^(-i*1009.5π) = e^(-i*1009.5π)
+  1009.5 mod 2 = 1.5 → e^(-i*1.5π) = e^(i*π/2) = i
+  So ratio = 2*i = 2i
+  Total: 2i + 2i = 4i ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+}
+
+.checkpoint details {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.number-line-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 6px 14px; font-size: 0.95rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Stepenovanje kompleksnih brojeva</h1>
+  <p class="subtitle">Množenje i deljenje stepena kompleksnih brojeva \(1-i\) i \(1+i\) — korišćenje konjugata i cikličnosti stepena od \(i\)</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Vrednost izraza:
+      <div class="math-box">
+        \[ \frac{(1-i)^{2020}}{(1+i)^{2018}} + 2i \]
+      </div>
+      je:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(4i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(2+2i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-2+2i\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(1\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Ključna ideja je da razlomak \(\frac{(1-i)^{2020}}{(1+i)^{2018}}\) rastavimo tako što izdvojimo zajednički eksponent. Prvo ćemo izračunati količnik \(\frac{1-i}{1+i}\) množeći konjugatom, a zatim koristiti <strong>cikličnost stepena imaginarne jedinice</strong> \(i\) (period 4) da pojednostavimo rezultat. Na kraju dodajemo \(2i\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Množenje konjugatom kompleksnog broja</summary>
+      <p style="margin-top: 8px;">
+        Da bismo pojednostavili razlomak dva kompleksna broja, množimo brojilac i imenilac <strong>konjugatom imenioca</strong>:
+      </p>
+      <div class="math-box">
+        \[ \frac{z_1}{z_2} = \frac{z_1 \cdot \overline{z_2}}{z_2 \cdot \overline{z_2}} = \frac{z_1 \cdot \overline{z_2}}{|z_2|^2} \]
+      </div>
+      <p>
+        Konjugat broja \(a+bi\) je \(a-bi\), a proizvod \((a+bi)(a-bi) = a^2 + b^2 = |a+bi|^2\).
+      </p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Cikličnost stepena imaginarne jedinice \(i\)</summary>
+      <p style="margin-top: 8px;">
+        Stepeni broja \(i\) se ponavljaju sa periodom 4:
+      </p>
+      <div class="math-box">
+        \[ i^0 = 1, \quad i^1 = i, \quad i^2 = -1, \quad i^3 = -i, \quad i^4 = 1, \quad \ldots \]
+      </div>
+      <p>
+        Za izračunavanje \(i^n\), dovoljno je naći ostatak pri deljenju eksponenta sa 4: \(i^n = i^{n \bmod 4}\). Isto važi i za \((-i)^n\).
+      </p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Binomna formula za \((a-b)^2\)</summary>
+      <div class="math-box" style="margin-top: 8px;">
+        \[ (a-b)^2 = a^2 - 2ab + b^2 \]
+      </div>
+      <p>
+        Primenjeno na kompleksne brojeve: \((1-i)^2 = 1 - 2i + i^2 = 1 - 2i - 1 = -2i\).
+      </p>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz: stepeni od \(-i\) na kompleksnoj ravni</div>
+    <canvas id="mainCanvas" width="900" height="500"></canvas>
+    <p class="drag-hint">Dijagram prikazuje ciklično kretanje stepena broja \(-i\) na jediničnom krugu u kompleksnoj ravni</p>
+    <div class="number-line-legend">
+      <div class="legend-item"><span class="legend-dot" style="background: #60a5fa;"></span> Stepeni \((-i)^n\)</div>
+      <div class="legend-item"><span class="legend-dot" style="background: #a78bfa;"></span> Jedinični krug</div>
+      <div class="legend-item"><span class="legend-dot" style="background: #4ade80;"></span> Rezultat \((-i)^{2018} = -1\)</div>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Rastavi razlomak na pogodne faktore</div>
+      <p class="step-explanation">
+        Rastavimo eksponent u brojiocu: \((1-i)^{2020} = (1-i)^{2018} \cdot (1-i)^2\). Tada razlomak postaje:
+      </p>
+      <div class="math-box">
+        \[ \frac{(1-i)^{2020}}{(1+i)^{2018}} = \frac{(1-i)^{2018} \cdot (1-i)^2}{(1+i)^{2018}} = \left(\frac{1-i}{1+i}\right)^{2018} \cdot (1-i)^2 \]
+      </div>
+      <p class="step-explanation" style="color: #94a3b8; font-size: 0.95rem;">
+        Koristili smo pravilo za stepene: \(a^{m+n} = a^m \cdot a^n\), gde je \(2020 = 2018 + 2\).
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Pojednostavi količnik \(\frac{1-i}{1+i}\)</div>
+      <p class="step-explanation">
+        Množimo brojilac i imenilac konjugatom imenioca, tj. sa \((1-i)\):
+      </p>
+      <div class="math-box">
+        \[ \frac{1-i}{1+i} = \frac{(1-i)(1-i)}{(1+i)(1-i)} = \frac{(1-i)^2}{1^2 + 1^2} = \frac{(1-i)^2}{2} \]
+      </div>
+      <p class="step-explanation">
+        Sada razvijemo \((1-i)^2\) koristeći formulu za kvadrat razlike:
+      </p>
+      <div class="math-box">
+        \[ (1-i)^2 = 1 - 2i + i^2 = 1 - 2i + (-1) = -2i \]
+      </div>
+      <p class="step-explanation">
+        Dakle:
+      </p>
+      <div class="math-box">
+        \[ \frac{1-i}{1+i} = \frac{-2i}{2} = -i \]
+      </div>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri sebe: Koliko je \(|{-i}|\)?</summary>
+          <p>
+            Moduo broja \(-i\) je \(|-i| = \sqrt{0^2 + (-1)^2} = 1\). Ovo znači da \(-i\) leži na jediničnom krugu, pa stepenovanje ne menja moduo — samo rotira tačku po krugu.
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Izračunaj \((-i)^{2018}\)</div>
+      <p class="step-explanation">
+        Pošto se stepeni od \(-i\) ponavljaju sa periodom 4, nađimo ostatak pri deljenju: \(2018 \div 4\).
+      </p>
+      <div class="math-box">
+        \[ 2018 = 4 \cdot 504 + 2 \]
+      </div>
+      <p class="step-explanation">
+        Ostatak je <span class="highlight-blue">\(2\)</span>, pa:
+      </p>
+      <div class="math-box">
+        \[ (-i)^{2018} = (-i)^{4 \cdot 504 + 2} = \big((-i)^4\big)^{504} \cdot (-i)^2 \]
+      </div>
+      <p class="step-explanation">
+        Izračunajmo \((-i)^4\):
+      </p>
+      <div class="math-box">
+        \[ (-i)^2 = i^2 = -1, \qquad (-i)^4 = \big((-i)^2\big)^2 = (-1)^2 = 1 \]
+      </div>
+      <p class="step-explanation">
+        Zamenjujemo:
+      </p>
+      <div class="math-box">
+        \[ (-i)^{2018} = 1^{504} \cdot (-1) = -1 \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Izračunaj \((1-i)^2\)</div>
+      <p class="step-explanation">
+        Ovo smo već uradili u koraku 2, ali ponovimo radi jasnoće:
+      </p>
+      <div class="math-box">
+        \[ (1-i)^2 = 1 - 2i + i^2 = 1 - 2i - 1 = -2i \]
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko je \((-1) \cdot (-2i)\)?</summary>
+        <p>
+          \((-1) \cdot (-2i) = 2i\). Minus puta minus daje plus: \(-1 \cdot (-2i) = +2i\).
+        </p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Pomnoži rezultate</div>
+      <p class="step-explanation">
+        Sada kombinujemo rezultate iz koraka 3 i 4:
+      </p>
+      <div class="math-box">
+        \[ \left(\frac{1-i}{1+i}\right)^{2018} \cdot (1-i)^2 = (-i)^{2018} \cdot (-2i) = (-1) \cdot (-2i) = 2i \]
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">6</span> Dodaj \(2i\) za konačan rezultat</div>
+      <p class="step-explanation">
+        Konačno, saberimo dobijeni rezultat sa \(2i\) iz polaznog izraza:
+      </p>
+      <div class="math-box">
+        \[ \frac{(1-i)^{2020}}{(1+i)^{2018}} + 2i = 2i + 2i = 4i \]
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Da li je \(4i\) čisto imaginaran broj?</summary>
+        <p>
+          Da! Broj \(4i = 0 + 4i\) ima realni deo jednak nuli i imaginarni deo jednak 4. To je čisto imaginaran broj koji leži na imaginarnoj osi u kompleksnoj ravni.
+        </p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Čitav zadatak se svodi na jedno elegantno zapažanje: količnik \(\frac{1-i}{1+i} = -i\). Kada to znamo, visoki eksponenti prestaju da budu zastrašujući — koristimo cikličnost stepena od \(i\) (period 4) da svedemo \((-i)^{2018}\) na jednostavan broj. Ostatak \(2018 \div 4 = 2\) nam kaže da je \((-i)^{2018} = (-i)^2 = -1\).
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ \frac{(1-i)^{2020}}{(1+i)^{2018}} + 2i = (-1)(-2i) + 2i = 2i + 2i = 4i \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(4i\)</div>
+    <div class="final-options">
+      <span class="final-option" data-option="A">(A) \(0\)</span>
+      <span class="final-option correct" data-option="B">(B) \(4i\)</span>
+      <span class="final-option" data-option="C">(C) \(2+2i\)</span>
+      <span class="final-option" data-option="D">(D) \(-2+2i\)</span>
+      <span class="final-option" data-option="E">(E) \(1\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(\frac{1-i}{1+i} = -i\), pa \((-i)^{2018} = -1\), i \((-1) \cdot (-2i) + 2i = 2i + 2i = 4i\) &#10004; Rezultat je čisto imaginaran broj, što odgovara ponuđenom odgovoru (B).
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešno pojednostavljivanje količnika \(\frac{1-i}{1+i}\)</div>
+      <p>Česta greška je da se „skrate" \(1\)-ce ili da se dobije \(\frac{-i}{i} = -1\) umesto ispravnog \(-i\). Uvek koristite metodu množenja konjugatom: pomnožite i brojilac i imenilac sa \((1-i)\) i koristite formulu \((a+b)(a-b) = a^2 - b^2\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Greška u cikličnosti stepena od \(-i\)</div>
+      <p>Neki učenici mešaju stepene od \(i\) i \(-i\). Zapamtite: \((-i)^1 = -i\), \((-i)^2 = -1\), \((-i)^3 = i\), \((-i)^4 = 1\). Ostatak \(2018 \div 4 = 2\) daje \((-i)^{2018} = (-i)^2 = -1\), a ne \(i^2 = -1\) iz drugačijeg niza. Rezultat je isti, ali logika mora biti ispravna.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Izračunaj vrednost sličnog izraza sa drugačijim eksponentom:
+    </p>
+    <div class="math-box">
+      \[ \frac{(1-i)^{2021}}{(1+i)^{2019}} + 3i \]
+    </div>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>
+        Koristi isti pristup: rastavi na \(\left(\frac{1-i}{1+i}\right)^{2019} \cdot (1-i)^2\). Pošto je \(2019 = 4 \cdot 504 + 3\), imaš \((-i)^{2019} = (-i)^3\). Koliko je \((-i)^3\)?
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 500;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const cx = W * 0.38;
+    const cy = H * 0.5;
+    const R = Math.min(W * 0.25, H * 0.35);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Stepeni broja (-i) na kompleksnoj ravni', W / 2, 28);
+
+    ctx.beginPath();
+    ctx.moveTo(cx - R - 40, cy);
+    ctx.lineTo(cx + R + 40, cy);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - R - 40);
+    ctx.lineTo(cx, cy + R + 40);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Re', cx + R + 20, cy - 6);
+    ctx.textAlign = 'center';
+    ctx.fillText('Im', cx + 10, cy - R - 20);
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(167, 139, 250, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    var points = [
+      { x: 1, y: 0, label: '(-i)\u2070 = 1', n: 0 },
+      { x: 0, y: -1, label: '(-i)\u00B9 = -i', n: 1 },
+      { x: -1, y: 0, label: '(-i)\u00B2 = -1', n: 2 },
+      { x: 0, y: 1, label: '(-i)\u00B3 = i', n: 3 }
+    ];
+
+    var arrowColors = ['#60a5fa', '#38bdf8', '#a78bfa', '#818cf8'];
+
+    for (var idx = 0; idx < 4; idx++) {
+      var from = points[idx];
+      var to = points[(idx + 1) % 4];
+
+      var fx = cx + from.x * R;
+      var fy = cy - from.y * R;
+      var tx = cx + to.x * R;
+      var ty = cy - to.y * R;
+
+      var midAngle = Math.atan2(-(to.y + from.y) / 2, (to.x + from.x) / 2);
+      var controlR = R * 1.15;
+      var cpx = cx + Math.cos(midAngle) * controlR * (idx % 2 === 0 ? 1 : 1);
+      var cpy = cy - Math.sin(midAngle) * controlR * (idx % 2 === 0 ? 1 : 1);
+
+      var startAngle, endAngle;
+      if (idx === 0) { startAngle = -0.15; endAngle = -Math.PI / 2 + 0.15; }
+      else if (idx === 1) { startAngle = -Math.PI / 2 - 0.15; endAngle = -Math.PI + 0.15; }
+      else if (idx === 2) { startAngle = Math.PI - 0.15; endAngle = Math.PI / 2 + 0.15; }
+      else { startAngle = Math.PI / 2 - 0.15; endAngle = 0.15; }
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 0.85, startAngle, endAngle, true);
+      ctx.strokeStyle = arrowColors[idx];
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.5;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      var arrowAngle = endAngle;
+      var ax = cx + Math.cos(arrowAngle) * R * 0.85;
+      var ay = cy + Math.sin(arrowAngle) * R * 0.85;
+      var tangent = arrowAngle - Math.PI / 2;
+      var as = 8;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax - as * Math.cos(tangent - 0.4), ay - as * Math.sin(tangent - 0.4));
+      ctx.lineTo(ax - as * Math.cos(tangent + 0.4), ay - as * Math.sin(tangent + 0.4));
+      ctx.closePath();
+      ctx.fillStyle = arrowColors[idx];
+      ctx.globalAlpha = 0.6;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    for (var idx = 0; idx < points.length; idx++) {
+      var p = points[idx];
+      var px = cx + p.x * R;
+      var py = cy - p.y * R;
+      var isResult = (p.n === 2);
+
+      ctx.beginPath();
+      ctx.arc(px, py, isResult ? 10 : 7, 0, 2 * Math.PI);
+      ctx.fillStyle = isResult ? '#4ade80' : '#60a5fa';
+      ctx.fill();
+
+      if (isResult) {
+        ctx.beginPath();
+        ctx.arc(px, py, 14, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#4ade80';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = isResult ? '#4ade80' : '#e2e8f0';
+      ctx.font = (isResult ? 'bold ' : '') + '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+
+      var labelX = px;
+      var labelY = py;
+      if (p.x === 1) { labelX += 12; ctx.textAlign = 'left'; labelY -= 14; }
+      else if (p.x === -1) { labelX -= 12; ctx.textAlign = 'right'; labelY -= 14; }
+      else if (p.y === 1) { labelY -= 20; }
+      else { labelY += 24; }
+
+      ctx.fillText(p.label, labelX, labelY);
+    }
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('1', cx + R + 5, cy + 16);
+    ctx.fillText('-1', cx - R - 8, cy + 16);
+    ctx.fillText('i', cx + 12, cy - R - 4);
+    ctx.fillText('-i', cx + 14, cy + R + 16);
+
+    var infoX = W * 0.75;
+    var infoY = H * 0.18;
+    var infoW = W * 0.4;
+    var infoH = 320;
+
+    ctx.beginPath();
+    ctx.roundRect(infoX - infoW / 2, infoY, infoW, infoH, 12);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Kako nalazimo (-i)\u00B2\u2070\u00B9\u2078:', infoX - infoW / 2 + 16, infoY + 28);
+
+    var lines = [
+      { text: '2018 \u00F7 4 = 504, ostatak 2', color: '#e2e8f0', y: 60 },
+      { text: '(-i)\u2074 = 1  (period = 4)', color: '#a78bfa', y: 88 },
+      { text: '(-i)\u00B2\u2070\u00B9\u2078 = ((-i)\u2074)\u2075\u2070\u2074 \u00B7 (-i)\u00B2', color: '#e2e8f0', y: 116 },
+      { text: '= 1\u2075\u2070\u2074 \u00B7 (-1) = -1', color: '#4ade80', y: 144 },
+      { text: '', color: '', y: 164 },
+      { text: 'Konačno:', color: '#94a3b8', y: 180 },
+      { text: '(-1) \u00B7 (-2i) = 2i', color: '#e2e8f0', y: 208 },
+      { text: '2i + 2i = 4i', color: '#4ade80', y: 236 },
+      { text: '', color: '', y: 256 },
+      { text: 'Odgovor: (B) 4i', color: '#4ade80', y: 285 }
+    ];
+
+    for (var li = 0; li < lines.length; li++) {
+      var ln = lines[li];
+      if (!ln.text) continue;
+      ctx.fillStyle = ln.color;
+      ctx.font = (li === lines.length - 1 ? 'bold ' : '') + '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(ln.text, infoX - infoW / 2 + 16, infoY + ln.y);
+    }
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje kompleksnih brojeva (1-i) i (1+i)",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "imaginarna jedinica", "stepenovanje", "konjugat", "cikličnost stepena"]
+}
+BRAINSPARK_META-->

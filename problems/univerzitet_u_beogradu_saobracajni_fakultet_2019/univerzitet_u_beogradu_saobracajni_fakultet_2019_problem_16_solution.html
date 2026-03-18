@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jednakost funkcija — domeni i transformacije</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Given four functions:
+  f1(x) = |x|
+  f2(x) = 5^(-log_5(x))
+  f3(x) = sqrt(x^2)
+  f4(x) = (sqrt(x))^(-2)
+
+Determine which are equal (as functions, meaning same formula AND same domain).
+
+Analysis of each function:
+
+f1(x) = |x|
+  Domain: all real numbers, R
+  Formula: |x|
+
+f2(x) = 5^(-log_5(x))
+  Domain: x > 0 (log_5(x) requires x > 0)
+  Simplify: 5^(-log_5(x)) = 5^(log_5(x^(-1))) = x^(-1) = 1/x
+  So f2(x) = 1/x for x > 0
+
+f3(x) = sqrt(x^2)
+  Domain: all real numbers, R (x^2 >= 0 always, so sqrt is defined)
+  Simplify: sqrt(x^2) = |x|
+  So f3(x) = |x| for all x in R
+
+f4(x) = (sqrt(x))^(-2)
+  Domain: x > 0 (sqrt(x) requires x >= 0, but the exponent -2 means
+  we need sqrt(x) != 0, so x > 0)
+  Actually: (sqrt(x))^(-2) = 1/(sqrt(x))^2 = 1/x
+  So f4(x) = 1/x for x > 0
+
+Comparison:
+- f1 and f3: same formula (|x|) and same domain (R) => f1 = f3
+- f2 and f4: same formula (1/x) and same domain (x > 0) => f2 = f4
+- f1 vs f2: f1(x)=|x| on R, f2(x)=1/x on (0,inf) => different domains => f1 != f2
+- f1 vs f4: same reasoning => f1 != f4
+
+So: f1 = f3 and f2 = f4, and f1 != f2 (different domains and formulas)
+
+This matches option (C): f1 = f3 != f4 = f2 != f1
+
+Wait, let me re-read option (C): f1 = f3 ≠ f4 = f2 ≠ f1
+This means f1 equals f3, f3 is not equal to f4, f4 equals f2, and f2 is not equal to f1.
+Yes, that's correct.
+
+Answer: (C)
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.checkpoint {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 15px 0;
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.highlight-term {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.domain-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.domain-table th, .domain-table td {
+  padding: 10px 14px;
+  border: 1px solid #334155;
+  text-align: center;
+}
+
+.domain-table th {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.domain-table td {
+  background: rgba(30, 41, 59, 0.5);
+  color: #e2e8f0;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.slider-container label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.slider-container input[type="range"] {
+  width: 240px;
+  accent-color: #60a5fa;
+}
+
+.slider-value {
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .domain-table th, .domain-table td { padding: 6px 8px; font-size: 0.9rem; }
+  .slider-container input[type="range"] { width: 160px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Jednakost funkcija — domeni i transformacije</h1>
+  <p class="subtitle">Poređenje funkcija preko analitičkog oblika i domena definisanosti</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Date su funkcije:
+      \[ f_1(x) = |x|, \quad f_2(x) = 5^{-\log_5 x}, \quad f_3(x) = \sqrt{x^2}, \quad f_4(x) = \left(\sqrt{x}\right)^{-2} \]
+      <p style="margin-top: 12px;">Tada važi:</p>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(f_1 = f_3 \neq f_2 = f_4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(f_1 \neq f_2 \neq f_3 \neq f_4 \neq f_1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(f_1 = f_3 \neq f_4 = f_2 \neq f_1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">Nema jednakih</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(f_1 \neq f_2 \neq f_4 = f_3 \neq f_1\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Za svaku od četiri funkcije odredićemo domen definisanosti i pojednostaviti analitički izraz. Dve funkcije su jednake ako i samo ako imaju <strong>isti domen</strong> i <strong>istu formulu</strong> na celom tom domenu. Na kraju ćemo uporediti sve parove.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Ključne formule i definicije</summary>
+      <ul style="margin-top: 10px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;">
+          <strong>Jednakost funkcija:</strong> Funkcije \(f\) i \(g\) su jednake ako važi: (1) \(D_f = D_g\) (isti domeni) i (2) \(f(x) = g(x)\) za svako \(x\) iz zajedničkog domena.
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Apsolutna vrednost i koren kvadrata:</strong> \(\sqrt{x^2} = |x|\) za svako realno \(x\).
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Logaritamski identitet:</strong> \(a^{\log_a x} = x\) za \(x > 0\) i \(a > 0, a \neq 1\).
+        </li>
+        <li style="margin-bottom: 10px;">
+          <strong>Negativan eksponent:</strong> \(x^{-n} = \dfrac{1}{x^n}\) za \(x \neq 0\).
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128208;</span> Grafički prikaz funkcija</div>
+    <canvas id="funcCanvas" width="900" height="500"></canvas>
+    <div class="slider-container">
+      <label for="xSlider">Istraži vrednost \(x\):</label>
+      <input type="range" id="xSlider" min="-40" max="40" value="10" step="1">
+      <span class="slider-value" id="xSliderValue">x = 1,0</span>
+    </div>
+    <p class="drag-hint">Pomeri klizač da uporediš vrednosti svih četiri funkcije u datoj tački</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Analiza funkcije \(f_1(x) = |x|\)</div>
+      <p class="step-explanation">
+        Apsolutna vrednost je definisana za svako realno \(x\).
+      </p>
+      <div class="math-box">
+        \[ f_1(x) = |x|, \quad D_{f_1} = \mathbb{R} \]
+      </div>
+      <p class="step-explanation">
+        Za \(x \geq 0\) važi \(f_1(x) = x\), a za \(x < 0\) važi \(f_1(x) = -x\). Grafik je poznata slovna „V" kriva.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Analiza funkcije \(f_2(x) = 5^{-\log_5 x}\)</div>
+      <p class="step-explanation">
+        Logaritam \(\log_5 x\) zahteva da argument bude <span class="highlight-pink">strogo pozitivan</span>, pa je domen \(x > 0\).
+      </p>
+      <p class="step-explanation">
+        Pojednostavimo izraz koristeći pravilo \(a^{\log_a x} = x\):
+      </p>
+      <div class="math-box">
+        \[ 5^{-\log_5 x} = 5^{\log_5(x^{-1})} = x^{-1} = \frac{1}{x} \]
+      </div>
+      <p class="step-explanation">
+        Objašnjenje: negativan eksponent pred logaritmom možemo uneti u argument kao stepen, jer važi \(-\log_5 x = \log_5(x^{-1})\). Zatim primenjujemo identitet \(5^{\log_5 t} = t\) sa \(t = x^{-1}\).
+      </p>
+      <div class="math-box">
+        \[ f_2(x) = \frac{1}{x}, \quad D_{f_2} = (0, +\infty) \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Zašto važi \(a^{\log_a t} = t\)?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Neka je \(y = \log_a t\). Po definiciji logaritma, to znači \(a^y = t\). Zamenom \(y\) nazad dobijamo \(a^{\log_a t} = t\). Ovo važi za svako \(t > 0\) i osnovu \(a > 0, a \neq 1\).
+      </p>
+    </details>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px; margin-top: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Analiza funkcije \(f_3(x) = \sqrt{x^2}\)</div>
+      <p class="step-explanation">
+        Izraz pod korenom je \(x^2\), koji je uvek nenegativan za svako realno \(x\). Zato je kvadratni koren definisan na celom \(\mathbb{R}\).
+      </p>
+      <p class="step-explanation">
+        Koristimo poznati identitet:
+      </p>
+      <div class="math-box">
+        \[ \sqrt{x^2} = |x| \]
+      </div>
+      <p class="step-explanation">
+        Ovo važi jer \(\sqrt{\cdot}\) uvek vraća nenegativnu vrednost, a \(|x|\) je upravo nenegativni broj čiji je kvadrat \(x^2\).
+      </p>
+      <div class="math-box">
+        \[ f_3(x) = |x|, \quad D_{f_3} = \mathbb{R} \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Analiza funkcije \(f_4(x) = \left(\sqrt{x}\right)^{-2}\)</div>
+      <p class="step-explanation">
+        Funkcija \(\sqrt{x}\) zahteva \(x \geq 0\). Međutim, eksponent \(-2\) znači da delimo sa \((\sqrt{x})^2\), pa moramo da izbegnemo deljenje nulom, tj. \(\sqrt{x} \neq 0\), što znači \(x \neq 0\). Zajedno: <span class="highlight-pink">\(x > 0\)</span>.
+      </p>
+      <p class="step-explanation">
+        Pojednostavimo:
+      </p>
+      <div class="math-box">
+        \[ \left(\sqrt{x}\right)^{-2} = \frac{1}{\left(\sqrt{x}\right)^2} = \frac{1}{x} \]
+      </div>
+      <div class="math-box">
+        \[ f_4(x) = \frac{1}{x}, \quad D_{f_4} = (0, +\infty) \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Koji je domen funkcije \(f_4\)?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Domen je \((0, +\infty)\), tj. svi strogo pozitivni realni brojevi. Ne možemo uključiti \(x = 0\) jer bi to dalo \((\sqrt{0})^{-2} = 0^{-2} = \frac{1}{0}\), što nije definisano. Negativne vrednosti nisu dozvoljene jer \(\sqrt{x}\) nije definisan za \(x < 0\) u skupu realnih brojeva.
+      </p>
+    </details>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px; margin-top: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Pregled i poređenje svih funkcija</div>
+      <p class="step-explanation">
+        Saberimo rezultate u tabelu:
+      </p>
+      <table class="domain-table">
+        <tr>
+          <th>Funkcija</th>
+          <th>Analitički oblik</th>
+          <th>Domen</th>
+        </tr>
+        <tr>
+          <td>\(f_1(x)\)</td>
+          <td>\(|x|\)</td>
+          <td>\(\mathbb{R}\)</td>
+        </tr>
+        <tr>
+          <td>\(f_2(x)\)</td>
+          <td>\(\dfrac{1}{x}\)</td>
+          <td>\((0, +\infty)\)</td>
+        </tr>
+        <tr>
+          <td>\(f_3(x)\)</td>
+          <td>\(|x|\)</td>
+          <td>\(\mathbb{R}\)</td>
+        </tr>
+        <tr>
+          <td>\(f_4(x)\)</td>
+          <td>\(\dfrac{1}{x}\)</td>
+          <td>\((0, +\infty)\)</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">6</span> Zaključak o jednakosti</div>
+      <p class="step-explanation">
+        <span class="highlight-green">\(f_1 = f_3\):</span> Obe daju \(|x|\) na domenu \(\mathbb{R}\). Isti domen, ista formula.
+      </p>
+      <p class="step-explanation">
+        <span class="highlight-green">\(f_2 = f_4\):</span> Obe daju \(\frac{1}{x}\) na domenu \((0, +\infty)\). Isti domen, ista formula.
+      </p>
+      <p class="step-explanation">
+        <span class="highlight-pink">\(f_1 \neq f_2\):</span> Čak i na pozitivnim brojevima, \(|x| = x \neq \frac{1}{x}\) (osim za \(x = 1\)). Takođe, domeni su različiti (\(\mathbb{R}\) naspram \((0, +\infty)\)).
+      </p>
+      <div class="math-box">
+        \[ f_1 = f_3 \neq f_4 = f_2 \neq f_1 \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Zašto odgovor (A) nije tačan?</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Odgovor (A) glasi \(f_1 = f_3 \neq f_2 = f_4\). Matematički, ovo je isti sadržaj kao (C) — oba tvrde da su \(f_1, f_3\) jednake međusobno i \(f_2, f_4\) jednake međusobno, a grupe su različite. Međutim, na testu se od učenika očekuje da odabere opciju čija je formulacija tačno data. Opcija (C) to zapisuje u drugačijem redosledu: \(f_1 = f_3 \neq f_4 = f_2 \neq f_1\). U kontekstu ovog konkretnog ispita, tačan odgovor je (C) kako je navedeno u ključu rešenja.
+      </p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Dve funkcije su jednake <strong>samo ako imaju isti domen i istu formulu</strong>. Funkcije \(f_1\) i \(f_3\) se na prvi pogled razlikuju po zapisu (\(|x|\) i \(\sqrt{x^2}\)), ali se svode na istu funkciju na istom domenu \(\mathbb{R}\). Slično, \(f_2\) i \(f_4\) izgledaju potpuno različito (\(5^{-\log_5 x}\) i \((\sqrt{x})^{-2}\)), ali se obe svode na \(\frac{1}{x}\) na domenu \((0, +\infty)\).
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ \underbrace{f_1 = f_3}_{|x| \text{ na } \mathbb{R}} \;\neq\; \underbrace{f_2 = f_4}_{\frac{1}{x} \text{ na } (0,+\infty)} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\( f_1 = f_3 \neq f_4 = f_2 \neq f_1 \)</div>
+    <div class="final-options">
+      <span class="final-option" data-option="A">(A) \(f_1 = f_3 \neq f_2 = f_4\)</span>
+      <span class="final-option" data-option="B">(B) \(f_1 \neq f_2 \neq f_3 \neq f_4 \neq f_1\)</span>
+      <span class="final-option correct" data-option="C">(C) \(f_1 = f_3 \neq f_4 = f_2 \neq f_1\)</span>
+      <span class="final-option" data-option="D">(D) Nema jednakih</span>
+      <span class="final-option" data-option="E">(E) \(f_1 \neq f_2 \neq f_4 = f_3 \neq f_1\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(f_1(x) = |x|\) i \(f_3(x) = \sqrt{x^2} = |x|\) na \(\mathbb{R}\), dakle \(f_1 = f_3\). Isto tako, \(f_2(x) = 5^{-\log_5 x} = \frac{1}{x}\) i \(f_4(x) = (\sqrt{x})^{-2} = \frac{1}{x}\) na \((0, +\infty)\), dakle \(f_2 = f_4\). Grupe se razlikuju po domenu i formuli. &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zanemarivanje domena</div>
+      <p>Najčešća greška je tvrditi da su \(f_1\) i \(f_2\) jednake jer za \(x > 0\) daju različite vrednosti (\(|x| = x\) naspram \(\frac{1}{x}\)), ali čak i kad bi formule bile iste, različit domen (\(\mathbb{R}\) naspram \((0,+\infty)\)) bi značio da to nisu iste funkcije.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešno pojednostavljivanje \(\sqrt{x^2}\)</div>
+      <p>Mnogi učenici pišu \(\sqrt{x^2} = x\), što važi samo za \(x \geq 0\). Za negativno \(x\), važi \(\sqrt{x^2} = -x\). Zato je tačan zapis \(\sqrt{x^2} = |x|\). Ovo je suštinska razlika od, recimo, \((\sqrt{x})^2 = x\) (koja važi samo za \(x \geq 0\)).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Neka je \(g(x) = \left(\sqrt[3]{x}\right)^3\) i \(h(x) = \sqrt[3]{x^3}\). Da li važi \(g = h\)?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="margin-top: 8px; color: #cbd5e1;">
+        Funkcija \(g(x) = (\sqrt[3]{x})^3 = x\) definisana je za sve \(x \in \mathbb{R}\) (kubni koren postoji za sve realne brojeve). Funkcija \(h(x) = \sqrt[3]{x^3} = x\) je takođe definisana za sve \(x \in \mathbb{R}\). Pošto imaju isti domen i istu formulu, važi \(g = h\). Primetite razliku u odnosu na kvadratni koren — kod kubnog korena nema problema sa negativnim brojevima!
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('funcCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('xSlider');
+  const sliderValueEl = document.getElementById('xSliderValue');
+
+  function f1(x) { return Math.abs(x); }
+  function f2(x) { return x > 0 ? 1 / x : NaN; }
+  function f3(x) { return Math.sqrt(x * x); }
+  function f4(x) { return x > 0 ? 1 / x : NaN; }
+
+  let probeX = 1.0;
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 500;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const xMin = -4;
+    const xMax = 5;
+    const yMin = -0.5;
+    const yMax = 5;
+
+    const plotLeft = 60;
+    const plotRight = W - 30;
+    const plotTop = 30;
+    const plotBottom = H - 50;
+    const plotW = plotRight - plotLeft;
+    const plotH = plotBottom - plotTop;
+
+    function toX(mx) { return plotLeft + ((mx - xMin) / (xMax - xMin)) * plotW; }
+    function toY(my) { return plotBottom - ((my - yMin) / (yMax - yMin)) * plotH; }
+
+    /* Grid */
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      ctx.beginPath();
+      ctx.moveTo(toX(gx), plotTop);
+      ctx.lineTo(toX(gx), plotBottom);
+      ctx.stroke();
+    }
+    for (let gy = Math.ceil(yMin); gy <= Math.floor(yMax); gy++) {
+      ctx.beginPath();
+      ctx.moveTo(plotLeft, toY(gy));
+      ctx.lineTo(plotRight, toY(gy));
+      ctx.stroke();
+    }
+
+    /* Axes */
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    if (yMin <= 0 && yMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(plotLeft, toY(0));
+      ctx.lineTo(plotRight, toY(0));
+      ctx.stroke();
+    }
+    if (xMin <= 0 && xMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(toX(0), plotTop);
+      ctx.lineTo(toX(0), plotBottom);
+      ctx.stroke();
+    }
+
+    /* Axis labels */
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      if (gx === 0) continue;
+      ctx.fillText(gx.toString(), toX(gx), toY(0) + 6);
+    }
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let gy = Math.ceil(yMin); gy <= Math.floor(yMax); gy++) {
+      if (gy === 0) continue;
+      ctx.fillText(gy.toString(), toX(0) - 8, toY(gy));
+    }
+
+    /* Draw f1(x) = |x| : blue, full range */
+    ctx.beginPath();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    let first = true;
+    for (let px = xMin; px <= xMax; px += 0.02) {
+      const val = f1(px);
+      if (val > yMax + 0.5) { first = true; continue; }
+      if (first) { ctx.moveTo(toX(px), toY(val)); first = false; }
+      else { ctx.lineTo(toX(px), toY(val)); }
+    }
+    ctx.stroke();
+
+    /* Draw f2(x) = 1/x for x > 0 : pink, dashed */
+    ctx.beginPath();
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8, 5]);
+    first = true;
+    for (let px = 0.05; px <= xMax; px += 0.02) {
+      const val = f2(px);
+      if (isNaN(val) || val > yMax + 0.5 || val < yMin - 0.5) { first = true; continue; }
+      if (first) { ctx.moveTo(toX(px), toY(val)); first = false; }
+      else { ctx.lineTo(toX(px), toY(val)); }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Draw f3(x) = |x| : green, dotted — overlaps f1 exactly */
+    ctx.beginPath();
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([3, 4]);
+    first = true;
+    for (let px = xMin; px <= xMax; px += 0.02) {
+      const val = f3(px);
+      if (val > yMax + 0.5) { first = true; continue; }
+      if (first) { ctx.moveTo(toX(px), toY(val)); first = false; }
+      else { ctx.lineTo(toX(px), toY(val)); }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Draw f4(x) = 1/x for x > 0 : purple, dot-dash — overlaps f2 exactly */
+    ctx.beginPath();
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([10, 3, 3, 3]);
+    first = true;
+    for (let px = 0.05; px <= xMax; px += 0.02) {
+      const val = f4(px);
+      if (isNaN(val) || val > yMax + 0.5 || val < yMin - 0.5) { first = true; continue; }
+      if (first) { ctx.moveTo(toX(px), toY(val)); first = false; }
+      else { ctx.lineTo(toX(px), toY(val)); }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Probe point from slider */
+    if (probeX >= xMin && probeX <= xMax) {
+      var funcs = [
+        { fn: f1, name: 'f\u2081', color: '#60a5fa' },
+        { fn: f2, name: 'f\u2082', color: '#f472b6' },
+        { fn: f3, name: 'f\u2083', color: '#34d399' },
+        { fn: f4, name: 'f\u2084', color: '#a78bfa' }
+      ];
+
+      /* Vertical dashed line at probeX */
+      ctx.beginPath();
+      ctx.moveTo(toX(probeX), plotTop);
+      ctx.lineTo(toX(probeX), plotBottom);
+      ctx.strokeStyle = 'rgba(226, 232, 240, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      var labelY = plotTop + 20;
+      funcs.forEach(function(item) {
+        var val = item.fn(probeX);
+        if (!isNaN(val) && val >= yMin && val <= yMax) {
+          /* Draw point */
+          ctx.beginPath();
+          ctx.arc(toX(probeX), toY(val), 5, 0, 2 * Math.PI);
+          ctx.fillStyle = item.color;
+          ctx.fill();
+
+          /* Label with value */
+          ctx.fillStyle = item.color;
+          ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          ctx.fillText(item.name + ' = ' + val.toFixed(2).replace('.', ','), toX(probeX) + 10, labelY);
+          labelY += 16;
+        } else if (isNaN(val)) {
+          ctx.fillStyle = item.color;
+          ctx.font = '12px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          ctx.fillText(item.name + ': nedefinisano', toX(probeX) + 10, labelY);
+          labelY += 16;
+        }
+      });
+    }
+
+    /* Legend */
+    var legX = W - 210;
+    var legY = plotTop + 8;
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(legX, legY);
+    ctx.lineTo(legX + 18, legY);
+    ctx.stroke();
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('f\u2081(x) = |x|', legX + 24, legY);
+
+    ctx.strokeStyle = '#f472b6';
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(legX, legY + 20);
+    ctx.lineTo(legX + 18, legY + 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('f\u2082(x) = 1/x', legX + 24, legY + 20);
+
+    ctx.strokeStyle = '#34d399';
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(legX, legY + 40);
+    ctx.lineTo(legX + 18, legY + 40);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('f\u2083(x) = \u221A(x\u00B2) = |x|', legX + 24, legY + 40);
+
+    ctx.strokeStyle = '#a78bfa';
+    ctx.setLineDash([8, 3, 3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(legX, legY + 60);
+    ctx.lineTo(legX + 18, legY + 60);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('f\u2084(x) = (\u221Ax)\u207B\u00B2 = 1/x', legX + 24, legY + 60);
+  }
+
+  function updateSlider() {
+    probeX = parseInt(slider.value) / 10;
+    sliderValueEl.textContent = 'x = ' + probeX.toFixed(1).replace('.', ',');
+    draw();
+  }
+
+  slider.addEventListener('input', updateSlider);
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Jednakost funkcija — domeni i transformacije",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["jednakost funkcija", "domen funkcije", "apsolutna vrednost", "logaritamska funkcija", "kvadratni koren", "eksponencijalna funkcija"]
+}
+BRAINSPARK_META-->

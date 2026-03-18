@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neparni petocifreni brojevi sa različitim ciframa</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Koliko ima neparnih petocifrenih brojeva čije su sve cifre međusobno različite?
+
+Petocifreni broj ima oblik: d1 d2 d3 d4 d5
+- d1 ∈ {1,2,...,9} (prva cifra ne može biti 0)
+- d5 ∈ {1,3,5,7,9} (broj mora biti neparan)
+- Sve cifre moraju biti međusobno različite
+
+Strategija: Biram prvo poslednju cifru (d5), pa prvu cifru (d1), pa srednje cifre (d2, d3, d4).
+
+Korak 1: Biranje poslednje cifre d5
+  d5 mora biti neparna cifra: {1, 3, 5, 7, 9}
+  Broj izbora: 5
+
+Korak 2: Biranje prve cifre d1
+  d1 ≠ 0 i d1 ≠ d5
+  Od cifara {1,2,...,9} izbacimo d5, ostaje 8 cifara.
+  Broj izbora: 8
+
+Korak 3: Biranje srednje tri cifre d2, d3, d4
+  Preostale cifre: od ukupno 10 cifara (0-9), dve su već izabrane (d1 i d5).
+  Ostaje 8 cifara za d2, d3, d4 (uključujući 0).
+  d2: 8 izbora
+  d3: 7 izbora
+  d4: 6 izbora
+
+Ukupno: 5 × 8 × 8 × 7 × 6
+
+Preuredimo: 5 × 8 × 8 × 7 × 6 = 8 × 7 × 6 × (5 × 8) = 8 × 7 × 6 × 40
+
+Provera: 8 × 7 × 6 × 40 = 336 × 40 = 13440
+
+Odgovor: (A) 8·7·6·40
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.arrow {
+  color: #60a5fa;
+  margin: 0 4px;
+}
+
+.checkpoint {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.digit-slots {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.digit-slot {
+  background: rgba(96, 165, 250, 0.12);
+  border: 2px solid rgba(96, 165, 250, 0.3);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  min-width: 90px;
+}
+
+.digit-slot .slot-label {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+}
+
+.digit-slot .slot-value {
+  color: #60a5fa;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.digit-slot.highlight-green {
+  border-color: #34d399;
+}
+
+.digit-slot.highlight-green .slot-value {
+  color: #4ade80;
+}
+
+.digit-slot.highlight-purple {
+  border-color: #a78bfa;
+}
+
+.digit-slot.highlight-purple .slot-value {
+  color: #a78bfa;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .digit-slots { gap: 8px; }
+  .digit-slot { min-width: 60px; padding: 10px 6px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Neparni petocifreni brojevi sa različitim ciframa</h1>
+  <p class="subtitle">Kombinatorika — prebrojavanje pomoću pravila proizvoda uz ograničenja na cifre</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Koliko ima <strong>neparnih petocifrenih brojeva</strong> čije su <strong>sve cifre međusobno različite</strong>?
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(8 \cdot 7 \cdot 6 \cdot 40\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(8 \cdot 7 \cdot 6 \cdot 42\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(8 \cdot 7 \cdot 6 \cdot 35\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(8 \cdot 7 \cdot 6 \cdot 45\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(8 \cdot 7 \cdot 6 \cdot 48\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Koristićemo <strong>pravilo proizvoda</strong> uz pažljiv redosled biranja cifara.
+      <span class="arrow">&#8594;</span> Prvo biramo poslednju cifru (mora biti neparna).
+      <span class="arrow">&#8594;</span> Zatim biramo prvu cifru (ne sme biti 0 i mora biti različita od poslednje).
+      <span class="arrow">&#8594;</span> Na kraju biramo srednje tri cifre od preostalih.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik na teoriju</div>
+    <details>
+      <summary>Pravilo proizvoda (princip množenja)</summary>
+      <p style="margin-top: 8px;">
+        Ako se prvi izbor može izvršiti na \(n_1\) načina, drugi na \(n_2\) načina, ..., i \(k\)-ti na \(n_k\) načina, tada se svi izbori zajedno mogu izvršiti na:
+      </p>
+      <div class="math-box">
+        \[ n_1 \cdot n_2 \cdot \ldots \cdot n_k \text{ načina} \]
+      </div>
+      <p>Ovo važi pod uslovom da izbori ne zavise jedni od drugih (osim preko ograničenja „različitosti").</p>
+    </details>
+    <details>
+      <summary>Varijacije bez ponavljanja</summary>
+      <p style="margin-top: 8px;">
+        Broj načina da se od \(n\) elemenata izabere \(k\) elemenata gde je <strong>redosled bitan</strong> i <strong>ponavljanje zabranjeno</strong>:
+      </p>
+      <div class="math-box">
+        \[ V(n, k) = \frac{n!}{(n-k)!} = n \cdot (n-1) \cdot (n-2) \cdots (n-k+1) \]
+      </div>
+    </details>
+    <details>
+      <summary>Strategija biranja — prvo najograničenija pozicija</summary>
+      <p style="margin-top: 8px;">
+        Kada cifre imaju različita ograničenja na različitim pozicijama, uvek je najbolje <strong>prvo birati cifru na poziciji sa najviše ograničenja</strong>. Time izbegavamo komplikacije sa „grananjem" slučajeva.
+      </p>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz — struktura petocifrenog broja</div>
+    <canvas id="digitCanvas" width="900" height="420"></canvas>
+    <p style="color:#94a3b8; font-size:0.9rem; text-align:center; margin-top:10px;">
+      Dijagram prikazuje redosled biranja cifara i broj mogućnosti na svakoj poziciji.
+    </p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Struktura problema</div>
+      <p class="step-explanation">
+        Petocifreni broj ima oblik \(\overline{d_1 d_2 d_3 d_4 d_5}\), gde:
+      </p>
+      <div class="digit-slots">
+        <div class="digit-slot highlight-purple">
+          <div class="slot-label">Prva cifra \(d_1\)</div>
+          <div class="slot-value">\(\neq 0\)</div>
+        </div>
+        <div class="digit-slot">
+          <div class="slot-label">Druga cifra \(d_2\)</div>
+          <div class="slot-value">?</div>
+        </div>
+        <div class="digit-slot">
+          <div class="slot-label">Treća cifra \(d_3\)</div>
+          <div class="slot-value">?</div>
+        </div>
+        <div class="digit-slot">
+          <div class="slot-label">Četvrta cifra \(d_4\)</div>
+          <div class="slot-value">?</div>
+        </div>
+        <div class="digit-slot highlight-green">
+          <div class="slot-label">Peta cifra \(d_5\)</div>
+          <div class="slot-value">neparna</div>
+        </div>
+      </div>
+      <p class="step-explanation">
+        Imamo dva ograničenja: \(d_1 \neq 0\) (jer je petocifren) i \(d_5\) mora biti neparna cifra (jer je broj neparan). Sve cifre moraju biti <strong>međusobno različite</strong>.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Biranje poslednje cifre \(d_5\) (prvo — jer ima najviše ograničenja)</div>
+      <p class="step-explanation">
+        Poslednja cifra mora biti neparna. Neparne cifre su:
+      </p>
+      <div class="math-box">
+        \[ d_5 \in \{1,\; 3,\; 5,\; 7,\; 9\} \]
+      </div>
+      <p class="step-explanation">
+        Dakle, imamo <strong>5 mogućnosti</strong> za poslednju cifru.
+      </p>
+      <div class="checkpoint">Kontrolna tačka: \(d_5\) se bira na 5 načina.</div>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Biranje prve cifre \(d_1\)</div>
+      <p class="step-explanation">
+        Prva cifra ne sme biti 0 (jer bi broj bio četvorocifren), i mora biti različita od \(d_5\) (koji je već izabran).
+      </p>
+      <p class="step-explanation">
+        Od cifara \(\{1, 2, 3, 4, 5, 6, 7, 8, 9\}\) (9 cifara koje nisu nula), jedna je već iskorišćena za \(d_5\). Ostaje:
+      </p>
+      <div class="math-box">
+        \[ 9 - 1 = 8 \text{ mogućnosti za } d_1 \]
+      </div>
+      <details>
+        <summary>Proveri sebe: Zašto ne razmatramo slučaj \(d_5 = 0\)?</summary>
+        <p>Jer je 0 parna cifra, a mi biramo neparan broj. Nula nikad ne može biti poslednja cifra neparnog broja, pa se uopšte ne pojavljuje među kandidatima za \(d_5\).</p>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Biranje srednje tri cifre \(d_2, d_3, d_4\)</div>
+      <p class="step-explanation">
+        Od ukupno 10 cifara (0 do 9), dve su već iskorišćene (\(d_1\) i \(d_5\)). Preostaje <strong>8 cifara</strong> za preostale tri pozicije. Pošto svaka cifra mora biti različita:
+      </p>
+      <div class="math-box">
+        \[ d_2: \; 8 \text{ izbora} \]
+        \[ d_3: \; 7 \text{ izbora (jedna manje)} \]
+        \[ d_4: \; 6 \text{ izbora (još jedna manje)} \]
+      </div>
+      <p class="step-explanation">
+        Ovde cifra 0 <strong>jeste</strong> dopuštena na pozicijama \(d_2, d_3, d_4\) — ona samo ne sme biti na prvom mestu.
+      </p>
+      <div class="checkpoint">Kontrolna tačka: Srednje tri cifre se biraju na \(8 \cdot 7 \cdot 6\) načina.</div>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Primena pravila proizvoda</div>
+      <p class="step-explanation">
+        Ukupan broj neparnih petocifrenih brojeva sa različitim ciframa je:
+      </p>
+      <div class="math-box">
+        \[ N = \underbrace{5}_{d_5} \times \underbrace{8}_{d_1} \times \underbrace{8}_{d_2} \times \underbrace{7}_{d_3} \times \underbrace{6}_{d_4} \]
+      </div>
+      <p class="step-explanation">
+        Preuređujemo faktore da bismo prepoznali oblik iz ponuđenih odgovora:
+      </p>
+      <div class="math-box">
+        \[ N = 8 \cdot 7 \cdot 6 \cdot (5 \cdot 8) = 8 \cdot 7 \cdot 6 \cdot 40 \]
+      </div>
+      <details>
+        <summary>Proveri sebe: Koliko iznosi \(8 \cdot 7 \cdot 6 \cdot 40\)?</summary>
+        <p>\(8 \cdot 7 = 56\), zatim \(56 \cdot 6 = 336\), i konačno \(336 \cdot 40 = 13\,440\). Dakle, postoji ukupno 13.440 takvih brojeva.</p>
+      </details>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">6</span> Verifikacija rezultata</div>
+      <p class="step-explanation">
+        Proverimo red veličine. Petocifrenih brojeva ukupno ima \(9 \cdot 10^4 = 90\,000\). Od toga je polovina neparna, tj. oko 45.000. Uslov da su sve cifre različite smanjuje taj broj — 13.440 je oko 30% od 45.000, što je razumno.
+      </p>
+      <p class="step-explanation">
+        Alternativna provera: petocifrenih brojeva sa svim različitim ciframa ima \(9 \cdot 9 \cdot 8 \cdot 7 \cdot 6 = 27\,216\). Neparnih među njima je 13.440, što je skoro polovina (49,4%) — sasvim logično.
+      </p>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Redosled biranja cifara je presudan! Prvo biramo pozicije sa najviše ograničenja (\(d_5\) — mora biti neparna, \(d_1\) — ne sme biti 0). Tek nakon toga biramo srednje cifre, gde ograničenje „sve različite" automatski smanjuje broj izbora. Da smo počeli od \(d_1\), morali bismo razmatrati posebne slučajeve zavisno od toga da li je \(d_1\) parna ili neparna — a to bi komplikovalo račun.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(8 \cdot 7 \cdot 6 \cdot 40 = 13\,440\)</div>
+    <div class="final-options">
+      <span class="final-option correct" data-option="A">(A) \(8 \cdot 7 \cdot 6 \cdot 40\)</span>
+      <span class="final-option" data-option="B">(B) \(8 \cdot 7 \cdot 6 \cdot 42\)</span>
+      <span class="final-option" data-option="C">(C) \(8 \cdot 7 \cdot 6 \cdot 35\)</span>
+      <span class="final-option" data-option="D">(D) \(8 \cdot 7 \cdot 6 \cdot 45\)</span>
+      <span class="final-option" data-option="E">(E) \(8 \cdot 7 \cdot 6 \cdot 48\)</span>
+    </div>
+    <p class="verification-note">Verifikacija: \(5 \times 8 \times 8 \times 7 \times 6 = 8 \times 7 \times 6 \times 40 = 13\,440\). Rezultat je oko polovine svih petocifrenih brojeva sa različitim ciframa (27.216), što ima smisla jer je otprilike polovina brojeva neparna.</p>
+  </div>
+
+  <!-- Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešan redosled biranja — početi od \(d_1\)</div>
+      Ako počnemo biranje od \(d_1\), onda za \(d_5\) imamo nekad 5, a nekad 4 izbora (zavisno od toga da li je \(d_1\) neparna ili ne). To zahteva razdvajanje na dva slučaja i lako vodi do greške.
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboraviti da \(d_1 \neq 0\)</div>
+      Ako zanemarimo uslov \(d_1 \neq 0\), dobili bismo \(d_1\) sa 9 izbora (umesto 8), i rezultat bi bio pogrešan. Petocifreni broj ne može početi nulom!
+    </div>
+  </div>
+
+  <!-- Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Izazov za razmišljanje</div>
+    <p class="step-explanation">
+      Koliko ima <strong>parnih</strong> petocifrenih brojeva čije su sve cifre međusobno različite?
+    </p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <p>
+        Postupak je sličan, ali sada je \(d_5 \in \{0, 2, 4, 6, 8\}\). Pažnja: slučaj \(d_5 = 0\) se razlikuje od ostalih jer tada za \(d_1\) imamo 9 izbora (umesto 8). Razdvoji na dva slučaja!
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('digitCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const w = Math.min(rect.width - 48, 900);
+    const h = Math.round(w * 0.47);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw(w, h);
+  }
+
+  function draw(W, H) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const positions = [
+      { label: 'd\u2081', constraint: '\u2260 0, \u2260 d\u2085', choices: '8', color: '#a78bfa', order: 2 },
+      { label: 'd\u2082', constraint: 'slobodna', choices: '8', color: '#60a5fa', order: 3 },
+      { label: 'd\u2083', constraint: 'slobodna', choices: '7', color: '#60a5fa', order: 4 },
+      { label: 'd\u2084', constraint: 'slobodna', choices: '6', color: '#60a5fa', order: 5 },
+      { label: 'd\u2085', constraint: 'neparna', choices: '5', color: '#4ade80', order: 1 }
+    ];
+
+    const boxW = Math.min(120, (W - 80) / 5 - 16);
+    const boxH = boxW * 1.2;
+    const gap = (W - 5 * boxW) / 6;
+    const topY = 30;
+
+    // Draw digit boxes
+    for (let i = 0; i < 5; i++) {
+      const p = positions[i];
+      const x = gap + i * (boxW + gap);
+      const y = topY;
+
+      // Box
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 2.5;
+      roundRect(ctx, x, y, boxW, boxH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      // Position label
+      ctx.fillStyle = p.color;
+      ctx.font = 'bold ' + Math.max(14, boxW * 0.18) + 'px "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(p.label, x + boxW / 2, y + boxH * 0.3);
+
+      // Constraint
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = Math.max(11, boxW * 0.11) + 'px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText(p.constraint, x + boxW / 2, y + boxH * 0.52);
+
+      // Choices number
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold ' + Math.max(22, boxW * 0.28) + 'px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText(p.choices, x + boxW / 2, y + boxH * 0.8);
+
+      // "izbora" text
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = Math.max(10, boxW * 0.1) + 'px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText('izbora', x + boxW / 2, y + boxH * 0.95);
+    }
+
+    // Draw order of selection arrows below boxes
+    const arrowY = topY + boxH + 30;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold ' + Math.max(13, boxW * 0.14) + 'px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Redosled biranja:', W / 2, arrowY);
+
+    const orderY = arrowY + 30;
+    const orderPositions = [4, 0, 1, 2, 3]; // indices in order of selection
+    const orderLabels = ['d\u2085 (5)', 'd\u2081 (8)', 'd\u2082 (8)', 'd\u2083 (7)', 'd\u2084 (6)'];
+    const orderColors = ['#4ade80', '#a78bfa', '#60a5fa', '#60a5fa', '#60a5fa'];
+
+    const totalOrderW = W * 0.8;
+    const orderGap = totalOrderW / 5;
+    const orderStartX = (W - totalOrderW) / 2 + orderGap / 2;
+
+    for (let i = 0; i < 5; i++) {
+      const x = orderStartX + i * orderGap;
+
+      // Circle badge
+      ctx.beginPath();
+      ctx.arc(x, orderY, 16, 0, 2 * Math.PI);
+      ctx.fillStyle = orderColors[i];
+      ctx.globalAlpha = 0.2;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = orderColors[i];
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Number in circle
+      ctx.fillStyle = orderColors[i];
+      ctx.font = 'bold ' + Math.max(12, boxW * 0.13) + 'px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText(String(i + 1), x, orderY + 5);
+
+      // Label below
+      ctx.fillStyle = orderColors[i];
+      ctx.font = Math.max(12, boxW * 0.12) + 'px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText(orderLabels[i], x, orderY + 35);
+
+      // Arrow between
+      if (i < 4) {
+        const ax1 = x + 22;
+        const ax2 = orderStartX + (i + 1) * orderGap - 22;
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(ax1, orderY);
+        ctx.lineTo(ax2, orderY);
+        ctx.stroke();
+
+        // Arrowhead
+        ctx.beginPath();
+        ctx.moveTo(ax2, orderY);
+        ctx.lineTo(ax2 - 6, orderY - 4);
+        ctx.lineTo(ax2 - 6, orderY + 4);
+        ctx.closePath();
+        ctx.fillStyle = '#475569';
+        ctx.fill();
+      }
+    }
+
+    // Multiplication formula at the bottom
+    const formulaY = orderY + 65;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold ' + Math.max(15, boxW * 0.17) + 'px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('N = 5 \u00d7 8 \u00d7 8 \u00d7 7 \u00d7 6 = 8 \u00d7 7 \u00d7 6 \u00d7 40 = 13.440', W / 2, formulaY);
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.lineTo(x + w - r, y);
+    c.quadraticCurveTo(x + w, y, x + w, y + r);
+    c.lineTo(x + w, y + h - r);
+    c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    c.lineTo(x + r, y + h);
+    c.quadraticCurveTo(x, y + h, x, y + h - r);
+    c.lineTo(x, y + r);
+    c.quadraticCurveTo(x, y, x + r, y);
+    c.closePath();
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Neparni petocifreni brojevi sa različitim ciframa","subject":"math","unit":"combinatorics","topic_tags":["kombinatorika","prebrojavanje","pravilo proizvoda","petocifreni brojevi","varijacije bez ponavljanja"]}
+BRAINSPARK_META-->

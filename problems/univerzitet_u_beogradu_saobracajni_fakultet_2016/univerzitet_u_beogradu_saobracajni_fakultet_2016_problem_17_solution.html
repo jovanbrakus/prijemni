@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eksponencijalni sistem jednačina — supstitucija</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Ako je x = a, y = b rešenje sistema:
+  5^(x+1) - 2^(y+2) = 93
+  2·5^x + 3·2^y = 74
+onda je a + b = ?
+
+Korak 1: Uvesti smenu u = 5^x, v = 2^y.
+  Tada: 5^(x+1) = 5·5^x = 5u
+         2^(y+2) = 4·2^y = 4v
+
+Korak 2: Sistem postaje:
+  5u - 4v = 93   ... (1)
+  2u + 3v = 74   ... (2)
+
+Korak 3: Rešavanje linearnog sistema.
+  Iz (2): 2u = 74 - 3v  →  u = (74 - 3v)/2
+
+  Zamena u (1):
+  5·(74 - 3v)/2 - 4v = 93
+  (370 - 15v)/2 - 4v = 93
+  Pomnožimo sa 2:
+  370 - 15v - 8v = 186
+  370 - 23v = 186
+  23v = 184
+  v = 8
+
+  Dakle v = 8, tj. 2^y = 8 = 2³  →  y = 3.
+
+Korak 4: Nađimo u.
+  u = (74 - 3·8)/2 = (74 - 24)/2 = 50/2 = 25
+  Dakle u = 25, tj. 5^x = 25 = 5²  →  x = 2.
+
+Korak 5: a + b = x + y = 2 + 3 = 5.
+
+Verifikacija:
+  5^(2+1) - 2^(3+2) = 125 - 32 = 93  ✓
+  2·5² + 3·2³ = 2·25 + 3·8 = 50 + 24 = 74  ✓
+
+Odgovor: (E) 5
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+}
+
+.checkpoint details {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.number-line-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 6px 14px; font-size: 0.95rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Eksponencijalni sistem jednačina</h1>
+  <p class="subtitle">Algebra — rešavanje sistema jednačina sa eksponencijalnim izrazima pomoću smene</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Ako je \( x = a, \; y = b \) rešenje sistema jednačina:
+      \[ \begin{cases} 5^{x+1} - 2^{y+2} = 93 \\ 2 \cdot 5^x + 3 \cdot 2^y = 74 \end{cases} \]
+      onda je \( a + b \):
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(10\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(7\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-7\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(5\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Uvešćemo smenu \(u = 5^x\) i \(v = 2^y\) da bismo eksponencijalne izraze transformisali u linearne. Time dobijamo sistem od dve linearne jednačine sa dve nepoznate koji ćemo rešiti metodom zamene. Iz dobijenih vrednosti \(u\) i \(v\) odredićemo \(x\) i \(y\), pa izračunati \(a + b\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Pravila stepena i eksponencijalne funkcije</summary>
+      <ul style="margin: 10px 0 10px 20px; color: #cbd5e1;">
+        <li>Pravilo za proizvod stepena istih osnova: \( a^{m+n} = a^m \cdot a^n \)</li>
+        <li>Specijalno: \( 5^{x+1} = 5^x \cdot 5^1 = 5 \cdot 5^x \) i \( 2^{y+2} = 2^y \cdot 2^2 = 4 \cdot 2^y \)</li>
+        <li>Eksponencijalna funkcija \( a^x \) je bijekcija za \( a > 0, a \neq 1 \): ako je \( a^x = a^k \), onda je \( x = k \)</li>
+        <li>Metoda smene: složene izraze zamenjujemo novim promenljivama da bismo dobili jednostavniji oblik jednačina</li>
+      </ul>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Rešavanje linearnog sistema metodom zamene</summary>
+      <ul style="margin: 10px 0 10px 20px; color: #cbd5e1;">
+        <li>Iz jedne jednačine izrazimo jednu nepoznatu preko druge</li>
+        <li>Zamenimo taj izraz u drugu jednačinu</li>
+        <li>Dobijamo jednačinu sa jednom nepoznatom koju rešavamo</li>
+        <li>Vraćamo se u prvu jednačinu da odredimo drugu nepoznatu</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Grafički prikaz</div>
+    <canvas id="mainCanvas" width="900" height="500"></canvas>
+    <p class="drag-hint">Presek pravih \(5u - 4v = 93\) i \(2u + 3v = 74\) u \(uv\)-ravni</p>
+    <div class="number-line-legend">
+      <div class="legend-item"><span class="legend-dot" style="background: #60a5fa;"></span> \(5u - 4v = 93\)</div>
+      <div class="legend-item"><span class="legend-dot" style="background: #a78bfa;"></span> \(2u + 3v = 74\)</div>
+      <div class="legend-item"><span class="legend-dot" style="background: #4ade80;"></span> Presečna tačka \((25,\, 8)\)</div>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Transformacija eksponencijalnih izraza</div>
+      <p class="step-explanation">
+        Primetimo da se \(5^{x+1}\) i \(2^{y+2}\) mogu zapisati pomoću pravila stepena \(a^{m+n} = a^m \cdot a^n\):
+      </p>
+      <div class="math-box">
+        \[ 5^{x+1} = 5 \cdot 5^x \]
+        \[ 2^{y+2} = 4 \cdot 2^y \]
+      </div>
+      <p class="step-explanation">
+        Koristeći ove identitete, sistem postaje:
+      </p>
+      <div class="math-box">
+        \[ \begin{cases} 5 \cdot 5^x - 4 \cdot 2^y = 93 \\ 2 \cdot 5^x + 3 \cdot 2^y = 74 \end{cases} \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Uvođenje smene</div>
+      <p class="step-explanation">
+        Uvedimo nove promenljive da bismo dobili linearan sistem. Neka je:
+      </p>
+      <div class="math-box">
+        \[ u = 5^x, \qquad v = 2^y \]
+      </div>
+      <p class="step-explanation">
+        Sistem sada postaje sistem od <strong>dve linearne jednačine</strong> sa dve nepoznate \(u\) i \(v\):
+      </p>
+      <div class="math-box">
+        \[ \begin{cases} 5u - 4v = 93 & \quad \text{(I)} \\ 2u + 3v = 74 & \quad \text{(II)} \end{cases} \]
+      </div>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri sebe: Zašto smemo ovu smenu?</summary>
+          <p>
+            Jer su \(5^x > 0\) i \(2^y > 0\) za svako realno \(x\) i \(y\). Smena \(u = 5^x, v = 2^y\) je dobro definisana i obrnuta — iz pozitivne vrednosti \(u\) jednoznačno odredimo \(x = \log_5 u\), analogno za \(v\) i \(y\).
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Izražavanje \(u\) iz jednačine (II)</div>
+      <p class="step-explanation">
+        Iz druge jednačine izrazimo \(u\):
+      </p>
+      <div class="math-box">
+        \[ 2u + 3v = 74 \]
+        \[ 2u = 74 - 3v \]
+        \[ u = \frac{74 - 3v}{2} \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Zamena u jednačinu (I) i nalaženje \(v\)</div>
+      <p class="step-explanation">
+        Zamenimo izraz za \(u\) u prvu jednačinu:
+      </p>
+      <div class="math-box">
+        \[ 5 \cdot \frac{74 - 3v}{2} - 4v = 93 \]
+      </div>
+      <p class="step-explanation">
+        Pomnožimo obe strane sa \(2\) da eliminišemo razlomak:
+      </p>
+      <div class="math-box">
+        \[ 5(74 - 3v) - 8v = 186 \]
+        \[ 370 - 15v - 8v = 186 \]
+        \[ 370 - 23v = 186 \]
+      </div>
+      <p class="step-explanation">
+        Rešimo po \(v\):
+      </p>
+      <div class="math-box">
+        \[ 23v = 370 - 186 \]
+        \[ 23v = 184 \]
+        \[ \boxed{v = 8} \]
+      </div>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri sebe: Koliko je \(184 \div 23\)?</summary>
+          <p>
+            \(23 \times 8 = 184\). Dakle \(v = 8\). &#10004;
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Nalaženje \(u\)</div>
+      <p class="step-explanation">
+        Vratimo \(v = 8\) u izraz za \(u\):
+      </p>
+      <div class="math-box">
+        \[ u = \frac{74 - 3 \cdot 8}{2} = \frac{74 - 24}{2} = \frac{50}{2} \]
+        \[ \boxed{u = 25} \]
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">6</span> Povratak na originalne promenljive</div>
+      <p class="step-explanation">
+        Sada iz vrednosti \(u\) i \(v\) odredimo \(x\) i \(y\). Kako je \(v = 2^y = 8\):
+      </p>
+      <div class="math-box">
+        \[ 2^y = 8 = 2^3 \quad \Rightarrow \quad \boxed{y = 3} \]
+      </div>
+      <p class="step-explanation">
+        Kako je \(u = 5^x = 25\):
+      </p>
+      <div class="math-box">
+        \[ 5^x = 25 = 5^2 \quad \Rightarrow \quad \boxed{x = 2} \]
+      </div>
+      <p class="step-explanation">
+        Dakle <span class="highlight-green">\(a = 2\)</span> i <span class="highlight-green">\(b = 3\)</span>.
+      </p>
+    </div>
+
+    <!-- Step 7 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">7</span> Izračunavanje \(a + b\)</div>
+      <div class="math-box">
+        \[ a + b = 2 + 3 = \boxed{5} \]
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">8</span> Verifikacija u originalnom sistemu</div>
+      <p class="step-explanation">
+        Proverimo da li \(x = 2, y = 3\) zaista zadovoljava obe polazne jednačine:
+      </p>
+      <p class="step-explanation"><strong>Prva jednačina:</strong></p>
+      <div class="math-box">
+        \[ 5^{2+1} - 2^{3+2} = 5^3 - 2^5 = 125 - 32 = 93 \quad \checkmark \]
+      </div>
+      <p class="step-explanation"><strong>Druga jednačina:</strong></p>
+      <div class="math-box">
+        \[ 2 \cdot 5^2 + 3 \cdot 2^3 = 2 \cdot 25 + 3 \cdot 8 = 50 + 24 = 74 \quad \checkmark \]
+      </div>
+      <p class="step-explanation">
+        Obe jednačine su zadovoljene — rešenje je tačno.
+      </p>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri sebe: Da li je \(5^3 = 125\) i \(2^5 = 32\)?</summary>
+          <p>
+            \(5^3 = 5 \cdot 5 \cdot 5 = 125\) &#10004;<br>
+            \(2^5 = 2 \cdot 2 \cdot 2 \cdot 2 \cdot 2 = 32\) &#10004;
+          </p>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Suština ovog zadatka je prepoznavanje da se eksponencijalni izrazi \(5^{x+1}\) i \(2^{y+2}\) mogu rastaviti pomoću pravila stepena, čime sistem postaje <strong>linearan</strong> u smeni \(u = 5^x, v = 2^y\). Ovo je tipičan primer kako dobra smena može dramatično pojednostaviti naizgled komplikovan problem. Važno je uočiti strukturu — čim vidimo \(5^{x+1} = 5 \cdot 5^x\), jasno je da se izraz ponavlja.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\( a + b = 5 \)</div>
+    <div class="final-options">
+      <span class="final-option" data-option="A">(A) \(10\)</span>
+      <span class="final-option" data-option="B">(B) \(7\)</span>
+      <span class="final-option" data-option="C">(C) \(0\)</span>
+      <span class="final-option" data-option="D">(D) \(-7\)</span>
+      <span class="final-option correct" data-option="E">(E) \(5\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(5^3 - 2^5 = 125 - 32 = 93\) &#10004; i \(2 \cdot 25 + 3 \cdot 8 = 50 + 24 = 74\) &#10004;. Rešenje \(x = 2, y = 3\) zadovoljava obe jednačine, pa je \(a + b = 5\).
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešno rastavljanje stepena</div>
+      <p>Greška: napisati \(5^{x+1} = 5^x + 5\) umesto \(5^{x+1} = 5 \cdot 5^x\). Pravilo stepena kaže \(a^{m+n} = a^m \cdot a^n\), ne \(a^{m+n} = a^m + a^n\). Sabiranje eksponenata odgovara <strong>množenju</strong>, ne sabiranju baza.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboraviti da se pomnoži celom jednačinom</div>
+      <p>Pri zameni \(u = \frac{74 - 3v}{2}\) u prvu jednačinu, nakon množenja sa 5, ostaje razlomak. Ako se ne pomnoži celom jednačinom sa 2, lako se napravi greška pri radu sa razlomcima. Uvek je sigurnije eliminisati imenioce pre dalje obrade.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Rešiti sistem jednačina:
+      \[ \begin{cases} 3^{x+2} + 2^{y+1} = 83 \\ 4 \cdot 3^x - 5 \cdot 2^y = 2 \end{cases} \]
+      i odrediti \(x \cdot y\).
+    </p>
+    <details>
+      <summary>Nagovještaj</summary>
+      <p>
+        Isti pristup: neka \(u = 3^x, v = 2^y\). Tada \(3^{x+2} = 9u\) i \(2^{y+1} = 2v\). Sistem postaje \(9u + 2v = 83\), \(4u - 5v = 2\). Rešite linearan sistem i odredite \(x\) i \(y\) iz \(u\) i \(v\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 500;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const padL = 60;
+    const padR = 40;
+    const padT = 50;
+    const padB = 60;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const uMin = -5;
+    const uMax = 45;
+    const vMin = -5;
+    const vMax = 35;
+
+    function toX(u) { return padL + (u - uMin) / (uMax - uMin) * plotW; }
+    function toY(v) { return padT + plotH - (v - vMin) / (vMax - vMin) * plotH; }
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let gu = 0; gu <= 45; gu += 5) {
+      ctx.beginPath();
+      ctx.moveTo(toX(gu), padT);
+      ctx.lineTo(toX(gu), padT + plotH);
+      ctx.stroke();
+    }
+    for (let gv = 0; gv <= 35; gv += 5) {
+      ctx.beginPath();
+      ctx.moveTo(padL, toY(gv));
+      ctx.lineTo(padL + plotW, toY(gv));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    // u-axis (v = 0)
+    if (vMin <= 0 && vMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(padL, toY(0));
+      ctx.lineTo(padL + plotW, toY(0));
+      ctx.stroke();
+    }
+    // v-axis (u = 0)
+    if (uMin <= 0 && uMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(toX(0), padT);
+      ctx.lineTo(toX(0), padT + plotH);
+      ctx.stroke();
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let lu = 0; lu <= 45; lu += 5) {
+      if (lu === 0) continue;
+      ctx.fillText(lu.toString(), toX(lu), toY(0) + 16);
+    }
+    ctx.textAlign = 'right';
+    for (let lv = 0; lv <= 35; lv += 5) {
+      if (lv === 0) continue;
+      ctx.fillText(lv.toString(), toX(0) - 8, toY(lv) + 4);
+    }
+    ctx.textAlign = 'right';
+    ctx.fillText('0', toX(0) - 8, toY(0) + 14);
+
+    // Axis names
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('u = 5\u02E3', W / 2, H - 10);
+    ctx.save();
+    ctx.translate(16, H / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('v = 2\u02B8', 0, 0);
+    ctx.restore();
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Linearni sistem u smeni u = 5\u02E3, v = 2\u02B8', W / 2, 28);
+
+    // Line 1: 5u - 4v = 93  =>  v = (5u - 93)/4
+    ctx.beginPath();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    const l1u1 = 93/5;  // v = 0 when u = 93/5 = 18.6
+    const l1u2 = uMax;
+    const l1v1 = 0;
+    const l1v2 = (5 * uMax - 93) / 4;
+    // Clip to visible region
+    let l1startU = uMin;
+    let l1startV = (5 * l1startU - 93) / 4;
+    let l1endU = uMax;
+    let l1endV = (5 * l1endU - 93) / 4;
+    ctx.moveTo(toX(l1startU), toY(l1startV));
+    ctx.lineTo(toX(l1endU), toY(l1endV));
+    ctx.stroke();
+
+    // Line 2: 2u + 3v = 74  =>  v = (74 - 2u)/3
+    ctx.beginPath();
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2.5;
+    let l2startU = uMin;
+    let l2startV = (74 - 2 * l2startU) / 3;
+    let l2endU = uMax;
+    let l2endV = (74 - 2 * l2endU) / 3;
+    ctx.moveTo(toX(l2startU), toY(l2startV));
+    ctx.lineTo(toX(l2endU), toY(l2endV));
+    ctx.stroke();
+
+    // Line labels
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    const labelU1 = 38;
+    const labelV1 = (5 * labelU1 - 93) / 4;
+    ctx.fillText('5u \u2212 4v = 93', toX(labelU1) - 90, toY(labelV1) - 10);
+
+    ctx.fillStyle = '#a78bfa';
+    const labelU2 = 5;
+    const labelV2 = (74 - 2 * labelU2) / 3;
+    ctx.fillText('2u + 3v = 74', toX(labelU2) + 5, toY(labelV2) - 10);
+
+    // Intersection point (25, 8)
+    const intU = 25;
+    const intV = 8;
+    // Glow effect
+    const glow = ctx.createRadialGradient(toX(intU), toY(intV), 0, toX(intU), toY(intV), 20);
+    glow.addColorStop(0, 'rgba(74, 222, 128, 0.4)');
+    glow.addColorStop(1, 'rgba(74, 222, 128, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(toX(intU), toY(intV), 20, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(toX(intU), toY(intV), 7, 0, Math.PI * 2);
+    ctx.fillStyle = '#4ade80';
+    ctx.fill();
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label for intersection
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('(25, 8)', toX(intU) + 12, toY(intV) - 8);
+
+    // Dashed lines from intersection to axes
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.4)';
+    ctx.lineWidth = 1;
+    // Vertical to u-axis
+    ctx.beginPath();
+    ctx.moveTo(toX(intU), toY(intV));
+    ctx.lineTo(toX(intU), toY(0));
+    ctx.stroke();
+    // Horizontal to v-axis
+    ctx.beginPath();
+    ctx.moveTo(toX(intU), toY(intV));
+    ctx.lineTo(toX(0), toY(intV));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Mark u = 25 on u-axis
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('u = 25', toX(intU), toY(0) + 30);
+    ctx.fillText('= 5\u00B2', toX(intU), toY(0) + 44);
+
+    // Mark v = 8 on v-axis
+    ctx.textAlign = 'right';
+    ctx.fillText('v = 8 = 2\u00B3', toX(0) - 8, toY(intV) - 8);
+
+    // Annotation box
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    const boxX = toX(30);
+    const boxY = toY(28);
+    const boxW = 170;
+    const boxH = 60;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('u = 25 = 5\u00B2  \u2192  x = 2', boxX + 12, boxY + 24);
+    ctx.fillText('v = 8 = 2\u00B3   \u2192  y = 3', boxX + 12, boxY + 44);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Eksponencijalni sistem jednačina — supstitucija",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["eksponencijalne jednačine", "sistem jednačina", "supstitucija", "smena promenljivih", "linearan sistem", "stepeni"]
+}
+BRAINSPARK_META-->

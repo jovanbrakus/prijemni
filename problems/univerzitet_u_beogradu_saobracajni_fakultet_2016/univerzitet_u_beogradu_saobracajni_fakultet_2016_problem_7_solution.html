@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brojanje četvorocifrenih brojeva sa uslovom deljivosti</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Count 4-digit natural numbers divisible by 2 but not by 5,
+with all digits distinct, chosen from the set {0, 1, 2, 4, 5, 6}.
+
+Step 1: Determine last digit constraints.
+  - Divisible by 2 => last digit ∈ {0, 2, 4, 6}
+  - NOT divisible by 5 => last digit ∉ {0, 5}
+  - Combined: last digit ∈ {2, 4, 6} (3 choices)
+
+Step 2: For each choice of last digit d:
+  - Available digits: {0, 1, 2, 4, 5, 6} \ {d} = 5 remaining digits
+  - First digit (thousands): cannot be 0 (must be 4-digit number)
+    From the 5 remaining digits, one is 0, so 4 valid choices for first digit
+  - Second digit (hundreds): any of the remaining 4 digits (including 0 if not used)
+    → 4 choices
+  - Third digit (tens): any of the remaining 3 digits → 3 choices
+
+  Per case: 4 × 4 × 3 = 48
+
+Step 3: Total = 3 × 48 = 144
+
+Verification:
+  - Total 4-digit numbers from {0,1,2,4,5,6} with all digits different:
+    First digit: 5 choices (1,2,4,5,6), then 5×4×3 = 60 for remaining = 5×60 = 300
+  - Of these 300, how many are divisible by 2?
+    Need last digit ∈ {0,2,4,6}
+    Case last=0: first from {1,2,4,5,6}=5, second from remaining 4, third from 3 = 5×4×3=60
+    Case last=2: first from {1,4,5,6}=4, second from remaining 4, third from 3 = 4×4×3=48
+    Case last=4: first from {1,2,5,6}=4, second from remaining 4, third from 3 = 4×4×3=48
+    Case last=6: first from {1,2,4,5}=4, second from remaining 4, third from 3 = 4×4×3=48
+    Total divisible by 2: 60+48+48+48 = 204
+  - Of these 204, how many are also divisible by 5? Only those with last digit 0 (since
+    last digit is already even, and divisible by 5 means last=0 or last=5, but 5 is odd).
+    So divisible by both 2 and 5: last=0 → 60
+  - Divisible by 2 but NOT by 5: 204 - 60 = 144 ✓
+
+Answer: (E) 144
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+}
+
+.checkpoint details {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.number-line-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.info-card {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+
+.info-card .info-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.info-card .info-value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.case-box {
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 14px 0;
+}
+
+.case-title {
+  color: #a78bfa;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .info-grid { grid-template-columns: 1fr 1fr; }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 6px 14px; font-size: 0.95rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Brojanje četvorocifrenih brojeva sa uslovom deljivosti</h1>
+  <p class="subtitle">Kombinatorika — brojanje sa ograničenjima na cifre i deljivost</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Postavka zadatka</div>
+    <div class="problem-text">
+      <p>Četvorocifrenih prirodnih brojeva koji su deljivi sa <span class="highlight-blue">2</span>, a nisu sa <span class="highlight-pink">5</span>, a čije su sve cifre <strong>različite</strong> i pripadaju skupu \(\{0, 1, 2, 4, 5, 6\}\), ima:</p>
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-label">Skup cifara</div>
+          <div class="info-value">\(\{0, 1, 2, 4, 5, 6\}\)</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Broj cifara</div>
+          <div class="info-value">4 (sve različite)</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Deljiv sa</div>
+          <div class="info-value" style="color: #60a5fa;">2</div>
+        </div>
+        <div class="info-card">
+          <div class="info-label">Nije deljiv sa</div>
+          <div class="info-value" style="color: #f472b6;">5</div>
+        </div>
+      </div>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(114\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(66\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(84\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(156\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(144\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Prvo ćemo odrediti koja cifra može stajati na mestu jedinica (uslov deljivosti). Zatim ćemo za svaki dopušteni izbor poslednje cifre prebrojati koliko ima načina da popunimo preostale tri pozicije (hiljade, stotine, desetice), vodeći računa da prva cifra ne sme biti \(0\) i da se cifre ne smeju ponavljati.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>&#128208; Ključne formule i pravila</summary>
+      <ul style="margin-top: 10px; padding-left: 20px; line-height: 2.2;">
+        <li><strong>Deljivost sa 2:</strong> Prirodan broj je deljiv sa 2 ako i samo ako mu je poslednja cifra parna, tj. pripada skupu \(\{0, 2, 4, 6, 8\}\).</li>
+        <li><strong>Deljivost sa 5:</strong> Prirodan broj je deljiv sa 5 ako i samo ako mu je poslednja cifra \(0\) ili \(5\).</li>
+        <li><strong>Pravilo proizvoda:</strong> Ako se jedan izbor pravi u \(m\) koraka, gde se \(i\)-ti korak može izvršiti na \(n_i\) načina (nezavisno od prethodnih), ukupan broj načina je \(n_1 \cdot n_2 \cdot \ldots \cdot n_m\).</li>
+        <li><strong>Permutacije bez ponavljanja:</strong> Broj načina da se od \(n\) različitih elemenata izabere \(k\) (bitan redosled, bez ponavljanja) je \(P(n, k) = \dfrac{n!}{(n-k)!}\).</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz: struktura četvorocifrenog broja</div>
+    <canvas id="mainCanvas" width="900" height="520"></canvas>
+    <p class="drag-hint">Dijagram prikazuje logiku popunjavanja četiri pozicije sa ograničenjima</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Određivanje poslednje cifre (jedinice)</div>
+      <p class="step-explanation">
+        Broj mora biti <span class="highlight-blue">deljiv sa 2</span>, što znači da poslednja cifra mora biti parna. Od cifara iz skupa \(\{0, 1, 2, 4, 5, 6\}\), parne su:
+      </p>
+      <div class="math-box">
+        \[ \text{Parne cifre: } \{0, 2, 4, 6\} \]
+      </div>
+      <p class="step-explanation">
+        Istovremeno, broj <span class="highlight-pink">ne sme biti deljiv sa 5</span>. Broj je deljiv sa 5 ako mu poslednja cifra pripada \(\{0, 5\}\). Pošto je \(5\) neparna (već isključena), jedini „problematičan" izbor je \(0\).
+      </p>
+      <p class="step-explanation">
+        Kombinujemo oba uslova — poslednja cifra mora biti parna, ali ne sme biti \(0\):
+      </p>
+      <div class="math-box" style="border-color: rgba(52, 211, 153, 0.3);">
+        \[ \text{Poslednja cifra} \in \{0, 2, 4, 6\} \setminus \{0\} = \{2, 4, 6\} \]
+      </div>
+      <p class="step-explanation">
+        Dakle, imamo <span class="highlight-green">3 moguća izbora</span> za poslednju cifru.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Analiza preostalih pozicija za fiksiranu poslednju cifru</div>
+      <p class="step-explanation">
+        Neka je poslednja cifra \(d \in \{2, 4, 6\}\). Tada nam za preostale tri pozicije (hiljade, stotine, desetice) ostaje 5 cifara iz skupa \(\{0, 1, 2, 4, 5, 6\} \setminus \{d\}\).
+      </p>
+      <p class="step-explanation">
+        Na primer, ako je \(d = 2\), preostale cifre su \(\{0, 1, 4, 5, 6\}\). Primetimo da se cifra \(0\) <strong>uvek</strong> nalazi među preostalim ciframa (jer \(d \neq 0\)).
+      </p>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri se: Zašto se 0 uvek nalazi među preostalim ciframa?</summary>
+          <p>
+            Zato što smo za poslednju cifru izabrali \(d \in \{2, 4, 6\}\), a nijedna od ovih vrednosti nije \(0\). Dakle, \(0\) ostaje u skupu od 5 preostalih cifara.
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Popunjavanje mesta hiljada (prva cifra)</div>
+      <p class="step-explanation">
+        Četvorocifreni broj ne sme počinjati nulom — inače bi bio trocifreni (ili manji). Od 5 preostalih cifara, <strong>jedna je nula</strong>, pa imamo:
+      </p>
+      <div class="math-box">
+        \[ \text{Izbora za prvu cifru: } 5 - 1 = 4 \]
+      </div>
+      <p class="step-explanation">
+        Na primer, za \(d = 2\) preostale cifre su \(\{0, 1, 4, 5, 6\}\), a za prvu poziciju biramo iz \(\{1, 4, 5, 6\}\) — to su <span class="highlight-green">4 izbora</span>.
+      </p>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Popunjavanje mesta stotina (druga cifra)</div>
+      <p class="step-explanation">
+        Iskoristili smo 2 cifre (jednu za poslednju poziciju, jednu za prvu). Od početnih 6 cifara, ostale su 4 neiskorišćene. Cifra \(0\) je sada dozvoljena (ne mora biti prva), pa biramo slobodno:
+      </p>
+      <div class="math-box">
+        \[ \text{Izbora za drugu cifru: } 4 \]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Popunjavanje mesta desetica (treća cifra)</div>
+      <p class="step-explanation">
+        Iskoristili smo 3 cifre. Od početnih 6, ostale su 3 neiskorišćene:
+      </p>
+      <div class="math-box">
+        \[ \text{Izbora za treću cifru: } 3 \]
+      </div>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri se: Koliko izbora ima za svaku poziciju?</summary>
+          <p>
+            Poslednja cifra: \(3\) izbora (\(2, 4, 6\)). Prva cifra: \(4\) izbora (sve preostale osim \(0\)). Druga cifra: \(4\) izbora. Treća cifra: \(3\) izbora.
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">6</span> Primena pravila proizvoda</div>
+      <p class="step-explanation">
+        Pošto su izbori na svakoj poziciji nezavisni (jednom kad fiksiramo poslednju cifru), ukupan broj za jedan izbor poslednje cifre je:
+      </p>
+      <div class="math-box">
+        \[ \underbrace{4}_{\text{hiljade}} \times \underbrace{4}_{\text{stotine}} \times \underbrace{3}_{\text{desetice}} = 48 \]
+      </div>
+      <p class="step-explanation">
+        Ova situacija je identična za svaku od tri moguće poslednje cifre (\(2\), \(4\) ili \(6\)), jer je struktura potpuno simetrična — uvek ostaje 5 cifara od kojih je jedna \(0\).
+      </p>
+    </div>
+
+    <!-- Step 7 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">7</span> Ukupan broj</div>
+      <p class="step-explanation">
+        Saberemo po svim slučajevima za poslednju cifru:
+      </p>
+      <div class="math-box" style="border-color: rgba(52, 211, 153, 0.3); text-align: center;">
+        \[ \text{Ukupno} = 3 \times 48 = 144 \]
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri se: Verifikacija alternativnim pristupom</summary>
+        <p style="margin-bottom: 8px;">
+          Možemo proveriti oduzimanjem. Prvo prebrojimo sve četvorocifrene brojeve deljive sa 2, pa od toga oduzmemo one koji su deljivi i sa 5 (tj. sa 10).
+        </p>
+        <p style="margin-bottom: 8px;">
+          <strong>Deljivi sa 2</strong> (poslednja cifra \(\in \{0, 2, 4, 6\}\)):
+        </p>
+        <ul style="padding-left: 20px; margin-bottom: 8px;">
+          <li>Poslednja = 0: prva iz \(\{1,2,4,5,6\}\) = 5, druga iz 4, treća iz 3 → \(5 \times 4 \times 3 = 60\)</li>
+          <li>Poslednja = 2: prva iz \(\{1,4,5,6\}\) = 4, druga iz 4, treća iz 3 → \(4 \times 4 \times 3 = 48\)</li>
+          <li>Poslednja = 4: isto → \(48\)</li>
+          <li>Poslednja = 6: isto → \(48\)</li>
+        </ul>
+        <p style="margin-bottom: 8px;">Ukupno deljivi sa 2: \(60 + 48 + 48 + 48 = 204\)</p>
+        <p style="margin-bottom: 8px;">
+          <strong>Deljivi i sa 2 i sa 5</strong> (poslednja cifra = 0): to je upravo \(60\).
+        </p>
+        <p>
+          Deljivi sa 2 a ne sa 5: \(204 - 60 = 144\) &#10004;
+        </p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Trik ovog zadatka leži u tome što se poslednja cifra bira <em>prva</em> (jer su na nju najjača ograničenja), a zatim se prva cifra bira <em>druga</em> (jer ne sme biti 0). Ovaj princip — <strong>počni od pozicije sa najviše ograničenja</strong> — fundamentalno je pravilo u kombinatorici.
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.1rem;">
+      \[ \underbrace{3}_{\text{posl. cifra}} \times \underbrace{4}_{\text{1. cifra}} \times \underbrace{4}_{\text{2. cifra}} \times \underbrace{3}_{\text{3. cifra}} = 144 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(144\)</div>
+    <div class="final-options">
+      <span class="final-option" data-option="A">(A) \(114\)</span>
+      <span class="final-option" data-option="B">(B) \(66\)</span>
+      <span class="final-option" data-option="C">(C) \(84\)</span>
+      <span class="final-option" data-option="D">(D) \(156\)</span>
+      <span class="final-option correct" data-option="E">(E) \(144\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Alternativnim pristupom (oduzimanje) dobijamo \(204 - 60 = 144\), što se poklapa. Odgovor \(144 = 3 \times 48\) je logičan jer imamo 3 simetrična slučaja po 48 brojeva. &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboraviti da prva cifra ne sme biti 0</div>
+      <p>Ako se pri popunjavanju pozicija ne vodi računa o tome da četvorocifreni broj ne počinje nulom, dobija se \(3 \times 5 \times 4 \times 3 = 180\), što je previše. Cifra \(0\) je legitimna svuda osim na prvoj poziciji.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Uključiti poslednju cifru 0 u prebrojavanje</div>
+      <p>Uslov „deljiv sa 2, a ne sa 5" se lako previdi. Ako se uključi i slučaj kada je poslednja cifra \(0\) (što daje deljivost i sa 5), dobija se \(204\) umesto \(144\). Broj koji se završava nulom deljiv je sa \(10\) (dakle i sa \(5\))!</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Koliko ima četvorocifrenih prirodnih brojeva sa svim različitim ciframa iz skupa \(\{0, 1, 2, 4, 5, 6\}\) koji su deljivi sa \(4\)?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>
+        Broj je deljiv sa 4 ako je dvocifreni broj formiran od poslednje dve cifre deljiv sa 4. Razmisli o svim parovima (desetica, jedinica) iz datog skupa čiji dvocifreni broj je deljiv sa 4, pa za svaki takav par prebroj koliko načina postoji za popunjavanje preostalih pozicija. Pazi na uslov da prva cifra ne sme biti 0!
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 520;
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Struktura izbora cifara za \u010Detvorocifreni broj', W / 2, 28);
+
+    // Layout constants
+    const boxW = Math.min(120, W * 0.12);
+    const boxH = 70;
+    const gap = Math.min(30, W * 0.03);
+    const totalW = 4 * boxW + 3 * gap;
+    const startX = (W - totalW) / 2;
+    const topY = 60;
+
+    // Position labels
+    const positions = [
+      { label: 'Hiljade', sub: '(1. cifra)', color: '#60a5fa' },
+      { label: 'Stotine', sub: '(2. cifra)', color: '#a78bfa' },
+      { label: 'Desetice', sub: '(3. cifra)', color: '#a78bfa' },
+      { label: 'Jedinice', sub: '(4. cifra)', color: '#34d399' }
+    ];
+
+    // Draw position boxes
+    positions.forEach(function(pos, i) {
+      var x = startX + i * (boxW + gap);
+      var y = topY;
+
+      // Box
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+      ctx.strokeStyle = pos.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, boxW, boxH, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = pos.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(pos.label, x + boxW / 2, y + 28);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(pos.sub, x + boxW / 2, y + 48);
+    });
+
+    // Arrow connecting the logic: start from last position (right) since we choose it first
+    var arrowY = topY + boxH + 25;
+
+    // Step indicator: "Redosled izbora"
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Redosled izbora:', W / 2, arrowY);
+
+    arrowY += 15;
+
+    // Draw numbered steps for order of selection
+    var orderLabels = [
+      { step: '1.', text: 'Jedinice', choices: '3 izbora', detail: '{2, 4, 6}', color: '#34d399', posIdx: 3 },
+      { step: '2.', text: 'Hiljade', choices: '4 izbora', detail: '(bez 0)', color: '#60a5fa', posIdx: 0 },
+      { step: '3.', text: 'Stotine', choices: '4 izbora', detail: '(preostale)', color: '#a78bfa', posIdx: 1 },
+      { step: '4.', text: 'Desetice', choices: '3 izbora', detail: '(preostale)', color: '#a78bfa', posIdx: 2 }
+    ];
+
+    // Draw selection order arrows
+    var stepBoxW = Math.min(160, W * 0.18);
+    var stepBoxH = 52;
+    var stepGap = 12;
+    var stepTotalW = 4 * stepBoxW + 3 * stepGap;
+    var stepStartX = (W - stepTotalW) / 2;
+
+    // If too wide, stack vertically
+    var useVertical = stepTotalW > W - 40;
+    if (useVertical) {
+      stepBoxW = Math.min(280, W - 80);
+      stepBoxH = 44;
+      stepGap = 10;
+    }
+
+    orderLabels.forEach(function(item, i) {
+      var x, y;
+      if (useVertical) {
+        x = (W - stepBoxW) / 2;
+        y = arrowY + 15 + i * (stepBoxH + stepGap);
+      } else {
+        x = stepStartX + i * (stepBoxW + stepGap);
+        y = arrowY + 15;
+      }
+
+      // Box
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x, y, stepBoxW, stepBoxH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Step number circle
+      ctx.beginPath();
+      ctx.arc(x + 18, y + stepBoxH / 2, 12, 0, Math.PI * 2);
+      ctx.fillStyle = item.color;
+      ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.step.replace('.', ''), x + 18, y + stepBoxH / 2 + 4);
+
+      // Text
+      ctx.fillStyle = item.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(item.text + ': ' + item.choices, x + 36, y + (useVertical ? 20 : 22));
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(item.detail, x + 36, y + (useVertical ? 36 : 40));
+
+      // Draw connecting line to position box
+      if (!useVertical) {
+        var posX = startX + item.posIdx * (boxW + gap) + boxW / 2;
+        var posBottomY = topY + boxH;
+
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = item.color;
+        ctx.globalAlpha = 0.4;
+        ctx.lineWidth = 1;
+        ctx.moveTo(x + stepBoxW / 2, y);
+        ctx.lineTo(posX, posBottomY + 4);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1.0;
+      }
+
+      // Arrow between steps
+      if (i < 3 && !useVertical) {
+        var nextX = stepStartX + (i + 1) * (stepBoxW + stepGap);
+        ctx.beginPath();
+        ctx.moveTo(x + stepBoxW + 2, y + stepBoxH / 2);
+        ctx.lineTo(nextX - 2, y + stepBoxH / 2);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Arrowhead
+        ctx.beginPath();
+        ctx.moveTo(nextX - 2, y + stepBoxH / 2);
+        ctx.lineTo(nextX - 8, y + stepBoxH / 2 - 4);
+        ctx.lineTo(nextX - 8, y + stepBoxH / 2 + 4);
+        ctx.closePath();
+        ctx.fillStyle = '#475569';
+        ctx.fill();
+      }
+
+      if (i < 3 && useVertical) {
+        var nextY = arrowY + 15 + (i + 1) * (stepBoxH + stepGap);
+        ctx.beginPath();
+        ctx.moveTo(x + stepBoxW / 2, y + stepBoxH + 2);
+        ctx.lineTo(x + stepBoxW / 2, nextY - 2);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x + stepBoxW / 2, nextY - 2);
+        ctx.lineTo(x + stepBoxW / 2 - 4, nextY - 8);
+        ctx.lineTo(x + stepBoxW / 2 + 4, nextY - 8);
+        ctx.closePath();
+        ctx.fillStyle = '#475569';
+        ctx.fill();
+      }
+    });
+
+    // Calculation summary at bottom
+    var calcY = useVertical ? arrowY + 15 + 4 * (stepBoxH + stepGap) + 20 : arrowY + 15 + stepBoxH + 40;
+
+    // Multiplication box
+    var calcBoxW = Math.min(500, W - 60);
+    var calcBoxX = (W - calcBoxW) / 2;
+
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.08)';
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(calcBoxX, calcY, calcBoxW, 70, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    // Title
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ukupan broj', W / 2, calcY + 22);
+
+    // Formula
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('3 \u00d7 4 \u00d7 4 \u00d7 3 = 144', W / 2, calcY + 52);
+
+    // Three cases breakdown
+    var caseY = calcY + 90;
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Razrada po slu\u010Dajevima:', W / 2, caseY);
+
+    var cases = [
+      { digit: '2', remaining: '{0, 1, 4, 5, 6}' },
+      { digit: '4', remaining: '{0, 1, 2, 5, 6}' },
+      { digit: '6', remaining: '{0, 1, 2, 4, 5}' }
+    ];
+
+    var caseBoxW = Math.min(190, (W - 80) / 3);
+    var caseGap = 15;
+    var caseTotalW = 3 * caseBoxW + 2 * caseGap;
+    var caseStartX = (W - caseTotalW) / 2;
+
+    cases.forEach(function(c, i) {
+      var x = caseStartX + i * (caseBoxW + caseGap);
+      var y = caseY + 12;
+
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(x, y, caseBoxW, 60, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#34d399';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Jedinice = ' + c.digit, x + caseBoxW / 2, y + 22);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Preostale: ' + c.remaining, x + caseBoxW / 2, y + 40);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('4 \u00d7 4 \u00d7 3 = 48', x + caseBoxW / 2, y + 54);
+    });
+
+    // Sum at bottom
+    var sumY = caseY + 85;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('48 + 48 + 48 = 144', W / 2, sumY);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Brojanje četvorocifrenih brojeva sa uslovom deljivosti",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "brojanje", "deljivost", "permutacije bez ponavljanja", "pravilo proizvoda"]
+}
+BRAINSPARK_META-->

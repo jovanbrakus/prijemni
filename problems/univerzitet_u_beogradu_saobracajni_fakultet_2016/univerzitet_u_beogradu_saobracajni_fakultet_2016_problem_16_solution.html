@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ostatak deljenja polinoma — Teorema o ostatku</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Dati su polinomi P(x) = x^7 - 3x^5 + 2x^2 + x + 7 i Q(x) = x^2 - 1.
+Ako je R(x) = ax + b ostatak deljenja P(x) sa Q(x), tada je 3a + b jednako?
+
+Ključna ideja:
+  Pošto je Q(x) = x^2 - 1 = (x - 1)(x + 1), ostatak pri deljenju sa Q(x)
+  je polinom stepena manjeg od 2, tj. R(x) = ax + b.
+
+  Važi: P(x) = Q(x) · D(x) + R(x) za sve x.
+
+  Za x = 1:  Q(1) = 0, pa P(1) = R(1) = a·1 + b = a + b
+  Za x = -1: Q(-1) = 0, pa P(-1) = R(-1) = a·(-1) + b = -a + b
+
+Korak 1: Izračunamo P(1)
+  P(1) = 1^7 - 3·1^5 + 2·1^2 + 1 + 7
+       = 1 - 3 + 2 + 1 + 7
+       = 8
+  Dakle: a + b = 8  ... (1)
+
+Korak 2: Izračunamo P(-1)
+  P(-1) = (-1)^7 - 3·(-1)^5 + 2·(-1)^2 + (-1) + 7
+        = -1 - 3·(-1) + 2·1 - 1 + 7
+        = -1 + 3 + 2 - 1 + 7
+        = 10
+  Dakle: -a + b = 10  ... (2)
+
+Korak 3: Rešimo sistem
+  (1): a + b = 8
+  (2): -a + b = 10
+
+  Sabiranjem: 2b = 18 => b = 9
+  Iz (1): a = 8 - 9 = -1
+
+Korak 4: Tražena vrednost
+  3a + b = 3·(-1) + 9 = -3 + 9 = 6
+
+Odgovor: (C) 6
+
+Verifikacija:
+  R(x) = -x + 9
+  R(1) = -1 + 9 = 8 = P(1) ✓
+  R(-1) = 1 + 9 = 10 = P(-1) ✓
+  3a + b = 3·(-1) + 9 = 6 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+}
+
+.checkpoint details {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.5rem; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 6px 14px; font-size: 0.95rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Ostatak deljenja polinoma</h1>
+  <p class="subtitle">Primena teoreme o ostatku na deljenje polinoma \(P(x)\) polinomom \(Q(x) = x^2 - 1\) — korišćenjem nula delioca</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Dati su polinomi \(P(x) = x^7 - 3x^5 + 2x^2 + x + 7\) i \(Q(x) = x^2 - 1\). Ako je \(R(x) = ax + b\) ostatak deljenja polinoma \(P(x)\) sa polinomom \(Q(x)\), tada je \(3a + b\) jednako:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(6\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-3\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Pošto je \(Q(x) = x^2 - 1 = (x - 1)(x + 1)\), iskoristićemo činjenicu da u tačkama \(x = 1\) i \(x = -1\) važi \(Q(x) = 0\), pa je \(P(x) = R(x)\). To nam daje sistem od dve jednačine sa dve nepoznate \(a\) i \(b\), iz kojeg lako nalazimo traženu vrednost \(3a + b\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Deljenje polinoma sa ostatkom</summary>
+      <p style="margin-top: 8px;">
+        Za polinome \(P(x)\) i \(Q(x)\) (gde je \(\deg Q \geq 1\)), postoje jedinstveni polinomi \(D(x)\) (količnik) i \(R(x)\) (ostatak) takvi da:
+      </p>
+      <div class="math-box">
+        \[ P(x) = Q(x) \cdot D(x) + R(x), \quad \deg R < \deg Q \]
+      </div>
+      <p>
+        Ovo znači da je ostatak \(R(x)\) pri deljenju sa polinomom stepena 2 uvek polinom stepena najviše 1, tj. oblika \(ax + b\).
+      </p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Korišćenje nula delioca</summary>
+      <p style="margin-top: 8px;">
+        Ako \(Q(x_0) = 0\), tada iz \(P(x) = Q(x) \cdot D(x) + R(x)\) sledi:
+      </p>
+      <div class="math-box">
+        \[ P(x_0) = Q(x_0) \cdot D(x_0) + R(x_0) = 0 \cdot D(x_0) + R(x_0) = R(x_0) \]
+      </div>
+      <p>
+        Dakle, <strong>vrednost polinoma \(P\) u nuli delioca \(Q\) jednaka je vrednosti ostatka \(R\) u toj tački</strong>. Ako delilac ima više nula, dobijamo sistem jednačina za koeficijente ostatka.
+      </p>
+    </details>
+  </div>
+
+  <!-- Visual Aid: Canvas diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz — polinomi i ostatak</div>
+    <canvas id="mainCanvas" width="900" height="480"></canvas>
+    <p class="drag-hint">Grafik prikazuje \(P(x)\), \(R(x) = -x + 9\), i nule delioca \(Q(x)\) u tačkama \(x = \pm 1\)</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Zapišimo jednakost deljenja sa ostatkom</div>
+      <p class="step-explanation">
+        Pri deljenju polinoma \(P(x)\) polinomom \(Q(x)\), važi:
+      </p>
+      <div class="math-box">
+        \[ P(x) = Q(x) \cdot D(x) + R(x) \]
+      </div>
+      <p class="step-explanation">
+        gde je \(D(x)\) količnik, a \(R(x) = ax + b\) ostatak (stepena manjeg od 2, jer je \(\deg Q = 2\)).
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Faktorizujmo delilac \(Q(x)\)</div>
+      <p class="step-explanation">
+        Prepoznajemo razliku kvadrata:
+      </p>
+      <div class="math-box">
+        \[ Q(x) = x^2 - 1 = (x - 1)(x + 1) \]
+      </div>
+      <p class="step-explanation">
+        Nule delioca su \(x = 1\) i \(x = -1\). U ovim tačkama \(Q(x) = 0\), pa ćemo ih iskoristiti za nalaženje koeficijenata \(a\) i \(b\).
+      </p>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Uvrstimo \(x = 1\) u jednakost deljenja</div>
+      <p class="step-explanation">
+        Za \(x = 1\): \(Q(1) = 0\), pa se član \(Q(1) \cdot D(1)\) poništava:
+      </p>
+      <div class="math-box">
+        \[ P(1) = R(1) = a \cdot 1 + b = a + b \]
+      </div>
+      <p class="step-explanation">
+        Izračunajmo \(P(1)\):
+      </p>
+      <div class="math-box">
+        \[ P(1) = 1^7 - 3 \cdot 1^5 + 2 \cdot 1^2 + 1 + 7 = 1 - 3 + 2 + 1 + 7 = 8 \]
+      </div>
+      <p class="step-explanation">
+        Dakle, dobijamo prvu jednačinu:
+      </p>
+      <div class="math-box" style="text-align: center;">
+        \[ a + b = 8 \quad \cdots (1) \]
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Zašto je \(P(1) = R(1)\)?</summary>
+        <p>
+          Zato što važi \(P(1) = Q(1) \cdot D(1) + R(1)\). Pošto je \(Q(1) = 1^2 - 1 = 0\), ceo prvi sabirak nestaje i ostaje samo \(R(1)\). Ovo je direktna posledica teoreme o deljenju polinoma.
+        </p>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Uvrstimo \(x = -1\) u jednakost deljenja</div>
+      <p class="step-explanation">
+        Za \(x = -1\): \(Q(-1) = 0\), pa analogno:
+      </p>
+      <div class="math-box">
+        \[ P(-1) = R(-1) = a \cdot (-1) + b = -a + b \]
+      </div>
+      <p class="step-explanation">
+        Izračunajmo \(P(-1)\). Obratimo pažnju na stepene: neparan stepen čuva znak, paran ga menja.
+      </p>
+      <div class="math-box">
+        \[ \begin{align} P(-1) &= (-1)^7 - 3 \cdot (-1)^5 + 2 \cdot (-1)^2 + (-1) + 7 \\ &= -1 - 3 \cdot (-1) + 2 \cdot 1 - 1 + 7 \\ &= -1 + 3 + 2 - 1 + 7 \\ &= 10 \end{align} \]
+      </div>
+      <p class="step-explanation">
+        Dakle, dobijamo drugu jednačinu:
+      </p>
+      <div class="math-box" style="text-align: center;">
+        \[ -a + b = 10 \quad \cdots (2) \]
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko je \((-1)^7\) i \((-1)^5\)?</summary>
+        <p>
+          Oba su jednaka \(-1\), jer su eksponenti neparni. Za bilo koji neparan broj \(n\), važi \((-1)^n = -1\). Za paran \(n\), važi \((-1)^n = 1\). U izrazu \(P(-1)\), članovi sa neparnim stepenima menjaju znak, dok članovi sa parnim stepenima ostaju nepromenjeni.
+        </p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Rešimo sistem jednačina</div>
+      <p class="step-explanation">
+        Imamo sistem:
+      </p>
+      <div class="math-box">
+        \[ \begin{cases} a + b = 8 \\ -a + b = 10 \end{cases} \]
+      </div>
+      <p class="step-explanation">
+        Saberemo obe jednačine da eliminišemo \(a\):
+      </p>
+      <div class="math-box">
+        \[ (a + b) + (-a + b) = 8 + 10 \]
+        \[ 2b = 18 \]
+        \[ b = 9 \]
+      </div>
+      <p class="step-explanation">
+        Uvrstimo \(b = 9\) u jednačinu (1):
+      </p>
+      <div class="math-box">
+        \[ a + 9 = 8 \implies a = -1 \]
+      </div>
+      <p class="step-explanation">
+        Dakle, ostatak je \(R(x) = -x + 9\), sa koeficijentima <span class="highlight-blue">\(a = -1\)</span> i <span class="highlight-blue">\(b = 9\)</span>.
+      </p>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">6</span> Izračunajmo \(3a + b\)</div>
+      <p class="step-explanation">
+        Sada lako nalazimo traženu vrednost:
+      </p>
+      <div class="math-box" style="text-align: center; font-size: 1.15rem;">
+        \[ 3a + b = 3 \cdot (-1) + 9 = -3 + 9 = 6 \]
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Verifikacija ostatka \(R(x) = -x + 9\)</summary>
+        <p>
+          \(R(1) = -1 + 9 = 8 = P(1)\) &#10004;<br>
+          \(R(-1) = -(-1) + 9 = 1 + 9 = 10 = P(-1)\) &#10004;<br>
+          Obe vrednosti se poklapaju, što potvrđuje da je ostatak korektno određen.
+        </p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Umesto dugačkog deljenja polinoma stepena 7 polinomom stepena 2, koristimo elegantnu činjenicu: <strong>nule delioca su ujedno i tačke u kojima se polinom i ostatak poklapaju</strong>. Pošto \(Q(x) = x^2 - 1\) ima dve nule (\(x = 1\) i \(x = -1\)), a ostatak ima dva nepoznata koeficijenta, dobijamo upravo onoliko jednačina koliko nam treba. Ovaj pristup radi za bilo koji polinom \(P(x)\), bez obzira na stepen!
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(3a + b = 6\)</div>
+    <div class="final-options">
+      <span class="final-option" data-option="A">(A) \(4\)</span>
+      <span class="final-option" data-option="B">(B) \(1\)</span>
+      <span class="final-option correct" data-option="C">(C) \(6\)</span>
+      <span class="final-option" data-option="D">(D) \(-2\)</span>
+      <span class="final-option" data-option="E">(E) \(-3\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(R(x) = -x + 9\), \(R(1) = 8 = P(1)\), \(R(-1) = 10 = P(-1)\). Vrednost \(3 \cdot (-1) + 9 = 6\).
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Greška u znaku pri računanju \(P(-1)\)</div>
+      <p>Nepažljivo računanje sa negativnim brojevima je čest izvor grešaka. Na primer, \((-1)^7 = -1\), ali \(-3 \cdot (-1)^5 = -3 \cdot (-1) = +3\). Obratite pažnju na to da se minus ispred koeficijenta i minus iz stepena mogu poništiti.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pokušaj polinomskog deljenja umesto korišćenja nula delioca</div>
+      <p>Deliti polinom stepena 7 polinomom stepena 2 dugačkim deljenjem je nepotrebno komplikovan pristup. Metod sa nulama delioca daje rezultat u svega nekoliko redova računa. Na prijemnom ispitu, uvek tražite prečice!</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Kako bi se problem promenio kada bismo delili sa \(Q(x) = x^2 - 4\) umesto sa \(x^2 - 1\)?
+    </p>
+    <details>
+      <summary>Nagovještaj</summary>
+      <p>
+        Polinom \(x^2 - 4 = (x-2)(x+2)\) ima nule \(x = 2\) i \(x = -2\). Postupak je potpuno analogan: izračunajte \(P(2)\) i \(P(-2)\), postavite sistem \(2a + b = P(2)\) i \(-2a + b = P(-2)\), i rešite ga. Probajte sami!
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width;
+    const H = 480;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const padL = 60;
+    const padR = 40;
+    const padT = 50;
+    const padB = 60;
+    const chartW = W - padL - padR;
+    const chartH = H - padT - padB;
+
+    // We'll show a zoomed view around x in [-2, 2] to highlight the key points
+    var xMin = -1.8;
+    var xMax = 1.8;
+    var yMin = -2;
+    var yMax = 18;
+
+    function toCanvasX(x) {
+      return padL + (x - xMin) / (xMax - xMin) * chartW;
+    }
+    function toCanvasY(y) {
+      return padT + chartH - (y - yMin) / (yMax - yMin) * chartH;
+    }
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+
+    // Vertical grid
+    for (var gx = -1.5; gx <= 1.5; gx += 0.5) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(gx), padT);
+      ctx.lineTo(toCanvasX(gx), padT + chartH);
+      ctx.stroke();
+    }
+    // Horizontal grid
+    for (var gy = 0; gy <= 16; gy += 2) {
+      ctx.beginPath();
+      ctx.moveTo(padL, toCanvasY(gy));
+      ctx.lineTo(padL + chartW, toCanvasY(gy));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+
+    // x-axis
+    if (yMin <= 0 && yMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(padL, toCanvasY(0));
+      ctx.lineTo(padL + chartW, toCanvasY(0));
+      ctx.stroke();
+    }
+    // y-axis
+    if (xMin <= 0 && xMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(0), padT);
+      ctx.lineTo(toCanvasX(0), padT + chartH);
+      ctx.stroke();
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (var lx = -1.5; lx <= 1.5; lx += 0.5) {
+      if (Math.abs(lx) > 0.01) {
+        var lxStr = lx.toFixed(1).replace('.', ',');
+        ctx.fillText(lxStr, toCanvasX(lx), toCanvasY(0) + 5);
+      }
+    }
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (var ly = 0; ly <= 16; ly += 4) {
+      ctx.fillText(ly.toString(), padL - 8, toCanvasY(ly));
+    }
+
+    // P(x) = x^7 - 3x^5 + 2x^2 + x + 7
+    function P(x) {
+      return Math.pow(x, 7) - 3 * Math.pow(x, 5) + 2 * x * x + x + 7;
+    }
+
+    // R(x) = -x + 9
+    function R(x) {
+      return -x + 9;
+    }
+
+    // Draw R(x) — the remainder line
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath();
+    var started = false;
+    for (var rx = xMin; rx <= xMax; rx += 0.01) {
+      var ry = R(rx);
+      var cx = toCanvasX(rx);
+      var cy = toCanvasY(ry);
+      if (!started) {
+        ctx.moveTo(cx, cy);
+        started = true;
+      } else {
+        ctx.lineTo(cx, cy);
+      }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw P(x) curve
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    started = false;
+    for (var px = xMin; px <= xMax; px += 0.005) {
+      var py = P(px);
+      if (py < yMin - 5 || py > yMax + 5) {
+        started = false;
+        continue;
+      }
+      var pcx = toCanvasX(px);
+      var pcy = toCanvasY(py);
+      if (!started) {
+        ctx.moveTo(pcx, pcy);
+        started = true;
+      } else {
+        ctx.lineTo(pcx, pcy);
+      }
+    }
+    ctx.stroke();
+
+    // Highlight the intersection points at x = 1 and x = -1
+    var pts = [
+      { x: 1, y: P(1), label: 'P(1) = R(1) = 8' },
+      { x: -1, y: P(-1), label: 'P(\u22121) = R(\u22121) = 10' }
+    ];
+
+    for (var i = 0; i < pts.length; i++) {
+      var pt = pts[i];
+      var ptcx = toCanvasX(pt.x);
+      var ptcy = toCanvasY(pt.y);
+
+      // Glow effect
+      var grd = ctx.createRadialGradient(ptcx, ptcy, 0, ptcx, ptcy, 20);
+      grd.addColorStop(0, 'rgba(244, 114, 182, 0.4)');
+      grd.addColorStop(1, 'rgba(244, 114, 182, 0)');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(ptcx, ptcy, 20, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Point
+      ctx.beginPath();
+      ctx.arc(ptcx, ptcy, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = '#f472b6';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#f472b6';
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = i === 0 ? 'left' : 'right';
+      ctx.textBaseline = 'bottom';
+      var labelOffsetX = i === 0 ? 12 : -12;
+      ctx.fillText(pt.label, ptcx + labelOffsetX, ptcy - 10);
+    }
+
+    // Vertical dashed lines at x = 1 and x = -1
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.4)';
+    ctx.lineWidth = 1;
+    for (var vi = 0; vi < pts.length; vi++) {
+      var vx = toCanvasX(pts[vi].x);
+      ctx.beginPath();
+      ctx.moveTo(vx, toCanvasY(0));
+      ctx.lineTo(vx, toCanvasY(pts[vi].y));
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // x-axis labels at x = 1 and x = -1
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('1', toCanvasX(1), toCanvasY(0) + 5);
+    ctx.fillText('\u22121', toCanvasX(-1), toCanvasY(0) + 5);
+
+    // Legend
+    var legendX = padL + 12;
+    var legendY = padT + 12;
+    var legendSpacing = 24;
+
+    // P(x) legend
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(legendX, legendY + 7);
+    ctx.lineTo(legendX + 25, legendY + 7);
+    ctx.stroke();
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('P(x) = x\u2077 \u2212 3x\u2075 + 2x\u00B2 + x + 7', legendX + 30, legendY + 7);
+
+    // R(x) legend
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath();
+    ctx.moveTo(legendX, legendY + legendSpacing + 7);
+    ctx.lineTo(legendX + 25, legendY + legendSpacing + 7);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('R(x) = \u2212x + 9  (ostatak)', legendX + 30, legendY + legendSpacing + 7);
+
+    // Intersection legend
+    ctx.beginPath();
+    ctx.arc(legendX + 12, legendY + 2 * legendSpacing + 7, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#f472b6';
+    ctx.fill();
+    ctx.fillText('Nule delioca: P(x\u2080) = R(x\u2080)', legendX + 30, legendY + 2 * legendSpacing + 7);
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('P(x) i R(x) se poklapaju u nulama delioca Q(x) = x\u00B2 \u2212 1', W / 2, 8);
+
+    // Result annotation at bottom
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('a = \u22121,  b = 9  \u2192  3a + b = 3\u00B7(\u22121) + 9 = 6', W / 2, H - 30);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Ostatak deljenja polinoma — teorema o ostatku",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["deljenje polinoma", "ostatak pri deljenju", "teorema o ostatku", "sistem jednačina", "polinomi"]
+}
+BRAINSPARK_META-->

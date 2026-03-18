@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Korenovanje negativnih brojeva — parni i neparni koreni</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem:
+  Compute the value of:
+    (3 * cbrt((-2)^3) + 2 * cbrt((-2)^6)) / (4throot((-3)^4) + 5throot((-4)^5))
+
+Step-by-step:
+
+NUMERATOR:
+  First term: 3 * cbrt((-2)^3)
+    (-2)^3 = -8
+    cbrt(-8) = -2  (cube root is an odd root, so it preserves the sign)
+    3 * (-2) = -6
+
+  Second term: 2 * cbrt((-2)^6)
+    (-2)^6 = 64  (even power, always positive)
+    cbrt(64) = 4
+    2 * 4 = 8
+
+  Numerator = -6 + 8 = 2
+
+DENOMINATOR:
+  First term: 4throot((-3)^4)
+    (-3)^4 = 81  (even power, always positive)
+    4throot(81) = 3  (even root always gives positive result)
+    Note: 4throot((-3)^4) = 4throot(81) = 3, NOT -3
+
+  Second term: 5throot((-4)^5)
+    (-4)^5 = -1024  (odd power, preserves the sign)
+    5throot(-1024) = -4  (odd root preserves the sign)
+
+  Denominator = 3 + (-4) = 3 - 4 = -1
+
+RESULT:
+  2 / (-1) = -2
+
+Answer: (B) -2
+
+Key concepts:
+  - Odd roots (3rd, 5th, 7th...) preserve the sign of the argument: cbrt(-8) = -2
+  - Even roots (2nd, 4th, 6th...) ALWAYS give a non-negative result: 4throot(81) = 3
+  - n-th root of a^n: if n is even, result = |a|; if n is odd, result = a
+  - cbrt((-2)^3) = cbrt(-8) = -2 (odd root of odd power = original value)
+  - cbrt((-2)^6) = cbrt(64) = 4 (cube root of even power: note (-2)^6 = 64 > 0)
+  - 4throot((-3)^4) = 4throot(81) = 3 = |-3| (even root of even power = |a|)
+  - 5throot((-4)^5) = -4 (odd root of odd power = original value)
+
+Verification: (B) -2 matches the answer key. Confirmed.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+}
+
+.checkpoint details {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.number-line-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.rule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.rule-card {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.rule-card .rule-label {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.rule-card .rule-formula {
+  font-size: 1rem;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .rule-grid { grid-template-columns: 1fr; }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 6px 14px; font-size: 0.95rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Korenovanje negativnih brojeva</h1>
+  <p class="subtitle">Računanje vrednosti razlomka sa parnim i neparnim korenima negativnih brojeva</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Postavka zadatka</div>
+    <div class="problem-text">
+      Vrednost izraza:
+      <div class="math-box" style="text-align: center; font-size: 1.1rem;">
+        \[ \frac{3 \cdot \sqrt[3]{(-2)^3} + 2 \cdot \sqrt[3]{(-2)^6}}{\sqrt[4]{(-3)^4} + \sqrt[5]{(-4)^5}} \]
+      </div>
+      <p>je:</p>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(-2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(6\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Izračunaćemo svaki član u brojiocu i imeniocu posebno, koristeći pravila o neparnim i parnim korenima negativnih brojeva. Ključ je zapamtiti: <strong>neparni koreni čuvaju znak</strong>, a <strong>parni koreni uvek daju pozitivan rezultat</strong>.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>&#128208; Ključne formule i pravila</summary>
+      <ul style="margin-top: 10px; padding-left: 20px; line-height: 2.2;">
+        <li><strong>Neparni koren</strong> (\(n = 3, 5, 7, \ldots\)): čuva znak argumenta.
+          \(\sqrt[n]{a^n} = a\) za svako realno \(a\). Primeri: \(\sqrt[3]{-8} = -2\), \(\sqrt[5]{-32} = -2\).</li>
+        <li><strong>Parni koren</strong> (\(n = 2, 4, 6, \ldots\)): uvek daje nenegativan rezultat.
+          \(\sqrt[n]{a^n} = |a|\) za svako realno \(a\). Primeri: \(\sqrt{9} = 3\), \(\sqrt[4]{81} = 3\).</li>
+        <li><strong>Stepenovanje negativnog broja:</strong> \((-a)^n\) je pozitivno ako je \(n\) parno, negativno ako je \(n\) neparno.</li>
+        <li><strong>Kombinovano pravilo:</strong> Kada se eksponent i indeks korena mogu skratiti, npr. \(\sqrt[3]{(-2)^6} = \sqrt[3]{64} = 4\), računamo stepen pa onda koren.</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz: struktura izraza</div>
+    <canvas id="mainCanvas" width="900" height="480"></canvas>
+    <p class="drag-hint">Prikaz svih komponenti razlomka sa međurezultatima</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">1</span> Izračunavanje \(\sqrt[3]{(-2)^3}\)</div>
+      <p class="step-explanation">
+        Prvo izračunamo stepen unutar korena:
+      </p>
+      <div class="math-box">
+        \[ (-2)^3 = (-2) \cdot (-2) \cdot (-2) = -8 \]
+      </div>
+      <p class="step-explanation">
+        Sada vadimo <span class="highlight-blue">treći (kubni) koren</span>. Pošto je treći koren <strong>neparan</strong>, on čuva znak:
+      </p>
+      <div class="math-box">
+        \[ \sqrt[3]{(-2)^3} = \sqrt[3]{-8} = -2 \]
+      </div>
+      <p class="step-explanation" style="color: #94a3b8; font-size: 0.95rem;">
+        Napomena: Neparni koren neparnog stepena vraća polaznu vrednost: \(\sqrt[3]{a^3} = a\).
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">2</span> Izračunavanje \(\sqrt[3]{(-2)^6}\)</div>
+      <p class="step-explanation">
+        Izračunamo stepen:
+      </p>
+      <div class="math-box">
+        \[ (-2)^6 = \big((-2)^2\big)^3 = 4^3 = 64 \]
+      </div>
+      <p class="step-explanation">
+        Pošto je \((-2)^6 = 64\) pozitivan broj, kubni koren je jednostavan:
+      </p>
+      <div class="math-box">
+        \[ \sqrt[3]{(-2)^6} = \sqrt[3]{64} = 4 \]
+      </div>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri se: Koliko je \(4^3\)?</summary>
+          <p>
+            \(4^3 = 4 \cdot 4 \cdot 4 = 64\). Dakle \(\sqrt[3]{64} = 4\). Tačno!
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">3</span> Računanje brojioca</div>
+      <p class="step-explanation">
+        Sada zamenjujemo izračunate vrednosti u brojilac:
+      </p>
+      <div class="math-box">
+        \[ 3 \cdot \sqrt[3]{(-2)^3} + 2 \cdot \sqrt[3]{(-2)^6} = 3 \cdot (-2) + 2 \cdot 4 \]
+      </div>
+      <div class="math-box">
+        \[ = -6 + 8 = \color{#4ade80}{2} \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">4</span> Izračunavanje \(\sqrt[4]{(-3)^4}\)</div>
+      <p class="step-explanation">
+        Izračunamo stepen:
+      </p>
+      <div class="math-box">
+        \[ (-3)^4 = (-3)^2 \cdot (-3)^2 = 9 \cdot 9 = 81 \]
+      </div>
+      <p class="step-explanation">
+        Četvrti koren je <span class="highlight-pink">paran koren</span>, pa uvek daje <strong>pozitivan</strong> rezultat:
+      </p>
+      <div class="math-box">
+        \[ \sqrt[4]{(-3)^4} = \sqrt[4]{81} = 3 \]
+      </div>
+      <p class="step-explanation" style="color: #94a3b8; font-size: 0.95rem;">
+        Napomena: \(\sqrt[4]{(-3)^4} = |-3| = 3\), a ne \(-3\). Parni koren parnog stepena daje apsolutnu vrednost.
+      </p>
+    </div>
+
+    <!-- Step 5 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">5</span> Izračunavanje \(\sqrt[5]{(-4)^5}\)</div>
+      <p class="step-explanation">
+        Izračunamo stepen:
+      </p>
+      <div class="math-box">
+        \[ (-4)^5 = -1024 \]
+      </div>
+      <p class="step-explanation">
+        Peti koren je <span class="highlight-blue">neparan koren</span>, pa čuva negativan znak:
+      </p>
+      <div class="math-box">
+        \[ \sqrt[5]{(-4)^5} = \sqrt[5]{-1024} = -4 \]
+      </div>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri se: Zašto \(\sqrt[5]{(-4)^5} = -4\), a ne \(4\)?</summary>
+          <p>
+            Peti koren je neparan. Neparni koreni čuvaju znak argumenta: \(\sqrt[5]{-1024} = -4\) jer \((-4)^5 = -1024\). Za razliku od parnih korena, neparni koreni su definisani i za negativne brojeve i vraćaju negativan rezultat kad je argument negativan.
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">6</span> Računanje imenioca</div>
+      <p class="step-explanation">
+        Zamenjujemo vrednosti u imenilac:
+      </p>
+      <div class="math-box">
+        \[ \sqrt[4]{(-3)^4} + \sqrt[5]{(-4)^5} = 3 + (-4) \]
+      </div>
+      <div class="math-box">
+        \[ = 3 - 4 = \color{#f472b6}{-1} \]
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div style="margin-bottom: 24px;">
+      <div class="step-title"><span class="step-badge">7</span> Konačno deljenje</div>
+      <p class="step-explanation">
+        Delimo brojilac sa imeniocem:
+      </p>
+      <div class="math-box">
+        \[ \frac{3 \cdot \sqrt[3]{(-2)^3} + 2 \cdot \sqrt[3]{(-2)^6}}{\sqrt[4]{(-3)^4} + \sqrt[5]{(-4)^5}} = \frac{2}{-1} = \color{#4ade80}{-2} \]
+      </div>
+
+      <div class="checkpoint">
+        <details>
+          <summary>Proveri se: Da li je \(\frac{2}{-1}\) zaista \(-2\)?</summary>
+          <p>
+            Da! Pozitivan broj podeljen negativnim daje negativan rezultat: \(\frac{2}{-1} = -2\). Proverimo: \((-2) \cdot (-1) = 2\). Tačno!
+          </p>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Čitav zadatak se svodi na jedno pravilo u dva dela:
+    </p>
+    <div class="rule-grid" style="margin-top: 12px;">
+      <div class="rule-card">
+        <div class="rule-label" style="color: #60a5fa;">Neparan koren</div>
+        <div class="rule-formula">\(\sqrt[n]{a^n} = a\)</div>
+        <div style="color: #94a3b8; font-size: 0.85rem; margin-top: 6px;">čuva znak</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-label" style="color: #f472b6;">Paran koren</div>
+        <div class="rule-formula">\(\sqrt[n]{a^n} = |a|\)</div>
+        <div style="color: #94a3b8; font-size: 0.85rem; margin-top: 6px;">uvek pozitivan</div>
+      </div>
+    </div>
+    <p style="margin-top: 14px;">
+      Kada ovo pravilo primenimo na sve četiri komponente izraza, račun postaje jednostavan!
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(-2\)</div>
+    <div class="final-options">
+      <span class="final-option" data-option="A">(A) \(3\)</span>
+      <span class="final-option correct" data-option="B">(B) \(-2\)</span>
+      <span class="final-option" data-option="C">(C) \(4\)</span>
+      <span class="final-option" data-option="D">(D) \(6\)</span>
+      <span class="final-option" data-option="E">(E) \(2\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Brojilac \(= 3 \cdot (-2) + 2 \cdot 4 = -6 + 8 = 2\). Imenilac \(= 3 + (-4) = -1\). Rezultat: \(\frac{2}{-1} = -2\). &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešan znak kod parnog korena</div>
+      <p>Česta greška je misliti da je \(\sqrt[4]{(-3)^4} = -3\). Parni koren <strong>nikad</strong> ne daje negativan rezultat! \(\sqrt[4]{(-3)^4} = \sqrt[4]{81} = 3 = |-3|\). Da je imenilac bio \(-3 + (-4) = -7\), dobili bismo pogrešan rezultat \(\frac{2}{-7}\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboravljanje znaka kod neparnog korena</div>
+      <p>Greška je i reći da je \(\sqrt[3]{(-2)^3} = 2\) ili da je \(\sqrt[5]{(-4)^5} = 4\). Neparni koreni <strong>čuvaju</strong> znak: \(\sqrt[3]{-8} = -2\), \(\sqrt[5]{-1024} = -4\). Da je \(\sqrt[3]{(-2)^3} = 2\), brojilac bi bio \(3 \cdot 2 + 8 = 14\), što ne odgovara nijednom ponuđenom odgovoru.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Izračunaj vrednost izraza:
+    </p>
+    <div class="math-box" style="text-align: center;">
+      \[ \frac{\sqrt[3]{(-3)^3} + \sqrt[6]{(-2)^6}}{\sqrt[4]{(-2)^4} - \sqrt[3]{(-1)^3}} \]
+    </div>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>
+        Primeni ista pravila: \(\sqrt[3]{(-3)^3} = -3\) (neparan koren), \(\sqrt[6]{(-2)^6} = |-2| = 2\) (paran koren), \(\sqrt[4]{(-2)^4} = |-2| = 2\) (paran koren), \(\sqrt[3]{(-1)^3} = -1\) (neparan koren). Imenilac: \(2 - (-1) = 3\). Brojilac: \(-3 + 2 = -1\). Rezultat: \(\frac{-1}{3}\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 480 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 480;
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Struktura izraza \u2014 korak po korak', W / 2, 30);
+
+    // Layout parameters
+    const centerX = W / 2;
+    const fractionLineY = 220;
+    const numY = 120;
+    const denY = 320;
+
+    // Draw fraction line
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(centerX - 260, fractionLineY);
+    ctx.lineTo(centerX + 260, fractionLineY);
+    ctx.stroke();
+
+    // === NUMERATOR ===
+    // Label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BROJILAC', centerX, 55);
+
+    // First term box
+    var box1X = centerX - 190;
+    var box1Y = numY - 30;
+    var boxW = 160;
+    var boxH = 70;
+
+    // Box background
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.1)';
+    roundRect(ctx, box1X, box1Y, boxW, boxH, 10);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, box1X, box1Y, boxW, boxH, 10);
+    ctx.stroke();
+
+    // First term content
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('3 \u00b7 \u00b3\u221a((\u22122)\u00b3)', box1X + boxW / 2, numY - 5);
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= 3 \u00b7 (\u22122) = \u22126', box1X + boxW / 2, numY + 18);
+
+    // Plus sign
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('+', centerX, numY + 5);
+
+    // Second term box
+    var box2X = centerX + 30;
+
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.1)';
+    roundRect(ctx, box2X, box1Y, boxW, boxH, 10);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(167, 139, 250, 0.3)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, box2X, box1Y, boxW, boxH, 10);
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2 \u00b7 \u00b3\u221a((\u22122)\u2076)', box2X + boxW / 2, numY - 5);
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= 2 \u00b7 4 = 8', box2X + boxW / 2, numY + 18);
+
+    // Numerator result
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u22126 + 8 = 2', centerX, fractionLineY - 20);
+
+    // Arrow to result
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(box1X + boxW, numY + 5);
+    ctx.lineTo(centerX - 50, fractionLineY - 25);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(box2X, numY + 5);
+    ctx.lineTo(centerX + 50, fractionLineY - 25);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // === DENOMINATOR ===
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('IMENILAC', centerX, fractionLineY + 50);
+
+    // Third term box
+    var box3X = centerX - 190;
+    var box3Y = denY - 20;
+
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.1)';
+    roundRect(ctx, box3X, box3Y, boxW, boxH, 10);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.3)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, box3X, box3Y, boxW, boxH, 10);
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u2074\u221a((\u22123)\u2074)', box3X + boxW / 2, denY + 5);
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= |\u22123| = 3', box3X + boxW / 2, denY + 28);
+
+    // Paran label
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'italic 10px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(paran koren)', box3X + boxW / 2, box3Y + boxH + 14);
+
+    // Plus sign
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('+', centerX, denY + 15);
+
+    // Fourth term box
+    var box4X = centerX + 30;
+
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.1)';
+    roundRect(ctx, box4X, box3Y, boxW, boxH, 10);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.3)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, box4X, box3Y, boxW, boxH, 10);
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('\u2075\u221a((\u22124)\u2075)', box4X + boxW / 2, denY + 5);
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= \u22124', box4X + boxW / 2, denY + 28);
+
+    // Neparan label
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'italic 10px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(neparan koren)', box4X + boxW / 2, box3Y + boxH + 14);
+
+    // Denominator result
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('3 + (\u22124) = \u22121', centerX, denY + boxH + 38);
+
+    // Arrows to denominator result
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(box3X + boxW, denY + 30);
+    ctx.lineTo(centerX - 60, denY + boxH + 30);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(box4X, denY + 30);
+    ctx.lineTo(centerX + 60, denY + boxH + 30);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // === FINAL RESULT ===
+    var resultY = H - 30;
+
+    // Result box
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.12)';
+    roundRect(ctx, centerX - 100, resultY - 30, 200, 40, 12);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.4)';
+    ctx.lineWidth = 2;
+    roundRect(ctx, centerX - 100, resultY - 30, 200, 40, 12);
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2 \u00f7 (\u22121) = \u22122', centerX, resultY - 5);
+
+    // Arrow from fraction to result
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(centerX, denY + boxH + 45);
+    ctx.lineTo(centerX, resultY - 35);
+    ctx.stroke();
+
+    // Arrowhead
+    ctx.beginPath();
+    ctx.moveTo(centerX, resultY - 35);
+    ctx.lineTo(centerX - 5, resultY - 43);
+    ctx.lineTo(centerX + 5, resultY - 43);
+    ctx.closePath();
+    ctx.fillStyle = '#4ade80';
+    ctx.fill();
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Korenovanje negativnih brojeva — parni i neparni koreni",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["korenovanje", "neparni koreni", "parni koreni", "stepeni negativnih brojeva", "računanje izraza"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algebarsko uprošćavanje izraza sa kубовима</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Given a = 2.3584, b = 1.6416, find the value of:
+  (a^3 + 8b^3) / ((a - b)^2 + 3b^2) - b
+
+Step 1: Notice that 8b^3 = (2b)^3, so the numerator is a sum of cubes:
+  a^3 + (2b)^3 = (a + 2b)(a^2 - 2ab + 4b^2)
+  Using the identity: x^3 + y^3 = (x + y)(x^2 - xy + y^2) with x = a, y = 2b.
+
+Step 2: Expand the denominator:
+  (a - b)^2 + 3b^2 = a^2 - 2ab + b^2 + 3b^2 = a^2 - 2ab + 4b^2
+
+Step 3: The fraction simplifies:
+  [(a + 2b)(a^2 - 2ab + 4b^2)] / (a^2 - 2ab + 4b^2) = a + 2b
+
+Step 4: Subtract b:
+  Expression = a + 2b - b = a + b
+
+Step 5: Compute a + b:
+  a + b = 2.3584 + 1.6416 = 4.0000
+
+Answer: 4, which is option (D).
+
+Verification:
+  a + 2b = 2.3584 + 2(1.6416) = 2.3584 + 3.2832 = 5.6416
+  a - b = 2.3584 - 1.6416 = 0.7168
+
+  Let's verify numerically:
+  a^3 = 2.3584^3 ≈ 13.124...
+  (2b)^3 = 3.2832^3 ≈ 35.373...
+  Numerator ≈ 48.497...
+
+  (a-b)^2 = 0.7168^2 ≈ 0.5138
+  3b^2 = 3 × 1.6416^2 = 3 × 2.6948 ≈ 8.0845
+  Denominator ≈ 8.5983
+
+  Fraction ≈ 48.497 / 8.5983 ≈ 5.6416 = a + 2b ✓
+  Expression = 5.6416 - 1.6416 = 4.0 ✓
+
+  Answer: (D) 4
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Uprošćavanje algebarskog izraza sa kubovima</h1>
+  <p class="subtitle">Faktorizacija zbira kubova i algebarsko skraćivanje razlomka sa decimalnim brojevima</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Ako je \(a = 2{,}3584\) i \(b = 1{,}6416\), onda izraz
+      \[\frac{a^3 + 8b^3}{(a - b)^2 + 3b^2} - b\]
+      ima vrednost:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(16\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(42{,}56\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(0{,}7168\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Umesto da računamo sa komplikovanim decimalnim brojevima, primenićemo algebarsku faktorizaciju. Prepoznaćemo da je \(8b^3 = (2b)^3\), pa brojilac predstavlja zbir kubova. Imenilac ćemo razviti i uporediti sa delom brojioca. Posle skraćivanja, izraz će se svesti na jednostavan zbir \(a + b\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Zbir kubova</summary>
+      <div class="math-box">
+        \[ x^3 + y^3 = (x + y)(x^2 - xy + y^2) \]
+      </div>
+      <p>Ovo je jedna od ključnih formula za faktorizaciju. Zbir kubova se rastavlja na proizvod binoma \((x + y)\) i trinoma \((x^2 - xy + y^2)\).</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Kvadrat binoma</summary>
+      <div class="math-box">
+        \[ (a - b)^2 = a^2 - 2ab + b^2 \]
+      </div>
+      <p>Kvadrat razlike dva broja jednak je kvadratu prvog, minus dvostruki proizvod, plus kvadrat drugog.</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz transformacije izraza</div>
+    <canvas id="mainCanvas" width="900" height="520"></canvas>
+    <p class="drag-hint">Prikaz korak-po-korak algebarskog uprošćavanja izraza</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Prepoznajmo strukturu brojioca</div>
+      <p class="step-explanation">
+        Primetimo da je \(8b^3 = (2b)^3\). Dakle, brojilac \(a^3 + 8b^3\) je zapravo zbir kubova:
+      </p>
+      <div class="math-box">
+        \[ a^3 + 8b^3 = a^3 + (2b)^3 \]
+      </div>
+      <p class="note-box">Ovo je ključna opservacija koja nam omogućava da primenimo formulu za zbir kubova.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Primenimo formulu za zbir kubova</div>
+      <p class="step-explanation">
+        Koristeći formulu \(x^3 + y^3 = (x + y)(x^2 - xy + y^2)\) sa \(x = a\) i \(y = 2b\):
+      </p>
+      <div class="math-box">
+        \[ a^3 + (2b)^3 = (a + 2b)\bigl(a^2 - a \cdot 2b + (2b)^2\bigr) \]
+      </div>
+      <p class="step-explanation">
+        Sredimo izraz u zagradi:
+      </p>
+      <div class="math-box">
+        \[ a^3 + (2b)^3 = (a + 2b)(a^2 - 2ab + 4b^2) \]
+      </div>
+
+      <details>
+        <summary>Proveri sebe: Koliko je \((2b)^2\)?</summary>
+        <p>\((2b)^2 = 4b^2\). Kvadriramo i koeficijent i promenljivu: \(2^2 \cdot b^2 = 4b^2\).</p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Razvijmo imenilac</div>
+      <p class="step-explanation">
+        Imenilac je \((a - b)^2 + 3b^2\). Razvijmo kvadrat binoma:
+      </p>
+      <div class="math-box">
+        \[ (a - b)^2 = a^2 - 2ab + b^2 \]
+      </div>
+      <p class="step-explanation">
+        Dodajmo \(3b^2\):
+      </p>
+      <div class="math-box">
+        \[ (a - b)^2 + 3b^2 = a^2 - 2ab + b^2 + 3b^2 = a^2 - 2ab + 4b^2 \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Uočimo poklapanje</div>
+      <p class="step-explanation">
+        Uporedimo rezultate iz koraka 2 i 3. Imenilac je upravo jednak drugom faktoru brojioca:
+      </p>
+      <div class="math-box">
+        \[ \underbrace{a^2 - 2ab + 4b^2}_{\text{imenilac}} = \underbrace{a^2 - 2ab + 4b^2}_{\text{drugi faktor brojioca}} \]
+      </div>
+      <p class="step-explanation">
+        Ovo znači da se razlomak može skratiti!
+      </p>
+
+      <details>
+        <summary>Proveri sebe: Šta preostaje posle skraćivanja?</summary>
+        <p>Posle skraćivanja \((a^2 - 2ab + 4b^2)\) u brojiocu i imeniocu, preostaje samo prvi faktor brojioca: \(a + 2b\).</p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Skratimo razlomak</div>
+      <p class="step-explanation">
+        Zamenom faktorisanih oblika u originalni izraz:
+      </p>
+      <div class="math-box">
+        \[ \frac{a^3 + 8b^3}{(a - b)^2 + 3b^2} = \frac{(a + 2b)\cancel{(a^2 - 2ab + 4b^2)}}{\cancel{a^2 - 2ab + 4b^2}} = a + 2b \]
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Oduzimamo \(b\)</div>
+      <p class="step-explanation">
+        Ceo izraz glasi:
+      </p>
+      <div class="math-box">
+        \[ \frac{a^3 + 8b^3}{(a - b)^2 + 3b^2} - b = (a + 2b) - b = a + b \]
+      </div>
+      <p class="step-explanation">
+        Izraz se svodi na najjednostavniji mogući oblik: \(a + b\).
+      </p>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">7</span> Izračunajmo brojčanu vrednost</div>
+      <p class="step-explanation">
+        Sada zamenjujemo konkretne vrednosti \(a = 2{,}3584\) i \(b = 1{,}6416\):
+      </p>
+      <div class="math-box">
+        \[ a + b = 2{,}3584 + 1{,}6416 = 4{,}0000 = 4 \]
+      </div>
+      <p class="note-box">Lepo se vidi da su decimale komplementarne: 0,3584 + 0,6416 = 1,0000, pa zajedno sa celim delovima 2 + 1 = 3 dobijamo ukupno 4.</p>
+
+      <details>
+        <summary>Proveri sebe: Da li je 4 među ponuđenim odgovorima?</summary>
+        <p>Da! Vrednost \(4\) odgovara opciji (D). Rešenje je tačno.</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Zadatak se čini komplikovanim zbog „ružnih" decimalnih brojeva, ali upravo to je zamka. Suština je da se ceo izraz algebarski uprosti pre zamene brojeva. Kada primenimo formulu za zbir kubova na brojilac i razvijemo imenilac, dolazimo do identičnog trinoma \(a^2 - 2ab + 4b^2\) koji se skraćuje. Konačni rezultat je jednostavno \(a + b\), a decimale su namerno izabrane tako da im je zbir okrugao broj.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(\dfrac{a^3 + 8b^3}{(a-b)^2 + 3b^2} - b = a + b = 4\)</div>
+    <div class="final-options">
+      <span class="final-option" data-option="A">(A) \(2\)</span>
+      <span class="final-option" data-option="B">(B) \(16\)</span>
+      <span class="final-option" data-option="C">(C) \(42{,}56\)</span>
+      <span class="final-option correct" data-option="D">(D) \(4\)</span>
+      <span class="final-option" data-option="E">(E) \(0{,}7168\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Proverimo direktnim računom. \(a + 2b = 2{,}3584 + 3{,}2832 = 5{,}6416\). \(a - b = 0{,}7168\). Razlomak daje \(a + 2b = 5{,}6416\). Oduzimanjem \(b = 1{,}6416\) dobijamo \(5{,}6416 - 1{,}6416 = 4\). Primetimo i da je \(0{,}7168 = a - b\), što je ponuđeni odgovor (E) — ovo je distraktror koji testira da li ste se zaustavili na \(a - b\) umesto da nastavite sa punom faktorizacijom. &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pokušaj direktnog izračunavanja</div>
+      <p>Najveća zamka je pokušaj da se stepenuju i množe decimalni brojevi direktno. Ovo vodi do velikih numeričkih grešaka i ogromnog gubitka vremena. Uvek prvo pokušajte algebarsko uprošćavanje!</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboravljena supstitucija \(8b^3 = (2b)^3\)</div>
+      <p>Ako ne prepoznate da je \(8b^3\) kub od \(2b\), ne možete primeniti formulu za zbir kubova. Ključ je primetiti da je \(8 = 2^3\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zamena \(a - b\) kao konačnog odgovora</div>
+      <p>Vrednost \(a - b = 0{,}7168\) je ponuđena kao odgovor (E). To je distraktror za studente koji pogrešno izračunaju ili se zaustave pre finalnog koraka.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Uprosti izraz \(\dfrac{a^3 - 27b^3}{a^2 - 6ab + 9b^2} + \dfrac{3ab}{a - 3b}\) za \(a \neq 3b\).
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Primeni formulu za razliku kubova: \(a^3 - 27b^3 = a^3 - (3b)^3 = (a - 3b)(a^2 + 3ab + 9b^2)\). Imenilac prvog razlomka je \((a - 3b)^2\). Posle skraćivanja dobija se \(\frac{a^2 + 3ab + 9b^2}{a - 3b} + \frac{3ab}{a - 3b}\), što daje \(\frac{a^2 + 6ab + 9b^2}{a - 3b} = \frac{(a + 3b)^2}{a - 3b}\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 520;
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Algebarsko uprošćavanje izraza', W / 2, 28);
+
+    const centerX = W / 2;
+    const boxW = Math.min(580, W * 0.85);
+    const smallBoxW = Math.min(440, W * 0.65);
+
+    // --- Row 1: Original expression ---
+    const y1 = 65;
+    drawBox(ctx, centerX, y1, boxW, 52, '#a78bfa', 'Polazni izraz:',
+      '(a\u00B3 + 8b\u00B3) / ((a \u2212 b)\u00B2 + 3b\u00B2) \u2212 b', '#e2e8f0');
+
+    drawArrow(ctx, centerX, y1 + 28, y1 + 56);
+
+    // --- Row 2: Numerator factoring ---
+    const y2 = y1 + 78;
+    const leftX = centerX - boxW * 0.27;
+    const rightX = centerX + boxW * 0.27;
+    const halfBoxW = Math.min(260, W * 0.38);
+
+    // Numerator box
+    drawBox(ctx, leftX, y2, halfBoxW, 68, '#60a5fa', 'Brojilac (zbir kubova):',
+      'a\u00B3 + (2b)\u00B3', '#e2e8f0', '= (a + 2b)(a\u00B2 \u2212 2ab + 4b\u00B2)');
+
+    // Denominator box
+    drawBox(ctx, rightX, y2, halfBoxW, 68, '#f472b6', 'Imenilac (razvijanje):',
+      '(a \u2212 b)\u00B2 + 3b\u00B2', '#e2e8f0', '= a\u00B2 \u2212 2ab + 4b\u00B2');
+
+    // Convergence arrows
+    drawArrow(ctx, leftX, y2 + 36, y2 + 64);
+    drawArrow(ctx, rightX, y2 + 36, y2 + 64);
+
+    // --- Row 3: Match highlight ---
+    const y3 = y2 + 90;
+
+    // Highlight box showing they match
+    ctx.beginPath();
+    ctx.roundRect(centerX - boxW / 2, y3 - 26, boxW, 52, 12);
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.1)';
+    ctx.fill();
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Isti izraz! Skraćujemo: a\u00B2 \u2212 2ab + 4b\u00B2', centerX, y3 - 4);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Razlomak se svodi na: a + 2b', centerX, y3 + 16);
+
+    drawArrow(ctx, centerX, y3 + 28, y3 + 54);
+
+    // --- Row 4: Subtract b ---
+    const y4 = y3 + 78;
+    drawBox(ctx, centerX, y4, smallBoxW, 52, '#a78bfa', 'Oduzimamo b:',
+      '(a + 2b) \u2212 b = a + b', '#e2e8f0');
+
+    drawArrow(ctx, centerX, y4 + 28, y4 + 56);
+
+    // --- Row 5: Substitution ---
+    const y5 = y4 + 78;
+    drawBox(ctx, centerX, y5, smallBoxW, 52, '#60a5fa', 'Zamena vrednosti:',
+      'a + b = 2,3584 + 1,6416', '#e2e8f0');
+
+    drawArrow(ctx, centerX, y5 + 28, y5 + 56);
+
+    // --- Row 6: Final result ---
+    const y6 = y5 + 82;
+
+    // Glow effect
+    const glow = ctx.createRadialGradient(centerX, y6, 0, centerX, y6, 60);
+    glow.addColorStop(0, 'rgba(74, 222, 128, 0.2)');
+    glow.addColorStop(1, 'rgba(74, 222, 128, 0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(centerX, y6, 60, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Result circle
+    ctx.beginPath();
+    ctx.arc(centerX, y6, 38, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.95)';
+    ctx.fill();
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 32px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('4', centerX, y6);
+    ctx.textBaseline = 'alphabetic';
+
+    // Answer label
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Odgovor: (D)', centerX, y6 + 58);
+  }
+
+  function drawBox(ctx, cx, cy, w, h, borderColor, titleText, mainText, mainColor, subText) {
+    ctx.beginPath();
+    ctx.roundRect(cx - w / 2, cy - h / 2, w, h, 10);
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    ctx.fill();
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = borderColor;
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    if (subText) {
+      ctx.fillText(titleText, cx, cy - h / 2 + 18);
+      ctx.fillStyle = mainColor;
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(mainText, cx, cy - h / 2 + 36);
+      ctx.fillStyle = '#a78bfa';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(subText, cx, cy - h / 2 + 54);
+    } else {
+      ctx.fillText(titleText, cx, cy - 8);
+      ctx.fillStyle = mainColor;
+      ctx.font = '15px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(mainText, cx, cy + 14);
+    }
+  }
+
+  function drawArrow(ctx, x, startY, endY) {
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, startY);
+    ctx.lineTo(x, endY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    ctx.moveTo(x, endY);
+    ctx.lineTo(x - 5, endY - 7);
+    ctx.lineTo(x + 5, endY - 7);
+    ctx.closePath();
+    ctx.fillStyle = '#475569';
+    ctx.fill();
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Uprošćavanje algebarskog izraza sa kubovima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["zbir kubova", "faktorizacija", "algebarsko uprošćavanje", "racionalni izrazi"]
+}
+BRAINSPARK_META-->

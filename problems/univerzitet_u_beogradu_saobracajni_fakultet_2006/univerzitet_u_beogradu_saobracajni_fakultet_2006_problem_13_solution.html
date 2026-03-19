@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rastojanje tačke na pravoj od dve date tačke</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Tačka M(a, b) pripada pravoj x + 2y - 10 = 0 i podjednako je udaljena od
+tačaka A(6, 3) i B(7, 2). Naći a - b.
+
+Step 1: M leži na pravoj, pa važi:
+  a + 2b - 10 = 0
+  a + 2b = 10  ... (1)
+
+Step 2: M je podjednako udaljena od A i B, tj. |MA| = |MB|.
+  (a - 6)^2 + (b - 3)^2 = (a - 7)^2 + (b - 2)^2
+
+Expand left side:
+  a^2 - 12a + 36 + b^2 - 6b + 9 = a^2 - 12a - 6b + 45
+
+Expand right side:
+  a^2 - 14a + 49 + b^2 - 4b + 4 = a^2 - 14a - 4b + 53
+
+Set equal (a^2 and b^2 cancel):
+  -12a - 6b + 45 = -14a - 4b + 53
+  -12a - 6b + 14a + 4b = 53 - 45
+  2a - 2b = 8
+  a - b = 4  ... (2)
+
+Answer: a - b = 4, which is option (A).
+
+Finding the actual point (for verification):
+From (2): a = b + 4
+Sub into (1): b + 4 + 2b = 10 → 3b = 6 → b = 2, a = 6
+So M = (6, 2).
+
+Verification:
+  MA = sqrt((6-6)^2 + (2-3)^2) = sqrt(0 + 1) = 1
+  MB = sqrt((6-7)^2 + (2-2)^2) = sqrt(1 + 0) = 1
+  MA = MB = 1 ✓
+  M on line: 6 + 2·2 - 10 = 0 ✓
+  a - b = 6 - 2 = 4 ✓
+
+Geometric insight: The set of all points equidistant from A and B is the
+perpendicular bisector (simetrala) of segment AB. The answer is the intersection
+of this perpendicular bisector with the given line.
+
+Common mistakes:
+- Forgetting to square both sides properly
+- Arithmetic errors during expansion
+- Mixing up coordinates of A and B
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Tačka na pravoj podjednako udaljena od dve tačke</h1>
+  <p class="subtitle">Jednakost rastojanja, jednačina prave i sistem linearnih jednačina u analitičkoj geometriji</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Ako je tačka <span class="highlight-val">\(M(a, b)\)</span>, koja pripada pravoj <span class="highlight-val">\(x + 2y - 10 = 0\)</span>, podjednako udaljena od tačaka <span class="highlight-val">\(A(6, 3)\)</span> i <span class="highlight-val">\(B(7, 2)\)</span>, onda je \(a - b\):
+    </div>
+
+    <div class="given-grid" style="margin-bottom: 16px;">
+      <div class="given-item">
+        <div class="label">Tačka M</div>
+        <div class="value">\((a, b)\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Prava</div>
+        <div class="value">\(x + 2y - 10 = 0\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Tačka A</div>
+        <div class="value">\((6, 3)\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Tačka B</div>
+        <div class="value">\((7, 2)\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(5\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Iskoristićemo dva uslova: (1) tačka \(M(a, b)\) leži na datoj pravoj, što daje jednu jednačinu, i (2) rastojanja od \(M\) do tačaka \(A\) i \(B\) su jednaka, što daje drugu jednačinu. Iz sistema dve jednačine sa dve nepoznate naći ćemo \(a - b\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>&#128208; Rastojanje između dve tačke</summary>
+      <p style="margin-top: 8px;">
+        Rastojanje između tačaka \(P(x_1, y_1)\) i \(Q(x_2, y_2)\) u ravni:
+      </p>
+      <div class="math-box">
+        \[ d(P, Q) = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2} \]
+      </div>
+    </details>
+    <details>
+      <summary>&#128208; Simetrala duži</summary>
+      <p style="margin-top: 8px;">
+        Skup svih tačaka koje su podjednako udaljene od dve date tačke \(A\) i \(B\) čini <strong>simetralu</strong> (normalni bisektris) duži \(\overline{AB}\). Ta prava je normalna na \(\overline{AB}\) i prolazi kroz središte duži.
+      </p>
+    </details>
+    <details>
+      <summary>&#128208; Pripadnost tačke pravoj</summary>
+      <p style="margin-top: 8px;">
+        Tačka \(M(a, b)\) pripada pravoj \(px + qy + r = 0\) ako i samo ako važi:
+      </p>
+      <div class="math-box">
+        \[ pa + qb + r = 0 \]
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz</div>
+    <canvas id="mainCanvas" width="900" height="550"></canvas>
+    <p class="drag-hint">Prevucite tačku M duž prave da vidite kako se menjaju rastojanja do A i B</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Uslov pripadnosti pravoj</div>
+      <p class="step-explanation">
+        Tačka \(M(a, b)\) leži na pravoj \(x + 2y - 10 = 0\). Zamenjujemo koordinate tačke u jednačinu prave:
+      </p>
+      <div class="math-box">
+        \[ a + 2b - 10 = 0 \]
+      </div>
+      <p class="step-explanation">
+        Odavde dobijamo prvu jednačinu:
+      </p>
+      <div class="math-box">
+        \[ a + 2b = 10 \quad \cdots (1) \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Uslov jednakih rastojanja</div>
+      <p class="step-explanation">
+        Tačka \(M\) je podjednako udaljena od \(A(6, 3)\) i \(B(7, 2)\), tj. \(|MA| = |MB|\).
+      </p>
+      <p class="step-explanation">
+        Kvadriranjem obe strane (rastojanja su nenegativna, pa je to ekvivalentno):
+      </p>
+      <div class="math-box">
+        \[ (a - 6)^2 + (b - 3)^2 = (a - 7)^2 + (b - 2)^2 \]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Razvijanje kvadrata &mdash; leva strana</div>
+      <p class="step-explanation">
+        Razvijamo levu stranu jednačine:
+      </p>
+      <div class="math-box">
+        \[ \begin{align}
+        (a - 6)^2 + (b - 3)^2 &= a^2 - 12a + 36 + b^2 - 6b + 9 \\
+        &= a^2 + b^2 - 12a - 6b + 45
+        \end{align} \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Razvijanje kvadrata &mdash; desna strana</div>
+      <p class="step-explanation">
+        Razvijamo desnu stranu jednačine:
+      </p>
+      <div class="math-box">
+        \[ \begin{align}
+        (a - 7)^2 + (b - 2)^2 &= a^2 - 14a + 49 + b^2 - 4b + 4 \\
+        &= a^2 + b^2 - 14a - 4b + 53
+        \end{align} \]
+      </div>
+    </div>
+
+    <details>
+      <summary>&#9989; Proveri se: Koliko je \((a - 7)^2\) kada se razvije?</summary>
+      <p style="margin-top: 8px;">
+        \((a - 7)^2 = a^2 - 2 \cdot a \cdot 7 + 7^2 = a^2 - 14a + 49\)
+      </p>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Izjednačavanje i skraćivanje</div>
+      <p class="step-explanation">
+        Izjednačavamo levu i desnu stranu. Članovi \(a^2\) i \(b^2\) se pojavljuju na obe strane i skraćuju se:
+      </p>
+      <div class="math-box">
+        \[ -12a - 6b + 45 = -14a - 4b + 53 \]
+      </div>
+      <p class="step-explanation">
+        Prenosimo sve na levu stranu:
+      </p>
+      <div class="math-box">
+        \[ -12a + 14a - 6b + 4b + 45 - 53 = 0 \]
+      </div>
+      <div class="math-box">
+        \[ 2a - 2b - 8 = 0 \]
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Pojednostavljivanje</div>
+      <p class="step-explanation">
+        Delimo celu jednačinu sa 2:
+      </p>
+      <div class="math-box">
+        \[ a - b - 4 = 0 \]
+      </div>
+      <p class="step-explanation">
+        Odavde odmah dobijamo:
+      </p>
+      <div class="math-box">
+        \[ a - b = 4 \quad \cdots (2) \]
+      </div>
+    </div>
+
+    <details>
+      <summary>&#9989; Proveri se: Da li nam zaista treba jednačina prave da nađemo \(a - b\)?</summary>
+      <p style="margin-top: 8px;">
+        Zapažamo da smo vrednost \(a - b = 4\) dobili samo iz uslova jednakih rastojanja, bez korišćenja jednačine prave! Jednačina prave bi bila potrebna tek da nađemo konkretne vrednosti \(a\) i \(b\), ali pošto zadatak traži samo \(a - b\), uslov jednakih rastojanja je dovoljan.
+      </p>
+    </details>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">7</span> Zaključak</div>
+      <p class="step-explanation">
+        Direktno iz jednačine (2) čitamo traženu vrednost:
+      </p>
+      <div class="math-box">
+        \[ \boxed{a - b = 4} \]
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">&#128161; Ključni uvid</div>
+    <p style="color: #cbd5e1;">
+      Uslov jednakih rastojanja \(|MA| = |MB|\) se svodi na <strong>linearnu</strong> jednačinu (jer se \(a^2\) i \(b^2\) skrate). Ta linearna jednačina je upravo jednačina simetrale duži \(\overline{AB}\). Zadatak traži \(a - b\), a ta vrednost izlazi direktno iz te jednačine &mdash; nije nam potrebna ni jednačina date prave!
+    </p>
+  </div>
+
+  <!-- Bonus: Finding exact point -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128270;</span> Bonus: Nalaženje tačke M</div>
+    <p class="step-explanation">
+      Ako želimo da nađemo konkretne koordinate tačke \(M\), rešavamo sistem jednačina (1) i (2):
+    </p>
+    <div class="math-box">
+      \[ \begin{cases} a + 2b = 10 \\ a - b = 4 \end{cases} \]
+    </div>
+    <p class="step-explanation">
+      Iz (2): \(a = b + 4\). Zamenom u (1): \(b + 4 + 2b = 10\), tj. \(3b = 6\), odakle \(b = 2\) i \(a = 6\).
+    </p>
+    <p class="step-explanation">
+      Dakle, \(M(6, 2)\).
+    </p>
+    <p class="step-explanation" style="color: #94a3b8; font-style: italic;">
+      Provera: \(|MA| = \sqrt{(6-6)^2 + (2-3)^2} = 1\), \(|MB| = \sqrt{(6-7)^2 + (2-2)^2} = 1\). Rastojanja su jednaka. &#10003;
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">&#127942; Konačan odgovor</div>
+    <div class="answer">\( a - b = 4 \)</div>
+    <div class="answer-options">
+      <span class="opt correct">(A) \(4\)</span>
+      <span class="opt">(B) \(2\)</span>
+      <span class="opt">(C) \(3\)</span>
+      <span class="opt">(D) \(1\)</span>
+      <span class="opt">(E) \(5\)</span>
+    </div>
+    <p class="verification-note">
+      &#9989; Provera: Tačka \(M(6, 2)\) leži na pravoj \(6 + 2 \cdot 2 - 10 = 0\) i jednako je udaljena od \(A\) i \(B\) (oba rastojanja jednaka 1).
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Najčešće greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Greška pri razvijanju kvadrata</div>
+      Česta greška je zaboraviti dupli proizvod: \((a - 6)^2 \neq a^2 - 6a + 36\). Ispravno je \((a - 6)^2 = a^2 - 12a + 36\).
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Nepotrebno komplikovanje</div>
+      Nije potrebno nalaziti konkretne vrednosti \(a\) i \(b\) &mdash; zadatak traži samo \(a - b\), što direktno sledi iz uslova jednakih rastojanja.
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127775;</span> Izazov za napredne</div>
+    <p class="step-explanation">
+      Neka tačka \(N(c, d)\) pripada pravoj \(2x - y + 3 = 0\) i neka je podjednako udaljena od tačaka \(P(1, 4)\) i \(Q(3, 2)\). Koliko je \(c + d\)?
+    </p>
+    <details>
+      <summary>&#128161; Nagoveštaj</summary>
+      <p style="margin-top: 8px;">
+        Primenite isti postupak: iz uslova \(|NP| = |NQ|\) dobijate jednu linearnu vezu između \(c\) i \(d\). Proverite da li vam je i jednačina prave uopšte potrebna za odgovor!
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Coordinate system setup
+  const W = canvas.width;
+  const H = canvas.height;
+  const scale = 55;
+  const originX = 80;
+  const originY = H - 80;
+
+  function toCanvas(x, y) {
+    return { x: originX + x * scale, y: originY - y * scale };
+  }
+
+  function toMath(cx, cy) {
+    return { x: (cx - originX) / scale, y: (originY - cy) / scale };
+  }
+
+  // Points
+  const A = { x: 6, y: 3 };
+  const B = { x: 7, y: 2 };
+  let M = { x: 6, y: 2 }; // actual solution point, draggable along the line
+
+  let dragging = false;
+
+  function clampToLine(mx) {
+    // Line: x + 2y - 10 = 0 => y = (10 - x) / 2
+    const x = Math.max(0, Math.min(10, mx));
+    const y = (10 - x) / 2;
+    return { x, y };
+  }
+
+  function dist(p1, p2) {
+    return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+  }
+
+  function drawGrid() {
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 12; i++) {
+      const px = toCanvas(i, 0);
+      const py = toCanvas(0, i);
+      ctx.beginPath();
+      ctx.moveTo(px.x, originY + 10);
+      ctx.lineTo(px.x, 30);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(originX - 10, py.y);
+      ctx.lineTo(W - 30, py.y);
+      ctx.stroke();
+    }
+  }
+
+  function drawAxes() {
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+
+    // X axis
+    ctx.beginPath();
+    ctx.moveTo(originX - 10, originY);
+    ctx.lineTo(W - 30, originY);
+    ctx.stroke();
+
+    // Y axis
+    ctx.beginPath();
+    ctx.moveTo(originX, originY + 10);
+    ctx.lineTo(originX, 30);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = 1; i <= 10; i++) {
+      const px = toCanvas(i, 0);
+      ctx.fillText(i.toString(), px.x, originY + 22);
+    }
+    ctx.textAlign = 'right';
+    for (let i = 1; i <= 7; i++) {
+      const py = toCanvas(0, i);
+      ctx.fillText(i.toString(), originX - 12, py.y + 5);
+    }
+
+    // Axis names
+    ctx.fillStyle = '#64748b';
+    ctx.font = 'italic 16px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x', W - 25, originY + 22);
+    ctx.fillText('y', originX - 12, 28);
+  }
+
+  function drawLine() {
+    // x + 2y - 10 = 0 => y = (10 - x) / 2
+    const x1 = 0, y1 = 5;
+    const x2 = 10, y2 = 0;
+    const p1 = toCanvas(x1, y1);
+    const p2 = toCanvas(x2, y2);
+
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+
+    // Line label
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '14px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    const labelPos = toCanvas(1, 4.8);
+    ctx.fillText('x + 2y − 10 = 0', labelPos.x - 30, labelPos.y - 12);
+  }
+
+  function drawPerpendicularBisector() {
+    // Perpendicular bisector of AB
+    // Midpoint of AB: (6.5, 2.5)
+    // Direction of AB: (1, -1), so perpendicular direction: (1, 1)
+    // Parametric: (6.5 + t, 2.5 + t)
+    const t1 = -4, t2 = 4;
+    const p1 = toCanvas(6.5 + t1, 2.5 + t1);
+    const p2 = toCanvas(6.5 + t2, 2.5 + t2);
+
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = '13px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    const labelPos = toCanvas(8.5, 4.5);
+    ctx.fillText('simetrala AB', labelPos.x + 5, labelPos.y - 5);
+  }
+
+  function drawPoint(p, label, color, offsetX, offsetY) {
+    const cp = toCanvas(p.x, p.y);
+
+    // Glow
+    const grad = ctx.createRadialGradient(cp.x, cp.y, 0, cp.x, cp.y, 18);
+    grad.addColorStop(0, color + '55');
+    grad.addColorStop(1, color + '00');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cp.x, cp.y, 18, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Point
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(cp.x, cp.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = color;
+    ctx.font = 'bold 15px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, cp.x + (offsetX || 0), cp.y + (offsetY || -15));
+  }
+
+  function drawDistanceLine(p1, p2, color, label) {
+    const cp1 = toCanvas(p1.x, p1.y);
+    const cp2 = toCanvas(p2.x, p2.y);
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cp1.x, cp1.y);
+    ctx.lineTo(cp2.x, cp2.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Distance label at midpoint
+    const mx = (cp1.x + cp2.x) / 2;
+    const my = (cp1.y + cp2.y) / 2;
+    ctx.fillStyle = color;
+    ctx.font = '13px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    const d = dist(p1, p2);
+    ctx.fillText(label + ' = ' + d.toFixed(2).replace('.', ','), mx + 15, my - 8);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    drawGrid();
+    drawAxes();
+    drawPerpendicularBisector();
+    drawLine();
+
+    // Distance lines
+    const dMA = dist(M, A);
+    const dMB = dist(M, B);
+    drawDistanceLine(M, A, '#34d399', '|MA|');
+    drawDistanceLine(M, B, '#f472b6', '|MB|');
+
+    // Midpoint of AB
+    const midAB = toCanvas(6.5, 2.5);
+    ctx.fillStyle = '#a78bfa';
+    ctx.beginPath();
+    ctx.arc(midAB.x, midAB.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Points
+    drawPoint(A, 'A(6, 3)', '#34d399', 0, -15);
+    drawPoint(B, 'B(7, 2)', '#f472b6', 15, 18);
+    drawPoint(M, 'M(' + M.x.toFixed(1).replace('.', ',') + '; ' + M.y.toFixed(1).replace('.', ',') + ')', '#60a5fa', 0, 20);
+
+    // Info panel
+    const equal = Math.abs(dMA - dMB) < 0.01;
+    ctx.fillStyle = equal ? 'rgba(52, 211, 153, 0.15)' : 'rgba(96, 165, 250, 0.1)';
+    ctx.fillRect(W - 280, 15, 260, 75);
+    ctx.strokeStyle = equal ? '#34d399' : '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(W - 280, 15, 260, 75);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('|MA| = ' + dMA.toFixed(3).replace('.', ','), W - 268, 38);
+    ctx.fillText('|MB| = ' + dMB.toFixed(3).replace('.', ','), W - 268, 58);
+
+    ctx.fillStyle = equal ? '#4ade80' : '#94a3b8';
+    ctx.font = 'bold 14px "Segoe UI", sans-serif';
+    ctx.fillText(equal ? '|MA| = |MB| ✓' : '|MA| ≠ |MB|', W - 268, 80);
+
+    // a - b value
+    const aMb = M.x - M.y;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('a − b = ' + aMb.toFixed(1).replace('.', ','), 20, 30);
+  }
+
+  function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function isNearM(pos) {
+    const cm = toCanvas(M.x, M.y);
+    return Math.hypot(pos.x - cm.x, pos.y - cm.y) < 25;
+  }
+
+  function handleStart(e) {
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    if (isNearM(pos)) {
+      dragging = true;
+    }
+  }
+
+  function handleMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    const math = toMath(pos.x, pos.y);
+    M = clampToLine(math.x);
+    draw();
+  }
+
+  function handleEnd() {
+    dragging = false;
+  }
+
+  canvas.addEventListener('mousedown', handleStart);
+  canvas.addEventListener('mousemove', handleMove);
+  canvas.addEventListener('mouseup', handleEnd);
+  canvas.addEventListener('mouseleave', handleEnd);
+  canvas.addEventListener('touchstart', handleStart);
+  canvas.addEventListener('touchmove', handleMove);
+  canvas.addEventListener('touchend', handleEnd);
+
+  // Step click interaction
+  document.querySelectorAll('.step-container').forEach(function(el) {
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      el.classList.add('active');
+    });
+  });
+
+  draw();
+})();
+</script>
+</div>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Tačka na pravoj podjednako udaljena od dve date tačke",
+  "subject": "math",
+  "unit": "geometry",
+  "topic_tags": ["analitička geometrija", "rastojanje tačaka", "simetrala duži", "jednačina prave", "sistem jednačina"]
+}
+BRAINSPARK_META-->

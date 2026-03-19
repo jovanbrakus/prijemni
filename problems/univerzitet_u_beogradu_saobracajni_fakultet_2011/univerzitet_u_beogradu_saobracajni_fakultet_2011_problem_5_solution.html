@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Korenovanje negativnih brojeva</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Vrednost izraza [sqrt((-3)^2) - cbrt((-3)^3)] / fifth_root((-3)^5)
+
+We need to evaluate:
+  sqrt((-3)^2) - cbrt((-3)^3)
+  ----------------------------
+       fifth_root((-3)^5)
+
+Step 1: Evaluate sqrt((-3)^2)
+  (-3)^2 = 9
+  sqrt(9) = 3
+  Note: sqrt always returns a non-negative value, so sqrt((-3)^2) = |−3| = 3
+
+Step 2: Evaluate cbrt((-3)^3)
+  (-3)^3 = -27
+  cbrt(-27) = -3
+  Note: The cube root of a negative number is negative (odd root).
+
+Step 3: Evaluate fifth_root((-3)^5)
+  (-3)^5 = -243
+  fifth_root(-243) = -3
+  Note: The fifth root of a negative number is negative (odd root).
+
+Step 4: Compute the numerator
+  sqrt((-3)^2) - cbrt((-3)^3) = 3 - (-3) = 3 + 3 = 6
+
+Step 5: Compute the full expression
+  6 / (-3) = -2
+
+Verification with options:
+(A) 0 — incorrect
+(B) 1 — incorrect
+(C) -2 — CORRECT
+(D) -1 — incorrect
+(E) 2 — incorrect
+
+Answer: (C) -2
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.final-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.final-option.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.data-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.data-item .data-label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.data-item .data-value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .data-grid { grid-template-columns: 1fr 1fr; }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .final-options { gap: 8px; }
+  .final-option { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Korenovanje negativnih brojeva</h1>
+  <p class="subtitle">Izračunavanje izraza sa kvadratnim, kubnim i petim korenom negativnog broja</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Vrednost izraza:
+      \[ \frac{\sqrt{(-3)^2} - \sqrt[3]{(-3)^3}}{\sqrt[5]{(-3)^5}} \]
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(-2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Izračunaćemo svaki koren posebno, vodeći računa o parnosti korena i znaku argumenta. Zatim ćemo izračunati brojilac i imenilac, pa dobiti konačnu vrednost razlomka.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Kvadratni koren i apsolutna vrednost</summary>
+      <div class="math-box">
+        \[ \sqrt{a^2} = |a| \]
+      </div>
+      <p>Kvadratni koren je uvek nenegativan. Zato \(\sqrt{(-3)^2} = |-3| = 3\), a ne \(-3\). Ovo je najčešći izvor greške u ovakvim zadacima.</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Neparni koreni negativnih brojeva</summary>
+      <div class="math-box">
+        \[ \sqrt[2k+1]{a^{2k+1}} = a \quad \text{za svako } a \in \mathbb{R} \]
+      </div>
+      <p>Neparni koreni (kubni, peti, sedmi...) očuvaju znak broja. Na primer: \(\sqrt[3]{-27} = -3\) i \(\sqrt[5]{-243} = -3\).</p>
+    </details>
+    <details style="margin-top: 10px;">
+      <summary>Razlika parnih i neparnih korena</summary>
+      <div class="math-box">
+        \[ \sqrt[n]{a^n} = \begin{cases} |a| & \text{ako je } n \text{ paran} \\ a & \text{ako je } n \text{ neparan} \end{cases} \]
+      </div>
+      <p>Ovo pravilo je ključ za rešavanje zadatka: parni koreni uvek daju apsolutnu vrednost, dok neparni koreni čuvaju originalni znak.</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz korenovanja</div>
+    <canvas id="mainCanvas" width="900" height="480"></canvas>
+    <p class="drag-hint">Prevucite klizač da vidite kako se izraz menja za različite vrednosti broja \(x\)</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Izračunajmo \(\sqrt{(-3)^2}\)</div>
+      <p class="step-explanation">
+        Prvo stepenujemo: \((-3)^2 = 9\).
+      </p>
+      <p class="step-explanation">
+        Zatim izračunamo kvadratni koren:
+      </p>
+      <div class="math-box">
+        \[ \sqrt{(-3)^2} = \sqrt{9} = 3 \]
+      </div>
+      <p class="note-box">Zapamtite: kvadratni koren uvek daje nenegativan rezultat. Važi \(\sqrt{a^2} = |a|\), pa je \(\sqrt{(-3)^2} = |-3| = 3\).</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Izračunajmo \(\sqrt[3]{(-3)^3}\)</div>
+      <p class="step-explanation">
+        Stepenujemo: \((-3)^3 = -27\).
+      </p>
+      <p class="step-explanation">
+        Kubni koren je neparan koren, pa čuva znak:
+      </p>
+      <div class="math-box">
+        \[ \sqrt[3]{(-3)^3} = \sqrt[3]{-27} = -3 \]
+      </div>
+      <p class="note-box">Za neparne korene važi: \(\sqrt[3]{a^3} = a\), uključujući negativne vrednosti \(a\).</p>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko je \(\sqrt[3]{(-2)^3}\)?</summary>
+      <p>Odgovor: \(\sqrt[3]{(-2)^3} = \sqrt[3]{-8} = -2\). Kubni koren čuva negativan znak!</p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Izračunajmo \(\sqrt[5]{(-3)^5}\)</div>
+      <p class="step-explanation">
+        Stepenujemo: \((-3)^5 = -243\).
+      </p>
+      <p class="step-explanation">
+        Peti koren je takođe neparan koren:
+      </p>
+      <div class="math-box">
+        \[ \sqrt[5]{(-3)^5} = \sqrt[5]{-243} = -3 \]
+      </div>
+      <p class="note-box">Isto kao kubni koren, peti koren čuva znak broja: \(\sqrt[5]{a^5} = a\).</p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Izračunajmo brojilac</div>
+      <p class="step-explanation">
+        Brojilac je razlika vrednosti iz Koraka 1 i Koraka 2:
+      </p>
+      <div class="math-box">
+        \[ \sqrt{(-3)^2} - \sqrt[3]{(-3)^3} = 3 - (-3) = 3 + 3 = 6 \]
+      </div>
+      <p class="note-box">Oduzimanje negativnog broja je isto što i sabiranje pozitivnog!</p>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Zašto je \(3 - (-3) = 6\), a ne \(0\)?</summary>
+      <p>Jer je \(3 - (-3) = 3 + 3 = 6\). Greška \(3 - 3 = 0\) nastaje ako pogrešno uzmemo da je \(\sqrt{(-3)^2} = -3\) umesto \(3\). Kvadratni koren je uvek nenegativan!</p>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Izračunajmo konačnu vrednost</div>
+      <p class="step-explanation">
+        Sada delimo brojilac sa imeniocem (vrednost iz Koraka 3):
+      </p>
+      <div class="math-box">
+        \[ \frac{\sqrt{(-3)^2} - \sqrt[3]{(-3)^3}}{\sqrt[5]{(-3)^5}} = \frac{6}{-3} = -2 \]
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Ključna razlika je u parnosti korena: <strong>parni koreni</strong> (kvadratni, četvrti...) uvek daju <strong>nenegativan rezultat</strong> (\(\sqrt{a^2} = |a|\)), dok <strong>neparni koreni</strong> (kubni, peti...) <strong>čuvaju znak</strong> argumenta (\(\sqrt[3]{a^3} = a\)). Upravo zato \(\sqrt{(-3)^2} = 3\), ali \(\sqrt[3]{(-3)^3} = -3\).
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(\dfrac{\sqrt{(-3)^2} - \sqrt[3]{(-3)^3}}{\sqrt[5]{(-3)^5}} = -2\)</div>
+    <div class="final-options">
+      <span class="final-option" data-option="A">(A) \(0\)</span>
+      <span class="final-option" data-option="B">(B) \(1\)</span>
+      <span class="final-option correct" data-option="C">(C) \(-2\)</span>
+      <span class="final-option" data-option="D">(D) \(-1\)</span>
+      <span class="final-option" data-option="E">(E) \(2\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Brojilac je \(3 - (-3) = 6\), imenilac je \(-3\). Količnik \(\frac{6}{-3} = -2\). Rezultat je negativan jer je imenilac negativan (neparan koren negativnog broja). &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešno izračunavanje \(\sqrt{(-3)^2}\)</div>
+      <p>Mnogi učenici zapišu \(\sqrt{(-3)^2} = -3\), ali to je netačno. Kvadratni koren je po definiciji nenegativan, pa je \(\sqrt{(-3)^2} = \sqrt{9} = 3\). Ova greška vodi do brojioca \(-3 - (-3) = 0\) i pogrešnog odgovora (A).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboravljanje da neparni koreni čuvaju znak</div>
+      <p>Ako uzmete da je \(\sqrt[3]{(-3)^3} = 3\) ili \(\sqrt[5]{(-3)^5} = 3\), dobićete pogrešan rezultat. Neparni koreni negativnih brojeva su negativni!</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Izračunajte vrednost izraza za opšte \(x < 0\):
+      \[ \frac{\sqrt{x^2} - \sqrt[3]{x^3}}{\sqrt[5]{x^5}} \]
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Za \(x < 0\) važi: \(\sqrt{x^2} = |x| = -x\), dok \(\sqrt[3]{x^3} = x\) i \(\sqrt[5]{x^5} = x\). Dakle, brojilac je \(-x - x = -2x\), a imenilac je \(x\). Konačno: \(\frac{-2x}{x} = -2\). Izraz je uvek jednak \(-2\) za svako \(x < 0\)!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let W = 900;
+  let H = 480;
+  let dpr = 1;
+
+  const xMin = -5;
+  const xMax = 5;
+  let sliderFrac = 0.2;
+  let draggingSlider = false;
+
+  function getCurrentX() {
+    return xMin + sliderFrac * (xMax - xMin);
+  }
+
+  function draw() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    W = rect.width;
+    H = 480;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const x = getCurrentX();
+    const paddingLeft = 50;
+    const paddingRight = 30;
+    const paddingTop = 50;
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Prikaz tri korena za x = ' + x.toFixed(2), W / 2, 28);
+
+    // Three columns showing the three roots
+    const colW = (W - paddingLeft - paddingRight) / 3;
+    const colCenters = [
+      paddingLeft + colW * 0.5,
+      paddingLeft + colW * 1.5,
+      paddingLeft + colW * 2.5
+    ];
+
+    const boxY = paddingTop + 10;
+    const boxH = 170;
+    const boxW = Math.min(colW - 20, 240);
+
+    // Compute values
+    const x2 = x * x;
+    const sqrtVal = Math.sqrt(x2);
+    const x3 = x * x * x;
+    const cbrtVal = Math.cbrt(x3);
+    const x5 = Math.pow(x, 5);
+    const fifthVal = Math.sign(x5) * Math.pow(Math.abs(x5), 0.2);
+
+    const roots = [
+      {
+        title: 'Kvadratni koren (paran)',
+        expr: '\u221a(x\u00b2)',
+        input: 'x\u00b2 = ' + x2.toFixed(2),
+        result: sqrtVal.toFixed(2),
+        color: '#60a5fa',
+        note: 'Uvek \u2265 0'
+      },
+      {
+        title: 'Kubni koren (neparan)',
+        expr: '\u00b3\u221a(x\u00b3)',
+        input: 'x\u00b3 = ' + x3.toFixed(2),
+        result: cbrtVal.toFixed(2),
+        color: '#a78bfa',
+        note: '\u010cuva znak'
+      },
+      {
+        title: 'Peti koren (neparan)',
+        expr: '\u2075\u221a(x\u2075)',
+        input: 'x\u2075 = ' + x5.toFixed(2),
+        result: fifthVal.toFixed(2),
+        color: '#f472b6',
+        note: '\u010cuva znak'
+      }
+    ];
+
+    roots.forEach(function(root, i) {
+      const cx = colCenters[i];
+      const bx = cx - boxW / 2;
+
+      // Glow
+      var glow = ctx.createRadialGradient(cx, boxY + boxH / 2, 0, cx, boxY + boxH / 2, boxW * 0.7);
+      glow.addColorStop(0, root.color + '12');
+      glow.addColorStop(1, root.color + '00');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, boxY + boxH / 2, boxW * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Box
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = root.color + '66';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(bx, boxY, boxW, boxH, 14);
+      ctx.fill();
+      ctx.stroke();
+
+      // Title
+      ctx.fillStyle = root.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(root.title, cx, boxY + 28);
+
+      // Expression
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '16px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(root.expr, cx, boxY + 58);
+
+      // Input value
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(root.input, cx, boxY + 85);
+
+      // Arrow
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.moveTo(cx, boxY + 95);
+      ctx.lineTo(cx - 5, boxY + 100);
+      ctx.lineTo(cx + 5, boxY + 100);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx, boxY + 100);
+      ctx.lineTo(cx, boxY + 110);
+      ctx.stroke();
+
+      // Result
+      ctx.fillStyle = root.color;
+      ctx.font = 'bold 24px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(root.result, cx, boxY + 140);
+
+      // Note
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'italic 11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(root.note, cx, boxY + 162);
+    });
+
+    // Result computation section
+    var resY = boxY + boxH + 30;
+
+    // Numerator
+    var numVal = sqrtVal - cbrtVal;
+    var denVal = fifthVal;
+    var finalVal = (Math.abs(denVal) < 0.0001) ? NaN : numVal / denVal;
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Izračunavanje:', W / 2, resY);
+
+    // Numerator box
+    var numBoxW = Math.min(W * 0.7, 500);
+    var numBoxX = (W - numBoxW) / 2;
+    var numBoxY = resY + 12;
+
+    ctx.fillStyle = '#1e293b';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(numBoxX, numBoxY, numBoxW, 80, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Brojilac: ' + sqrtVal.toFixed(2) + ' \u2212 (' + cbrtVal.toFixed(2) + ') = ' + numVal.toFixed(2), W / 2, numBoxY + 24);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Imenilac: ' + denVal.toFixed(2), W / 2, numBoxY + 46);
+
+    if (isNaN(finalVal) || !isFinite(finalVal)) {
+      ctx.fillStyle = '#f472b6';
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Nedefinisano (deljenje nulom)', W / 2, numBoxY + 70);
+    } else {
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Rezultat = ' + finalVal.toFixed(2), W / 2, numBoxY + 70);
+    }
+
+    // Slider
+    var sliderY = H - 36;
+    var sliderLeft = paddingLeft + 40;
+    var sliderRight = W - paddingRight - 40;
+    var sliderW = sliderRight - sliderLeft;
+
+    // Track
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(sliderLeft, sliderY);
+    ctx.lineTo(sliderRight, sliderY);
+    ctx.stroke();
+
+    // Active portion
+    var zeroPosX = sliderLeft + (0 - xMin) / (xMax - xMin) * sliderW;
+    var handleX = sliderLeft + sliderFrac * sliderW;
+
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(zeroPosX, sliderY);
+    ctx.lineTo(handleX, sliderY);
+    ctx.stroke();
+    ctx.lineCap = 'butt';
+
+    // Zero marker
+    ctx.fillStyle = '#475569';
+    ctx.beginPath();
+    ctx.arc(zeroPosX, sliderY, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('0', zeroPosX, sliderY + 18);
+
+    // Handle glow
+    var handleGlow = ctx.createRadialGradient(handleX, sliderY, 0, handleX, sliderY, 18);
+    handleGlow.addColorStop(0, '#a78bfa44');
+    handleGlow.addColorStop(1, '#a78bfa00');
+    ctx.fillStyle = handleGlow;
+    ctx.beginPath();
+    ctx.arc(handleX, sliderY, 18, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Handle
+    ctx.fillStyle = '#a78bfa';
+    ctx.beginPath();
+    ctx.arc(handleX, sliderY, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Slider labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x = ' + xMin, sliderLeft, sliderY + 18);
+    ctx.fillText('x = ' + xMax, sliderRight, sliderY + 18);
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('x = ' + x.toFixed(2), handleX, sliderY - 16);
+  }
+
+  function getSliderBounds() {
+    var rect = canvas.getBoundingClientRect();
+    var paddingLeft = 50;
+    var paddingRight = 30;
+    var sliderLeft = paddingLeft + 40;
+    var sliderRight = rect.width - paddingRight - 40;
+    return { sliderLeft: sliderLeft, sliderRight: sliderRight, sliderY: H - 36, rect: rect };
+  }
+
+  function getEventPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    if (e.touches && e.touches.length > 0) {
+      return { cx: e.touches[0].clientX - rect.left, cy: e.touches[0].clientY - rect.top };
+    }
+    return { cx: e.clientX - rect.left, cy: e.clientY - rect.top };
+  }
+
+  function isNearSlider(cx, cy) {
+    var bounds = getSliderBounds();
+    var handleX = bounds.sliderLeft + sliderFrac * (bounds.sliderRight - bounds.sliderLeft);
+    var dx = cx - handleX;
+    var dy = cy - bounds.sliderY;
+    return (dx * dx + dy * dy) < 600;
+  }
+
+  function updateSlider(cx) {
+    var bounds = getSliderBounds();
+    var sw = bounds.sliderRight - bounds.sliderLeft;
+    sliderFrac = Math.max(0, Math.min(1, (cx - bounds.sliderLeft) / sw));
+    draw();
+  }
+
+  function onStart(e) {
+    e.preventDefault();
+    var pos = getEventPos(e);
+    if (isNearSlider(pos.cx, pos.cy)) {
+      draggingSlider = true;
+      updateSlider(pos.cx);
+    }
+  }
+
+  function onMove(e) {
+    if (!draggingSlider) return;
+    e.preventDefault();
+    var pos = getEventPos(e);
+    updateSlider(pos.cx);
+  }
+
+  function onEnd() {
+    draggingSlider = false;
+  }
+
+  canvas.addEventListener('mousedown', onStart);
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('mouseup', onEnd);
+  canvas.addEventListener('mouseleave', onEnd);
+  canvas.addEventListener('touchstart', onStart);
+  canvas.addEventListener('touchmove', onMove);
+  canvas.addEventListener('touchend', onEnd);
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click handlers
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Korenovanje negativnih brojeva",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["korenovanje", "parni i neparni koreni", "apsolutna vrednost", "stepenovanje negativnih brojeva"]
+}
+BRAINSPARK_META-->

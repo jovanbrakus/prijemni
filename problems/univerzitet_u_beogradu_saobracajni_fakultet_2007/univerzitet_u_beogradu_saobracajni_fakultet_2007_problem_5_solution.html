@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepenovanje i korenovanje razlomaka</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Izračunati vrednost izraza
+  [3/2 · (2/9)^(−1) + (2/3)^(−2)]^(−1/2)
+
+Step 1: Compute (2/9)^(−1)
+  By definition, a^(−1) = 1/a, so:
+  (2/9)^(−1) = 9/2
+
+Step 2: Compute 3/2 · (2/9)^(−1) = 3/2 · 9/2
+  = (3 · 9) / (2 · 2) = 27/4
+
+Step 3: Compute (2/3)^(−2)
+  By definition, a^(−n) = (1/a)^n, so:
+  (2/3)^(−2) = (3/2)^2 = 9/4
+
+Step 4: Add the two terms inside the brackets:
+  27/4 + 9/4 = 36/4 = 9
+
+Step 5: Apply the outer exponent (−1/2):
+  9^(−1/2) = 1 / 9^(1/2) = 1 / √9 = 1/3
+
+Answer: 1/3
+
+Verification against options:
+(A) 1/3  ← THIS IS CORRECT ✓
+(B) 0
+(C) 3
+(D) −3
+(E) −1/3
+
+The correct answer is (A) 1/3. Matches the expected answer.
+
+Additional check: 9^(−1/2) means taking the reciprocal of the square root.
+√9 = 3, so 1/3. No ambiguity since 9 > 0.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Stepenovanje i korenovanje razlomaka</h1>
+  <p class="subtitle">Negativni eksponenti, recipročne vrednosti i korenovanje</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Vrednost izraza
+      \[ \left[\frac{3}{2} \cdot \left(\frac{2}{9}\right)^{-1} + \left(\frac{2}{3}\right)^{-2}\right]^{-1/2} \]
+      je:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{1}{3}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-\dfrac{1}{3}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Računaćemo izraz iznutra ka spolja: najpre ćemo primeniti pravila za negativne eksponente na svaki razlomak unutar zagrade, zatim ćemo pomnožiti i sabrati dobijene vrednosti, i na kraju primeniti spoljašnji eksponent \(-\frac{1}{2}\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Negativan eksponent</summary>
+      <div class="math-box">
+        \[ a^{-n} = \frac{1}{a^n} \quad \text{i posebno} \quad \left(\frac{a}{b}\right)^{-n} = \left(\frac{b}{a}\right)^{n} \]
+      </div>
+      <p>Negativan eksponent znači da uzimamo recipročnu vrednost osnove, a zatim stepenujemo sa pozitivnim eksponentom. Na primer, \(\left(\frac{2}{9}\right)^{-1} = \frac{9}{2}\).</p>
+    </details>
+    <details>
+      <summary>Razlomljeni eksponent i korenovanje</summary>
+      <div class="math-box">
+        \[ a^{1/n} = \sqrt[n]{a} \quad \text{i} \quad a^{-1/2} = \frac{1}{\sqrt{a}} \]
+      </div>
+      <p>Eksponent \(\frac{1}{2}\) odgovara kvadratnom korenu. Kombinacija sa negativnim znakom daje recipročnu vrednost korena.</p>
+    </details>
+    <details>
+      <summary>Stepenovanje razlomaka</summary>
+      <div class="math-box">
+        \[ \left(\frac{a}{b}\right)^{n} = \frac{a^n}{b^n} \]
+      </div>
+      <p>Pri stepenovanji razlomka, stepenujemo posebno brojilac i posebno imenilac.</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz računanja</div>
+    <canvas id="mainCanvas" width="900" height="500"></canvas>
+    <p class="drag-hint">Dijagram prikazuje tok računanja izraza korak po korak</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Zapišemo polazni izraz</div>
+      <p class="step-explanation">
+        Potrebno je izračunati vrednost sledećeg izraza:
+      </p>
+      <div class="math-box">
+        \[ \left[\frac{3}{2} \cdot \left(\frac{2}{9}\right)^{-1} + \left(\frac{2}{3}\right)^{-2}\right]^{-1/2} \]
+      </div>
+      <p class="note-box">Izraz sadrži negativne eksponente i razlomljeni eksponent. Krenućemo iznutra ka spolja &mdash; prvo ćemo izračunati svaki deo unutar uglaste zagrade.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Izračunamo \(\left(\frac{2}{9}\right)^{-1}\)</div>
+      <p class="step-explanation">
+        Eksponent \(-1\) znači da uzimamo <span class="highlight-val">recipročnu vrednost</span> razlomka &mdash; brojilac i imenilac menjaju mesta:
+      </p>
+      <div class="math-box">
+        \[ \left(\frac{2}{9}\right)^{-1} = \frac{9}{2} \]
+      </div>
+      <p class="note-box">Opšte pravilo: \(\left(\frac{a}{b}\right)^{-1} = \frac{b}{a}\). Prosto "obrnemo" razlomak.</p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Pomnožimo \(\frac{3}{2} \cdot \frac{9}{2}\)</div>
+      <p class="step-explanation">
+        Sada množimo dva razlomka &mdash; množimo brojilac sa brojiocem i imenilac sa imeniocem:
+      </p>
+      <div class="math-box">
+        \[ \frac{3}{2} \cdot \frac{9}{2} = \frac{3 \cdot 9}{2 \cdot 2} = \frac{27}{4} \]
+      </div>
+
+      <details>
+        <summary>Proveri se: Koliko je \(\frac{3}{2} \cdot \frac{9}{2}\) u decimalnom zapisu?</summary>
+        <p>\(\frac{27}{4} = 6{,}75\). Proverimo: \(1{,}5 \cdot 4{,}5 = 6{,}75\). Tačno!</p>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Izračunamo \(\left(\frac{2}{3}\right)^{-2}\)</div>
+      <p class="step-explanation">
+        Eksponent \(-2\) znači da najpre obrnemo razlomak (zbog minusa), a zatim kvadriramo (zbog dvojke):
+      </p>
+      <div class="math-box">
+        \[ \left(\frac{2}{3}\right)^{-2} = \left(\frac{3}{2}\right)^{2} = \frac{3^2}{2^2} = \frac{9}{4} \]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Saberemo vrednosti unutar zagrade</div>
+      <p class="step-explanation">
+        Sada sabiramo dva razlomka koji već imaju isti imenilac \(4\):
+      </p>
+      <div class="math-box">
+        \[ \frac{27}{4} + \frac{9}{4} = \frac{27 + 9}{4} = \frac{36}{4} = 9 \]
+      </div>
+      <p class="step-explanation">
+        Dakle, izraz unutar uglaste zagrade ima vrednost <span class="highlight-val">9</span>.
+      </p>
+
+      <details>
+        <summary>Proveri se: Koliko je \(\frac{36}{4}\)?</summary>
+        <p>\(36 \div 4 = 9\). Tačno! Možemo i proveriti: \(6{,}75 + 2{,}25 = 9\).</p>
+      </details>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Primenimo spoljašnji eksponent \(-\frac{1}{2}\)</div>
+      <p class="step-explanation">
+        Sada treba da izračunamo \(9^{-1/2}\). Rastavimo ovaj eksponent na dva dela:
+      </p>
+      <div class="math-box">
+        \[ 9^{-1/2} = \frac{1}{9^{1/2}} = \frac{1}{\sqrt{9}} \]
+      </div>
+      <p class="step-explanation">
+        Negativan znak u eksponentu daje recipročnu vrednost, a \(\frac{1}{2}\) u eksponentu označava kvadratni koren.
+      </p>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">7</span> Izračunamo konačnu vrednost</div>
+      <p class="step-explanation">
+        Pošto je \(\sqrt{9} = 3\), dobijamo:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{\sqrt{9}} = \frac{1}{3} \]
+      </div>
+
+      <details>
+        <summary>Proveri se: Da li je \(3^2 = 9\)?</summary>
+        <p>Da, \(3 \cdot 3 = 9\), pa je zaista \(\sqrt{9} = 3\). Prema tome, \(9^{-1/2} = \frac{1}{3}\).</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Ključ ovog zadatka je sistematična primena pravila za negativne eksponente. Svaki negativan eksponent prosto "obrće" osnovu: \(\left(\frac{a}{b}\right)^{-n} = \left(\frac{b}{a}\right)^n\). Kada se ovo primeni na oba člana unutar zagrade, razlomci se svedu na oblike sa istim imeniocem, što omogućava lako sabiranje. Na kraju, eksponent \(-\frac{1}{2}\) kombinuje recipročnu vrednost i kvadratni koren.
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ \left[\frac{27}{4} + \frac{9}{4}\right]^{-1/2} = 9^{-1/2} = \frac{1}{\sqrt{9}} = \frac{1}{3} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(\dfrac{1}{3}\)</div>
+    <div class="answer-options">
+      <span class="opt correct">(A) \(\dfrac{1}{3}\)</span>
+      <span class="opt">(B) \(0\)</span>
+      <span class="opt">(C) \(3\)</span>
+      <span class="opt">(D) \(-3\)</span>
+      <span class="opt">(E) \(-\dfrac{1}{3}\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Izraz unutar zagrade daje \(9\), a \(9^{-1/2} = \frac{1}{3}\). Rezultat je pozitivan jer je osnova \(9 > 0\), pa opcije (D) i (E) sa negativnim predznakom otpadaju. Rezultat nije \(0\) jer je \(9 \neq 0\), i nije \(3\) jer eksponent \(-\frac{1}{2}\) daje recipročnu vrednost korena, a ne sam koren. &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zamena eksponenta \(-\frac{1}{2}\) sa \(\frac{1}{2}\)</div>
+      <p>Ako se zaboravi negativan znak spoljašnjeg eksponenta i izračuna samo \(9^{1/2} = \sqrt{9} = 3\), dobija se pogrešan odgovor (C). Negativan eksponent zahteva uzimanje recipročne vrednosti!</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešna primena negativnog eksponenta na razlomak</div>
+      <p>Česta greška je da se eksponent \(-1\) primeni samo na brojilac umesto na ceo razlomak. Na primer, \(\left(\frac{2}{9}\right)^{-1} \neq \frac{-2}{9}\). Negativan eksponent <em>obrće</em> razlomak, ne menja mu znak!</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Izračunaj vrednost izraza: \(\displaystyle\left[\frac{5}{3} \cdot \left(\frac{3}{25}\right)^{-1} + \left(\frac{3}{5}\right)^{-2}\right]^{-1/2}\)
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Primeni isti postupak: \(\left(\frac{3}{25}\right)^{-1} = \frac{25}{3}\), pa \(\frac{5}{3} \cdot \frac{25}{3} = \frac{125}{9}\). Zatim \(\left(\frac{3}{5}\right)^{-2} = \frac{25}{9}\). Saberi: \(\frac{125}{9} + \frac{25}{9} = \frac{150}{9} = \frac{50}{3}\). Na kraju: \(\left(\frac{50}{3}\right)^{-1/2} = \sqrt{\frac{3}{50}} = \frac{\sqrt{3}}{5\sqrt{2}} = \frac{\sqrt{6}}{10}\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 500;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const centerX = W / 2;
+    const boxW = Math.min(W - 40, 580);
+    const boxH = 48;
+    const boxRad = 12;
+    const startY = 25;
+    const gapY = 80;
+
+    function roundedRect(x, y, w, h, r, fillColor, borderColor) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function drawArrow(fromX, fromY, toX, toY, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+      const headLen = 10;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(toX - headLen * Math.cos(angle - 0.4), toY - headLen * Math.sin(angle - 0.4));
+      ctx.lineTo(toX - headLen * Math.cos(angle + 0.4), toY - headLen * Math.sin(angle + 0.4));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawCenteredText(text, x, y, color, fontSize, bold) {
+      ctx.fillStyle = color || '#e2e8f0';
+      ctx.font = (bold ? 'bold ' : '') + (fontSize || 15) + 'px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+    }
+
+    const smallFont = W < 600 ? 11 : 13;
+    const mainFont = W < 600 ? 14 : 16;
+
+    // Row 1: Original expression
+    const row1Y = startY;
+    roundedRect(centerX - boxW/2, row1Y, boxW, boxH, boxRad, 'rgba(167, 139, 250, 0.12)', '#a78bfa');
+    drawCenteredText('[3/2 \u00B7 (2/9)\u207B\u00B9 + (2/3)\u207B\u00B2]\u207B\u00B9\u02F2', centerX, row1Y + boxH/2, '#e2e8f0', mainFont, true);
+
+    // Arrow + label
+    drawArrow(centerX, row1Y + boxH, centerX, row1Y + gapY, '#60a5fa');
+    drawCenteredText('(2/9)\u207B\u00B9 = 9/2,  (2/3)\u207B\u00B2 = 9/4', centerX, row1Y + boxH + (gapY - boxH)/2, '#94a3b8', smallFont, false);
+
+    // Row 2: After applying negative exponents
+    const row2Y = startY + gapY;
+    roundedRect(centerX - boxW/2, row2Y, boxW, boxH, boxRad, 'rgba(96, 165, 250, 0.12)', '#60a5fa');
+    drawCenteredText('[3/2 \u00B7 9/2 + 9/4]\u207B\u00B9\u02F2', centerX, row2Y + boxH/2, '#e2e8f0', mainFont, true);
+
+    // Arrow + label
+    drawArrow(centerX, row2Y + boxH, centerX, row2Y + gapY, '#60a5fa');
+    drawCenteredText('3/2 \u00B7 9/2 = 27/4', centerX, row2Y + boxH + (gapY - boxH)/2, '#94a3b8', smallFont, false);
+
+    // Row 3: After multiplication
+    const row3Y = startY + 2 * gapY;
+    roundedRect(centerX - boxW/2, row3Y, boxW, boxH, boxRad, 'rgba(96, 165, 250, 0.12)', '#60a5fa');
+    drawCenteredText('[27/4 + 9/4]\u207B\u00B9\u02F2  =  [36/4]\u207B\u00B9\u02F2', centerX, row3Y + boxH/2, '#e2e8f0', mainFont, true);
+
+    // Arrow + label
+    drawArrow(centerX, row3Y + boxH, centerX, row3Y + gapY, '#60a5fa');
+    drawCenteredText('36/4 = 9', centerX, row3Y + boxH + (gapY - boxH)/2, '#94a3b8', smallFont, false);
+
+    // Row 4: Simplified to 9^(-1/2)
+    const row4Y = startY + 3 * gapY;
+    roundedRect(centerX - boxW/2, row4Y, boxW, boxH, boxRad, 'rgba(96, 165, 250, 0.12)', '#60a5fa');
+    drawCenteredText('9\u207B\u00B9\u02F2  =  1 / \u221A9', centerX, row4Y + boxH/2, '#e2e8f0', mainFont, true);
+
+    // Arrow + label
+    drawArrow(centerX, row4Y + boxH, centerX, row4Y + gapY, '#34d399');
+    drawCenteredText('\u221A9 = 3', centerX, row4Y + boxH + (gapY - boxH)/2, '#94a3b8', smallFont, false);
+
+    // Row 5: Final answer
+    const row5Y = startY + 4 * gapY;
+    const finalBoxW = boxW * 0.6;
+    roundedRect(centerX - finalBoxW/2, row5Y, finalBoxW, boxH + 10, boxRad, 'rgba(52, 211, 153, 0.2)', '#4ade80');
+    drawCenteredText('1/3', centerX, row5Y + (boxH + 10)/2, '#4ade80', 24, true);
+
+    // Small label
+    drawCenteredText('Odgovor (A)', centerX, row5Y + boxH + 24, '#34d399', 14, true);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  const stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(step) {
+    step.addEventListener('click', function() {
+      stepContainers.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje i korenovanje razlomaka",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["negativni eksponenti", "stepenovanje razlomaka", "korenovanje", "recipročna vrednost", "razlomljeni eksponenti"]
+}
+BRAINSPARK_META-->

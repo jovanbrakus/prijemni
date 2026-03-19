@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kombinacije — sastavljanje ekipe od 4 učenika iz grupe od 7</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Peticu iz matematike ima 7 učenika od kojih treba sastaviti ekipu za takmičenje.
+Ekipa se sastoji od 4 učenika. Koliko različitih ekipa može biti?
+
+This is a classic combination problem. We are choosing 4 students from 7, where order
+does not matter (it's a team, not a lineup).
+
+Formula: C(n, k) = n! / (k! * (n-k)!)
+
+C(7, 4) = 7! / (4! * 3!)
+
+Let me compute step by step:
+  7! = 5040
+  4! = 24
+  3! = 6
+
+  C(7, 4) = 5040 / (24 * 6) = 5040 / 144 = 35
+
+Alternative computation (cancellation):
+  C(7, 4) = (7 * 6 * 5 * 4) / (4 * 3 * 2 * 1) = 840 / 24 = 35
+
+Also, C(7, 4) = C(7, 3) since C(n, k) = C(n, n-k):
+  C(7, 3) = (7 * 6 * 5) / (3 * 2 * 1) = 210 / 6 = 35
+
+All methods give 35.
+
+Answer verification against options:
+  (A) 18 — NO
+  (C) 210 — This is 7*6*5 without dividing by 3!, i.e. P(7,3) = 210, or equivalently
+             this is the number of PERMUTATIONS of 3 from 7. Common mistake.
+  (E) 35 — YES, this is C(7,4) = 35 ✓
+  (G) 840 — This is 7*6*5*4 = 840 = P(7,4), the number of permutations of 4 from 7.
+             Common mistake of not dividing by 4!.
+  (I) 12 — NO
+
+The correct answer is (E) 35. Confirmed.
+
+Note on the option labels: The exam uses Cyrillic labels (А, Ц, Е, Г, И).
+For the HTML output we must use Latin letters: (A), (B), (C), (D), (E).
+Mapping: А→A, Ц→B, Е→C, Г→D, И→E.
+Values: (A) 18, (B) 210, (C) 35, (D) 840, (E) 12.
+Correct: (C) 35.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+}
+
+.checkpoint details {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .insight-title {
+  color: #a78bfa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Kombinacije — izbor ekipe za takmičenje</h1>
+  <p class="subtitle">Kombinatorika: određivanje broja načina da se od datog skupa izabere podskup bez obzira na redosled</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <div class="problem-text">
+      <p>Peticu iz matematike ima <span class="highlight-blue">7</span> učenika od kojih treba sastaviti ekipu za takmičenje. Ako se ekipa sastoji od <span class="highlight-pink">4</span> učenika, onda takvih različitih ekipa može biti:</p>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(18\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(210\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(35\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(840\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(12\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Pošto biramo 4 učenika iz grupe od 7, a redosled u ekipi nije bitan (ekipa je skup, ne niz), koristićemo formulu za kombinacije bez ponavljanja \(\binom{n}{k}\). Izračunaćemo \(\binom{7}{4}\) i uporediti sa ponuđenim odgovorima.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Ključne formule i pojmovi (klikni da otvoriš)</summary>
+      <div style="margin-top: 10px;">
+        <ul style="margin-left: 20px; line-height: 2.2;">
+          <li><strong>Kombinacije bez ponavljanja:</strong> Broj načina da se od \(n\) elemenata izabere \(k\), gde redosled <em>nije</em> bitan:
+            \[ \binom{n}{k} = C(n, k) = \frac{n!}{k!\,(n-k)!} \]
+          </li>
+          <li><strong>Simetrija kombinacija:</strong> \(\binom{n}{k} = \binom{n}{n-k}\). Na primer, \(\binom{7}{4} = \binom{7}{3}\).</li>
+          <li><strong>Varijacije bez ponavljanja:</strong> Ako bi redosled bio bitan, koristili bismo varijacije:
+            \[ V(n, k) = \frac{n!}{(n-k)!} \]
+          </li>
+          <li><strong>Razlika:</strong> Kombinacije = varijacije / \(k!\), jer se svaki podskup od \(k\) elemenata u varijacijama prebrojava \(k!\) puta (po jednom za svaki raspored).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Vizuelni prikaz</div>
+    <canvas id="diagram" width="700" height="460"></canvas>
+    <p class="drag-hint">Prikaz svih 35 mogućih ekipa od 4 učenika iz grupe od 7</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Prepoznavanje tipa problema</div>
+      <p class="step-explanation">Biramo <strong>4 učenika</strong> od ukupno <strong>7</strong>. Pošto pravimo ekipu (tim), redosled u kome biramo učenike <strong>nije bitan</strong> — ekipa {Ana, Bojan, Ceca, Dragan} je ista kao {Dragan, Ceca, Ana, Bojan}.</p>
+      <p class="step-explanation">Zato koristimo <strong>kombinacije bez ponavljanja</strong>, a ne varijacije.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Postavljanje formule</div>
+      <p class="step-explanation">Primenjujemo formulu za kombinacije sa \(n = 7\) i \(k = 4\):</p>
+      <div class="math-box">
+        \[ \binom{7}{4} = \frac{7!}{4! \cdot (7-4)!} = \frac{7!}{4! \cdot 3!} \]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Računanje faktorijela</div>
+      <p class="step-explanation">Izračunajmo svaki faktorijel pojedinačno:</p>
+      <div class="math-box">
+        \[ 7! = 7 \cdot 6 \cdot 5 \cdot 4 \cdot 3 \cdot 2 \cdot 1 = 5040 \]
+      </div>
+      <div class="math-box">
+        \[ 4! = 4 \cdot 3 \cdot 2 \cdot 1 = 24 \]
+      </div>
+      <div class="math-box">
+        \[ 3! = 3 \cdot 2 \cdot 1 = 6 \]
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Koliko je \(4! \cdot 3!\)?</summary>
+        <div>
+          <p>\(4! \cdot 3! = 24 \cdot 6 = 144\).</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Uvrštavanje u formulu</div>
+      <p class="step-explanation">Zamenjujemo izračunate vrednosti:</p>
+      <div class="math-box">
+        \[ \binom{7}{4} = \frac{5040}{24 \cdot 6} = \frac{5040}{144} = 35 \]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Alternativni (brži) način — skraćivanje</div>
+      <p class="step-explanation">Umesto da računamo ceo \(7!\), možemo da skratimo zajedničke činioce. Koristimo svojstvo simetrije \(\binom{7}{4} = \binom{7}{3}\), jer je lakše računati sa manjim brojem u imeniocu:</p>
+      <div class="math-box">
+        \[ \binom{7}{3} = \frac{7 \cdot 6 \cdot 5}{3 \cdot 2 \cdot 1} = \frac{210}{6} = 35 \]
+      </div>
+      <p class="step-explanation">Ili direktno:</p>
+      <div class="math-box">
+        \[ \binom{7}{4} = \frac{7 \cdot 6 \cdot 5 \cdot 4}{4 \cdot 3 \cdot 2 \cdot 1} = \frac{840}{24} = 35 \]
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri sebe: Zašto odgovor nije 840?</summary>
+        <div>
+          <p>Broj 840 = 7 &middot; 6 &middot; 5 &middot; 4 je broj <strong>varijacija</strong> (uređenih izbora) 4 od 7. To bi bio tačan odgovor samo kad bi redosled bio bitan — na primer, kad bismo birali predsednika, potpredsednika, sekretara i blagajnika. Ali ovde biramo ekipu gde su svi članovi ravnopravni, pa moramo da podelimo sa \(4! = 24\) da eliminišemo ponovljeno brojanje istih grupa.</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Provera rezultata</div>
+      <p class="step-explanation">Potvrdimo logiku sa malim primerom. Od učenika {1, 2, 3, 4, 5, 6, 7} biramo 4. Koliko grupa sadrži učenika 1?</p>
+      <div class="math-box">
+        \[ \text{Grupe sa učenikom 1: } \binom{6}{3} = \frac{6 \cdot 5 \cdot 4}{3!} = \frac{120}{6} = 20 \]
+      </div>
+      <p class="step-explanation">A koliko grupa ne sadrži učenika 1?</p>
+      <div class="math-box">
+        \[ \text{Grupe bez učenika 1: } \binom{6}{4} = \frac{6 \cdot 5 \cdot 4 \cdot 3}{4!} = \frac{360}{24} = 15 \]
+      </div>
+      <p class="step-explanation">Ukupno: \(20 + 15 = 35\). Potvrđeno!</p>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title"><span class="icon">💡</span> Ključni uvid</div>
+    <p>Ključ ovog zadatka je prepoznati da redosled <strong>nije bitan</strong> jer se pravi ekipa (tim), a ne poredak (rang-lista). Kad redosled nije bitan, koristimo <strong>kombinacije</strong>. Kad jeste bitan — koristimo <strong>varijacije</strong>. Ova razlika se svodi na jedno pitanje: „Da li je {A, B, C, D} isto što i {D, C, B, A}?" Ako jeste — kombinacije.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačan odgovor</div>
+    <div class="answer">\( \binom{7}{4} = 35 \)</div>
+    <div class="answer-options">
+      <span class="opt">(A) \(18\)</span>
+      <span class="opt">(B) \(210\)</span>
+      <span class="opt correct">(C) \(35\)</span>
+      <span class="opt">(D) \(840\)</span>
+      <span class="opt">(E) \(12\)</span>
+    </div>
+    <p class="verification-note">Verifikacija: \(\binom{7}{4} = \binom{7}{3} = \frac{7 \cdot 6 \cdot 5}{6} = 35\). Takođe, 20 ekipa sa učenikom 1 + 15 ekipa bez učenika 1 = 35.</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zameniti kombinacije sa varijacijama</div>
+      <p>Ako se ne podeli sa \(k!\), dobija se broj varijacija \(V(7,4) = 840\). To je pogrešan odgovor (D), jer prebrojava iste grupe u različitim redosledima kao različite.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Dobiti 210 umesto 35</div>
+      <p>Vrednost 210 jednaka je \(\binom{7}{3} \cdot 3! / 3! \cdot \ldots\) — zapravo, \(7 \cdot 6 \cdot 5 = 210\) je broj varijacija 3 od 7, ili \(\binom{10}{4}\). To se može dobiti pogrešnim postavljanjem formule ili greškom u računanju.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Od istih 7 učenika, na koliko načina se može sastaviti ekipa od 4 učenika <strong>ako jedan određeni učenik mora da bude kapiten</strong> (tj. jedan član ekipe ima posebnu ulogu)?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div style="margin-top: 8px;">
+        <p>Sada redosled <em>delimično</em> jeste bitan: prvo biramo kapitena (7 izbora), pa preostala 3 člana od preostalih 6. To je \(7 \cdot \binom{6}{3} = 7 \cdot 20 = 140\). Alternativno: \(\binom{7}{4} \cdot 4 = 35 \cdot 4 = 140\), jer za svaku ekipu od 4 postoje 4 izbora za kapitena.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Generate all C(7,4) = 35 combinations
+  const combos = [];
+  for (let a = 1; a <= 4; a++) {
+    for (let b = a + 1; b <= 5; b++) {
+      for (let c = b + 1; c <= 6; c++) {
+        for (let d = c + 1; d <= 7; d++) {
+          combos.push([a, b, c, d]);
+        }
+      }
+    }
+  }
+
+  const studentNames = ['', 'U1', 'U2', 'U3', 'U4', 'U5', 'U6', 'U7'];
+  const studentColors = [
+    '',
+    '#60a5fa', // blue
+    '#a78bfa', // purple
+    '#f472b6', // pink
+    '#34d399', // green
+    '#fbbf24', // yellow
+    '#fb923c', // orange
+    '#38bdf8'  // sky
+  ];
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Svih 35 kombinacija (ekipa) od 4 učenika iz grupe od 7', W / 2, 22);
+
+    // Draw 7 students at top
+    const topY = 58;
+    const studentSpacing = W / 8;
+    const studentRadius = 18;
+
+    for (let i = 1; i <= 7; i++) {
+      const sx = studentSpacing * i;
+      // Circle
+      ctx.beginPath();
+      ctx.arc(sx, topY, studentRadius, 0, 2 * Math.PI);
+      ctx.fillStyle = studentColors[i];
+      ctx.globalAlpha = 0.2;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = studentColors[i];
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = studentColors[i];
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(studentNames[i], sx, topY + 5);
+    }
+
+    // Draw combinations as a grid
+    const cols = 7;
+    const rows = 5;
+    const gridTop = 105;
+    const gridLeft = 40;
+    const cellW = (W - 80) / cols;
+    const cellH = 66;
+
+    for (let idx = 0; idx < combos.length; idx++) {
+      const row = Math.floor(idx / cols);
+      const col = idx % cols;
+      const cx = gridLeft + col * cellW + cellW / 2;
+      const cy = gridTop + row * cellH + cellH / 2;
+
+      // Cell background
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.8)';
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      const rw = cellW - 8;
+      const rh = cellH - 8;
+      const rx = cx - rw / 2;
+      const ry = cy - rh / 2;
+      ctx.beginPath();
+      ctx.roundRect(rx, ry, rw, rh, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      // Combo number
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('#' + (idx + 1), rx + 5, ry + 13);
+
+      // Draw 4 small colored circles for each member
+      const combo = combos[idx];
+      const dotY = cy + 4;
+      const dotSpacing = rw / 5;
+      for (let j = 0; j < 4; j++) {
+        const dotX = rx + dotSpacing * (j + 1);
+        const student = combo[j];
+
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 10, 0, 2 * Math.PI);
+        ctx.fillStyle = studentColors[student];
+        ctx.globalAlpha = 0.25;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = studentColors[student];
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = studentColors[student];
+        ctx.font = 'bold 10px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('' + student, dotX, dotY + 4);
+      }
+    }
+
+    // Bottom summary
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ukupno: C(7, 4) = 35 ekipa', W / 2, H - 16);
+  }
+
+  draw();
+})();
+</script>
+
+<script>
+(() => {
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Kombinacije — sastavljanje ekipe od 4 učenika iz grupe od 7",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinacije", "kombinatorika", "binomni koeficijent", "faktorijel", "izbor bez ponavljanja"]
+}
+BRAINSPARK_META-->

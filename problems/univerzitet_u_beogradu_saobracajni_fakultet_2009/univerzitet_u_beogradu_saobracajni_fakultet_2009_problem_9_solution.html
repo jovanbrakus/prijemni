@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepenovanje kompleksnih brojeva</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Evaluate (1 + i)^2009 / (1 - i)^2009 where i is the imaginary unit.
+
+OPTIONS (mapped to Latin letters):
+(A) 1 + i
+(B) -i
+(C) 1
+(D) 1 - i
+(E) i
+
+APPROACH 1: Simplify the base fraction first
+(1+i)/(1-i) = (1+i)(1+i) / ((1-i)(1+i))
+            = (1+i)^2 / (1 - i^2)
+            = (1 + 2i + i^2) / (1 - (-1))
+            = (1 + 2i - 1) / 2
+            = 2i / 2
+            = i
+
+So (1+i)^2009 / (1-i)^2009 = ((1+i)/(1-i))^2009 = i^2009
+
+APPROACH 2: Use polar form
+1+i = sqrt(2) * cis(pi/4)
+1-i = sqrt(2) * cis(-pi/4)
+(1+i)/(1-i) = cis(pi/4) / cis(-pi/4) = cis(pi/2) = i
+Same result.
+
+NOW: compute i^2009
+i^1 = i
+i^2 = -1
+i^3 = -i
+i^4 = 1
+i^5 = i  (cycle of 4)
+
+2009 = 4 * 502 + 1
+So i^2009 = i^(4*502 + 1) = (i^4)^502 * i^1 = 1^502 * i = i
+
+ANSWER: i — option (E)
+
+This matches the marked answer И) i. ✓
+
+VERIFICATION:
+Let's double-check (1+i)/(1-i) = i by multiplying both sides:
+i * (1 - i) = i - i^2 = i - (-1) = 1 + i ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 8px 0;
+}
+
+.theory-card ul {
+  margin: 12px 0 0 20px;
+  color: #e2e8f0;
+}
+
+.theory-card li {
+  margin-bottom: 10px;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96,165,250,0.05);
+  border-left: 3px solid #4ade80;
+}
+
+.step-badge {
+  min-width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+}
+
+.checkpoint details {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+}
+
+.insight-formula {
+  font-size: 1.3rem;
+  margin: 16px 0;
+  color: #4ade80;
+}
+
+.final-answer {
+  text-align: center;
+  border: 1px solid rgba(52,211,153,0.3);
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(74,222,128,0.08));
+}
+
+.final-answer .big-answer {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.answer-options .opt {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.answer-options .opt.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 12px;
+  font-style: italic;
+}
+
+.pitfalls {
+  border-left: 3px solid #f472b6;
+}
+
+.pitfalls ul {
+  margin: 10px 0 0 20px;
+}
+
+.pitfalls li {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.challenge details {
+  margin: 15px 0;
+}
+
+.challenge summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+canvas {
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Stepenovanje kompleksnih brojeva</h1>
+  <p class="subtitle">Kompleksni brojevi — stepenovanje količnika, trigonometrijski oblik i cikličnost stepena od \( i \)</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Vrednost izraza \( \dfrac{(1+i)^{2009}}{(1-i)^{2009}} \) (gde je \( i \) imaginarna jedinica) je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( 1 + i \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( -i \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( 1 - i \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( i \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Najpre ćemo pojednostaviti razlomak \( \frac{1+i}{1-i} \) racionalizacijom imenioca (množenjem konjugovanim brojem). Kada dobijemo jednostavnu bazu, stepenujemo je na 2009. stepen koristeći činjenicu da se stepeni od \( i \) ponavljaju u ciklusu dužine 4.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <ul>
+        <li><strong>Imaginarna jedinica:</strong> \( i^2 = -1 \), što daje ciklus stepena:
+          \[ i^0 = 1, \quad i^1 = i, \quad i^2 = -1, \quad i^3 = -i, \quad i^4 = 1, \quad \ldots \]
+          Stepeni od \( i \) se ponavljaju sa periodom 4.
+        </li>
+        <li><strong>Racionalizacija imenioca:</strong> Za kompleksni razlomak \( \frac{a+bi}{c+di} \), množimo brojilac i imenilac konjugatom imenioca \( c - di \):
+          \[ \frac{a+bi}{c+di} = \frac{(a+bi)(c-di)}{(c+di)(c-di)} = \frac{(a+bi)(c-di)}{c^2 + d^2} \]
+        </li>
+        <li><strong>Pravilo za količnik stepena:</strong> \( \frac{z^n}{w^n} = \left(\frac{z}{w}\right)^n \) važi za sve kompleksne brojeve \( z, w \neq 0 \).</li>
+        <li><strong>Ostatak pri deljenju:</strong> Za cikličnost stepena, koristimo \( i^n = i^{n \mod 4} \).</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz — ciklus stepena od \( i \)</h2>
+    <canvas id="cycleCanvas" width="700" height="420"></canvas>
+    <p class="canvas-hint">Stepeni od \( i \) se kreću po jediničnoj kružnici u ciklusima dužine 4</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapišemo izraz kao stepen količnika</h3>
+        <p>Koristimo pravilo za količnik stepena sa istim eksponentom:</p>
+        <div class="math-block">
+          \[ \frac{(1+i)^{2009}}{(1-i)^{2009}} = \left(\frac{1+i}{1-i}\right)^{2009} \]
+        </div>
+        <p class="note">Ovo nam omogućava da najpre pojednostavimo bazu razlomka, pa tek onda stepenujemo.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Racionalizujemo razlomak \( \frac{1+i}{1-i} \)</h3>
+        <p>Množimo i brojilac i imenilac konjugatom imenioca, tj. brojem \( 1 + i \):</p>
+        <div class="math-block">
+          \[ \frac{1+i}{1-i} = \frac{(1+i)(1+i)}{(1-i)(1+i)} = \frac{(1+i)^2}{1 - i^2} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Izračunamo brojilac \( (1+i)^2 \)</h3>
+        <p>Razvijamo kvadrat binoma:</p>
+        <div class="math-block">
+          \[ (1+i)^2 = 1 + 2i + i^2 = 1 + 2i + (-1) = 2i \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izračunamo imenilac \( 1 - i^2 \)</h3>
+        <p>Kako je \( i^2 = -1 \):</p>
+        <div class="math-block">
+          \[ 1 - i^2 = 1 - (-1) = 2 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Dobijamo vrednost baze</h3>
+        <p>Spajamo rezultate iz koraka 3 i 4:</p>
+        <div class="math-block">
+          \[ \frac{1+i}{1-i} = \frac{2i}{2} = i \]
+        </div>
+        <p class="note">Ovo je ključni rezultat — razlomak \( \frac{1+i}{1-i} \) je jednaka imaginarna jedinica \( i \)!</p>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>🔍 Proveri sebe — koliko je \( \frac{1+i}{1-i} \)?</summary>
+        <div class="answer">Razlomak \( \frac{1+i}{1-i} = i \). Možemo proveriti: \( i \cdot (1 - i) = i - i^2 = i + 1 = 1 + i \) ✓</div>
+      </details>
+    </div>
+
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Stepenujemo bazu na 2009</h3>
+        <p>Sada naš izraz postaje:</p>
+        <div class="math-block">
+          \[ \left(\frac{1+i}{1-i}\right)^{2009} = i^{2009} \]
+        </div>
+        <p>Trebamo odrediti \( i^{2009} \). Kako se stepeni od \( i \) ponavljaju sa periodom 4, tražimo ostatak pri deljenju 2009 sa 4.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Nađemo ostatak \( 2009 \div 4 \)</h3>
+        <p>Delimo 2009 sa 4:</p>
+        <div class="math-block">
+          \[ 2009 = 4 \cdot 502 + 1 \]
+        </div>
+        <p>Ostatak je \( 1 \), dakle:</p>
+        <div class="math-block">
+          \[ i^{2009} = i^{4 \cdot 502 + 1} = \left(i^4\right)^{502} \cdot i^1 = 1^{502} \cdot i = i \]
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>🔍 Proveri sebe — koliko je \( i^{4} \)?</summary>
+        <div class="answer">\( i^4 = (i^2)^2 = (-1)^2 = 1 \). Zato je \( i^{4k} = 1 \) za svako \( k \in \mathbb{N} \).</div>
+      </details>
+    </div>
+
+    <div class="step-container" id="step8">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3>Zaključak</h3>
+        <p>Konačno:</p>
+        <div class="math-block">
+          \[ \frac{(1+i)^{2009}}{(1-i)^{2009}} = i^{2009} = i \]
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <details>
+        <summary>🔍 Proveri sebe — da li bismo za eksponent 2010 dobili isti rezultat?</summary>
+        <div class="answer">Ne! Za 2010: \( 2010 = 4 \cdot 502 + 2 \), pa bi \( i^{2010} = i^2 = -1 \). Rezultat zavisi od ostatka pri deljenju eksponenta sa 4.</div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Trik je u tome da se složeni razlomak prvo pojednostavi do jednostavne baze. Kada shvatimo da je \( \frac{1+i}{1-i} = i \), ceo problem se svodi na nalaženje \( i^{2009} \), što je rutinski zadatak sa cikličnošću stepena od \( i \).</p>
+    <div class="insight-formula">
+      \[ \frac{1+i}{1-i} = i \implies \frac{(1+i)^{2009}}{(1-i)^{2009}} = i^{2009} = i \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="big-answer">\[ \frac{(1+i)^{2009}}{(1-i)^{2009}} = i \]</div>
+    <div class="answer-options">
+      <span class="opt">(A) \( 1 + i \)</span>
+      <span class="opt">(B) \( -i \)</span>
+      <span class="opt">(C) \( 1 \)</span>
+      <span class="opt">(D) \( 1 - i \)</span>
+      <span class="opt correct">(E) \( i \)</span>
+    </div>
+    <p class="verification-note">Verifikacija: \( i \cdot (1 - i) = i - i^2 = i + 1 = 1 + i \), čime potvrđujemo da je \( \frac{1+i}{1-i} = i \). Zatim, \( 2009 = 4 \cdot 502 + 1 \), pa \( i^{2009} = i^1 = i \). Tačan odgovor je potvrđen.</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls">
+    <h2>Česte greške</h2>
+    <ul>
+      <li><strong>Pogrešno racionalizovanje:</strong> Neki učenici množite sa \( 1 - i \) umesto sa \( 1 + i \) (konjugatom imenioca), čime ne eliminišu imaginarni deo u imeniocu. Zapamtite: imenilac množimo njegovim konjugatom!</li>
+      <li><strong>Greška pri deljenju eksponenta sa 4:</strong> Brza računica \( 2009 \div 4 \) može dovesti do greške ako se ne proveri. Proverite: \( 4 \cdot 500 = 2000 \), pa \( 2009 - 2000 = 9 \), i \( 9 = 4 \cdot 2 + 1 \), dakle ostatak je zaista 1.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge">
+    <h2>Dodatni izazov</h2>
+    <p>Izračunaj vrednost izraza \( (1+i)^{2009} + (1-i)^{2009} \). (Savet: koristite trigonometrijski oblik kompleksnih brojeva.)</p>
+    <details>
+      <summary>💡 Nagoveštaj</summary>
+      <p>Zapišite \( 1+i = \sqrt{2} \cdot \left(\cos\frac{\pi}{4} + i\sin\frac{\pi}{4}\right) \) i \( 1-i = \sqrt{2} \cdot \left(\cos\frac{\pi}{4} - i\sin\frac{\pi}{4}\right) \). Primenite De Moavrov obrazac na oba člana. Kada saberete, imaginarni delovi se potiru, a realni se dupliraju. Koristite \( 2009 \cdot \frac{\pi}{4} = 502\pi + \frac{\pi}{4} \).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Canvas: Cycle of powers of i on the unit circle
+  const canvas = document.getElementById('cycleCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const centerX = W / 2;
+    const centerY = H / 2 + 15;
+    const radius = 140;
+
+    // Title
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ciklus stepena od i na jediničnoj kružnici', centerX, 32);
+
+    // Draw subtle grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+
+    // Horizontal axis
+    ctx.beginPath();
+    ctx.moveTo(centerX - radius - 60, centerY);
+    ctx.lineTo(centerX + radius + 60, centerY);
+    ctx.stroke();
+
+    // Vertical axis
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY - radius - 60);
+    ctx.lineTo(centerX, centerY + radius + 60);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', centerX + radius + 45, centerY + 18);
+    ctx.fillText('Im', centerX + 14, centerY - radius - 40);
+
+    // Draw unit circle
+    ctx.strokeStyle = 'rgba(96,165,250,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // Draw dashed circle glow
+    ctx.strokeStyle = 'rgba(96,165,250,0.08)';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // Points on unit circle for powers of i
+    const powers = [
+      { label: 'i⁰ = 1', x: 1, y: 0, color: '#60a5fa', angle: 0, labelDx: 22, labelDy: 20 },
+      { label: 'i¹ = i', x: 0, y: 1, color: '#4ade80', angle: Math.PI/2, labelDx: 20, labelDy: -14 },
+      { label: 'i² = -1', x: -1, y: 0, color: '#f472b6', angle: Math.PI, labelDx: -28, labelDy: 20 },
+      { label: 'i³ = -i', x: 0, y: -1, color: '#a78bfa', angle: 3*Math.PI/2, labelDx: 24, labelDy: 18 }
+    ];
+
+    // Draw curved arrows between points
+    const arrowAngles = [
+      { start: 0.08, end: Math.PI/2 - 0.08, color: 'rgba(96,165,250,0.5)' },
+      { start: Math.PI/2 + 0.08, end: Math.PI - 0.08, color: 'rgba(74,222,128,0.5)' },
+      { start: Math.PI + 0.08, end: 3*Math.PI/2 - 0.08, color: 'rgba(244,114,182,0.5)' },
+      { start: 3*Math.PI/2 + 0.08, end: 2*Math.PI - 0.08, color: 'rgba(167,139,250,0.5)' }
+    ];
+
+    arrowAngles.forEach(function(a) {
+      ctx.strokeStyle = a.color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      // Note: canvas angles go clockwise, but we want counterclockwise on math plane
+      // We use -angle because our y is flipped
+      ctx.arc(centerX, centerY, radius + 18, -a.start, -a.end, true);
+      ctx.stroke();
+
+      // Arrowhead
+      var endAngle = -a.end;
+      var ax = centerX + (radius + 18) * Math.cos(endAngle);
+      var ay = centerY + (radius + 18) * Math.sin(endAngle);
+      var arrowSize = 8;
+      var headAngle = endAngle + Math.PI/2 + 0.3;
+      ctx.setLineDash([]);
+      ctx.fillStyle = a.color;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax + arrowSize * Math.cos(headAngle - 0.5), ay + arrowSize * Math.sin(headAngle - 0.5));
+      ctx.lineTo(ax + arrowSize * Math.cos(headAngle + 0.5), ay + arrowSize * Math.sin(headAngle + 0.5));
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    ctx.setLineDash([]);
+
+    // Draw points
+    powers.forEach(function(p) {
+      var px = centerX + p.x * radius;
+      var py = centerY - p.y * radius; // Flip y for math convention
+
+      // Glow
+      var grd = ctx.createRadialGradient(px, py, 0, px, py, 18);
+      grd.addColorStop(0, p.color.replace(')', ',0.4)').replace('rgb', 'rgba'));
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(px, py, 18, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(px, py, 7, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // White center
+      ctx.fillStyle = '#0c1222';
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Label
+      ctx.font = 'bold 14px Courier New, monospace';
+      ctx.fillStyle = p.color;
+      ctx.textAlign = 'center';
+      ctx.fillText(p.label, px + p.labelDx, py + p.labelDy);
+    });
+
+    // Highlight i^2009 = i^1 = i
+    var highlightX = centerX;
+    var highlightY = centerY - radius;
+
+    // Pulsing ring around i
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.arc(highlightX, highlightY, 14, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Annotation box
+    var boxX = centerX + 100;
+    var boxY = centerY - radius - 50;
+    var boxW = 220;
+    var boxH = 70;
+
+    ctx.fillStyle = 'rgba(52,211,153,0.1)';
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 10);
+    ctx.fill();
+
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 10);
+    ctx.stroke();
+
+    // Arrow from annotation to point
+    ctx.strokeStyle = 'rgba(52,211,153,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(boxX, boxY + boxH / 2);
+    ctx.lineTo(highlightX + 16, highlightY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.font = 'bold 13px Courier New, monospace';
+    ctx.fillStyle = '#4ade80';
+    ctx.textAlign = 'center';
+    ctx.fillText('2009 = 4 · 502 + 1', boxX + boxW / 2, boxY + 28);
+    ctx.font = 'bold 15px Courier New, monospace';
+    ctx.fillText('i²⁰⁰⁹ = i¹ = i', boxX + boxW / 2, boxY + 52);
+
+    // "×i" labels on arcs
+    var arcLabels = [
+      { angle: -Math.PI/4, text: '×i' },
+      { angle: -3*Math.PI/4, text: '×i' },
+      { angle: Math.PI - Math.PI/4, text: '×i' },
+      { angle: Math.PI/4, text: '×i' }
+    ];
+
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    arcLabels.forEach(function(l) {
+      var lx = centerX + (radius + 38) * Math.cos(l.angle);
+      var ly = centerY + (radius + 38) * Math.sin(l.angle);
+      ctx.fillText(l.text, lx, ly);
+    });
+
+    // Tick marks on axes
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+
+    // 1 on real axis
+    ctx.fillText('1', centerX + radius, centerY + 22);
+    // -1 on real axis
+    ctx.fillText('-1', centerX - radius, centerY + 22);
+    // i on imaginary axis
+    ctx.fillText('1', centerX - 16, centerY - radius + 5);
+    // -i on imaginary axis
+    ctx.fillText('-1', centerX - 18, centerY + radius + 5);
+  }
+
+  draw();
+
+  // Step click interaction
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      this.classList.toggle('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje količnika kompleksnih brojeva (1+i)/(1-i)",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "imaginarna jedinica", "stepenovanje", "cikličnost stepena od i", "racionalizacija"]
+}
+BRAINSPARK_META-->

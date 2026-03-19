@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algebarsko pojednostavljivanje izraza sa razlikom stepena</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Given a = 3,2148 and b = 4,2852, evaluate:
+  (a^4 - b^4)/(a^2 - b^2) - (2a^2*b - 2ab^2)/(b - a)
+
+Key observation: a + b = 3.2148 + 4.2852 = 7.5 exactly.
+
+Step 1: Simplify the first fraction (a^4 - b^4)/(a^2 - b^2)
+  a^4 - b^4 = (a^2 - b^2)(a^2 + b^2)   [difference of squares]
+  So: (a^4 - b^4)/(a^2 - b^2) = (a^2 + b^2)
+  (Valid since a ≠ b, so a^2 - b^2 ≠ 0)
+
+Step 2: Simplify the second fraction (2a^2*b - 2ab^2)/(b - a)
+  Numerator: 2a^2*b - 2ab^2 = 2ab(a - b)
+  So: 2ab(a - b)/(b - a) = 2ab * (-(b - a))/(b - a) = -2ab
+
+Step 3: Combine
+  Expression = (a^2 + b^2) - (-2ab) = a^2 + b^2 + 2ab = (a + b)^2
+
+Step 4: Substitute
+  (a + b)^2 = (7.5)^2 = 56.25
+
+Answer: 56,25 which is option (A). Confirmed correct.
+
+The answer options use Cyrillic-style letters in the original:
+A) 56,25; Ц) 2,42; E) 0; Г) 6,25; И) -2,25
+We map these to Latin: (A) 56,25; (B) 2,42; (C) 0; (D) 6,25; (E) -2,25
+The correct answer is (A).
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.given-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Pojednostavljivanje algebarskog izraza</h1>
+  <p class="subtitle">Faktorizacija, razlika kvadrata, razlika četvrtih stepena, formule skraćenog množenja</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Ako je \(a = 3{,}2148\) i \(b = 4{,}2852\), onda izraz:
+      \[ \frac{a^4 - b^4}{a^2 - b^2} - \frac{2a^2 b - 2ab^2}{b - a} \]
+      ima vrednost:
+    </div>
+    <div class="given-data-grid">
+      <div class="given-item">
+        <div class="label">\(a\)</div>
+        <div class="value">\(3{,}2148\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">\(b\)</div>
+        <div class="value">\(4{,}2852\)</div>
+      </div>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(56{,}25\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2{,}42\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(6{,}25\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-2{,}25\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Umesto uvrštavanja ružnih decimalnih vrednosti, faktorizovaćemo oba razlomka algebarski. Koristićemo razliku kvadrata i izlučivanje zajedničkog faktora, pa ćemo sve svesti na poznatu formulu skraćenog množenja \((a + b)^2\). Na kraju, iskoristićemo činjenicu da je \(a + b = 7{,}5\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Razlika kvadrata</summary>
+      <div class="math-box">
+        \[ a^2 - b^2 = (a - b)(a + b) \]
+      </div>
+      <p>Razlika kvadrata dva broja jednaka je proizvodu njihove razlike i njihovog zbira.</p>
+    </details>
+    <details>
+      <summary>Razlika četvrtih stepena</summary>
+      <div class="math-box">
+        \[ a^4 - b^4 = (a^2 - b^2)(a^2 + b^2) = (a - b)(a + b)(a^2 + b^2) \]
+      </div>
+      <p>Razliku četvrtih stepena rastavimo dvostrukom primenom formule za razliku kvadrata.</p>
+    </details>
+    <details>
+      <summary>Kvadrat zbira</summary>
+      <div class="math-box">
+        \[ (a + b)^2 = a^2 + 2ab + b^2 \]
+      </div>
+      <p>Ova formula nam omogućava da prepoznamo krajnji rezultat bez izračunavanja pojedinačnih kvadrata.</p>
+    </details>
+    <details>
+      <summary>Izlučivanje zajedničkog faktora</summary>
+      <div class="math-box">
+        \[ 2a^2 b - 2ab^2 = 2ab(a - b) \]
+      </div>
+      <p>Zajednički faktor \(2ab\) izlučujemo ispred zagrade.</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz transformacije izraza</div>
+    <canvas id="mainCanvas" width="900" height="500"></canvas>
+    <p class="drag-hint">Dijagram prikazuje tok algebarskog pojednostavljivanja izraza</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Uočimo ključnu osobinu brojeva</div>
+      <p class="step-explanation">
+        Pre nego što krenemo sa faktorizacijom, primetimo nešto bitno o datim brojevima:
+      </p>
+      <div class="math-box">
+        \[ a + b = 3{,}2148 + 4{,}2852 = 7{,}5 \]
+      </div>
+      <p class="note-box">Ovo nije slučajnost! Zadatak je tako dizajniran da se izraz svede na \((a+b)^2\), pa ćemo dobiti lep rezultat.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Faktorizujemo prvi razlomak</div>
+      <p class="step-explanation">
+        Razmotrimo brojilac prvog razlomka. Izraz \(a^4 - b^4\) je razlika kvadrata od \(a^2\) i \(b^2\):
+      </p>
+      <div class="math-box">
+        \[ a^4 - b^4 = (a^2)^2 - (b^2)^2 = (a^2 - b^2)(a^2 + b^2) \]
+      </div>
+      <p class="step-explanation">
+        Sada delimo sa \(a^2 - b^2\):
+      </p>
+      <div class="math-box">
+        \[ \frac{a^4 - b^4}{a^2 - b^2} = \frac{(a^2 - b^2)(a^2 + b^2)}{a^2 - b^2} = a^2 + b^2 \]
+      </div>
+      <p class="note-box">Smemo da skratimo jer je \(a \neq b\), što znači da je \(a^2 - b^2 \neq 0\).</p>
+
+      <details>
+        <summary>Proveri se: Koliko je \(\frac{x^4 - y^4}{x^2 - y^2}\) ako je \(x = 3\) i \(y = 1\)?</summary>
+        <p>Brojilac: \(81 - 1 = 80\). Imenilac: \(9 - 1 = 8\). Rezultat: \(\frac{80}{8} = 10\). Po formuli: \(x^2 + y^2 = 9 + 1 = 10\). Tačno!</p>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Faktorizujemo drugi razlomak</div>
+      <p class="step-explanation">
+        U brojiocu drugog razlomka izlučimo zajednički faktor \(2ab\):
+      </p>
+      <div class="math-box">
+        \[ 2a^2 b - 2ab^2 = 2ab(a - b) \]
+      </div>
+      <p class="step-explanation">
+        Sada delimo sa \((b - a)\). Primetimo da je \((a - b) = -(b - a)\):
+      </p>
+      <div class="math-box">
+        \[ \frac{2ab(a - b)}{b - a} = \frac{2ab \cdot (-(b - a))}{b - a} = \frac{-2ab \cdot (b - a)}{b - a} = -2ab \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Sastavimo celokupan izraz</div>
+      <p class="step-explanation">
+        Sada zamenjujemo oba pojednostavljena razlomka nazad u polazni izraz:
+      </p>
+      <div class="math-box">
+        \[ \underbrace{\frac{a^4 - b^4}{a^2 - b^2}}_{a^2 + b^2} - \underbrace{\frac{2a^2 b - 2ab^2}{b - a}}_{-2ab} \]
+      </div>
+      <p class="step-explanation">
+        Oduzimanje negativnog broja postaje sabiranje:
+      </p>
+      <div class="math-box">
+        \[ (a^2 + b^2) - (-2ab) = a^2 + b^2 + 2ab \]
+      </div>
+
+      <details>
+        <summary>Proveri se: Koji je ovo poznati obrazac?</summary>
+        <p>To je formula za kvadrat zbira: \(a^2 + 2ab + b^2 = (a + b)^2\). Svaki put kad vidimo ovu kombinaciju, možemo je zapisati kao kvadrat.</p>
+      </details>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Prepoznamo formulu skraćenog množenja</div>
+      <p class="step-explanation">
+        Izraz \(a^2 + 2ab + b^2\) je savršen kvadrat zbira:
+      </p>
+      <div class="math-box">
+        \[ a^2 + 2ab + b^2 = (a + b)^2 \]
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Uvrstimo poznatu vrednost \(a + b\)</div>
+      <p class="step-explanation">
+        Iz koraka 1 znamo da je \(a + b = 7{,}5\). Sada samo stepenujemo:
+      </p>
+      <div class="math-box">
+        \[ (a + b)^2 = (7{,}5)^2 = 56{,}25 \]
+      </div>
+      <p class="note-box">Podsetimo se: \(7{,}5^2 = 7{,}5 \times 7{,}5 = 56{,}25\). Možemo i ovako: \(\left(\frac{15}{2}\right)^2 = \frac{225}{4} = 56{,}25\).</p>
+
+      <details>
+        <summary>Proveri se: Koliko je \(7{,}5^2\) na drugi način?</summary>
+        <p>Možemo koristiti formulu \((a+b)^2\) sa \(a = 7\) i \(b = 0{,}5\): \(49 + 2 \cdot 7 \cdot 0{,}5 + 0{,}25 = 49 + 7 + 0{,}25 = 56{,}25\). Tačno!</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Ovaj zadatak izgleda zastrašujuće zbog „ružnih" decimalnih brojeva, ali poenta je upravo u tome da se <strong>nikada ne uvrštavaju</strong> konkretne vrednosti direktno. Algebarskom faktorizacijom ceo izraz se svodi na \((a+b)^2\), a dizajneri zadatka su namerno izabrali \(a\) i \(b\) tako da im je zbir lep broj.
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ \frac{a^4 - b^4}{a^2 - b^2} - \frac{2a^2 b - 2ab^2}{b - a} = (a + b)^2 = 7{,}5^2 = 56{,}25 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(56{,}25\)</div>
+    <div class="answer-options">
+      <span class="opt correct">(A) \(56{,}25\)</span>
+      <span class="opt">(B) \(2{,}42\)</span>
+      <span class="opt">(C) \(0\)</span>
+      <span class="opt">(D) \(6{,}25\)</span>
+      <span class="opt">(E) \(-2{,}25\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(a + b = 3{,}2148 + 4{,}2852 = 7{,}5\), a \(7{,}5^2 = 56{,}25\). Rezultat je pozitivan ceo broj sa dve decimale, što odgovara ponuđenom odgovoru (A). &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Uvrštavanje decimalnih vrednosti odmah</div>
+      <p>Najveća greška je pokušati da se izračuna \(a^4\), \(b^4\) itd. sa datim decimalnim brojevima. Računica postaje izuzetno komplikovana i sklona greškama. Uvek prvo pojednostavi algebarski!</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešan predznak kod delenja sa \((b-a)\)</div>
+      <p>Kod drugog razlomka, \(\frac{2ab(a-b)}{b-a}\), česta greška je zaboraviti da je \((a-b) = -(b-a)\). Ako se ne promeni predznak, umesto \(-2ab\) dobija se \(+2ab\), pa krajnji rezultat postaje \(a^2 - 2ab + b^2 = (a-b)^2\), što daje pogrešnu vrednost.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Šta bi bila vrednost istog izraza da je \(a = 2{,}7183\) i \(b = 7{,}2817\)? A šta ako bi umesto oduzimanja u polaznom izrazu stajalo sabiranje?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Za prvi deo: \(a + b = 10\), pa je rezultat \(10^2 = 100\). Za drugi deo: ako bi umesto „minus" stajalo „plus" između dva razlomka, dobili bismo \((a^2 + b^2) + (-2ab) = a^2 - 2ab + b^2 = (a - b)^2\), što je razlika na kvadrat.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 500;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const centerX = W / 2;
+
+    function roundRect(x, y, w, h, r, fillColor, strokeColor) {
+      ctx.beginPath();
+      ctx.roundRect(x - w / 2, y - h / 2, w, h, r);
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+      if (strokeColor) {
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+
+    function connectLine(x1, y1, x2, y2, color) {
+      ctx.strokeStyle = color || '#334155';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawText(text, x, y, color, font) {
+      ctx.fillStyle = color;
+      ctx.font = font || 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+    }
+
+    function drawArrow(x1, y1, x2, y2, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      var angle = Math.atan2(y2 - y1, x2 - x1);
+      var headLen = 8;
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+      ctx.stroke();
+    }
+
+    var boxH = 48;
+    var r = 10;
+    var spacing = Math.min(W / 3.2, 240);
+
+    // Row 1: Original two fractions
+    var row1Y = 50;
+    var col1 = centerX - spacing * 0.6;
+    var col2 = centerX + spacing * 0.6;
+    var bw1 = Math.min(260, W * 0.35);
+    var bw2 = Math.min(260, W * 0.35);
+
+    roundRect(col1, row1Y, bw1, boxH, r, 'rgba(96, 165, 250, 0.12)', '#60a5fa');
+    drawText('(a\u2074 \u2212 b\u2074) / (a\u00B2 \u2212 b\u00B2)', col1, row1Y, '#60a5fa');
+
+    roundRect(col2, row1Y, bw2, boxH, r, 'rgba(167, 139, 250, 0.12)', '#a78bfa');
+    drawText('(2a\u00B2b \u2212 2ab\u00B2) / (b \u2212 a)', col2, row1Y, '#a78bfa');
+
+    // Labels
+    drawText('prvi razlomak', col1, row1Y - 34, '#94a3b8', '12px Segoe UI, system-ui, sans-serif');
+    drawText('drugi razlomak', col2, row1Y - 34, '#94a3b8', '12px Segoe UI, system-ui, sans-serif');
+
+    // Row 2: Factorized
+    var row2Y = 145;
+    connectLine(col1, row1Y + boxH / 2, col1, row2Y - boxH / 2, '#60a5fa');
+    connectLine(col2, row1Y + boxH / 2, col2, row2Y - boxH / 2, '#a78bfa');
+
+    roundRect(col1, row2Y, Math.min(220, W * 0.3), boxH, r, 'rgba(96, 165, 250, 0.12)', '#60a5fa');
+    drawText('= a\u00B2 + b\u00B2', col1, row2Y, '#60a5fa');
+
+    roundRect(col2, row2Y, Math.min(220, W * 0.3), boxH, r, 'rgba(167, 139, 250, 0.12)', '#a78bfa');
+    drawText('= \u22122ab', col2, row2Y, '#a78bfa');
+
+    // Arrow labels for factorization
+    drawText('razlika kvadrata', col1 + bw1 / 2 + 10, (row1Y + row2Y) / 2, '#475569', '11px Segoe UI, system-ui, sans-serif');
+    drawText('izlučimo 2ab', col2 + bw2 / 2 + 10, (row1Y + row2Y) / 2, '#475569', '11px Segoe UI, system-ui, sans-serif');
+
+    // Row 3: Combine
+    var row3Y = 240;
+    connectLine(col1, row2Y + boxH / 2, centerX, row3Y - boxH / 2, '#60a5fa');
+    connectLine(col2, row2Y + boxH / 2, centerX, row3Y - boxH / 2, '#a78bfa');
+
+    var bw3 = Math.min(360, W * 0.55);
+    roundRect(centerX, row3Y, bw3, boxH, r, 'rgba(244, 114, 182, 0.1)', '#f472b6');
+    drawText('(a\u00B2 + b\u00B2) \u2212 (\u22122ab) = a\u00B2 + 2ab + b\u00B2', centerX, row3Y, '#f472b6');
+
+    // Operator between fractions
+    drawText('\u2212', centerX, row1Y, '#e2e8f0', 'bold 22px Segoe UI, system-ui, sans-serif');
+    drawText('sastavimo', centerX, row3Y - 34, '#94a3b8', '12px Segoe UI, system-ui, sans-serif');
+
+    // Row 4: Recognize formula
+    var row4Y = 330;
+    connectLine(centerX, row3Y + boxH / 2, centerX, row4Y - boxH / 2, '#f472b6');
+
+    var bw4 = Math.min(220, W * 0.35);
+    roundRect(centerX, row4Y, bw4, boxH, r, 'rgba(96, 165, 250, 0.12)', '#60a5fa');
+    drawText('= (a + b)\u00B2', centerX, row4Y, '#60a5fa', 'bold 16px Segoe UI, system-ui, sans-serif');
+
+    drawText('formula kvadrata zbira', centerX + bw4 / 2 + 20, row4Y, '#475569', '11px Segoe UI, system-ui, sans-serif');
+
+    // Row 5: Substitute
+    var row5Y = 410;
+    connectLine(centerX, row4Y + boxH / 2, centerX, row5Y - boxH / 2, '#34d399');
+
+    var bw5 = Math.min(220, W * 0.35);
+    roundRect(centerX, row5Y, bw5, boxH + 4, r, 'rgba(52, 211, 153, 0.12)', '#34d399');
+    drawText('= (7,5)\u00B2 = 56,25', centerX, row5Y, '#4ade80', 'bold 16px Segoe UI, system-ui, sans-serif');
+
+    drawText('a + b = 7,5', centerX + bw5 / 2 + 20, row5Y, '#475569', '11px Segoe UI, system-ui, sans-serif');
+
+    // Final underline
+    ctx.beginPath();
+    ctx.moveTo(centerX - bw5 / 2, row5Y + boxH / 2 + 6);
+    ctx.lineTo(centerX + bw5 / 2, row5Y + boxH / 2 + 6);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Title
+    drawText('Tok pojednostavljivanja', centerX, H - 30, '#64748b', '13px Segoe UI, system-ui, sans-serif');
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(step) {
+    step.addEventListener('click', function() {
+      stepContainers.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje algebarskog izraza sa razlikom stepena",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["faktorizacija", "razlika kvadrata", "formule skraćenog množenja", "kvadrat zbira", "algebarski izrazi"]
+}
+BRAINSPARK_META-->

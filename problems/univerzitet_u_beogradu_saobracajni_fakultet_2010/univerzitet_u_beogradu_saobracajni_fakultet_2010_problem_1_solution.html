@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Izračunavanje vrednosti izraza sa negativnim eksponentima</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Evaluate the expression
+{ 3^(-1) - (1/3) * [ (1/2)^(-2) + (-1/3)^(-3) ] }^(1/3)
+
+Step-by-step solution:
+
+1. Compute 3^(-1):
+   3^(-1) = 1/3
+
+2. Compute (1/2)^(-2):
+   (1/2)^(-2) = 2^2 = 4
+
+3. Compute (-1/3)^(-3):
+   (-1/3)^(-3) = (-3)^3 = -27
+   (Negative base raised to odd power gives negative result)
+
+4. Evaluate the bracket:
+   (1/2)^(-2) + (-1/3)^(-3) = 4 + (-27) = 4 - 27 = -23
+
+5. Multiply by 1/3:
+   (1/3) * (-23) = -23/3
+
+6. Compute the expression inside the curly braces:
+   3^(-1) - (1/3)[ ... ] = 1/3 - (-23/3) = 1/3 + 23/3 = 24/3 = 8
+
+7. Take the cube root:
+   8^(1/3) = ³√8 = 2
+
+Final answer: 2
+
+Verification: Answer is 2, which matches option (E). Confirmed correct.
+The key steps are: negative exponents flip the base, careful sign tracking with (-1/3)^(-3),
+and recognizing that the cube root of 8 is 2.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Negativni eksponenti i kubni koren</h1>
+  <p class="subtitle">Stepenovanje, negativni eksponenti, pravila za računanje sa stepenima, kubni koren</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Vrednost izraza:
+      \[ \left\{3^{-1} - \frac{1}{3}\left[\left(\frac{1}{2}\right)^{-2} + \left(-\frac{1}{3}\right)^{-3}\right]\right\}^{1/3} \]
+      je:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(-2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Izraz ćemo rešavati „iznutra ka spolja": prvo izračunamo svaki stepen sa negativnim eksponentom, zatim saberemo vrednosti u uglastoj zagradi, pomnožimo sa \(\frac{1}{3}\), oduzimamo od \(3^{-1}\), i na kraju izvučemo kubni koren.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Negativan eksponent</summary>
+      <div class="math-box">
+        \[ a^{-n} = \frac{1}{a^n} \quad \text{i obrnuto:} \quad \left(\frac{a}{b}\right)^{-n} = \left(\frac{b}{a}\right)^{n} \]
+      </div>
+      <p>Negativan eksponent „okreće" razlomak: baza prelazi iz brojioca u imenilac (ili obrnuto), a eksponent postaje pozitivan.</p>
+    </details>
+    <details>
+      <summary>Stepen razlomka</summary>
+      <div class="math-box">
+        \[ \left(\frac{a}{b}\right)^{n} = \frac{a^n}{b^n} \]
+      </div>
+      <p>Kad stepenujemo razlomak, stepenujemo i brojilac i imenilac posebno.</p>
+    </details>
+    <details>
+      <summary>Kubni koren (stepen \(\frac{1}{3}\))</summary>
+      <div class="math-box">
+        \[ a^{1/3} = \sqrt[3]{a} \]
+      </div>
+      <p>Stepen \(\frac{1}{3}\) je ekvivalentan kubnom korenu. Na primer, \(8^{1/3} = \sqrt[3]{8} = 2\).</p>
+    </details>
+    <details>
+      <summary>Paran i neparan stepen negativnog broja</summary>
+      <div class="math-box">
+        \[ (-a)^{2k} = a^{2k} > 0, \qquad (-a)^{2k+1} = -a^{2k+1} < 0 \]
+      </div>
+      <p>Negativan broj stepenovani na paran eksponent daje pozitivan rezultat, a na neparan eksponent daje negativan rezultat.</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz izraza</div>
+    <canvas id="mainCanvas" width="900" height="480"></canvas>
+    <p class="drag-hint">Dijagram prikazuje strukturu izraza sa vrednošću svake komponente</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Izračunamo \(3^{-1}\)</div>
+      <p class="step-explanation">
+        Negativan eksponent znači da „obrnemo" bazu. Dakle:
+      </p>
+      <div class="math-box">
+        \[ 3^{-1} = \frac{1}{3} \]
+      </div>
+      <p class="note-box">Ovo je prvi član izraza unutar velikih vitičastih zagrada.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Izračunamo \(\left(\frac{1}{2}\right)^{-2}\)</div>
+      <p class="step-explanation">
+        Negativan eksponent \(-2\) „okreće" razlomak \(\frac{1}{2}\) u \(\frac{2}{1} = 2\), pa stepenujemo na 2:
+      </p>
+      <div class="math-box">
+        \[ \left(\frac{1}{2}\right)^{-2} = \left(\frac{2}{1}\right)^{2} = 2^2 = 4 \]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Izračunamo \(\left(-\frac{1}{3}\right)^{-3}\)</div>
+      <p class="step-explanation">
+        Negativan eksponent \(-3\) „okreće" razlomak \(-\frac{1}{3}\) u \(-3\), a zatim stepenujemo na 3:
+      </p>
+      <div class="math-box">
+        \[ \left(-\frac{1}{3}\right)^{-3} = \left(-3\right)^{3} \]
+      </div>
+      <p class="step-explanation">
+        Pošto je eksponent <span class="highlight-val">neparan</span> (3), rezultat je negativan:
+      </p>
+      <div class="math-box">
+        \[ (-3)^3 = (-3) \cdot (-3) \cdot (-3) = 9 \cdot (-3) = -27 \]
+      </div>
+
+      <details>
+        <summary>Proveri se: Zašto je \((-3)^3\) negativan broj?</summary>
+        <p>Zato što je eksponent neparan. Kad množimo tri negativna broja: \((-3)\cdot(-3) = +9\), pa \(9 \cdot (-3) = -27\). Dva negativna daju pozitivan, ali treći ga ponovo čini negativnim.</p>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Saberemo vrednosti u uglastoj zagradi</div>
+      <p class="step-explanation">
+        Sada saberemo rezultate iz koraka 2 i 3:
+      </p>
+      <div class="math-box">
+        \[ \left(\frac{1}{2}\right)^{-2} + \left(-\frac{1}{3}\right)^{-3} = 4 + (-27) = 4 - 27 = -23 \]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Pomnožimo sa \(\frac{1}{3}\)</div>
+      <p class="step-explanation">
+        Rezultat iz uglaste zagrade množimo sa \(\frac{1}{3}\):
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{3} \cdot (-23) = -\frac{23}{3} \]
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Izraz u vitičastim zagradama</div>
+      <p class="step-explanation">
+        Sada imamo sve komponente. Vitičasta zagrada glasi: \(3^{-1} - \frac{1}{3}[\ldots]\). Uvrštavamo izračunate vrednosti:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{3} - \left(-\frac{23}{3}\right) \]
+      </div>
+      <p class="step-explanation">
+        Minus ispred negativnog broja postaje plus:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{3} + \frac{23}{3} = \frac{1 + 23}{3} = \frac{24}{3} = 8 \]
+      </div>
+
+      <details>
+        <summary>Proveri se: Koliko je \(\frac{1}{3} + \frac{23}{3}\)?</summary>
+        <p>Razlomci imaju isti imenilac (3), pa sabiramo samo brojioce: \(\frac{1+23}{3} = \frac{24}{3} = 8\). Tačno!</p>
+      </details>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">7</span> Izvučemo kubni koren</div>
+      <p class="step-explanation">
+        Konačno, primenjujemo eksponent \(\frac{1}{3}\), što je kubni koren:
+      </p>
+      <div class="math-box">
+        \[ 8^{1/3} = \sqrt[3]{8} = 2 \]
+      </div>
+      <p class="note-box">Zato što je \(2 \cdot 2 \cdot 2 = 2^3 = 8\), kubni koren od 8 je tačno 2.</p>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Ovo je tipičan zadatak sa „gnezdom" zagrada — rešava se strpljivo, iznutra ka spolja. Najveća zamka je stepen \(\left(-\frac{1}{3}\right)^{-3}\), gde treba pažljivo pratiti i predznak (neparan eksponent!) i okretanje razlomka (negativan eksponent!). Kad se pažljivo izračuna svaki deo, izraz se lepo „skrati" i dobijamo kubni koren savršenog kuba.
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ \left\{\frac{1}{3} + \frac{23}{3}\right\}^{1/3} = 8^{1/3} = \sqrt[3]{8} = 2 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(2\)</div>
+    <div class="answer-options">
+      <span class="opt">(A) \(1\)</span>
+      <span class="opt">(B) \(-2\)</span>
+      <span class="opt">(C) \(-1\)</span>
+      <span class="opt">(D) \(0\)</span>
+      <span class="opt correct">(E) \(2\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(2^3 = 8\), a izraz u vitičastoj zagradi je \(\frac{24}{3} = 8\). Kubni koren od 8 je zaista 2. &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešan predznak kod \((-1/3)^{-3}\)</div>
+      <p>Mnogi učenici zaborave da neparan eksponent čuva negativan predznak. \((-3)^3 = -27\), a ne \(+27\). Da je eksponent bio paran, rezultat bi bio pozitivan.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zabuna sa operacijom „minus ispred minusa"</div>
+      <p>U koraku 6, imamo \(\frac{1}{3} - \left(-\frac{23}{3}\right)\). Dva minusa daju plus: \(\frac{1}{3} + \frac{23}{3} = 8\). Česta greška je da se zadrži oduzimanje i dobije \(\frac{1-23}{3} = -\frac{22}{3}\), što je pogrešno.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Šta bi bila vrednost izraza da umesto eksponenta \(\frac{1}{3}\) na kraju stoji eksponent \(\frac{1}{2}\) (tj. kvadratni koren)?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Unutrašnjost se ne menja — i dalje dobijamo 8. Ali sada tražimo \(8^{1/2} = \sqrt{8} = 2\sqrt{2} \approx 2{,}83\). To nije ceo broj, pa ne bi mogao biti nijedan od ponuđenih odgovora!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 480 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 480;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw the expression tree showing the computation flow
+    const centerX = W / 2;
+
+    // Helper: draw a rounded rectangle
+    function roundRect(x, y, w, h, r, fillColor, strokeColor) {
+      ctx.beginPath();
+      ctx.roundRect(x - w / 2, y - h / 2, w, h, r);
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+      if (strokeColor) {
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+
+    // Helper: draw connecting line
+    function connectLine(x1, y1, x2, y2, color) {
+      ctx.strokeStyle = color || '#334155';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Helper: draw text centered
+    function drawText(text, x, y, color, font) {
+      ctx.fillStyle = color;
+      ctx.font = font || 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+    }
+
+    // Layout parameters
+    const boxW = 140;
+    const boxH = 52;
+    const smallBoxW = 120;
+    const smallBoxH = 44;
+    const r = 10;
+
+    // Row 1: Three initial computations
+    const row1Y = 60;
+    const spacing = Math.min(W / 4, 200);
+
+    const col1 = centerX - spacing;
+    const col2 = centerX;
+    const col3 = centerX + spacing;
+
+    // Box: 3^(-1) = 1/3
+    roundRect(col1, row1Y, smallBoxW, smallBoxH, r, 'rgba(96, 165, 250, 0.12)', '#60a5fa');
+    drawText('3\u207B\u00B9 = 1/3', col1, row1Y, '#60a5fa', 'bold 14px Segoe UI, system-ui, sans-serif');
+
+    // Box: (1/2)^(-2) = 4
+    roundRect(col2, row1Y, smallBoxW, smallBoxH, r, 'rgba(167, 139, 250, 0.12)', '#a78bfa');
+    drawText('(1/2)\u207B\u00B2 = 4', col2, row1Y, '#a78bfa', 'bold 14px Segoe UI, system-ui, sans-serif');
+
+    // Box: (-1/3)^(-3) = -27
+    roundRect(col3, row1Y, boxW, smallBoxH, r, 'rgba(244, 114, 182, 0.12)', '#f472b6');
+    drawText('(-1/3)\u207B\u00B3 = -27', col3, row1Y, '#f472b6', 'bold 14px Segoe UI, system-ui, sans-serif');
+
+    // Row 2: Sum in brackets
+    const row2Y = 155;
+    const mid23 = (col2 + col3) / 2;
+    connectLine(col2, row1Y + smallBoxH / 2, mid23, row2Y - smallBoxH / 2, '#a78bfa');
+    connectLine(col3, row1Y + smallBoxH / 2, mid23, row2Y - smallBoxH / 2, '#f472b6');
+
+    roundRect(mid23, row2Y, boxW + 20, smallBoxH, r, 'rgba(167, 139, 250, 0.12)', '#a78bfa');
+    drawText('4 + (-27) = -23', mid23, row2Y, '#a78bfa', 'bold 14px Segoe UI, system-ui, sans-serif');
+
+    // Label: [ ... ]
+    drawText('[ ... ]', mid23, row2Y - 32, '#94a3b8', '13px Segoe UI, system-ui, sans-serif');
+
+    // Row 3: Multiply by 1/3
+    const row3Y = 245;
+    connectLine(mid23, row2Y + smallBoxH / 2, mid23, row3Y - smallBoxH / 2, '#a78bfa');
+
+    roundRect(mid23, row3Y, boxW + 20, smallBoxH, r, 'rgba(167, 139, 250, 0.12)', '#a78bfa');
+    drawText('(1/3)\u00B7(-23) = -23/3', mid23, row3Y, '#a78bfa', 'bold 14px Segoe UI, system-ui, sans-serif');
+
+    // Label: \u00D7 1/3
+    drawText('\u00D7 1/3', mid23 + 95, row3Y - 32, '#94a3b8', '13px Segoe UI, system-ui, sans-serif');
+
+    // Row 4: Subtraction -> 8
+    const row4Y = 335;
+    connectLine(col1, row1Y + smallBoxH / 2, centerX, row4Y - boxH / 2, '#60a5fa');
+    connectLine(mid23, row3Y + smallBoxH / 2, centerX, row4Y - boxH / 2, '#a78bfa');
+
+    roundRect(centerX, row4Y, boxW + 60, boxH, r, 'rgba(96, 165, 250, 0.12)', '#60a5fa');
+    drawText('1/3 - (-23/3) = 24/3 = 8', centerX, row4Y, '#60a5fa', 'bold 14px Segoe UI, system-ui, sans-serif');
+
+    // Label: { ... }
+    drawText('{ ... }', centerX, row4Y - 36, '#94a3b8', '13px Segoe UI, system-ui, sans-serif');
+
+    // Row 5: Cube root -> 2
+    const row5Y = 430;
+    connectLine(centerX, row4Y + boxH / 2, centerX, row5Y - boxH / 2, '#34d399');
+
+    roundRect(centerX, row5Y, boxW, boxH, r, 'rgba(52, 211, 153, 0.15)', '#34d399');
+    drawText('\u00B3\u221A8 = 2', centerX, row5Y, '#4ade80', 'bold 18px Segoe UI, system-ui, sans-serif');
+
+    // Label: exponent 1/3
+    drawText('eksponent 1/3', centerX + 95, row5Y - 32, '#94a3b8', '13px Segoe UI, system-ui, sans-serif');
+
+    // Arrow indicator at the bottom result
+    ctx.beginPath();
+    ctx.moveTo(centerX - 80, row5Y + boxH / 2 + 2);
+    ctx.lineTo(centerX + 80, row5Y + boxH / 2 + 2);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  const stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(step) {
+    step.addEventListener('click', function() {
+      stepContainers.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Negativni eksponenti i kubni koren",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["negativni eksponenti", "stepenovanje", "kubni koren", "razlomci", "red operacija"]
+}
+BRAINSPARK_META-->

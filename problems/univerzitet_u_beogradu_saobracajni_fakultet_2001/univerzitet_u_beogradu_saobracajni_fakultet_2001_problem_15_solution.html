@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jednakost funkcija — domeni i analitički izrazi</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Given four functions, determine which ones are equal.
+
+f₁(x) = 4x / |x|
+  Domain: x ≠ 0 (i.e., ℝ \ {0})
+  For x > 0: f₁(x) = 4x/x = 4
+  For x < 0: f₁(x) = 4x/(-x) = -4
+  So f₁ takes values 4 and -4, NOT a constant function.
+
+f₂(x) = (4/x) · ln(eˣ)
+  ln(eˣ) = x for all real x (natural log is inverse of exp)
+  So f₂(x) = (4/x) · x = 4
+  Domain: x ≠ 0 (denominator x ≠ 0)
+  f₂(x) = 4 for all x ≠ 0
+
+f₃(x) = (√(4x))² / x
+  √(4x) requires 4x ≥ 0, i.e., x ≥ 0
+  Also x ≠ 0 (denominator)
+  So domain: x > 0
+  (√(4x))² = 4x (since √ returns non-negative)
+  f₃(x) = 4x / x = 4 for x > 0
+
+f₄(x) = 2^{2(x-1)/x + 2/x}
+  Exponent: 2(x-1)/x + 2/x = (2x - 2 + 2)/x = 2x/x = 2
+  So f₄(x) = 2² = 4
+  Domain: x ≠ 0
+  f₄(x) = 4 for all x ≠ 0
+
+Comparison:
+- f₁: domain ℝ\{0}, value is ±4 (not constant) — DIFFERENT from all others
+- f₂: domain ℝ\{0}, value 4 — equals f₄
+- f₃: domain (0, +∞), value 4 — different domain from f₂ and f₄, so f₃ ≠ f₂ and f₃ ≠ f₄
+- f₄: domain ℝ\{0}, value 4 — equals f₂
+
+Two functions are equal iff they have the SAME domain AND the same value at every point.
+
+f₂ = f₄ (same domain ℝ\{0}, same value 4)
+f₁ ≠ f₂ (different values for x < 0)
+f₃ ≠ f₂ (different domains: f₃ only x > 0)
+f₃ ≠ f₄ (different domains)
+f₁ ≠ f₃ (different domains and values)
+f₁ ≠ f₄ (different values for x < 0)
+
+So: f₂ = f₄, and all other pairs are unequal.
+
+Checking options:
+(A) No equal functions — WRONG (f₂ = f₄)
+(B) f₂ ≠ f₃ = f₄ ≠ f₁ — says f₃ = f₄, but f₃ ≠ f₄ (different domains) — WRONG
+(C) f₁ ≠ f₂ = f₃ ≠ f₄ — says f₂ = f₃, but f₂ ≠ f₃ — WRONG
+(D) f₁ ≠ f₂ = f₃ = f₄ — says f₂ = f₃, WRONG
+(E) f₁ ≠ f₂ = f₄ ≠ f₃ — says f₂ = f₄ (TRUE), f₁ ≠ f₂ (TRUE), f₄ ≠ f₃ (TRUE) — CORRECT
+
+Answer: (E)
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 32px;
+  line-height: 1.3;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.domain-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+}
+
+.domain-table th, .domain-table td {
+  border: 1px solid #334155;
+  padding: 10px 14px;
+  text-align: center;
+}
+
+.domain-table th {
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.domain-table td {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.domain-match { color: #4ade80; font-weight: 600; }
+.domain-diff { color: #f472b6; font-weight: 600; }
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: 1fr; }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+  .domain-table th, .domain-table td { padding: 6px 8px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Jednakost funkcija — domeni i analitički izrazi</h1>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Date su funkcije:
+      \[ f_1(x) = \frac{4x}{|x|}, \quad f_2(x) = \frac{4}{x} \ln e^x, \quad f_3(x) = \frac{(\sqrt{4x})^2}{x}, \quad f_4(x) = 2^{\frac{2(x-1)}{x} + \frac{2}{x}} \]
+      Tačan je iskaz:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">Među datim funkcijama nema jednakih</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(f_2 \neq f_3 = f_4 \neq f_1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(f_1 \neq f_2 = f_3 \neq f_4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(f_1 \neq f_2 = f_3 = f_4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(f_1 \neq f_2 = f_4 \neq f_3\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Da bismo utvrdili koje su funkcije jednake, moramo za svaku od njih odrediti <strong>domen</strong> i <strong>pojednostavljen analitički izraz</strong>. Dve funkcije su jednake ako i samo ako imaju isti domen i iste vrednosti na tom domenu.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Kada su dve funkcije jednake?</summary>
+      <p style="margin-top: 8px;">Funkcije \(f\) i \(g\) su jednake ako i samo ako važi:</p>
+      <div class="math-box">
+        \[ D_f = D_g \quad \text{i} \quad f(x) = g(x) \;\; \forall x \in D_f \]
+      </div>
+      <p>Dakle, nije dovoljno samo da formula daje iste vrednosti &mdash; <strong>domeni moraju biti identični</strong>.</p>
+    </details>
+    <details>
+      <summary>Ključna svojstva: \(|x|\), \(\ln e^x\), \(\sqrt{x}\)</summary>
+      <p style="margin-top: 8px;">Apsolutna vrednost:</p>
+      <div class="math-box">
+        \[ |x| = \begin{cases} x, & x > 0 \\ -x, & x < 0 \end{cases} \]
+      </div>
+      <p>Prirodni logaritam i eksponencijalna funkcija su inverzne:</p>
+      <div class="math-box">
+        \[ \ln e^x = x \quad \text{za svako } x \in \mathbb{R} \]
+      </div>
+      <p>Kvadratni koren:</p>
+      <div class="math-box">
+        \[ \sqrt{a} \text{ postoji} \iff a \geq 0, \quad (\sqrt{a})^2 = a \text{ za } a \geq 0 \]
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz domena i vrednosti funkcija</div>
+    <canvas id="mainCanvas" width="900" height="480"></canvas>
+    <p class="drag-hint">Dijagram prikazuje domene (brojevna prava) i vrednosti svake funkcije</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Analiza funkcije \(f_1(x) = \dfrac{4x}{|x|}\)</div>
+      <p class="step-explanation">
+        <strong>Domen:</strong> Imenilac \(|x|\) je definisan za svako \(x \neq 0\), pa je \(D_{f_1} = \mathbb{R} \setminus \{0\}\).
+      </p>
+      <p class="step-explanation">
+        <strong>Pojednostavljenje:</strong> Razdvajamo po znaku:
+      </p>
+      <div class="math-box">
+        \[ f_1(x) = \frac{4x}{|x|} = \begin{cases} \dfrac{4x}{x} = 4, & x > 0 \\[8pt] \dfrac{4x}{-x} = -4, & x < 0 \end{cases} \]
+      </div>
+      <p class="step-explanation">
+        Funkcija \(f_1\) <strong>nije konstantna</strong> &mdash; uzima vrednost \(4\) za pozitivne i \(-4\) za negativne argumente.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Analiza funkcije \(f_2(x) = \dfrac{4}{x} \ln e^x\)</div>
+      <p class="step-explanation">
+        <strong>Domen:</strong> Izraz \(\ln e^x\) je definisan za svako \(x \in \mathbb{R}\) (jer je \(e^x > 0\) uvek). Imenilac zahteva \(x \neq 0\). Dakle \(D_{f_2} = \mathbb{R} \setminus \{0\}\).
+      </p>
+      <p class="step-explanation">
+        <strong>Pojednostavljenje:</strong> Koristimo \(\ln e^x = x\):
+      </p>
+      <div class="math-box">
+        \[ f_2(x) = \frac{4}{x} \cdot x = 4 \quad \text{za svako } x \neq 0 \]
+      </div>
+      <p class="step-explanation">
+        Funkcija \(f_2\) je <strong>konstantna</strong>, jednaka \(4\) na celom svom domenu \(\mathbb{R} \setminus \{0\}\).
+      </p>
+    </div>
+
+    <details>
+      <summary>Proveri se: Da li je \(\ln e^x = x\) uvek tačno?</summary>
+      <p>Da. Funkcija \(\ln\) je inverzna funkciji \(e^x\), pa je \(\ln(e^x) = x\) za svako \(x \in \mathbb{R}\). Ovo je identitet, ne zavisi od znaka \(x\).</p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Analiza funkcije \(f_3(x) = \dfrac{(\sqrt{4x})^2}{x}\)</div>
+      <p class="step-explanation">
+        <strong>Domen:</strong> Pod korenom mora biti \(4x \geq 0\), tj. \(x \geq 0\). Takođe, imenilac zahteva \(x \neq 0\). Dakle:
+      </p>
+      <div class="math-box">
+        \[ D_{f_3} = (0, +\infty) \]
+      </div>
+      <p class="step-explanation">
+        <strong>Pojednostavljenje:</strong> Za \(x > 0\) važi \((\sqrt{4x})^2 = 4x\):
+      </p>
+      <div class="math-box">
+        \[ f_3(x) = \frac{4x}{x} = 4 \quad \text{za svako } x > 0 \]
+      </div>
+      <p class="step-explanation">
+        Funkcija \(f_3\) je konstantna \(4\), ali <strong>samo na \((0, +\infty)\)</strong> &mdash; njen domen je <span class="domain-diff">uži</span> od domena funkcija \(f_2\) i \(f_4\).
+      </p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Analiza funkcije \(f_4(x) = 2^{\frac{2(x-1)}{x} + \frac{2}{x}}\)</div>
+      <p class="step-explanation">
+        <strong>Domen:</strong> Imenilac \(x\) u eksponentu zahteva \(x \neq 0\), pa je \(D_{f_4} = \mathbb{R} \setminus \{0\}\).
+      </p>
+      <p class="step-explanation">
+        <strong>Pojednostavljenje eksponenta:</strong>
+      </p>
+      <div class="math-box">
+        \[ \frac{2(x-1)}{x} + \frac{2}{x} = \frac{2x - 2 + 2}{x} = \frac{2x}{x} = 2 \]
+      </div>
+      <p class="step-explanation">
+        Prema tome:
+      </p>
+      <div class="math-box">
+        \[ f_4(x) = 2^2 = 4 \quad \text{za svako } x \neq 0 \]
+      </div>
+      <p class="step-explanation">
+        Funkcija \(f_4\) je <strong>konstantna</strong>, jednaka \(4\) na domenu \(\mathbb{R} \setminus \{0\}\) &mdash; <span class="domain-match">identično kao \(f_2\)</span>.
+      </p>
+    </div>
+
+    <details>
+      <summary>Proveri se: Detaljan račun pojednostavljenja eksponenta</summary>
+      <p style="margin-top: 8px;">Polazimo od eksponenta:</p>
+      <div class="math-box">
+        \[ \frac{2(x-1)}{x} + \frac{2}{x} = \frac{2x - 2}{x} + \frac{2}{x} = \frac{2x - 2 + 2}{x} = \frac{2x}{x} = 2 \]
+      </div>
+      <p>Ovo važi za svako \(x \neq 0\). Dakle \(f_4(x) = 2^2 = 4\). Tačno!</p>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Poređenje funkcija — sumarni pregled</div>
+      <p class="step-explanation">
+        Sažimamo rezultate analize u tabelu:
+      </p>
+      <table class="domain-table">
+        <tr>
+          <th>Funkcija</th>
+          <th>Domen</th>
+          <th>Vrednost</th>
+        </tr>
+        <tr>
+          <td>\(f_1\)</td>
+          <td>\(\mathbb{R} \setminus \{0\}\)</td>
+          <td>\(\begin{cases} 4, & x > 0 \\ -4, & x < 0 \end{cases}\)</td>
+        </tr>
+        <tr>
+          <td>\(f_2\)</td>
+          <td>\(\mathbb{R} \setminus \{0\}\)</td>
+          <td>\(4\)</td>
+        </tr>
+        <tr>
+          <td>\(f_3\)</td>
+          <td>\((0, +\infty)\)</td>
+          <td>\(4\)</td>
+        </tr>
+        <tr>
+          <td>\(f_4\)</td>
+          <td>\(\mathbb{R} \setminus \{0\}\)</td>
+          <td>\(4\)</td>
+        </tr>
+      </table>
+      <p class="step-explanation" style="margin-top: 14px;">
+        <strong>Zaključci:</strong>
+      </p>
+      <div class="math-box">
+        \[ f_2 = f_4 \quad \text{(isti domen } \mathbb{R}\setminus\{0\}\text{, ista vrednost 4)} \]
+      </div>
+      <p class="step-explanation">
+        \(f_1 \neq f_2\) jer \(f_1(-1) = -4 \neq 4 = f_2(-1)\) (različite vrednosti za \(x < 0\)).
+      </p>
+      <p class="step-explanation">
+        \(f_3 \neq f_2\) i \(f_3 \neq f_4\) jer je \(D_{f_3} = (0, +\infty) \neq \mathbb{R}\setminus\{0\}\) (različiti domeni).
+      </p>
+      <p class="step-explanation">
+        Na primer, \(f_2(-1) = 4\) je definisano, ali \(f_3(-1)\) <strong>ne postoji</strong> jer \(\sqrt{4 \cdot (-1)} = \sqrt{-4}\) nije realan broj.
+      </p>
+    </div>
+
+    <details>
+      <summary>Proveri se: Koji iskaz odgovara našem zaključku?</summary>
+      <p>Imamo: \(f_2 = f_4\), a \(f_1\), \(f_3\) su od njih različite (i međusobno). Iskaz (E): \(f_1 \neq f_2 = f_4 \neq f_3\) &mdash; upravo to tvrdi. Tačno!</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Pri ispitivanju jednakosti funkcija, <strong>domen je jednako važan kao i formula</strong>. Funkcije \(f_2\), \(f_3\) i \(f_4\) sve daju vrednost \(4\), ali \(f_3\) je definisana samo za \(x > 0\) (zbog \(\sqrt{4x}\)), dok su \(f_2\) i \(f_4\) definisane za sva \(x \neq 0\). Zato je \(f_3\) različita od \(f_2\) i \(f_4\), iako su im formule „iste" nakon pojednostavljenja.
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(f_1 \neq f_2 = f_4 \neq f_3\)</div>
+    <div class="answer-options">
+      <span class="opt">(A)</span>
+      <span class="opt">(B)</span>
+      <span class="opt">(C)</span>
+      <span class="opt">(D)</span>
+      <span class="opt correct">(E) \(f_1 \neq f_2 = f_4 \neq f_3\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(f_2\) i \(f_4\) imaju isti domen \(\mathbb{R}\setminus\{0\}\) i obe su konstantne \(= 4\), pa je \(f_2 = f_4\). Funkcija \(f_1\) ima isti domen ali različite vrednosti (uzima i \(-4\)). Funkcija \(f_3\) ima uži domen \((0,+\infty)\). &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zanemarivanje domena</div>
+      <p>Najčešća greška je zaključiti da su \(f_2 = f_3 = f_4\) jer sve tri daju vrednost \(4\). Međutim, \(f_3\) je definisana samo za \(x > 0\) (uslov \(4x \geq 0\)), što je strogo uži domen. Jednakost funkcija zahteva i jednakost domena!</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešno pojednostavljenje \(f_1\)</div>
+      <p>Pokušaj da se zapiše \(\frac{4x}{|x|} = 4\) zanemaruje slučaj \(x < 0\), gde je \(|x| = -x\), pa je rezultat \(-4\). Funkcija \(f_1\) definitivno nije konstantna.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Brkanje \((\sqrt{a})^2\) i \(\sqrt{a^2}\)</div>
+      <p>Izraz \((\sqrt{a})^2 = a\) važi samo za \(a \geq 0\), dok \(\sqrt{a^2} = |a|\) važi za svako \(a \in \mathbb{R}\). U ovom zadatku imamo \((\sqrt{4x})^2\), pa je uslov \(4x \geq 0\), tj. \(x \geq 0\).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Neka je \(g(x) = \frac{(\sqrt{x})^2 + (\sqrt{-x})^2}{|x|}\). Odredite domen i vrednosti funkcije \(g\).
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Za \(\sqrt{x}\) treba \(x \geq 0\), a za \(\sqrt{-x}\) treba \(-x \geq 0\), tj. \(x \leq 0\). Oba uslova istovremeno daju \(x = 0\), ali imenilac zahteva \(x \neq 0\). Dakle, domen je <strong>prazan skup</strong> &mdash; funkcija \(g\) nije definisana ni za jednu vrednost!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 480 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 480;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const centerX = W / 2;
+    const isMobile = W < 600;
+    const fontSize = isMobile ? 11 : 14;
+    const smallFont = isMobile ? 9 : 11;
+    const medFont = isMobile ? 10 : 13;
+
+    function drawText(text, x, y, color, size, bold, align) {
+      ctx.fillStyle = color || '#e2e8f0';
+      ctx.font = (bold ? 'bold ' : '') + (size || fontSize) + 'px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = align || 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+    }
+
+    function roundRect(x, y, w, h, r, fill, stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); }
+    }
+
+    // Title
+    drawText('Domeni i vrednosti funkcija f\u2081, f\u2082, f\u2083, f\u2084', centerX, 20, '#94a3b8', medFont, false);
+
+    // --- Draw 4 function rows ---
+    var leftMargin = isMobile ? 10 : 50;
+    var rightMargin = isMobile ? 10 : 50;
+    var lineLeft = isMobile ? 90 : 160;
+    var lineRight = W - rightMargin;
+    var lineW = lineRight - lineLeft;
+    var lineMid = lineLeft + lineW / 2;
+
+    var funcs = [
+      { name: 'f\u2081', domain: 'x \u2260 0', value: '\u00B14', color: '#f472b6', domType: 'punctured' },
+      { name: 'f\u2082', domain: 'x \u2260 0', value: '4', color: '#60a5fa', domType: 'punctured' },
+      { name: 'f\u2083', domain: 'x > 0', value: '4', color: '#a78bfa', domType: 'positive' },
+      { name: 'f\u2084', domain: 'x \u2260 0', value: '4', color: '#34d399', domType: 'punctured' }
+    ];
+
+    var rowH = 90;
+    var startY = 50;
+
+    funcs.forEach(function(fn, i) {
+      var y = startY + i * rowH;
+      var lineY = y + 35;
+
+      // Function label
+      roundRect(leftMargin, y + 10, isMobile ? 70 : 100, 50, 10, 'rgba(30, 41, 59, 0.8)', fn.color);
+      drawText(fn.name, leftMargin + (isMobile ? 35 : 50), y + 28, fn.color, fontSize + 2, true);
+      drawText(fn.value, leftMargin + (isMobile ? 35 : 50), y + 46, '#e2e8f0', smallFont + 1, false);
+
+      // Number line axis
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(lineLeft, lineY);
+      ctx.lineTo(lineRight, lineY);
+      ctx.stroke();
+
+      // Zero tick
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(lineMid, lineY - 6);
+      ctx.lineTo(lineMid, lineY + 6);
+      ctx.stroke();
+      drawText('0', lineMid, lineY + 16, '#64748b', smallFont, false);
+
+      // Draw domain highlight
+      if (fn.domType === 'punctured') {
+        // x != 0: both sides
+        ctx.strokeStyle = fn.color;
+        ctx.lineWidth = 4;
+        ctx.globalAlpha = 0.7;
+        // Left half
+        ctx.beginPath();
+        ctx.moveTo(lineLeft, lineY);
+        ctx.lineTo(lineMid - 8, lineY);
+        ctx.stroke();
+        // Right half
+        ctx.beginPath();
+        ctx.moveTo(lineMid + 8, lineY);
+        ctx.lineTo(lineRight, lineY);
+        ctx.stroke();
+        ctx.globalAlpha = 1.0;
+        // Open circle at 0
+        ctx.beginPath();
+        ctx.arc(lineMid, lineY, 5, 0, Math.PI * 2);
+        ctx.strokeStyle = fn.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#0f172a';
+        ctx.fill();
+        // Arrows at ends
+        drawArrowHead(lineLeft, lineY, -1, fn.color);
+        drawArrowHead(lineRight, lineY, 1, fn.color);
+      } else {
+        // x > 0: only right side
+        ctx.strokeStyle = fn.color;
+        ctx.lineWidth = 4;
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(lineMid + 8, lineY);
+        ctx.lineTo(lineRight, lineY);
+        ctx.stroke();
+        ctx.globalAlpha = 1.0;
+        // Open circle at 0
+        ctx.beginPath();
+        ctx.arc(lineMid, lineY, 5, 0, Math.PI * 2);
+        ctx.strokeStyle = fn.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#0f172a';
+        ctx.fill();
+        // Arrow at right end
+        drawArrowHead(lineRight, lineY, 1, fn.color);
+        // Gray (undefined) left side
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(lineLeft, lineY);
+        ctx.lineTo(lineMid - 8, lineY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // X mark for undefined left
+        var xMarkX = lineLeft + (lineMid - lineLeft) / 2;
+        drawText('\u2716 nedefinisano', xMarkX, lineY - 14, '#475569', smallFont, false);
+      }
+
+      // Value labels
+      if (fn.domType === 'punctured' && fn.name === 'f\u2081') {
+        // f1: show -4 on left, +4 on right
+        var leftQ = lineLeft + (lineMid - lineLeft) / 2;
+        var rightQ = lineMid + (lineRight - lineMid) / 2;
+        drawText('y = \u22124', leftQ, lineY - 16, '#f472b6', smallFont + 1, true);
+        drawText('y = 4', rightQ, lineY - 16, '#f472b6', smallFont + 1, true);
+      } else {
+        var rightQ2 = lineMid + (lineRight - lineMid) / 2;
+        drawText('y = 4', rightQ2, lineY - 16, fn.color, smallFont + 1, true);
+        if (fn.domType === 'punctured') {
+          var leftQ2 = lineLeft + (lineMid - lineLeft) / 2;
+          drawText('y = 4', leftQ2, lineY - 16, fn.color, smallFont + 1, true);
+        }
+      }
+
+      // Domain label
+      drawText('D: ' + fn.domain, lineRight + 4, lineY, '#94a3b8', smallFont, false, 'left');
+    });
+
+    function drawArrowHead(x, y, dir, color) {
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - dir * 8, y - 4);
+      ctx.lineTo(x - dir * 8, y + 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
+    }
+
+    // --- Section: Comparison result ---
+    var compY = startY + 4 * rowH + 10;
+
+    // Equality bracket between f2 and f4
+    var f2Y = startY + 1 * rowH + 35;
+    var f4Y = startY + 3 * rowH + 35;
+    var bracketX = isMobile ? W - 18 : W - 30;
+
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(bracketX, f2Y);
+    ctx.lineTo(bracketX + 10, f2Y);
+    ctx.lineTo(bracketX + 10, f4Y);
+    ctx.lineTo(bracketX, f4Y);
+    ctx.stroke();
+
+    drawText('=', bracketX + 20, (f2Y + f4Y) / 2, '#4ade80', fontSize + 4, true);
+
+    // f3 different marker
+    var f3Y = startY + 2 * rowH + 35;
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(bracketX - 6, f3Y - 18);
+    ctx.lineTo(bracketX - 6, f3Y + 18);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawText('\u2260', bracketX - 16, f3Y, '#f472b6', fontSize + 2, true);
+
+    // Result box
+    roundRect(centerX - (isMobile ? W * 0.42 : 200), compY, isMobile ? W * 0.84 : 400, isMobile ? 42 : 48, 14, 'rgba(74, 222, 128, 0.12)', '#4ade80');
+    drawText('Zaključak: f\u2081 \u2260 f\u2082 = f\u2084 \u2260 f\u2083  \u2192  Odgovor (E)', centerX, compY + (isMobile ? 21 : 24), '#4ade80', fontSize + 1, true);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(step) {
+    step.addEventListener('click', function() {
+      stepContainers.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Jednakost funkcija — domeni i analitički izrazi",
+  "subject": "math",
+  "unit": "functions",
+  "topic_tags": ["jednakost funkcija", "domen funkcije", "apsolutna vrednost", "logaritam", "eksponencijalna funkcija", "kvadratni koren"]
+}
+BRAINSPARK_META-->

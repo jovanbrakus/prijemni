@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Određivanje parametara polinoma</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Find parameters a and b such that P(x) = x³ + ax² + bx + 2:
+  (1) is divisible by (x + 2), i.e. P(-2) = 0
+  (2) gives remainder 3 when divided by (x - 1), i.e. P(1) = 3
+
+Step 1: P(-2) = 0
+  (-2)³ + a(-2)² + b(-2) + 2 = 0
+  -8 + 4a - 2b + 2 = 0
+  4a - 2b - 6 = 0
+  4a - 2b = 6
+  2a - b = 3  ... (I)
+
+Step 2: P(1) = 3
+  1³ + a(1)² + b(1) + 2 = 3
+  1 + a + b + 2 = 3
+  a + b = 0  ... (II)
+
+Step 3: From (II): a = -b. Substitute into (I):
+  2(-b) - b = 3
+  -2b - b = 3
+  -3b = 3
+  b = -1
+
+Step 4: a = -b = -(-1) = 1
+
+So a = 1, b = -1.
+
+Check answers:
+A) log(1) - |-1| = 0 - 1 = -1 ≠ 2  ✗
+B) 1 + √((-1)²) = 1 + 1 = 2 ≠ 0  ✗
+C) log(1) + |-1| = 0 + 1 = 1 ≠ 2  ✗
+D) 1 + (-1) = 0 ≠ 2  ✗
+E) 1 - (-1) = 2 = 2  ✓
+
+Answer: E) a - b = 2  ✓ (matches expected)
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+  list-style: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B8 ';
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  content: '\25BE ';
+}
+
+details .theory-content {
+  padding: 12px 0 4px 8px;
+}
+
+details .theory-content li {
+  color: #cbd5e1;
+  margin-bottom: 10px;
+  list-style: none;
+  padding-left: 12px;
+  border-left: 2px solid #334155;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96, 165, 250, 0.04);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+  font-size: 0.97rem;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.88rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+  padding: 14px 18px;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  border-radius: 10px;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  padding: 10px 0 2px 4px;
+  color: #cbd5e1;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  justify-content: center;
+  color: #a78bfa;
+}
+
+.insight-box .big-formula {
+  font-size: 1.3rem;
+  margin: 16px 0;
+  color: #e2e8f0;
+}
+
+.final-answer {
+  text-align: center;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(74,222,128,0.08));
+}
+
+.final-answer h2 {
+  color: #34d399;
+  justify-content: center;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 800;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.option-card {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  text-align: center;
+  min-width: 70px;
+}
+
+.option-card.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
+}
+
+.option-card .opt-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.option-card.correct .opt-label {
+  color: #34d399;
+}
+
+.option-card .opt-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid #34d399;
+  color: #94a3b8;
+  font-size: 0.92rem;
+}
+
+.pitfall-list {
+  list-style: none;
+}
+
+.pitfall-list li {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: rgba(224, 148, 104, 0.06);
+  border-left: 3px solid #e09468;
+  border-radius: 0 8px 8px 0;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.challenge-box {
+  border-left: 3px solid #f472b6;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.82rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .options-row { gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Određivanje parametara polinoma</h1>
+  <p class="subtitle">Teorema o ostatku i sistem linearnih jednačina za nalaženje koeficijenata polinoma</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Neka su \(a\) i \(b\) vrednosti parametara za koje je polinom \(P(x) = x^3 + ax^2 + bx + 2\) deljiv sa \(x + 2\), a pri deljenju sa \(x - 1\) daje ostatak 3. Tada je:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\log a - |b| = 2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(a + \sqrt{b^2} = 0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\log a + |b| = 2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(a + b = 2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(a - b = 2\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Koristićemo teoremu o ostatku (Bezuovu teoremu): ostatak pri deljenju polinoma \(P(x)\) sa \(x - c\) jednak je \(P(c)\). Uslov deljivosti sa \(x + 2\) daje \(P(-2) = 0\), a ostatak 3 pri deljenju sa \(x - 1\) daje \(P(1) = 3\). Time dobijamo sistem od dve linearne jednačine sa dve nepoznate \(a\) i \(b\), čijim rešavanjem nalazimo tražene parametre.</p>
+  </div>
+
+  <!-- THEORY -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Bezuova teorema (teorema o ostatku):</strong> Ostatak pri deljenju polinoma \(P(x)\) sa \((x - c)\) jednak je \(P(c)\).</li>
+          <li><strong>Uslov deljivosti:</strong> Polinom \(P(x)\) je deljiv sa \((x - c)\) ako i samo ako je \(P(c) = 0\). Nula polinoma je koren.</li>
+          <li><strong>Napomena:</strong> \(x + 2 = x - (-2)\), pa se uslov deljivosti svodi na \(P(-2) = 0\).</li>
+          <li><strong>Identiteti:</strong> \(\sqrt{b^2} = |b|\) za svako realno \(b\), i \(\log 1 = 0\) (dekadni logaritam).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- VISUAL AID -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="diagramCanvas" width="800" height="440"></canvas>
+    <p class="canvas-hint">Graf polinoma P(x) = x&#179; + x&#178; &#8722; x + 2 sa označenim ključnim tačkama</p>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Uslov deljivosti sa \(x + 2\)</h3>
+        <p>Polinom \(P(x)\) je deljiv sa \(x + 2 = x - (-2)\). Po Bezuovoj teoremi, to znači da je \(P(-2) = 0\):</p>
+        <div class="math-block">
+          \[P(-2) = (-2)^3 + a \cdot (-2)^2 + b \cdot (-2) + 2 = 0\]
+        </div>
+        <p>Izračunavamo svaki član posebno:</p>
+        <div class="math-block">
+          \[-8 + 4a - 2b + 2 = 0\]
+        </div>
+        <p>Sređivanjem dobijamo prvu jednačinu:</p>
+        <div class="math-block">
+          \[4a - 2b = 6 \quad \Longrightarrow \quad 2a - b = 3 \quad \ldots (I)\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Uslov za ostatak pri deljenju sa \(x - 1\)</h3>
+        <p>Pri deljenju sa \(x - 1\), ostatak je 3. Po teoremi o ostatku, to znači \(P(1) = 3\):</p>
+        <div class="math-block">
+          \[P(1) = 1^3 + a \cdot 1^2 + b \cdot 1 + 2 = 3\]
+        </div>
+        <p>Pojednostavljujemo:</p>
+        <div class="math-block">
+          \[1 + a + b + 2 = 3 \quad \Longrightarrow \quad a + b = 0 \quad \ldots (II)\]
+        </div>
+        <p class="note">Iz jednačine (II) direktno sledi da su \(a\) i \(b\) suprotnog znaka: \(a = -b\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto koristimo \(P(-2)\) a ne \(P(2)\)?</summary>
+      <div class="answer">
+        <p>Jer delimo sa \(x + 2\), a to je isto što i \(x - (-2)\). Po teoremi o ostatku, ostatak pri deljenju sa \(x - c\) je \(P(c)\). Ovde je \(c = -2\), pa računamo \(P(-2)\). Da smo delili sa \(x - 2\), koristili bismo \(P(2)\).</p>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Rešavanje sistema jednačina</h3>
+        <p>Imamo sistem:</p>
+        <div class="math-block">
+          \[\begin{cases} 2a - b = 3 \\ a + b = 0 \end{cases}\]
+        </div>
+        <p>Iz jednačine (II) izrazimo \(a = -b\) i zamenimo u (I):</p>
+        <div class="math-block">
+          \[2(-b) - b = 3 \quad \Longrightarrow \quad -2b - b = 3 \quad \Longrightarrow \quad -3b = 3\]
+        </div>
+        <div class="math-block">
+          \[b = -1\]
+        </div>
+        <p>Zatim iz \(a = -b\):</p>
+        <div class="math-block">
+          \[a = -(-1) = 1\]
+        </div>
+        <p class="note">Parametri su: \(a = 1\) i \(b = -1\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Da li dobijeni polinom zaista ispunjava oba uslova?</summary>
+      <div class="answer">
+        <p>Polinom je \(P(x) = x^3 + x^2 - x + 2\). Proveravamo:</p>
+        <p>\(P(-2) = -8 + 4 + 2 + 2 = 0\) -- deljiv sa \(x + 2\).</p>
+        <p>\(P(1) = 1 + 1 - 1 + 2 = 3\) -- ostatak pri deljenju sa \(x - 1\) je 3.</p>
+        <p>Oba uslova su ispunjena.</p>
+      </div>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Provera ponuđenih odgovora</h3>
+        <p>Sa \(a = 1\) i \(b = -1\), proveravamo svaki ponuđeni odgovor:</p>
+        <div class="math-block">
+          \[\text{A)} \quad \log 1 - |-1| = 0 - 1 = -1 \neq 2 \quad \boldsymbol{\times}\]
+        </div>
+        <div class="math-block">
+          \[\text{B)} \quad 1 + \sqrt{(-1)^2} = 1 + 1 = 2 \neq 0 \quad \boldsymbol{\times}\]
+        </div>
+        <div class="math-block">
+          \[\text{C)} \quad \log 1 + |-1| = 0 + 1 = 1 \neq 2 \quad \boldsymbol{\times}\]
+        </div>
+        <div class="math-block">
+          \[\text{D)} \quad 1 + (-1) = 0 \neq 2 \quad \boldsymbol{\times}\]
+        </div>
+        <div class="math-block">
+          \[\text{E)} \quad 1 - (-1) = 2 = 2 \quad \boldsymbol{\checkmark}\]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto odgovor B) ne važi, iako daje 2?</summary>
+      <div class="answer">
+        <p>Odgovor B) tvrdi da je \(a + \sqrt{b^2} = 0\). Ali \(\sqrt{b^2} = |b| = 1\), pa je \(a + \sqrt{b^2} = 1 + 1 = 2\), što nije jednako 0. Dakle, jednakost u B) ne važi. Odgovor E) tvrdi \(a - b = 2\), i zaista \(1 - (-1) = 2\).</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p>Teorema o ostatku pretvara uslove deljivosti i ostatka u konkretne numeričke jednačine. Dva uslova daju dve jednačine za dve nepoznate -- klasičan sistem čije rešenje je jedinstveno. Ključ je prepoznati da \(x + 2 = x - (-2)\), pa je odgovarajuća tačka evaluacije \(x = -2\).</p>
+    <div class="big-formula">
+      \[P(-2) = 0 \;\;\wedge\;\; P(1) = 3 \quad \Longrightarrow \quad a = 1,\; b = -1 \quad \Longrightarrow \quad a - b = 2\]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">\(a - b = 1 - (-1) = 2\)</div>
+
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(\log a - |b| = 2\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(a + \sqrt{b^2} = 0\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(\log a + |b| = 2\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(a + b = 2\)</div>
+      </div>
+      <div class="option-card correct">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(a - b = 2\)</div>
+      </div>
+    </div>
+
+    <div class="verification">
+      <strong>Verifikacija:</strong> Polinom \(P(x) = x^3 + x^2 - x + 2\) možemo faktorizovati: \(P(x) = (x + 2)(x^2 - x + 1)\). Zaista, \((x+2)(x^2 - x + 1) = x^3 - x^2 + x + 2x^2 - 2x + 2 = x^3 + x^2 - x + 2\). Diskriminanta kvadratnog faktora: \(\Delta = 1 - 4 = -3 < 0\), pa nema realnih korena osim \(x = -2\). Ostatak pri deljenju sa \(x-1\): \(P(1) = 1 + 1 - 1 + 2 = 3\). Sve potvrđeno.
+    </div>
+  </div>
+
+  <!-- PITFALLS -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li><strong>Pogrešan znak pri evaluaciji \(P(-2)\).</strong> Čest je propust sa znakom kod \((-2)^2 = 4\) (ne \(-4\)) i \((-2)^3 = -8\) (ne \(8\)). Treba pažljivo raspisati sve stepene negativnog broja.</li>
+      <li><strong>Brkanje uslova deljivosti i ostatka.</strong> Deljivost sa \(x + 2\) znači \(P(-2) = 0\) (ostatak je nula), a ostatak 3 pri deljenju sa \(x - 1\) znači \(P(1) = 3\) (ne \(P(1) = 0\)).</li>
+      <li><strong>Zaboravljanje da je \(\sqrt{b^2} = |b|\).</strong> Mnogi pogrešno uzimaju \(\sqrt{b^2} = b\), što ne važi za negativno \(b\). Za \(b = -1\): \(\sqrt{(-1)^2} = \sqrt{1} = 1 = |{-1}|\), a ne \(-1\).</li>
+      <li><strong>Neprovera svih odgovora.</strong> Odgovori A), B) i C) sadrže logaritam i apsolutnu vrednost -- funkcije koje menjaju karakter izraza. Treba proveri svaki da bi se potvrdilo da jedino E) važi.</li>
+    </ul>
+  </div>
+
+  <!-- CHALLENGE -->
+  <div class="card challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p>Neka je polinom \(Q(x) = x^4 + mx^3 + nx^2 + 3x - 4\) deljiv sa \(x^2 - 1\), tj. sa \((x-1)(x+1)\). Odrediti vrednosti parametara \(m\) i \(n\).</p>
+    <details>
+      <summary>Savet</summary>
+      <div class="theory-content">
+        <ul>
+          <li>Deljivost sa \(x^2 - 1\) znači da su \(x = 1\) i \(x = -1\) koreni, tj. \(Q(1) = 0\) i \(Q(-1) = 0\). Iz \(Q(1) = 0\): \(1 + m + n + 3 - 4 = 0 \Rightarrow m + n = 0\). Iz \(Q(-1) = 0\): \(1 - m + n - 3 - 4 = 0 \Rightarrow -m + n = 6\). Rešenje: \(n = 3\), \(m = -3\).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click highlighting
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+
+  // Polynomial graph
+  var canvas = document.getElementById('diagramCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  function P(x) {
+    return x * x * x + x * x - x + 2;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    var centerX = 420;
+    var centerY = 240;
+    var scaleX = 80;
+    var scaleY = 18;
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (var gx = -5; gx <= 5; gx++) {
+      var px = centerX + gx * scaleX;
+      ctx.beginPath();
+      ctx.moveTo(px, 0);
+      ctx.lineTo(px, H);
+      ctx.stroke();
+    }
+    for (var gy = -12; gy <= 12; gy++) {
+      var py = centerY - gy * scaleY;
+      if (py >= 0 && py <= H) {
+        ctx.beginPath();
+        ctx.moveTo(0, py);
+        ctx.lineTo(W, py);
+        ctx.stroke();
+      }
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(W, centerY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(centerX, 0);
+    ctx.lineTo(centerX, H);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (var lx = -5; lx <= 4; lx++) {
+      if (lx === 0) continue;
+      ctx.fillText(String(lx), centerX + lx * scaleX, centerY + 6);
+    }
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (var ly = -10; ly <= 10; ly += 5) {
+      if (ly === 0) continue;
+      var yp = centerY - ly * scaleY;
+      if (yp > 10 && yp < H - 10) {
+        ctx.fillText(String(ly), centerX - 8, yp);
+      }
+    }
+
+    // Plot P(x)
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    var started = false;
+    for (var px2 = 0; px2 < W; px2++) {
+      var x = (px2 - centerX) / scaleX;
+      var y = P(x);
+      var py2 = centerY - y * scaleY;
+      if (py2 < -50 || py2 > H + 50) {
+        started = false;
+        continue;
+      }
+      if (!started) {
+        ctx.moveTo(px2, py2);
+        started = true;
+      } else {
+        ctx.lineTo(px2, py2);
+      }
+    }
+    ctx.stroke();
+
+    // Mark P(-2) = 0
+    var xm2 = centerX + (-2) * scaleX;
+    var ym2 = centerY - P(-2) * scaleY;
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.arc(xm2, ym2, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('P(\u22122) = 0', xm2 + 12, ym2 - 8);
+
+    // Mark P(1) = 3
+    var x1 = centerX + 1 * scaleX;
+    var y1 = centerY - P(1) * scaleY;
+    ctx.fillStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.arc(x1, y1, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('P(1) = 3', x1 + 12, y1 - 8);
+
+    // Dashed line at y = 3
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    var y3line = centerY - 3 * scaleY;
+    ctx.beginPath();
+    ctx.moveTo(0, y3line);
+    ctx.lineTo(W, y3line);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.5)';
+    ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('y = 3 (ostatak)', 10, y3line - 4);
+
+    // Dashed line at y = 0 (x-axis already there, just highlight)
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.5)';
+    ctx.fillText('y = 0 (deljivost)', 10, centerY - 4);
+
+    // Function label
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('P(x) = x\u00B3 + x\u00B2 \u2212 x + 2', 20, 16);
+
+    // Parameters box
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('a = 1, b = \u22121', 20, 38);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('a \u2212 b = 1 \u2212 (\u22121) = 2', 20, 58);
+
+    // Origin label
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillText('O', centerX - 8, centerY + 6);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Određivanje parametara polinoma",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["polinom", "teorema o ostatku", "Bezuova teorema", "sistem linearnih jednačina", "deljivost polinoma"]
+}
+BRAINSPARK_META-->

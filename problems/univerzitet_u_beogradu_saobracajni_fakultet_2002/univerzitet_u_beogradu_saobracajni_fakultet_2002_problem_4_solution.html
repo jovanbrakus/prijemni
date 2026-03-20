@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepenovanje i logaritmi — izračunavanje složenog izraza</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Ako je a = 4^(1 - log_2(5)), b = sqrt((-1)^2) - cbrt(-1), c = a^b, naći c.
+
+Step 1: Compute a = 4^(1 - log_2(5))
+  4 = 2^2, so:
+  a = (2^2)^(1 - log_2(5)) = 2^(2*(1 - log_2(5))) = 2^(2 - 2*log_2(5))
+
+  Now, 2*log_2(5) = log_2(5^2) = log_2(25)
+
+  So: a = 2^(2 - log_2(25)) = 2^2 / 2^(log_2(25)) = 4 / 25
+
+  Since 2^(log_2(25)) = 25 by definition of logarithm.
+
+  Therefore: a = 4/25
+
+Step 2: Compute b = sqrt((-1)^2) - cbrt(-1)
+  (-1)^2 = 1
+  sqrt(1) = 1  (square root is always non-negative)
+
+  cbrt(-1) = -1  (real cube root of -1 is -1, since (-1)^3 = -1)
+
+  b = 1 - (-1) = 1 + 1 = 2
+
+Step 3: Compute c = a^b = (4/25)^2 = 16/625
+
+Step 4: Check against options:
+  (A) c = 16/625 — CORRECT! ✓
+  (B) c = 1 — wrong
+  (C) c = 625/16 — wrong (this would be (25/4)^2)
+  (D) c = 5/2 — wrong
+  (E) c = 0,25 — wrong (this is 1/4)
+
+Answer: (A) c = 16/625
+
+Common mistakes:
+1. Getting a wrong by not correctly applying logarithm properties — e.g., forgetting 4 = 2^2
+2. Computing sqrt((-1)^2) = -1 instead of 1 (forgetting sqrt always returns non-negative)
+3. Computing cbrt(-1) = 1 (confusing with even roots)
+4. Computing b = 0 instead of 2 (if both sqrt and cbrt mistakes cancel)
+5. Getting c = (25/4)^2 = 625/16 by inverting the fraction
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.given-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.given-data-item {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  text-align: center;
+}
+
+.given-data-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.given-data-item .value {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+  .given-data-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Stepenovanje i logaritmi</h1>
+  <p class="subtitle">Eksponencijalni izrazi, korenovanje i svojstva logaritama &mdash; izračunavanje vrednosti složenog izraza</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Ako je <span class="highlight-val">\( a = 4^{1 - \log_2 5} \)</span>, <span class="highlight-val">\( b = \sqrt{(-1)^2} - \sqrt[3]{-1} \)</span> i <span class="highlight-val">\( c = a^b \)</span>, onda je:
+    </div>
+    <div class="given-data-grid">
+      <div class="given-data-item">
+        <div class="label">Dato</div>
+        <div class="value">\( a = 4^{1 - \log_2 5} \)</div>
+      </div>
+      <div class="given-data-item">
+        <div class="label">Dato</div>
+        <div class="value">\( b = \sqrt{(-1)^2} - \sqrt[3]{-1} \)</div>
+      </div>
+      <div class="given-data-item">
+        <div class="label">Traženo</div>
+        <div class="value">\( c = a^b \)</div>
+      </div>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( c = \dfrac{16}{625} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( c = 1 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( c = \dfrac{625}{16} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( c = \dfrac{5}{2} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( c = 0{,}25 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Prvo ćemo izračunati vrednost \(a\) koristeći svojstva stepena i logaritama (pretvaranje baze 4 u bazu 2). Zatim ćemo izračunati \(b\) pažljivim izračunavanjem kvadratnog i kubnog korena. Na kraju ćemo stepenovanje \(c = a^b\) svesti na razlomak.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Svojstva stepena</summary>
+      <p style="margin-top: 8px;">Stepen stepena &mdash; eksponenti se množe:</p>
+      <div class="math-box">
+        \[ (a^m)^n = a^{m \cdot n} \]
+      </div>
+      <p>Stepen količnika:</p>
+      <div class="math-box">
+        \[ a^{m - n} = \frac{a^m}{a^n} \]
+      </div>
+    </details>
+    <details>
+      <summary>Osnovno svojstvo logaritma</summary>
+      <p style="margin-top: 8px;">Po definiciji logaritma važi:</p>
+      <div class="math-box">
+        \[ a^{\log_a x} = x \]
+      </div>
+      <p>Takođe, za množenje eksponenta logaritmom:</p>
+      <div class="math-box">
+        \[ n \cdot \log_a x = \log_a x^n \]
+      </div>
+    </details>
+    <details>
+      <summary>Kvadratni i kubni koren</summary>
+      <p style="margin-top: 8px;">Kvadratni koren je uvek nenegativan:</p>
+      <div class="math-box">
+        \[ \sqrt{x^2} = |x| \quad \text{(za svako realno } x\text{)} \]
+      </div>
+      <p>Kubni koren realnog broja zadržava znak:</p>
+      <div class="math-box">
+        \[ \sqrt[3]{-1} = -1 \quad \text{jer } (-1)^3 = -1 \]
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz: transformacija izraza</div>
+    <canvas id="mainCanvas" width="900" height="500"></canvas>
+    <p class="drag-hint">Dijagram prikazuje tok izračunavanja vrednosti \(a\), \(b\) i \(c\)</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Pretvaramo bazu broja \(a\)</div>
+      <p class="step-explanation">
+        Osnova stepena je \(4\). Pošto se u eksponentu pojavljuje \(\log_2 5\), zgodno je bazu pretvoriti u dvojku:
+      </p>
+      <div class="math-box">
+        \[ 4 = 2^2 \]
+      </div>
+      <p class="step-explanation">
+        Pa zamenom dobijamo:
+      </p>
+      <div class="math-box">
+        \[ a = 4^{1 - \log_2 5} = \left(2^2\right)^{1 - \log_2 5} \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Primenjujemo pravilo stepena stepena</div>
+      <p class="step-explanation">
+        Po pravilu \((a^m)^n = a^{m \cdot n}\), eksponente množimo:
+      </p>
+      <div class="math-box">
+        \[ a = 2^{2 \cdot (1 - \log_2 5)} = 2^{2 - 2\log_2 5} \]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Sređujemo eksponent pomoću svojstava logaritma</div>
+      <p class="step-explanation">
+        Koristimo pravilo \(n \cdot \log_a x = \log_a x^n\):
+      </p>
+      <div class="math-box">
+        \[ 2\log_2 5 = \log_2 5^2 = \log_2 25 \]
+      </div>
+      <p class="step-explanation">
+        Dakle:
+      </p>
+      <div class="math-box">
+        \[ a = 2^{2 - \log_2 25} \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Koliko iznosi \(\log_2 25\) približno?</summary>
+      <p>\(\log_2 25 \approx 4{,}64\), jer \(2^4 = 16\) i \(2^5 = 32\), a \(25\) je između. Dakle eksponent \(2 - 4{,}64 \approx -2{,}64\), što daje broj manji od 1.</p>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Razdvajamo stepen na razlomak</div>
+      <p class="step-explanation">
+        Koristimo pravilo \(a^{m-n} = \frac{a^m}{a^n}\):
+      </p>
+      <div class="math-box">
+        \[ a = \frac{2^2}{2^{\log_2 25}} \]
+      </div>
+      <p class="step-explanation">
+        Brojilac je jednostavan: \(2^2 = 4\).
+      </p>
+      <p class="step-explanation">
+        Za imenilac koristimo osnovno svojstvo logaritma \(a^{\log_a x} = x\):
+      </p>
+      <div class="math-box">
+        \[ 2^{\log_2 25} = 25 \]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Dobijamo vrednost \(a\)</div>
+      <p class="step-explanation">
+        Zamenom u razlomak:
+      </p>
+      <div class="math-box">
+        \[ a = \frac{4}{25} \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Da li \(\frac{4}{25}\) odgovara približnoj vrednosti?</summary>
+      <p>\(\frac{4}{25} = 0{,}16\). Ranije smo procenili da je eksponent oko \(-2{,}64\), pa \(2^{-2{,}64} \approx 0{,}16\). Sve se slaže!</p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Računamo \(\sqrt{(-1)^2}\)</div>
+      <p class="step-explanation">
+        Prvo izračunavamo izraz unutar korena:
+      </p>
+      <div class="math-box">
+        \[ (-1)^2 = 1 \]
+      </div>
+      <p class="step-explanation">
+        Sada vadimo kvadratni koren. Kvadratni koren je uvek nenegativan broj:
+      </p>
+      <div class="math-box">
+        \[ \sqrt{(-1)^2} = \sqrt{1} = 1 \]
+      </div>
+      <p class="note-box">Napomena: Važi opšte pravilo \(\sqrt{x^2} = |x|\), pa je \(\sqrt{(-1)^2} = |-1| = 1\).</p>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">7</span> Računamo \(\sqrt[3]{-1}\)</div>
+      <p class="step-explanation">
+        Kubni koren negativnog broja je negativan, jer je kubna funkcija neparna:
+      </p>
+      <div class="math-box">
+        \[ \sqrt[3]{-1} = -1 \quad \text{jer } (-1)^3 = -1 \]
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">8</span> Dobijamo vrednost \(b\)</div>
+      <p class="step-explanation">
+        Zamenjujemo u izraz za \(b\):
+      </p>
+      <div class="math-box">
+        \[ b = \sqrt{(-1)^2} - \sqrt[3]{-1} = 1 - (-1) = 1 + 1 = 2 \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Zašto se oduzima negativan broj?</summary>
+      <p>Izraz kaže \(b = \sqrt{(-1)^2} - \sqrt[3]{-1}\). Kubni koren od \(-1\) je \(-1\), pa oduzimanje daje \(1 - (-1) = 1 + 1 = 2\). Minus i minus daju plus!</p>
+    </details>
+
+    <!-- Step 9 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">9</span> Računamo \(c = a^b\)</div>
+      <p class="step-explanation">
+        Sada imamo sve što nam treba:
+      </p>
+      <div class="math-box">
+        \[ a = \frac{4}{25}, \quad b = 2 \]
+      </div>
+      <p class="step-explanation">
+        Stepenujemo razlomak:
+      </p>
+      <div class="math-box">
+        \[ c = a^b = \left(\frac{4}{25}\right)^2 = \frac{4^2}{25^2} = \frac{16}{625} \]
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Celokupan zadatak se svodi na tri odvojene veštine: pretvaranje baze stepena da odgovara bazi logaritma, pažljivo razlikovanje parnog i neparnog korena (kvadratni koren je nenegativan, kubni zadržava znak), i stepenovanje razlomka. Ove tri veštine zajedno daju elegantan rezultat.
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ 4^{1-\log_2 5} = \frac{4}{25}, \quad 1 - (-1) = 2, \quad \left(\frac{4}{25}\right)^{\!2} = \frac{16}{625} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\( c = \dfrac{16}{625} \)</div>
+    <div class="answer-options">
+      <span class="opt correct">(A) \( c = \dfrac{16}{625} \)</span>
+      <span class="opt">(B) \( c = 1 \)</span>
+      <span class="opt">(C) \( c = \dfrac{625}{16} \)</span>
+      <span class="opt">(D) \( c = \dfrac{5}{2} \)</span>
+      <span class="opt">(E) \( c = 0{,}25 \)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(\left(\frac{4}{25}\right)^2 = \frac{16}{625} = 0{,}0256\). Numerička provera: \(4^{1 - \log_2 5} \approx 4^{1 - 2{,}322} = 4^{-1{,}322} \approx 0{,}16\), pa \(0{,}16^2 \approx 0{,}0256\). &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešno tumačenje \(\sqrt{(-1)^2}\)</div>
+      <p>Česta greška je pisati \(\sqrt{(-1)^2} = -1\). Kvadratni koren uvek daje nenegativan rezultat: \(\sqrt{x^2} = |x|\), pa je rezultat \(1\), ne \(-1\). Ako se napravi ova greška, dobija se \(b = 0\) i \(c = 1\) (opcija B).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zamena brojioca i imenioca</div>
+      <p>Ako se pogrešno izračuna \(a = \frac{25}{4}\) umesto \(\frac{4}{25}\) (npr. zamenom reda u razlomku), dobija se \(c = \frac{625}{16}\) (opcija C) &mdash; recipročna vrednost tačnog odgovora.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Odredite vrednost izraza \(d = 9^{1 - \log_3 7} + \sqrt{(-2)^2} - \sqrt[3]{-8}\).
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Koristite isti princip: \(9 = 3^2\), pa \(9^{1 - \log_3 7} = 3^{2(1 - \log_3 7)} = \frac{9}{49}\). Zatim \(\sqrt{(-2)^2} = 2\) i \(\sqrt[3]{-8} = -2\). Saberite sve tri vrednosti.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 500;
+    const isMobile = W < 600;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const fontSize = isMobile ? 12 : 15;
+    const smallFont = isMobile ? 10 : 12;
+    const titleFont = isMobile ? 14 : 18;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = smallFont + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Tok izračunavanja vrednosti c = a\u1D47', W / 2, 10);
+
+    // Layout: three columns for a, b, c
+    const colW = W / 3;
+    const topY = isMobile ? 45 : 55;
+
+    // --- Column 1: Computing a ---
+    const col1X = colW / 2;
+
+    // Header for a
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold ' + titleFont + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Izračunavanje a', col1X, topY);
+
+    // Steps for a
+    const aSteps = [
+      'a = 4^(1 - log\u2082 5)',
+      '= (2\u00B2)^(1 - log\u2082 5)',
+      '= 2^(2 - 2 log\u2082 5)',
+      '= 2^(2 - log\u2082 25)',
+      '= 2\u00B2 / 2^(log\u2082 25)',
+      '= 4 / 25'
+    ];
+
+    ctx.font = fontSize + 'px Segoe UI, system-ui, sans-serif';
+    const lineH = isMobile ? 28 : 34;
+    let startY = topY + (isMobile ? 30 : 40);
+
+    aSteps.forEach(function(step, i) {
+      var y = startY + i * lineH;
+      var isLast = i === aSteps.length - 1;
+
+      if (isLast) {
+        // Highlight final result
+        var tw = ctx.measureText(step).width;
+        ctx.fillStyle = 'rgba(96, 165, 250, 0.12)';
+        ctx.beginPath();
+        ctx.roundRect(col1X - tw / 2 - 12, y - 4, tw + 24, lineH - 2, 8);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = '#60a5fa';
+        ctx.font = 'bold ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
+      } else {
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = fontSize + 'px Segoe UI, system-ui, sans-serif';
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(step, col1X, y);
+    });
+
+    // --- Column 2: Computing b ---
+    var col2X = colW + colW / 2;
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold ' + titleFont + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Izračunavanje b', col2X, topY);
+
+    var bSteps = [
+      'b = \u221A((-1)\u00B2) - \u00B3\u221A(-1)',
+      '\u221A((-1)\u00B2) = \u221A1 = 1',
+      '\u00B3\u221A(-1) = -1',
+      'b = 1 - (-1)',
+      '= 1 + 1',
+      '= 2'
+    ];
+
+    bSteps.forEach(function(step, i) {
+      var y = startY + i * lineH;
+      var isLast = i === bSteps.length - 1;
+
+      if (isLast) {
+        var tw = ctx.measureText(step).width;
+        ctx.fillStyle = 'rgba(167, 139, 250, 0.12)';
+        ctx.beginPath();
+        ctx.roundRect(col2X - tw / 2 - 12, y - 4, tw + 24, lineH - 2, 8);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(167, 139, 250, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = '#a78bfa';
+        ctx.font = 'bold ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
+      } else {
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = fontSize + 'px Segoe UI, system-ui, sans-serif';
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(step, col2X, y);
+    });
+
+    // --- Column 3: Computing c ---
+    var col3X = 2 * colW + colW / 2;
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold ' + titleFont + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Izračunavanje c', col3X, topY);
+
+    var cSteps = [
+      'c = a\u1D47',
+      '= (4/25)\u00B2',
+      '= 4\u00B2 / 25\u00B2',
+      '= 16 / 625'
+    ];
+
+    var cStartY = startY + lineH;
+
+    cSteps.forEach(function(step, i) {
+      var y = cStartY + i * lineH;
+      var isLast = i === cSteps.length - 1;
+
+      if (isLast) {
+        var tw = ctx.measureText(step).width;
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.12)';
+        ctx.beginPath();
+        ctx.roundRect(col3X - tw / 2 - 12, y - 4, tw + 24, lineH - 2, 8);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(74, 222, 128, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = '#4ade80';
+        ctx.font = 'bold ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
+      } else {
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = fontSize + 'px Segoe UI, system-ui, sans-serif';
+      }
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(step, col3X, y);
+    });
+
+    // Arrows between columns
+    var arrowY = startY + 2.5 * lineH;
+
+    // Arrow col1 -> col3
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 4]);
+
+    // Arrow from a result to c
+    var aEndY = startY + 5 * lineH + lineH / 2;
+    var cMidY = cStartY - lineH * 0.3;
+
+    ctx.beginPath();
+    ctx.moveTo(col1X + (isMobile ? 35 : 55), aEndY);
+    ctx.quadraticCurveTo(col1X + colW, aEndY + 20, col3X - (isMobile ? 50 : 70), cMidY + 10);
+    ctx.stroke();
+
+    // Arrowhead
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#475569';
+    ctx.beginPath();
+    ctx.moveTo(col3X - (isMobile ? 50 : 70), cMidY + 10);
+    ctx.lineTo(col3X - (isMobile ? 57 : 77), cMidY + 3);
+    ctx.lineTo(col3X - (isMobile ? 57 : 77), cMidY + 17);
+    ctx.closePath();
+    ctx.fill();
+
+    // Label on arrow
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = smallFont + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('a = 4/25', (col1X + col3X) / 2, aEndY - 2);
+
+    // Arrow from b result to c
+    var bEndY = startY + 5 * lineH + lineH / 2;
+
+    ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = '#475569';
+    ctx.beginPath();
+    ctx.moveTo(col2X + (isMobile ? 15 : 25), bEndY);
+    ctx.quadraticCurveTo(col2X + colW * 0.4, bEndY + 15, col3X - (isMobile ? 50 : 70), cMidY + 25);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#475569';
+    ctx.beginPath();
+    ctx.moveTo(col3X - (isMobile ? 50 : 70), cMidY + 25);
+    ctx.lineTo(col3X - (isMobile ? 57 : 77), cMidY + 18);
+    ctx.lineTo(col3X - (isMobile ? 57 : 77), cMidY + 32);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = smallFont + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('b = 2', (col2X + col3X) / 2 + 10, bEndY - 2);
+
+    // Bottom: Final result box
+    var boxY = H - (isMobile ? 65 : 80);
+    var boxW = isMobile ? 180 : 260;
+    var boxH = isMobile ? 45 : 55;
+    var boxX = W / 2 - boxW / 2;
+
+    // Glow
+    ctx.shadowColor = 'rgba(74, 222, 128, 0.3)';
+    ctx.shadowBlur = 25;
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.08)';
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 12);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 12);
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold ' + (isMobile ? 16 : 22) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('c = 16/625', W / 2, boxY + boxH / 2);
+
+    // Arrow from c steps to final box
+    var cLastY = cStartY + 3 * lineH + lineH;
+    ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(col3X, cLastY + 5);
+    ctx.lineTo(W / 2, boxY - 5);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.moveTo(W / 2, boxY - 5);
+    ctx.lineTo(W / 2 - 5, boxY - 13);
+    ctx.lineTo(W / 2 + 5, boxY - 13);
+    ctx.closePath();
+    ctx.fill();
+
+    // Column separators
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath();
+    ctx.moveTo(colW, topY + 5);
+    ctx.lineTo(colW, H - (isMobile ? 90 : 100));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(2 * colW, topY + 5);
+    ctx.lineTo(2 * colW, H - (isMobile ? 90 : 100));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(step) {
+    step.addEventListener('click', function() {
+      stepContainers.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje i logaritmi — izračunavanje složenog izraza",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["stepenovanje", "logaritmi", "korenovanje", "razlomci", "svojstva logaritama"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prebrojavanje članova aritmetičkog niza deljivih sa 5</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Četvorocifrenih prirodnih brojeva koji su deljivi sa 5 i koji su manji od 2009 ima:
+(A) 200  (B) 201  (C) 202  (D) 203  (E) 204
+
+Korak 1: Identifikuj skup brojeva
+  - Četvorocifreni prirodni brojevi: od 1000 do 9999
+  - Deljivi sa 5: poslednja cifra je 0 ili 5
+  - Manji od 2009: dakle od 1000 do 2008
+
+Korak 2: Nađi četvorocifrene brojeve deljive sa 5 u opsegu [1000, 2008]
+  - Prvi takav broj: 1000 (deljiv sa 5)
+  - Poslednji takav broj: 2005 (2005 / 5 = 401, OK)
+  - Provera: 2010 > 2008, pa 2005 je zaista poslednji
+
+Korak 3: Primeni formulu za broj članova aritmetičkog niza
+  Niz: 1000, 1005, 1010, ..., 2005
+  Razlika: d = 5
+  Broj članova: n = (a_n - a_1) / d + 1 = (2005 - 1000) / 5 + 1 = 1005 / 5 + 1 = 201 + 1 = 202
+
+Odgovor: (C) 202
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+  list-style: none;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B8 ';
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  content: '\25BE ';
+}
+
+details .theory-content {
+  padding: 12px 0 4px 8px;
+}
+
+details .theory-content li {
+  color: #cbd5e1;
+  margin-bottom: 10px;
+  list-style: none;
+  padding-left: 12px;
+  border-left: 2px solid #334155;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96, 165, 250, 0.04);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+  font-size: 0.97rem;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.88rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+  padding: 14px 18px;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  border-radius: 10px;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  padding: 10px 0 2px 4px;
+  color: #cbd5e1;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  justify-content: center;
+  color: #a78bfa;
+}
+
+.insight-box .big-formula {
+  font-size: 1.3rem;
+  margin: 16px 0;
+  color: #e2e8f0;
+}
+
+.final-answer {
+  text-align: center;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(74,222,128,0.08));
+}
+
+.final-answer h2 {
+  color: #34d399;
+  justify-content: center;
+}
+
+.final-answer .answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 800;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.option-card {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  text-align: center;
+  min-width: 70px;
+}
+
+.option-card.correct {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.15);
+}
+
+.option-card .opt-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.option-card.correct .opt-label {
+  color: #34d399;
+}
+
+.option-card .opt-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.option-card.correct .opt-value {
+  color: #4ade80;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid #34d399;
+  color: #94a3b8;
+  font-size: 0.92rem;
+}
+
+.pitfall-list {
+  list-style: none;
+}
+
+.pitfall-list li {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: rgba(224, 148, 104, 0.06);
+  border-left: 3px solid #e09468;
+  border-radius: 0 8px 8px 0;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.challenge-box {
+  border-left: 3px solid #f472b6;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #64748b;
+  font-size: 0.82rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .options-row { gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Prebrojavanje članova aritmetičkog niza deljivih sa 5</h1>
+  <p class="subtitle">Aritmetički nizovi i prebrojavanje: koliko je članova u konačnom aritmetičkom nizu</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Četvorocifrenih prirodnih brojeva koji su deljivi sa 5 i koji su manji od 2009 ima:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(200\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(201\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(202\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(203\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(204\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Potrebno je prebrojati sve četvorocifrene prirodne brojeve koji su deljivi sa 5 i manji od 2009. Ovi brojevi čine aritmetički niz sa razlikom \(d = 5\). Odredićemo prvi i poslednji član tog niza, a zatim primeniti formulu za broj članova aritmetičkog niza.</p>
+  </div>
+
+  <!-- THEORY -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Aritmetički niz:</strong> Niz brojeva kod koga je razlika svaka dva uzastopna člana konstantna. Ako je prvi član \(a_1\), razlika \(d\), onda je \(n\)-ti član \(a_n = a_1 + (n-1) \cdot d\).</li>
+          <li><strong>Broj članova aritmetičkog niza:</strong> Ako su poznati prvi član \(a_1\), poslednji član \(a_n\) i razlika \(d\), broj članova je \(n = \frac{a_n - a_1}{d} + 1\).</li>
+          <li><strong>Deljivost sa 5:</strong> Prirodan broj je deljiv sa 5 ako i samo ako mu je poslednja cifra 0 ili 5.</li>
+          <li><strong>Četvorocifreni brojevi:</strong> Prirodni brojevi od 1000 do 9999.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- CANVAS VISUAL -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz — brojčana prava</h2>
+    <canvas id="numberLineCanvas" width="800" height="300"></canvas>
+    <p class="canvas-hint">Četvorocifreni brojevi deljivi sa 5 od 1000 do 2005 na brojčanoj pravi</p>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step-container" data-step="1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Odredi opseg brojeva</h3>
+        <p>Tražimo četvorocifrene prirodne brojeve koji su deljivi sa 5 i manji od 2009.</p>
+        <p>Četvorocifreni prirodni brojevi počinju od \(1000\) i idu do \(9999\). Dodatni uslov je da broj mora biti <strong>manji od 2009</strong>, pa posmatramo opseg:</p>
+        <div class="math-block">
+          \[1000 \leq x \leq 2008, \quad x \in \mathbb{N}, \quad 5 \mid x\]
+        </div>
+        <p class="note">Uslov „manji od 2009" znači \(x \leq 2008\), jer su u pitanju prirodni brojevi (celi).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container" data-step="2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Nađi prvi i poslednji član niza</h3>
+        <p><strong>Prvi član:</strong> Najmanji četvorocifreni broj deljiv sa 5 je:</p>
+        <div class="math-block">
+          \[a_1 = 1000 \quad (\text{jer } 1000 \div 5 = 200)\]
+        </div>
+        <p><strong>Poslednji član:</strong> Najveći broj u opsegu \([1000, 2008]\) koji je deljiv sa 5. Kako je \(2008 \div 5 = 401{,}6\), uzimamo \(\lfloor 401{,}6 \rfloor = 401\), pa je:</p>
+        <div class="math-block">
+          \[a_n = 401 \cdot 5 = 2005\]
+        </div>
+        <p class="note">Zaista, \(2005 < 2009\) i \(2005\) je deljiv sa 5. Sledeći kandidat bi bio \(2010\), ali \(2010 > 2008\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto poslednji član nije 2010?</summary>
+      <div class="answer">
+        <p>Broj \(2010\) jeste deljiv sa 5, ali nije manji od 2009 (uslov zadatka). Zato je poslednji odgovarajući broj \(2005\), jer je \(2005 < 2009\) i \(5 \mid 2005\).</p>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container" data-step="3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Prepoznaj aritmetički niz</h3>
+        <p>Svi četvorocifreni brojevi deljivi sa 5 u opsegu \([1000, 2008]\) čine aritmetički niz:</p>
+        <div class="math-block">
+          \[1000, \; 1005, \; 1010, \; 1015, \; \ldots, \; 2000, \; 2005\]
+        </div>
+        <p>Parametri niza:</p>
+        <ul style="margin-left: 20px; margin-top: 8px; color: #cbd5e1;">
+          <li>Prvi član: \(a_1 = 1000\)</li>
+          <li>Poslednji član: \(a_n = 2005\)</li>
+          <li>Razlika: \(d = 5\)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container" data-step="4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izračunaj broj članova</h3>
+        <p>Primenjujemo formulu za broj članova aritmetičkog niza:</p>
+        <div class="math-block">
+          \[n = \frac{a_n - a_1}{d} + 1 = \frac{2005 - 1000}{5} + 1 = \frac{1005}{5} + 1 = 201 + 1 = \boxed{202}\]
+        </div>
+        <p class="note">Ovo je klasična formula: razliku krajnjih članova delimo razlikom niza i dodajemo 1 (jer brojimo i prvi i poslednji član).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto dodajemo +1 u formuli?</summary>
+      <div class="answer">
+        <p>Kada delimo razliku krajnjih članova sa razlikom niza, dobijamo broj „koraka" između prvog i poslednjeg člana. Ali broj članova je uvek za jedan veći od broja koraka (jer i prvi član treba da se ubroji). Na primer, niz \(5, 10, 15\) ima 2 koraka, ali 3 člana.</p>
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step-container" data-step="5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Verifikacija</h3>
+        <p>Proverimo rezultat drugim pristupom. Brojevi deljivi sa 5 od 1 do \(N\) ima tačno \(\lfloor N/5 \rfloor\). Nama trebaju oni u opsegu \([1000, 2008]\).</p>
+        <div class="math-block">
+          \[\text{Brojevi deljivi sa 5 u } [1, 2008]: \quad \left\lfloor \frac{2008}{5} \right\rfloor = 401\]
+        </div>
+        <div class="math-block">
+          \[\text{Brojevi deljivi sa 5 u } [1, 999]: \quad \left\lfloor \frac{999}{5} \right\rfloor = 199\]
+        </div>
+        <p>Razlika daje broj deljivih sa 5 u opsegu \([1000, 2008]\):</p>
+        <div class="math-block">
+          \[401 - 199 = 202 \; \checkmark\]
+        </div>
+        <p class="note">Oba pristupa daju isti rezultat — 202.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <h2>Ključni uvid</h2>
+    <p class="big-formula">
+      \[n = \frac{a_n - a_1}{d} + 1 = \frac{2005 - 1000}{5} + 1 = 202\]
+    </p>
+    <p style="color: #cbd5e1;">Prebrojavanje članova aritmetičkog niza se svodi na prostu formulu: razlika krajnjih članova podeljena razlikom, plus jedan.</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value correct">
+      (C) 202
+    </div>
+
+    <div class="options-row">
+      <div class="option-card">
+        <div class="opt-label">(A)</div>
+        <div class="opt-value">\(200\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(B)</div>
+        <div class="opt-value">\(201\)</div>
+      </div>
+      <div class="option-card correct">
+        <div class="opt-label">(C)</div>
+        <div class="opt-value">\(202\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(D)</div>
+        <div class="opt-value">\(203\)</div>
+      </div>
+      <div class="option-card">
+        <div class="opt-label">(E)</div>
+        <div class="opt-value">\(204\)</div>
+      </div>
+    </div>
+
+    <div class="verification">
+      <strong>Verifikacija:</strong> Aritmetički niz \(1000, 1005, 1010, \ldots, 2005\) sa razlikom \(d = 5\) ima \(\frac{2005 - 1000}{5} + 1 = 202\) člana. Alternativno: \(\lfloor 2008/5 \rfloor - \lfloor 999/5 \rfloor = 401 - 199 = 202\).
+    </div>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <h2>Najčešće greške</h2>
+    <ul class="pitfall-list">
+      <li><strong>Zaboraviti +1 u formuli:</strong> Ako se izračuna samo \(\frac{2005 - 1000}{5} = 201\), dobija se odgovor (B) umesto tačnog (C). Ovo je najčešća greška — izostavljanje prvog ili poslednjeg člana pri prebrojavanju.</li>
+      <li><strong>Pogrešan poslednji član:</strong> Broj 2010 je deljiv sa 5, ali nije manji od 2009. Ako se uzme 2010 kao poslednji član, formula daje \(\frac{2010 - 1000}{5} + 1 = 203\), što je odgovor (D) — pogrešno.</li>
+      <li><strong>Uključivanje trocifrenih brojeva:</strong> Uslov je da su brojevi četvorocifreni, pa se počinje od 1000, ne od 5 ili 995.</li>
+      <li><strong>Interpretacija „manji od 2009":</strong> „Manji od 2009" znači strogo manje, dakle \(x < 2009\), tj. \(x \leq 2008\). Kako 2009 nije deljiv sa 5, ova razlika ovde ne utiče na rezultat.</li>
+    </ul>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="card challenge-box">
+    <h2>Dodatni izazov</h2>
+    <p style="color: #cbd5e1;">Koliko ima četvorocifrenih prirodnih brojeva koji su deljivi i sa 3 i sa 5 (tj. deljivi sa 15) i manji od 2009?</p>
+    <details>
+      <summary>Prikaži rešenje</summary>
+      <div class="theory-content">
+        <p style="color: #cbd5e1;">Tražimo četvorocifrene brojeve deljive sa 15 u opsegu \([1000, 2008]\).</p>
+        <p style="color: #cbd5e1;">Prvi takav broj: \(1005\) (jer \(1005 = 67 \cdot 15\)).</p>
+        <p style="color: #cbd5e1;">Poslednji takav broj: \(1995\) (jer \(1995 = 133 \cdot 15\), a \(2010 = 134 \cdot 15 > 2008\)).</p>
+        <p style="color: #cbd5e1;">Broj članova: \(\frac{1995 - 1005}{15} + 1 = \frac{990}{15} + 1 = 66 + 1 = 67\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<!-- CANVAS DRAWING SCRIPT -->
+<script>
+(function() {
+  var canvas = document.getElementById('numberLineCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    var padL = 60, padR = 60, padT = 60, padB = 80;
+    var lineY = H / 2 + 10;
+    var lineStartX = padL, lineEndX = W - padR;
+    var totalWidth = lineEndX - lineStartX;
+
+    // Number line range: 950 to 2100
+    var rangeMin = 950, rangeMax = 2100;
+    function xOf(val) {
+      return lineStartX + (val - rangeMin) / (rangeMax - rangeMin) * totalWidth;
+    }
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Brojčana prava: četvorocifreni brojevi deljivi sa 5, manji od 2009', W/2, 30);
+
+    // Main number line
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(lineStartX - 10, lineY);
+    ctx.lineTo(lineEndX + 10, lineY);
+    ctx.stroke();
+
+    // Arrows
+    ctx.fillStyle = '#475569';
+    ctx.beginPath();
+    ctx.moveTo(lineEndX + 20, lineY);
+    ctx.lineTo(lineEndX + 5, lineY - 6);
+    ctx.lineTo(lineEndX + 5, lineY + 6);
+    ctx.fill();
+
+    // Highlighted region [1000, 2005]
+    var x1000 = xOf(1000), x2005 = xOf(2005);
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.08)';
+    ctx.fillRect(x1000, lineY - 40, x2005 - x1000, 80);
+
+    // Region border
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.strokeRect(x1000, lineY - 40, x2005 - x1000, 80);
+    ctx.setLineDash([]);
+
+    // Tick marks for key values
+    var keyValues = [1000, 1005, 1010, 1500, 2000, 2005, 2009];
+    ctx.lineWidth = 1;
+
+    for (var i = 0; i < keyValues.length; i++) {
+      var v = keyValues[i];
+      var x = xOf(v);
+      var tickH = 12;
+
+      if (v === 1000 || v === 2005) {
+        ctx.strokeStyle = '#4ade80';
+        ctx.lineWidth = 2;
+        tickH = 18;
+      } else if (v === 2009) {
+        ctx.strokeStyle = '#f472b6';
+        ctx.lineWidth = 2;
+        tickH = 14;
+      } else {
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        tickH = 10;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(x, lineY - tickH);
+      ctx.lineTo(x, lineY + tickH);
+      ctx.stroke();
+
+      // Labels below
+      ctx.textAlign = 'center';
+      if (v === 1000 || v === 2005) {
+        ctx.fillStyle = '#4ade80';
+        ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      } else if (v === 2009) {
+        ctx.fillStyle = '#f472b6';
+        ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      } else {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      }
+      ctx.fillText(String(v), x, lineY + tickH + 18);
+    }
+
+    // Dots for the pattern 1000, 1005, 1010, ..., 2005
+    ctx.fillStyle = '#60a5fa';
+    for (var v = 1000; v <= 2005; v += 5) {
+      var x = xOf(v);
+      ctx.beginPath();
+      ctx.arc(x, lineY, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Ellipsis between 1010 and 1500
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('...', xOf(1250), lineY - 25);
+
+    // Ellipsis between 1500 and 2000
+    ctx.fillText('...', xOf(1750), lineY - 25);
+
+    // Labels above key points
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+
+    // a₁ = 1000
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('a\u2081 = 1000', xOf(1000), lineY - 50);
+
+    // aₙ = 2005
+    ctx.fillText('a\u2099 = 2005', xOf(2005), lineY - 50);
+
+    // 2009 boundary
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('< 2009', xOf(2009), lineY - 45);
+
+    // d = 5 annotation
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 1;
+    var xA = xOf(1000), xB = xOf(1005);
+    var arrY = lineY + 50;
+    ctx.beginPath();
+    ctx.moveTo(xA, arrY);
+    ctx.lineTo(xB, arrY);
+    ctx.stroke();
+    // Small arrow tips
+    ctx.beginPath();
+    ctx.moveTo(xA, arrY - 4);
+    ctx.lineTo(xA, arrY + 4);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(xB, arrY - 4);
+    ctx.lineTo(xB, arrY + 4);
+    ctx.stroke();
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('d = 5', (xA + xB) / 2, arrY + 18);
+
+    // Result label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('n = 202 članova', (xOf(1000) + xOf(2005)) / 2, lineY + 75);
+  }
+
+  draw();
+})();
+</script>
+
+<!-- STEP CLICK HANDLER -->
+<script>
+(function() {
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Prebrojavanje članova aritmetičkog niza deljivih sa 5",
+  "subject": "math",
+  "unit": "aritmetički nizovi i prebrojavanje",
+  "topic_tags": ["aritmetički niz", "deljivost", "prebrojavanje", "četvorocifreni brojevi"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje algebarskog izraza sa korenima</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Given a, b > 0 and a ≠ b, simplify:
+
+((a√a + b√b)/(√a + √b) - √(ab)) · (√a + √b)/(ab(a - b))
+
+which should be identically equal to one of the given options.
+
+STEP-BY-STEP LOGIC:
+
+Let me write a√a = a · a^{1/2} = a^{3/2} and b√b = b · b^{1/2} = b^{3/2}.
+
+Step 1: Simplify the first fraction (a√a + b√b)/(√a + √b)
+= (a^{3/2} + b^{3/2}) / (a^{1/2} + b^{1/2})
+
+Use the sum of cubes factoring for the numerator:
+a^{3/2} + b^{3/2} = (a^{1/2})^3 + (b^{1/2})^3
+= (a^{1/2} + b^{1/2})((a^{1/2})^2 - a^{1/2}·b^{1/2} + (b^{1/2})^2)
+= (√a + √b)(a - √(ab) + b)
+
+So:
+(a^{3/2} + b^{3/2}) / (a^{1/2} + b^{1/2}) = a - √(ab) + b
+
+Step 2: Compute first bracket
+(a√a + b√b)/(√a + √b) - √(ab)
+= (a - √(ab) + b) - √(ab)
+= a + b - 2√(ab)
+= (√a - √b)^2
+
+Step 3: Multiply by the second factor
+(√a - √b)^2 · (√a + √b) / (ab(a - b))
+
+Note: a - b = (√a - √b)(√a + √b)
+
+So:
+= (√a - √b)^2 · (√a + √b) / (ab · (√a - √b)(√a + √b))
+= (√a - √b)^2 / (ab · (√a - √b))
+= (√a - √b) / (ab)
+
+ANSWER: (B) (√a − √b)/(ab)
+
+VERIFICATION with a=4, b=1:
+First fraction: (4·2 + 1·1)/(2+1) = 9/3 = 3
+Subtract √(4·1) = 2: 3 - 2 = 1
+Multiply by (2+1)/(4·1·(4-1)) = 3/12 = 1/4
+Result: 1 · 1/4 = 1/4
+
+Check (B): (√4 - √1)/(4·1) = (2-1)/4 = 1/4 ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.subtitle {
+  color: #94a3b8;
+  text-align: center;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.12);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+  flex: 1;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: default;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #a78bfa;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.theory-card ul {
+  list-style: none;
+  padding: 12px 0;
+}
+
+.theory-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+.theory-card li:last-child {
+  border-bottom: none;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.step:hover {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 20px 0;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.checkpoint .answer {
+  padding-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(96,165,250,0.25);
+  text-align: center;
+  padding: 28px;
+}
+
+.insight-card .big-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+  color: #4ade80;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(74,222,128,0.04));
+  text-align: center;
+  padding: 28px;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+  justify-content: center;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 800;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  color: #4ade80;
+  box-shadow: 0 0 20px rgba(74,222,128,0.15);
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+  text-align: left;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #cbd5e1;
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-label {
+  color: #e09468;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-weight: 600;
+  user-select: none;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+  width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { padding: 12px; flex-direction: column; gap: 8px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .final-answer-value { font-size: 1.4rem; }
+  .options-row { gap: 8px; }
+  .option-card { padding: 8px 14px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Pojednostavljivanje algebarskog izraza sa korenima</h1>
+  <p class="subtitle">Algebra &mdash; korenovanje, razlika kubova, racionalizacija</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako je \( a, b > 0 \) i \( a \neq b \), onda je izraz:</p>
+    <div class="math-block">
+      \[ \left( \frac{a\sqrt{a} + b\sqrt{b}}{\sqrt{a} + \sqrt{b}} - \sqrt{ab} \right) \cdot \frac{\sqrt{a} + \sqrt{b}}{ab(a - b)} \]
+    </div>
+    <p>identički jednak:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{\sqrt{a} + \sqrt{b}}{a - b}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{\sqrt{a} - \sqrt{b}}{ab}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{\sqrt{a} + \sqrt{b}}{ab}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\sqrt{ab}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{1}{a - b}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Ključni korak je prepoznati da je \( a\sqrt{a} + b\sqrt{b} = (\sqrt{a})^3 + (\sqrt{b})^3 \),
+      čime možemo primeniti formulu za zbir kubova. Nakon toga, pojednostavićemo razliku u zagradi
+      i iskoristiti faktorizaciju \( a - b = (\sqrt{a} - \sqrt{b})(\sqrt{a} + \sqrt{b}) \) da skratimo izraz.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <ul>
+        <li>
+          <strong>Zbir kubova:</strong>
+          \( x^3 + y^3 = (x + y)(x^2 - xy + y^2) \)
+        </li>
+        <li>
+          <strong>Razlika kvadrata:</strong>
+          \( x^2 - y^2 = (x - y)(x + y) \)
+        </li>
+        <li>
+          <strong>Kvadrat razlike:</strong>
+          \( (x - y)^2 = x^2 - 2xy + y^2 \)
+        </li>
+        <li>
+          <strong>Veza stepena i korena:</strong>
+          \( a\sqrt{a} = a^{3/2} = (\sqrt{a})^3 \)
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color:#94a3b8; margin-bottom: 14px;">
+      Dijagram prikazuje tok pojednostavljivanja izraza kroz ključne transformacije.
+    </p>
+    <canvas id="diagramCanvas" width="800" height="480"></canvas>
+    <p class="canvas-hint">Shematski prikaz koraka pojednostavljivanja</p>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Prepišimo brojilac prvog razlomka koristeći stepene</h3>
+        <p>
+          Primetimo da važi \( a\sqrt{a} = a \cdot a^{1/2} = a^{3/2} = (\sqrt{a})^3 \) i analogno
+          \( b\sqrt{b} = (\sqrt{b})^3 \). Dakle:
+        </p>
+        <div class="math-block">
+          \[ \frac{a\sqrt{a} + b\sqrt{b}}{\sqrt{a} + \sqrt{b}} = \frac{(\sqrt{a})^3 + (\sqrt{b})^3}{\sqrt{a} + \sqrt{b}} \]
+        </div>
+        <p class="note">
+          Ovo je klasičan oblik zbira kubova &mdash; uvedemo smenu \( x = \sqrt{a} \), \( y = \sqrt{b} \).
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Primenimo formulu za zbir kubova</h3>
+        <p>
+          Koristimo identitet \( x^3 + y^3 = (x + y)(x^2 - xy + y^2) \):
+        </p>
+        <div class="math-block">
+          \[ (\sqrt{a})^3 + (\sqrt{b})^3 = (\sqrt{a} + \sqrt{b})\left(a - \sqrt{ab} + b\right) \]
+        </div>
+        <p>
+          Uvrstimo to u razlomak i skratimo zajednički činilac \( (\sqrt{a} + \sqrt{b}) \):
+        </p>
+        <div class="math-block">
+          \[ \frac{(\sqrt{a} + \sqrt{b})(a - \sqrt{ab} + b)}{\sqrt{a} + \sqrt{b}} = a - \sqrt{ab} + b \]
+        </div>
+        <p class="note">
+          Skraćivanje je dozvoljeno jer je \( \sqrt{a} + \sqrt{b} > 0 \) (oba broja su pozitivna).
+        </p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri se: Koliko je \(\frac{a\sqrt{a} + b\sqrt{b}}{\sqrt{a} + \sqrt{b}}\) nakon pojednostavljivanja?</summary>
+        <div class="answer">
+          Odgovor: \( a - \sqrt{ab} + b \)
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Izračunajmo izraz u zagradi</h3>
+        <p>
+          Sada oduzimamo \( \sqrt{ab} \) od dobijenog rezultata:
+        </p>
+        <div class="math-block">
+          \[ \left(a - \sqrt{ab} + b\right) - \sqrt{ab} = a - 2\sqrt{ab} + b \]
+        </div>
+        <p>
+          Prepoznajemo <span class="highlight-green">potpun kvadrat razlike</span>:
+        </p>
+        <div class="math-block">
+          \[ a - 2\sqrt{ab} + b = (\sqrt{a})^2 - 2\sqrt{a}\sqrt{b} + (\sqrt{b})^2 = \left(\sqrt{a} - \sqrt{b}\right)^2 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri se: Zašto je \(a - 2\sqrt{ab} + b = (\sqrt{a} - \sqrt{b})^2\)?</summary>
+        <div class="answer">
+          Jer \( (\sqrt{a} - \sqrt{b})^2 = (\sqrt{a})^2 - 2\cdot\sqrt{a}\cdot\sqrt{b} + (\sqrt{b})^2 = a - 2\sqrt{ab} + b \). To je primena formule \( (x-y)^2 = x^2 - 2xy + y^2 \).
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Pomnožimo sa drugim razlomkom</h3>
+        <p>
+          Sada ceo izraz glasi:
+        </p>
+        <div class="math-block">
+          \[ \left(\sqrt{a} - \sqrt{b}\right)^2 \cdot \frac{\sqrt{a} + \sqrt{b}}{ab(a - b)} \]
+        </div>
+        <p>
+          Ključni korak: faktorizujemo imenilac. Koristimo <span class="highlight-blue">razliku kvadrata</span>:
+        </p>
+        <div class="math-block">
+          \[ a - b = (\sqrt{a})^2 - (\sqrt{b})^2 = (\sqrt{a} - \sqrt{b})(\sqrt{a} + \sqrt{b}) \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Skratimo zajedničke činioce</h3>
+        <p>
+          Uvrstimo faktorizaciju u imenilac:
+        </p>
+        <div class="math-block">
+          \[ \frac{(\sqrt{a} - \sqrt{b})^2 \cdot (\sqrt{a} + \sqrt{b})}{ab \cdot (\sqrt{a} - \sqrt{b})(\sqrt{a} + \sqrt{b})} \]
+        </div>
+        <p>
+          Skraćujemo \( (\sqrt{a} + \sqrt{b}) \) u brojiocu i imeniocu (dozvoljeno jer je \( > 0 \)):
+        </p>
+        <div class="math-block">
+          \[ = \frac{(\sqrt{a} - \sqrt{b})^2}{ab \cdot (\sqrt{a} - \sqrt{b})} \]
+        </div>
+        <p>
+          Skraćujemo jedan činilac \( (\sqrt{a} - \sqrt{b}) \) (dozvoljeno jer \( a \neq b \), pa \( \sqrt{a} \neq \sqrt{b} \)):
+        </p>
+        <div class="math-block">
+          \[ = \frac{\sqrt{a} - \sqrt{b}}{ab} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <div class="checkpoint">
+      <details>
+        <summary>Proveri se: Za \(a = 4\), \(b = 1\), koliko iznosi polazni izraz?</summary>
+        <div class="answer">
+          Račun: \(\frac{4\cdot2 + 1\cdot1}{2 + 1} - \sqrt{4} = \frac{9}{3} - 2 = 1\). Zatim: \(1 \cdot \frac{2+1}{4\cdot1\cdot3} = \frac{3}{12} = \frac{1}{4}\). Provera (B): \(\frac{\sqrt{4}-\sqrt{1}}{4\cdot1} = \frac{1}{4}\). Tačno!
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2>Ključni uvid</h2>
+    <p>Prepoznavanje oblika <span class="highlight-blue">zbira kubova</span> \((\sqrt{a})^3 + (\sqrt{b})^3\) i
+    <span class="highlight-pink">potpunog kvadrata razlike</span> \((\sqrt{a} - \sqrt{b})^2\) su dva ključna koraka.
+    Faktorizacija \(a - b = (\sqrt{a} - \sqrt{b})(\sqrt{a} + \sqrt{b})\) omogućava skraćivanje.</p>
+    <div class="big-formula">
+      \[ \frac{(\sqrt{a})^3 + (\sqrt{b})^3}{\sqrt{a}+\sqrt{b}} = a - \sqrt{ab} + b \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">
+      \[ \frac{\sqrt{a} - \sqrt{b}}{ab} \]
+    </div>
+
+    <div class="options-row">
+      <div class="option-card">(A) \(\dfrac{\sqrt{a}+\sqrt{b}}{a-b}\)</div>
+      <div class="option-card correct">(B) \(\dfrac{\sqrt{a}-\sqrt{b}}{ab}\)</div>
+      <div class="option-card">(C) \(\dfrac{\sqrt{a}+\sqrt{b}}{ab}\)</div>
+      <div class="option-card">(D) \(\sqrt{ab}\)</div>
+      <div class="option-card">(E) \(\dfrac{1}{a-b}\)</div>
+    </div>
+
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> Za \( a = 4 \), \( b = 1 \): polazni izraz daje \(\frac{1}{4}\), a odgovor (B) daje
+      \(\frac{2-1}{4} = \frac{1}{4}\). Za \( a = 9 \), \( b = 4 \): polazni izraz daje \(\frac{3-2}{36} = \frac{1}{36}\), a odgovor (B) daje
+      \(\frac{3-2}{36} = \frac{1}{36}\). Odgovor je potvrđen.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li>
+        <span class="pitfall-label">Zamka 1:</span>
+        Ne prepoznati da je \(a\sqrt{a} = (\sqrt{a})^3\). Bez ove transformacije, ne može se primeniti formula za zbir kubova i pojednostavljivanje postaje mnogo teže.
+      </li>
+      <li>
+        <span class="pitfall-label">Zamka 2:</span>
+        Zaboraviti da se \(a - b\) može faktorizovati kao \((\sqrt{a}-\sqrt{b})(\sqrt{a}+\sqrt{b})\). Ova faktorizacija je neophodna za skraćivanje u poslednjem koraku.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Pojednostavi sličan izraz, ali sa razlikom kubova u brojiocu:
+    </p>
+    <div class="math-block">
+      \[ \left( \frac{a\sqrt{a} - b\sqrt{b}}{\sqrt{a} - \sqrt{b}} - \sqrt{ab} \right) \cdot \frac{\sqrt{a} - \sqrt{b}}{ab(a + b)} \]
+    </div>
+    <details>
+      <summary>Prikaži nagoveštaj</summary>
+      <p style="padding-top: 10px; color: #cbd5e1;">
+        Koristi formulu za razliku kubova: \(x^3 - y^3 = (x - y)(x^2 + xy + y^2)\).
+        Tada je \(\frac{(\sqrt{a})^3 - (\sqrt{b})^3}{\sqrt{a}-\sqrt{b}} = a + \sqrt{ab} + b\).
+        Posle oduzimanja \(\sqrt{ab}\), dobija se \(a + b = (\sqrt{a})^2 + (\sqrt{b})^2\). Nastavi sličnim postupkom i koristi \(a + b\) za skraćivanje &mdash; konačan rezultat je \(\frac{\sqrt{a} - \sqrt{b}}{ab}\), isti kao u polaznom zadatku!
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var canvas = document.getElementById('diagramCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 16px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tok pojednostavljivanja izraza', W / 2, 30);
+
+    // Box drawing function
+    function drawBox(x, y, w, h, color, borderColor, text, subtext) {
+      ctx.fillStyle = color;
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(text, x + w / 2, y + h / 2 - (subtext ? 6 : 2));
+      if (subtext) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '12px Segoe UI, sans-serif';
+        ctx.fillText(subtext, x + w / 2, y + h / 2 + 12);
+      }
+    }
+
+    // Arrow function
+    function drawArrow(x1, y1, x2, y2, label) {
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      // Arrowhead
+      var angle = Math.atan2(y2 - y1, x2 - x1);
+      var headLen = 10;
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+      ctx.stroke();
+
+      if (label) {
+        ctx.fillStyle = '#a78bfa';
+        ctx.font = 'italic 12px Segoe UI, sans-serif';
+        ctx.textAlign = 'center';
+        var mx = (x1 + x2) / 2;
+        var my = (y1 + y2) / 2;
+        ctx.fillText(label, mx + 8, my - 6);
+      }
+    }
+
+    var bw = 220;
+    var bh = 50;
+
+    // Row 1: Original expression
+    drawBox(W/2 - bw/2, 50, bw, bh, 'rgba(96,165,250,0.15)', '#60a5fa',
+      'Polazni izraz', '((a\u221Aa + b\u221Ab)/(\u221Aa+\u221Ab) - \u221A(ab)) \u00B7 ...');
+
+    // Row 2: After sum of cubes
+    drawArrow(W/2, 100, W/2, 130, 'Zbir kubova');
+    drawBox(W/2 - bw/2, 130, bw, bh, 'rgba(167,139,250,0.15)', '#a78bfa',
+      'Korak 1-2', '(a - \u221A(ab) + b) - \u221A(ab)');
+
+    // Row 3: After subtraction
+    drawArrow(W/2, 180, W/2, 210, 'Oduzimanje');
+    drawBox(W/2 - bw/2, 210, bw, bh, 'rgba(244,114,182,0.15)', '#f472b6',
+      'Korak 3: Potpun kvadrat', '(\u221Aa - \u221Ab)\u00B2');
+
+    // Row 4: Multiply
+    drawArrow(W/2, 260, W/2, 290, 'Množenje');
+    drawBox(W/2 - bw/2 - 20, 290, bw + 40, bh + 10, 'rgba(96,165,250,0.1)', '#334155',
+      'Korak 4', '(\u221Aa-\u221Ab)\u00B2 \u00B7 (\u221Aa+\u221Ab) / [ab(\u221Aa-\u221Ab)(\u221Aa+\u221Ab)]');
+
+    // Row 5: Final
+    drawArrow(W/2, 350, W/2, 380, 'Skraćivanje');
+    drawBox(W/2 - bw/2, 380, bw, bh, 'rgba(74,222,128,0.15)', '#4ade80',
+      'Rezultat', '(\u221Aa - \u221Ab) / (ab)');
+
+    // Side annotations
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('a\u221Aa = (\u221Aa)\u00B3', W/2 + bw/2 + 20, 75);
+    ctx.fillText('x\u00B3+y\u00B3 = (x+y)(x\u00B2-xy+y\u00B2)', W/2 + bw/2 + 20, 155);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('a - 2\u221A(ab) + b = (\u221Aa-\u221Ab)\u00B2', W/2 + bw/2 + 20, 235);
+
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('a-b = (\u221Aa-\u221Ab)(\u221Aa+\u221Ab)', W/2 + bw/2 + 20, 315);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, sans-serif';
+    ctx.fillText('Odgovor: (B)', W/2 + bw/2 + 20, 410);
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje izraza sa korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["korenovanje", "zbir_kubova", "razlika_kvadrata", "racionalizacija", "algebarski_izrazi"]
+}
+BRAINSPARK_META-->

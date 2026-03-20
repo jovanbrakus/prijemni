@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vrednost izraza sa stepenim funkcijama</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Given f(x) = x^2009 + x^2008 + 2^2008, find 2^(-2009) * (f(2x) + f(-2x)).
+
+APPROACH:
+Step 1: Compute f(2x)
+f(2x) = (2x)^2009 + (2x)^2008 + 2^2008
+       = 2^2009 * x^2009 + 2^2008 * x^2008 + 2^2008
+
+Step 2: Compute f(-2x)
+f(-2x) = (-2x)^2009 + (-2x)^2008 + 2^2008
+        = -(2x)^2009 + (2x)^2008 + 2^2008     [since 2009 is odd, 2008 is even]
+        = -2^2009 * x^2009 + 2^2008 * x^2008 + 2^2008
+
+Step 3: Add f(2x) + f(-2x)
+f(2x) + f(-2x) = (2^2009 * x^2009 - 2^2009 * x^2009)
+               + (2^2008 * x^2008 + 2^2008 * x^2008)
+               + (2^2008 + 2^2008)
+               = 0 + 2 * 2^2008 * x^2008 + 2 * 2^2008
+               = 2^2009 * x^2008 + 2^2009
+
+Step 4: Multiply by 2^(-2009)
+2^(-2009) * (f(2x) + f(-2x))
+= 2^(-2009) * (2^2009 * x^2008 + 2^2009)
+= 2^(-2009) * 2^2009 * (x^2008 + 1)
+= x^2008 + 1
+
+ANSWER: D) x^2008 + 1
+
+KEY INSIGHT: When you add f(2x) + f(-2x), odd-power terms cancel and even-power terms double.
+This is the principle of extracting the "even part" of a function.
+</script>
+
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  border: 2px solid #a78bfa;
+  font-size: 1.08rem;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+}
+
+.given-item .value {
+  font-size: 1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin: 15px 0;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  font-size: 0.95rem;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkpoint summary::-webkit-details-marker { display: none; }
+
+.checkpoint summary::before {
+  content: '\25B6';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+
+.checkpoint[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.checkpoint .checkpoint-content {
+  padding: 0 1rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.final-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.final-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.final-option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.verification {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 700px) {
+  body { padding: 0.5rem; }
+  .card, .problem-statement, details .detail-content, .final-answer,
+  .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: repeat(2, 1fr); }
+  .final-options { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Vrednost izraza sa stepenim funkcijama</h1>
+  <p class="subtitle">Parnost i neparnost stepena, zamena promenljive</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Ako je</p>
+    <div class="math-block">
+      \[f(x) = x^{2009} + x^{2008} + 2^{2008}\]
+    </div>
+    <p>onda je \(2^{-2009} \cdot \big(f(2x) + f(-2x)\big)\) jednako:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(x^{2009} + 1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(x^{2008} + 2^{2008}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(x^{2009} - 1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(x^{2008} + 1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(x^{2008} - 1\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</div>
+    <ol class="plan-list">
+      <li>Izračunamo \(f(2x)\) zamenom \(x \to 2x\) u definiciju funkcije.</li>
+      <li>Izračunamo \(f(-2x)\) zamenom \(x \to -2x\), koristeći parnost/neparnost stepena.</li>
+      <li>Saberemo \(f(2x) + f(-2x)\) i uočimo da se neparni stepeni poništavaju.</li>
+      <li>Pomnožimo rezultat sa \(2^{-2009}\) i pojednostavimo.</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>Podsetnik iz teorije</summary>
+    <div class="detail-content">
+      <p><strong>Parnost i neparnost stepena:</strong> Za proizvoljno realno \(a\) i prirodan broj \(n\):</p>
+      <div class="math-block">
+        \[(-a)^n = \begin{cases} a^n & \text{ako je } n \text{ paran} \\ -a^n & \text{ako je } n \text{ neparan} \end{cases}\]
+      </div>
+
+      <p style="margin-top:0.75rem"><strong>Parna i neparna funkcija:</strong></p>
+      <ul style="margin-left:1.2rem; margin-top:0.3rem;">
+        <li>Funkcija \(g\) je <em>parna</em> ako važi \(g(-x) = g(x)\) za svako \(x\) iz domena.</li>
+        <li>Funkcija \(g\) je <em>neparna</em> ako važi \(g(-x) = -g(x)\) za svako \(x\) iz domena.</li>
+      </ul>
+
+      <p style="margin-top:0.75rem"><strong>Izdvajanje parnog dela funkcije:</strong> Za proizvoljnu funkciju \(g(x)\), izraz</p>
+      <div class="math-block">
+        \[\frac{g(x) + g(-x)}{2}\]
+      </div>
+      <p>predstavlja njen <em>paran deo</em> — sadrži samo članove sa parnim stepenima od \(x\).</p>
+
+      <p style="margin-top:0.75rem"><strong>Pravila za stepene:</strong></p>
+      <div class="math-block">
+        \[(ab)^n = a^n \cdot b^n, \qquad a^m \cdot a^n = a^{m+n}, \qquad \frac{a^m}{a^n} = a^{m-n}\]
+      </div>
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Vizuelni prikaz - Mehanizam poništavanja</div>
+    <p class="muted" style="margin-bottom:0.75rem;">Dijagram pokazuje kako se pri sabiranju \(f(2x)\) i \(f(-2x)\) neparni članovi poništavaju, a parni udvostručuju.</p>
+    <div class="canvas-wrap">
+      <canvas id="cancel-canvas" width="650" height="400"></canvas>
+      <p class="canvas-hint">Shematski prikaz sabiranja članova f(2x) i f(-2x)</p>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Izračunamo f(2x)</div>
+      <p>Zamenjujemo \(x\) sa \(2x\) u definiciju \(f(x) = x^{2009} + x^{2008} + 2^{2008}\):</p>
+      <div class="math-block">
+        \[f(2x) = (2x)^{2009} + (2x)^{2008} + 2^{2008}\]
+      </div>
+      <p>Primenom pravila \((ab)^n = a^n \cdot b^n\):</p>
+      <div class="math-block">
+        \[f(2x) = 2^{2009} \cdot x^{2009} + 2^{2008} \cdot x^{2008} + 2^{2008}\]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Izračunamo f(-2x)</div>
+      <p>Zamenjujemo \(x\) sa \(-2x\):</p>
+      <div class="math-block">
+        \[f(-2x) = (-2x)^{2009} + (-2x)^{2008} + 2^{2008}\]
+      </div>
+      <p>Sada koristimo parnost stepena:</p>
+      <ul style="margin-left:1.2rem; margin-top:0.3rem;">
+        <li>\((-2x)^{2009} = -(2x)^{2009} = -2^{2009} \cdot x^{2009}\) jer je 2009 <span class="highlight-pink">neparan</span></li>
+        <li>\((-2x)^{2008} = (2x)^{2008} = 2^{2008} \cdot x^{2008}\) jer je 2008 <span class="highlight">paran</span></li>
+      </ul>
+      <div class="math-block">
+        \[f(-2x) = -2^{2009} \cdot x^{2009} + 2^{2008} \cdot x^{2008} + 2^{2008}\]
+      </div>
+
+      <details class="checkpoint">
+        <summary>Kontrolna tačka: Zašto se menja znak prvog člana?</summary>
+        <div class="checkpoint-content">
+          <p>Broj 2009 je neparan, pa važi \((-a)^{2009} = -a^{2009}\). Minus se „prenosi" iz baze samo kod neparnih eksponenata. Broj 2008 je paran, pa \((-a)^{2008} = a^{2008}\) — minus se „gubi" jer je \((-1)^{2008} = 1\).</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Saberemo f(2x) + f(-2x)</div>
+      <p>Saberimo odgovarajuće članove:</p>
+      <div class="math-block">
+        \[\begin{aligned}
+f(2x) + f(-2x) &= \bigl(2^{2009}x^{2009} + 2^{2008}x^{2008} + 2^{2008}\bigr) \\
+&\quad + \bigl(-2^{2009}x^{2009} + 2^{2008}x^{2008} + 2^{2008}\bigr)
+\end{aligned}\]
+      </div>
+      <p>Grupisanjem po članovima:</p>
+      <ul style="margin-left:1.2rem; margin-top:0.3rem;">
+        <li>Član sa \(x^{2009}\): \(\;2^{2009}x^{2009} + (-2^{2009}x^{2009}) = \) <span class="highlight-pink">0</span> (poništava se!)</li>
+        <li>Član sa \(x^{2008}\): \(\;2^{2008}x^{2008} + 2^{2008}x^{2008} = \) <span class="highlight">2 \cdot 2^{2008} \cdot x^{2008} = 2^{2009} \cdot x^{2008}\)</span></li>
+        <li>Slobodan član: \(\;2^{2008} + 2^{2008} = \) <span class="highlight">2 \cdot 2^{2008} = 2^{2009}\)</span></li>
+      </ul>
+      <div class="math-block">
+        \[f(2x) + f(-2x) = 2^{2009} \cdot x^{2008} + 2^{2009}\]
+      </div>
+
+      <details class="checkpoint">
+        <summary>Kontrolna tačka: Faktorizacija</summary>
+        <div class="checkpoint-content">
+          <p>Možemo da izlučimo zajednički faktor: \(f(2x) + f(-2x) = 2^{2009}(x^{2008} + 1)\). Ovo je ključni korak koji značajno pojednostavljuje krajnji rezultat.</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Pomnožimo sa 2^(-2009)</div>
+      <p>Sada množimo ceo zbir sa \(2^{-2009}\):</p>
+      <div class="math-block">
+        \[2^{-2009} \cdot \bigl(f(2x) + f(-2x)\bigr) = 2^{-2009} \cdot 2^{2009} \cdot (x^{2008} + 1)\]
+      </div>
+      <p>Kako je \(2^{-2009} \cdot 2^{2009} = 2^{-2009+2009} = 2^0 = 1\), dobijamo:</p>
+      <div class="math-block">
+        \[2^{-2009} \cdot \bigl(f(2x) + f(-2x)\bigr) = \boxed{x^{2008} + 1}\]
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Ključni uvid</div>
+    <p>Zbir \(f(t) + f(-t)\) predstavlja <strong>izdvajanje parnog dela</strong> funkcije \(f\). Svi članovi sa neparnim stepenima od \(t\) se poništavaju (jer menjaju znak), a članovi sa parnim stepenima se udvostručuju. U našem slučaju, \(x^{2009}\) je neparan stepen i poništava se, dok \(x^{2008}\) i konstanta \(2^{2008}\) (parni deo) ostaju i udvostručuju se.</p>
+    <p style="margin-top:0.5rem">Ovo je korisna tehnika koja se pojavljuje i u definiciji hiperboličkih funkcija: \(\cosh(x) = \frac{e^x + e^{-x}}{2}\).</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konačan odgovor</div>
+    <div class="value">\(x^{2008} + 1\)</div>
+    <div class="final-options">
+      <div class="opt">(A) \(x^{2009} + 1\)</div>
+      <div class="opt">(B) \(x^{2008} + 2^{2008}\)</div>
+      <div class="opt">(C) \(x^{2009} - 1\)</div>
+      <div class="opt correct">(D) \(x^{2008} + 1\)</div>
+      <div class="opt">(E) \(x^{2008} - 1\)</div>
+    </div>
+    <p class="verification">Verifikacija: Proverimo za \(x = 1\). Tada je \(f(2) = 2^{2009} + 2^{2008} + 2^{2008} = 2^{2009} + 2^{2009} = 2^{2010}\) i \(f(-2) = -2^{2009} + 2^{2008} + 2^{2008} = -2^{2009} + 2^{2009} = 0\). Zbir: \(2^{2010}\). Pomnoženo sa \(2^{-2009}\): \(2^{2010-2009} = 2\). Naš odgovor: \(1^{2008} + 1 = 2\). Tačno!</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall">
+      <strong>Brkanje parnosti 2008 i 2009:</strong> Kritično je prepoznati da je 2009 neparan a 2008 paran. Zamena ovih činjenica dovodi do potpuno pogrešnog rezultata jer se tada poništavaju pogrešni članovi.
+    </div>
+    <div class="pitfall">
+      <strong>Zaboravljena konstanta \(2^{2008}\):</strong> Mnogi studenti se fokusiraju na članove sa \(x\) i zaborave da se i konstantni član \(2^{2008}\) pojavljuje dva puta, dajući doprinos \(2^{2009}\) u zbiru. Bez njega, rezultat bi bio \(x^{2008}\) umesto \(x^{2008} + 1\).
+    </div>
+    <div class="pitfall">
+      <strong>Greška u stepenima dvojke:</strong> Pravilo \(2 \cdot 2^{2008} = 2^{2009}\) je ključno. Česta greška je pisati \(2 \cdot 2^{2008} = 4^{2008}\) ili \(2^{2 \cdot 2008}\), što je pogrešno. Važi \(2 \cdot 2^n = 2^{n+1}\).
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Ako je \(g(x) = x^{100} + x^{99} + x^{98} + 3^{99}\), odredite vrednost izraza \(3^{-100} \cdot \big(g(3x) - g(-3x)\big)\).</p>
+    <details style="background: transparent; border: 1px solid #34d399; margin: 15px 0;">
+      <summary style="color: #34d399;">Prikaži nagovještaj</summary>
+      <div class="detail-content">
+        <p>Razlika \(g(t) - g(-t)\) izdvaja <em>neparan deo</em> funkcije — svi parni stepeni se poništavaju, a neparni se udvostručuju. Primenite isti princip kao u zadatku, ali za neparne članove (\(x^{100}\) je paran stepen pa se poništava, \(x^{99}\) je neparan pa se udvostručuje).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('cancel-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const colW = 190;
+    const startX = 40;
+    const rowH = 55;
+    const startY = 60;
+
+    // Title row
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const headers = ['f(2x)', 'f(-2x)', 'Zbir'];
+    const headerColors = ['#60a5fa', '#a78bfa', '#4ade80'];
+    for (let i = 0; i < 3; i++) {
+      const cx = startX + colW * i + colW / 2;
+      ctx.fillStyle = headerColors[i];
+      ctx.fillText(headers[i], cx, startY - 20);
+
+      // Column background
+      ctx.fillStyle = i === 2 ? 'rgba(74, 222, 128, 0.05)' : 'rgba(96, 165, 250, 0.05)';
+      ctx.fillRect(startX + colW * i + 5, startY - 5, colW - 10, rowH * 3 + 20);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(startX + colW * i + 5, startY - 5, colW - 10, rowH * 3 + 20);
+    }
+
+    // Row data
+    const rows = [
+      {
+        items: ['+2^2009 x^2009', '-2^2009 x^2009', '0'],
+        colors: ['#f472b6', '#f472b6', '#64748b'],
+        strike: [false, false, true]
+      },
+      {
+        items: ['+2^2008 x^2008', '+2^2008 x^2008', '2^2009 x^2008'],
+        colors: ['#4ade80', '#4ade80', '#4ade80'],
+        strike: [false, false, false]
+      },
+      {
+        items: ['+2^2008', '+2^2008', '2^2009'],
+        colors: ['#4ade80', '#4ade80', '#4ade80'],
+        strike: [false, false, false]
+      }
+    ];
+
+    const labels = ['x^2009 (neparan)', 'x^2008 (paran)', 'konstanta'];
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    for (let r = 0; r < 3; r++) {
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(labels[r], startX - 5, startY + r * rowH + rowH / 2);
+    }
+
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        const cx = startX + colW * c + colW / 2;
+        const cy = startY + r * rowH + rowH / 2;
+
+        ctx.fillStyle = rows[r].colors[c];
+        ctx.fillText(rows[r].items[c], cx, cy);
+
+        // Strikethrough for cancelled terms
+        if (rows[r].strike[c]) {
+          const textW = ctx.measureText(rows[r].items[c]).width;
+          ctx.strokeStyle = '#f472b6';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(cx - textW / 2 - 5, cy);
+          ctx.lineTo(cx + textW / 2 + 5, cy);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Plus signs between columns
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    for (let r = 0; r < 3; r++) {
+      const cy = startY + r * rowH + rowH / 2;
+      ctx.fillText('+', startX + colW - 2, cy);
+      ctx.fillText('=', startX + colW * 2 - 2, cy);
+    }
+
+    // Arrow to final result
+    const arrowY = startY + 3 * rowH + 30;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath();
+    ctx.moveTo(startX + colW * 2 + colW / 2, startY + 3 * rowH + 10);
+    ctx.lineTo(startX + colW * 2 + colW / 2, arrowY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Final result box
+    const boxW = 300;
+    const boxH = 45;
+    const boxX = W / 2 - boxW / 2;
+    const boxY = arrowY + 10;
+
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.1)';
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('2^(-2009) * zbir = x^2008 + 1', W / 2, boxY + boxH / 2);
+
+    // Legend
+    const legY = boxY + boxH + 25;
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    // Pink = cancels
+    ctx.fillStyle = '#f472b6';
+    ctx.fillRect(startX + 20, legY - 6, 12, 12);
+    ctx.fillText('Neparan stepen — poništava se', startX + 38, legY + 1);
+
+    // Green = stays
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(startX + colW + 60, legY - 6, 12, 12);
+    ctx.fillText('Paran stepen / konstanta — udvostručuje se', startX + colW + 78, legY + 1);
+  }
+
+  draw();
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Vrednost izraza sa stepenim funkcijama i parnoscu stepena","subject":"math","unit":"algebra","topic_tags":["stepene funkcije","parnost stepena","zamena promenljive","stepeni dvojke","paran deo funkcije"]}
+BRAINSPARK_META-->

@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Srednji clan binomnog razvoja</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Zbir prva tri binomna koeficijenta u razvoju binoma
+(5th_root(2) + 1/5th_root(3))^n, n in N, je 56.
+Naci srednji clan u tom razvoju.
+
+STEP 1: Find n from the sum of first three binomial coefficients.
+  "Binomni koeficijenti" = C(n,0), C(n,1), C(n,2)
+  C(n,0) + C(n,1) + C(n,2) = 56
+  1 + n + n(n-1)/2 = 56
+  Multiply by 2: 2 + 2n + n^2 - n = 112
+  n^2 + n + 2 = 112
+  n^2 + n - 110 = 0
+  Discriminant: 1 + 440 = 441 = 21^2
+  n = (-1 + 21)/2 = 10   (reject n = -11 since n in N)
+  So n = 10.
+
+STEP 2: Identify the middle term.
+  n = 10 (even), so there are 11 terms (k = 0, 1, ..., 10).
+  The middle term is the (n/2 + 1)-th term = 6th term, i.e. k = 5.
+
+STEP 3: Compute T_6 (k=5).
+  a = 2^(1/5), b = 3^(-1/5) = 1/3^(1/5)
+
+  T_{k+1} = C(n, k) * a^{n-k} * b^k
+  T_6 = C(10, 5) * (2^{1/5})^{10-5} * (3^{-1/5})^5
+      = C(10, 5) * (2^{1/5})^5 * (3^{-1/5})^5
+      = 252 * 2^{5/5} * 3^{-5/5}
+      = 252 * 2^1 * 3^{-1}
+      = 252 * 2 * (1/3)
+      = 252 * 2/3
+      = 504/3
+      = 168
+
+VERIFICATION: 168 matches answer (E). Correct!
+
+Note on the PDF: The PDF shows the binom as (5th_root(2) + 1/5th_root(3))^n.
+Both root indices are 5 (peti koren). This is what makes the middle term rational:
+when k=5, both exponents become integers (5/5 = 1), yielding a clean rational answer.
+
+ANSWER: (E) 168
+</script>
+
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  border: 2px solid #a78bfa;
+  font-size: 1.08rem;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+}
+
+.given-item .value {
+  font-size: 1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin: 15px 0;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  font-size: 0.95rem;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkpoint summary::-webkit-details-marker { display: none; }
+
+.checkpoint summary::before {
+  content: '\25B6';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+
+.checkpoint[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.checkpoint .checkpoint-content {
+  padding: 0 1rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.final-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.final-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.final-option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.verification {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 700px) {
+  body { padding: 0.5rem; }
+  .card, .problem-statement, details .detail-content, .final-answer,
+  .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: repeat(2, 1fr); }
+  .final-options { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Srednji član binomnog razvoja</h1>
+  <p class="subtitle">Binomni koeficijenti, Njutnova binomna formula, srednji član</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Zbir prva tri binomna koeficijenta u razvoju binoma</p>
+    <div class="math-block">
+      \[\left(\sqrt[5]{2} + \frac{1}{\sqrt[5]{3}}\right)^n, \quad n \in \mathbb{N}\]
+    </div>
+    <p>je <span class="highlight-blue">56</span>. Srednji član u tom razvoju je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(147\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(420\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(152\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(450\sqrt[5]{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(168\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</div>
+    <ol class="plan-list">
+      <li>Iz uslova da je zbir prva tri binomna koeficijenta jednak 56, postavićemo jednačinu i odrediti \(n\).</li>
+      <li>Za nađeno \(n\) identifikovaćemo srednji član razvoja i izračunati ga primenom binomne formule.</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>Podsetnik iz teorije</summary>
+    <div class="detail-content">
+      <p><strong>Njutnova binomna formula:</strong></p>
+      \[(a + b)^n = \sum_{k=0}^{n} \binom{n}{k} \, a^{n-k} \, b^k\]
+
+      <p style="margin-top:0.75rem"><strong>Binomni koeficijenti:</strong></p>
+      <p>Binomni koeficijenti u razvoju \((a+b)^n\) su brojevi \(\binom{n}{k} = \frac{n!}{k!(n-k)!}\) za \(k = 0, 1, \ldots, n\).</p>
+      <ul style="margin: 0.5rem 0 0.5rem 1.5rem;">
+        <li>\(\binom{n}{0} = 1\)</li>
+        <li>\(\binom{n}{1} = n\)</li>
+        <li>\(\binom{n}{2} = \frac{n(n-1)}{2}\)</li>
+      </ul>
+
+      <p style="margin-top:0.75rem"><strong>Srednji član:</strong></p>
+      <p>Ako je \(n\) paran, razvoj \((a+b)^n\) ima \(n+1\) članova (neparan broj), pa postoji tačno jedan srednji član. To je \(\left(\frac{n}{2}+1\right)\)-vi član, tj. član za \(k = \frac{n}{2}\):</p>
+      \[T_{\frac{n}{2}+1} = \binom{n}{\frac{n}{2}} \, a^{\frac{n}{2}} \, b^{\frac{n}{2}}\]
+
+      <p style="margin-top:0.75rem"><strong>Pravila za stepene korenova:</strong></p>
+      \[\left(\sqrt[m]{a}\right)^k = a^{\frac{k}{m}}\]
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Vizuelni prikaz - Pascalov trougao i srednji član</div>
+    <p class="muted" style="margin-bottom:0.75rem;">Dijagram prikazuje redove Pascalovog trougla do \(n = 10\), sa istaknutim binomnim koeficijentima. Prva tri koeficijenta i srednji koeficijent su označeni.</p>
+    <div class="canvas-wrap">
+      <canvas id="pascal-canvas" width="700" height="420"></canvas>
+      <p class="canvas-hint">Pascalov trougao za \(n = 10\): zeleno = prva tri koeficijenta, roze = srednji koeficijent</p>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Postavka jednačine za \(n\)</div>
+      <p>Prva tri binomna koeficijenta u razvoju \((a+b)^n\) su:</p>
+      <div class="math-block">
+        \[\binom{n}{0} = 1, \quad \binom{n}{1} = n, \quad \binom{n}{2} = \frac{n(n-1)}{2}\]
+      </div>
+      <p>Njihov zbir je 56, pa postavljamo jednačinu:</p>
+      <div class="math-block">
+        \[1 + n + \frac{n(n-1)}{2} = 56\]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Rešavanje jednačine</div>
+      <p>Množimo obe strane sa 2 da eliminišemo razlomak:</p>
+      <div class="math-block">
+        \[2 + 2n + n(n-1) = 112\]
+      </div>
+      <p>Raspisujemo \(n(n-1) = n^2 - n\):</p>
+      <div class="math-block">
+        \[2 + 2n + n^2 - n = 112\]
+      </div>
+      <p>Sređujemo:</p>
+      <div class="math-block">
+        \[n^2 + n + 2 = 112\]
+      </div>
+      <div class="math-block">
+        \[n^2 + n - 110 = 0\]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Primena formule za kvadratnu jednačinu</div>
+      <p>Izračunavamo diskriminantu:</p>
+      <div class="math-block">
+        \[D = 1^2 + 4 \cdot 110 = 1 + 440 = 441 = 21^2\]
+      </div>
+      <p>Rešenja su:</p>
+      <div class="math-block">
+        \[n = \frac{-1 \pm 21}{2}\]
+      </div>
+      <p>Dobijamo dva rešenja:</p>
+      <div class="math-block">
+        \[n_1 = \frac{-1 + 21}{2} = \frac{20}{2} = \color{#4ade80}{10}\]
+      </div>
+      <div class="math-block">
+        \[n_2 = \frac{-1 - 21}{2} = \frac{-22}{2} = -11\]
+      </div>
+      <p>Pošto je \(n \in \mathbb{N}\), odbacujemo \(n_2 = -11\). Dakle, <span class="highlight">n = 10</span>.</p>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko članova ima razvoj binoma kada je \(n = 10\)?</summary>
+      <div class="checkpoint-content">
+        <p>Razvoj \((a+b)^{10}\) ima \(10 + 1 = 11\) članova (od \(k=0\) do \(k=10\)). Pošto je 11 neparan broj, postoji tačno jedan srednji član - to je 6. član (za \(k=5\)).</p>
+      </div>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Identifikacija srednjeg člana</div>
+      <p>Razvoj \((a+b)^{10}\) ima 11 članova. Srednji član je:</p>
+      <div class="math-block">
+        \[T_{\frac{10}{2}+1} = T_6 \quad \text{(šesti član, za } k = 5\text{)}\]
+      </div>
+      <p>Označimo članove binoma:</p>
+      <ul style="margin: 0.5rem 0 0.5rem 1.5rem;">
+        <li>\(a = \sqrt[5]{2} = 2^{1/5}\)</li>
+        <li>\(b = \dfrac{1}{\sqrt[5]{3}} = 3^{-1/5}\)</li>
+      </ul>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-title">Korak 5: Računanje srednjeg člana</div>
+      <p>Primenjujemo opštu formulu za \(k\)-ti član binomnog razvoja:</p>
+      <div class="math-block">
+        \[T_6 = \binom{10}{5} \cdot \left(2^{1/5}\right)^{10-5} \cdot \left(3^{-1/5}\right)^5\]
+      </div>
+      <p>Izračunavamo svaki faktor posebno:</p>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-title">Korak 6: Binomni koeficijent \(\binom{10}{5}\)</div>
+      <div class="math-block">
+        \[\binom{10}{5} = \frac{10!}{5! \cdot 5!} = \frac{10 \cdot 9 \cdot 8 \cdot 7 \cdot 6}{5 \cdot 4 \cdot 3 \cdot 2 \cdot 1} = \frac{30240}{120} = \color{#60a5fa}{252}\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko je \(\left(2^{1/5}\right)^5\)?</summary>
+      <div class="checkpoint-content">
+        <p>Primenom pravila \(\left(a^m\right)^n = a^{mn}\), dobijamo: \(\left(2^{1/5}\right)^5 = 2^{5/5} = 2^1 = 2\). Peti stepen petog korena iz 2 je upravo 2.</p>
+      </div>
+    </details>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-title">Korak 7: Stepenovanje korenova</div>
+      <p>Za prvi faktor:</p>
+      <div class="math-block">
+        \[\left(2^{1/5}\right)^5 = 2^{\frac{5}{5}} = 2^1 = \color{#60a5fa}{2}\]
+      </div>
+      <p>Za drugi faktor:</p>
+      <div class="math-block">
+        \[\left(3^{-1/5}\right)^5 = 3^{\frac{-5}{5}} = 3^{-1} = \color{#60a5fa}{\frac{1}{3}}\]
+      </div>
+      <p class="muted">Ključna stvar: eksponent srednog člana (\(k = 5\)) se poklapa sa indeksom korena (5), pa se koreni "ponište" i dobijamo racionalan broj.</p>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step">
+      <div class="step-title">Korak 8: Konačno množenje</div>
+      <p>Množimo sve tri vrednosti:</p>
+      <div class="math-block">
+        \[T_6 = 252 \cdot 2 \cdot \frac{1}{3}\]
+      </div>
+      <p>Najpre:</p>
+      <div class="math-block">
+        \[252 \cdot 2 = 504\]
+      </div>
+      <p>Zatim:</p>
+      <div class="math-block">
+        \[T_6 = \frac{504}{3} = \color{#4ade80}{168}\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto je srednji član racionalan broj?</summary>
+      <div class="checkpoint-content">
+        <p>Zato što je indeks korena (5) jednak eksponentu srednjeg člana (\(k = n/2 = 5\)). Kada se \(k\)-ti stepen petog korena izračuna, dobije se \(2^{k/5}\) i \(3^{-k/5}\). Za \(k = 5\) oba razlomljiva eksponenta postaju celobrojni: \(2^1\) i \(3^{-1}\), pa je rezultat racionalan.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Ključni uvid</div>
+    <p>U ovom zadatku, indeks korena (5) i red srednjeg člana (\(k = 5\)) se savršeno podudaraju. Ovo nije slučajnost - zadatak je upravo tako konstruisan da srednji član bude racionalan broj koji se može naći među ponuđenim odgovorima. Kada god vidite korene u binomu sa celobrojnim ponuđenim odgovorima, očekujte da će se eksponenti "skratiti" i dati ceo broj.</p>
+    <div class="math-block" style="text-align: center; font-size: 1.1rem;">
+      \[T_6 = \underbrace{252}_{\binom{10}{5}} \cdot \underbrace{2}_{(\sqrt[5]{2})^5} \cdot \underbrace{\frac{1}{3}}_{\left(\frac{1}{\sqrt[5]{3}}\right)^5} = \color{#4ade80}{168}\]
+    </div>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konačan odgovor</div>
+    <div class="value">(E) \(\;168\)</div>
+    <div class="final-options">
+      <div class="final-option">(A) \(147\)</div>
+      <div class="final-option">(B) \(420\)</div>
+      <div class="final-option">(C) \(152\)</div>
+      <div class="final-option">(D) \(450\sqrt[5]{2}\)</div>
+      <div class="final-option correct">(E) \(168\)</div>
+    </div>
+    <p class="verification">Verifikacija: \(\binom{10}{0} + \binom{10}{1} + \binom{10}{2} = 1 + 10 + 45 = 56\) &#10004;. Srednji član: \(252 \cdot 2 \cdot \frac{1}{3} = 168\) &#10004;. Odgovor (D) \(= 450\sqrt[5]{2}\) bi značio da eksponenti nisu celobrojni, ali za \(k=5\) su oba celobrojna, pa je rezultat racionalan.</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall">
+      <strong>Pogrešno tumačenje "binomni koeficijenti":</strong> Termin "binomni koeficijenti" se odnosi na kombinatorne brojeve \(\binom{n}{k}\), a ne na celokupne članove razvoja koji uključuju i stepene \(a\) i \(b\). Da su u pitanju celi članovi, jednačina bi bila mnogo složenija (uključivala bi iracionalne brojeve).
+    </div>
+    <div class="pitfall">
+      <strong>Pogrešno određivanje srednjeg člana:</strong> Za \(n = 10\) razvoj ima 11 članova. Srednji je 6. član (\(k = 5\)), a ne 5. član (\(k = 4\)). Greška u numeraciji vodi do pogrešnog rezultata. Zapamtite: srednji član za parno \(n\) je \(T_{n/2+1}\).
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Koji članovi razvoja \(\left(\sqrt[5]{2} + \frac{1}{\sqrt[5]{3}}\right)^{10}\) su racionalni brojevi? Koliko ih ima?</p>
+    <details style="background: transparent; border: 1px solid #34d399; margin: 15px 0;">
+      <summary style="color: #34d399;">Prikaži nagovaštajući savet</summary>
+      <div class="detail-content">
+        <p>Opšti član je \(T_{k+1} = \binom{10}{k} \cdot 2^{(10-k)/5} \cdot 3^{-k/5}\). Da bi član bio racionalan, oba eksponenta moraju biti celobrojna, tj. \(\frac{10-k}{5} \in \mathbb{Z}\) i \(\frac{k}{5} \in \mathbb{Z}\). To znači da \(k\) mora biti deljivo sa 5. Za \(k \in \{0, 1, \ldots, 10\}\), koji \(k\) ispunjavaju uslov?</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('pascal-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function binomial(n, k) {
+    if (k < 0 || k > n) return 0;
+    if (k === 0 || k === n) return 1;
+    let result = 1;
+    for (let i = 0; i < k; i++) {
+      result = result * (n - i) / (i + 1);
+    }
+    return Math.round(result);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const maxN = 10;
+    const cellW = 56;
+    const cellH = 34;
+    const startY = 18;
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (let n = 0; n <= maxN; n++) {
+      const rowWidth = (n + 1) * cellW;
+      const startX = (W - rowWidth) / 2 + cellW / 2;
+      const y = startY + n * cellH;
+
+      for (let k = 0; k <= n; k++) {
+        const x = startX + k * cellW;
+        const val = binomial(n, k);
+
+        let bgColor = 'rgba(30, 41, 59, 0.6)';
+        let textColor = '#94a3b8';
+        let borderColor = '#334155';
+        let fontSize = 11;
+
+        if (n === maxN) {
+          textColor = '#e2e8f0';
+          fontSize = 12;
+          borderColor = '#475569';
+          bgColor = 'rgba(30, 41, 59, 0.9)';
+
+          if (k <= 2) {
+            bgColor = 'rgba(74, 222, 128, 0.15)';
+            borderColor = '#4ade80';
+            textColor = '#4ade80';
+          }
+
+          if (k === 5) {
+            bgColor = 'rgba(244, 114, 182, 0.15)';
+            borderColor = '#f472b6';
+            textColor = '#f472b6';
+            fontSize = 13;
+          }
+        }
+
+        const rw = cellW - 6;
+        const rh = cellH - 6;
+        const rx = x - rw / 2;
+        const ry = y - rh / 2;
+        const r = 6;
+
+        ctx.fillStyle = bgColor;
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(rx + r, ry);
+        ctx.lineTo(rx + rw - r, ry);
+        ctx.arcTo(rx + rw, ry, rx + rw, ry + r, r);
+        ctx.lineTo(rx + rw, ry + rh - r);
+        ctx.arcTo(rx + rw, ry + rh, rx + rw - r, ry + rh, r);
+        ctx.lineTo(rx + r, ry + rh);
+        ctx.arcTo(rx, ry + rh, rx, ry + rh - r, r);
+        ctx.lineTo(rx, ry + r);
+        ctx.arcTo(rx, ry, rx + r, ry, r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = textColor;
+        ctx.font = (n === maxN ? 'bold ' : '') + fontSize + 'px Segoe UI, system-ui, sans-serif';
+        ctx.fillText(val.toString(), x, y);
+      }
+    }
+
+    const legendY = startY + (maxN + 1) * cellH + 8;
+
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1;
+    ctx.fillRect(W / 2 - 200, legendY, 14, 14);
+    ctx.strokeRect(W / 2 - 200, legendY, 14, 14);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Prva tri koeficijenta (zbir = 56)', W / 2 - 180, legendY + 8);
+
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.15)';
+    ctx.strokeStyle = '#f472b6';
+    ctx.fillRect(W / 2 + 60, legendY, 14, 14);
+    ctx.strokeRect(W / 2 + 60, legendY, 14, 14);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('Srednji koef. (252)', W / 2 + 80, legendY + 8);
+  }
+
+  draw();
+
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Средnji члан бинoмног развоја из збира коефицијената",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["binomna formula", "binomni koeficijenti", "srednji član", "Njutnov binom", "kvadratna jednačina"]
+}
+BRAINSPARK_META-->

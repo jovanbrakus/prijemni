@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Izračunavanje vrednosti izraza sa stepenima i korenima</title>
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Vrednost izraza (32)^{-2} * (1/2)^{-11} + (1/(1+sqrt(5)) + 1/(1-sqrt(5)))^{-1} + (0,5 : 1,25)^{-1}
+
+SOLUTION:
+
+The expression has three terms. I'll compute each separately.
+
+PART 1: (32)^{-2} * (1/2)^{-11}
+- 32 = 2^5, so (32)^{-2} = (2^5)^{-2} = 2^{-10}
+- (1/2)^{-11} = 2^{11}
+- Product: 2^{-10} * 2^{11} = 2^{(-10+11)} = 2^1 = 2
+
+PART 2: (1/(1+sqrt(5)) + 1/(1-sqrt(5)))^{-1}
+- Common denominator: (1+sqrt(5))(1-sqrt(5)) = 1 - 5 = -4
+- Numerator of sum: (1-sqrt(5)) + (1+sqrt(5)) = 2
+- Sum = 2/(-4) = -1/2
+- Inverse: (-1/2)^{-1} = -2
+
+PART 3: (0,5 : 1,25)^{-1}
+- 0,5 / 1,25 = (1/2) / (5/4) = (1/2) * (4/5) = 4/10 = 2/5
+- Inverse: (2/5)^{-1} = 5/2
+
+TOTAL: 2 + (-2) + 5/2 = 0 + 5/2 = 5/2
+
+ANSWER: (A) 5/2
+
+VERIFICATION:
+- Part 1: 2^{-10} * 2^{11} = 2^1 = 2. Check: 2^{10} = 1024, 2^{11} = 2048, 2048/1024 = 2. Correct.
+- Part 2: The two fractions combine to -1/2, inverse is -2. Check: 1/(1+sqrt(5)) + 1/(1-sqrt(5)) = (1-sqrt(5)+1+sqrt(5))/((1)^2-(sqrt(5))^2) = 2/(-4) = -1/2. Correct.
+- Part 3: 0.5/1.25 = 0.4 = 2/5, inverse is 5/2. Check: 0.4 * 2.5 = 1. Correct.
+- Total: 2 - 2 + 5/2 = 5/2 = 2,5. This matches option (A).
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.subtitle {
+  color: #94a3b8;
+  text-align: center;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.35rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.12);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: default;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.plan-card {
+  border-left: 4px solid #a78bfa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #a78bfa;
+  padding: 8px 0;
+  user-select: none;
+}
+
+.theory-card ul {
+  list-style: none;
+  padding: 12px 0;
+}
+
+.theory-card li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #e2e8f0;
+}
+
+.theory-card li:last-child {
+  border-bottom: none;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74,222,128,0.04);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 20px 0;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.checkpoint .answer {
+  padding-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(96,165,250,0.25);
+  text-align: center;
+  padding: 28px;
+}
+
+.insight-card .big-formula {
+  font-size: 1.4rem;
+  margin: 16px 0;
+  color: #4ade80;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(74,222,128,0.04));
+  text-align: center;
+  padding: 28px;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+  justify-content: center;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 800;
+  margin: 16px 0;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.option-card {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: 2px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.option-card.correct {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  color: #4ade80;
+  box-shadow: 0 0 20px rgba(74,222,128,0.15);
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+  text-align: left;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #cbd5e1;
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-label {
+  color: #e09468;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #f472b6;
+  font-weight: 600;
+  user-select: none;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { padding: 12px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 70px; padding: 10px 12px; }
+  .final-answer-value { font-size: 1.4rem; }
+  .options-row { gap: 8px; }
+  .option-card { padding: 8px 14px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Izračunavanje vrednosti složenog izraza</h1>
+  <p class="subtitle">Algebra &mdash; stepeni, racionalizacija, recipročne vrednosti i decimalni razlomci</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>
+      Vrednost izraza:
+    </p>
+    <div class="math-block">
+      \[ (32)^{-2} \cdot \left(\frac{1}{2}\right)^{-11} + \left(\frac{1}{1+\sqrt{5}} + \frac{1}{1-\sqrt{5}}\right)^{-1} + (0{,}5 : 1{,}25)^{-1} \]
+    </div>
+    <p>je:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( \dfrac{5}{2} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( 1{,}5 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( \dfrac{11}{2} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( \dfrac{1}{2} \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( -\dfrac{5}{2} \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Izraz se sastoji od tri sabirka. Svaki ćemo izračunati pojedinačno koristeći pravila stepenovanja, racionalizaciju imenilaca i operacije sa razlomcima, a zatim ćemo ih sabrati.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <ul>
+        <li>
+          <strong>Pravilo za negativan eksponent:</strong>
+          \[ a^{-n} = \frac{1}{a^n}, \quad \left(\frac{1}{a}\right)^{-n} = a^n \]
+        </li>
+        <li>
+          <strong>Množenje stepeni sa istom osnovom:</strong>
+          \[ a^m \cdot a^n = a^{m+n} \]
+        </li>
+        <li>
+          <strong>Razlika kvadrata:</strong>
+          \[ (a+b)(a-b) = a^2 - b^2 \]
+        </li>
+        <li>
+          <strong>Recipročna vrednost:</strong>
+          \[ \left(\frac{a}{b}\right)^{-1} = \frac{b}{a} \]
+        </li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <p style="color:#94a3b8; margin-bottom: 14px;">
+      Dijagram prikazuje strukturu izraza &mdash; tri sabirka koji se zasebno računaju, a zatim sabiraju u konačan rezultat.
+    </p>
+    <canvas id="mainCanvas" width="700" height="420"></canvas>
+    <p class="canvas-hint">Tri dela izraza i njihov zbir</p>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <!-- Step 1 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Prepisujemo izraz i identifikujemo tri sabirka</h3>
+        <p>
+          Ceo izraz ima tri dela koja ćemo označiti sa \( S_1 \), \( S_2 \) i \( S_3 \):
+        </p>
+        <div class="math-block">
+          \[ \underbrace{(32)^{-2} \cdot \left(\frac{1}{2}\right)^{-11}}_{S_1} + \underbrace{\left(\frac{1}{1+\sqrt{5}} + \frac{1}{1-\sqrt{5}}\right)^{-1}}_{S_2} + \underbrace{(0{,}5 : 1{,}25)^{-1}}_{S_3} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Računamo \( S_1 \): zapisujemo bazu kao stepen dvojke</h3>
+        <p>
+          Broj \( 32 \) je stepen dvojke:
+        </p>
+        <div class="math-block">
+          \[ 32 = 2^5 \]
+        </div>
+        <p>
+          Zato je:
+        </p>
+        <div class="math-block">
+          \[ (32)^{-2} = (2^5)^{-2} = 2^{5 \cdot (-2)} = 2^{-10} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Računamo \( S_1 \): primenjujemo pravilo za negativan eksponent</h3>
+        <p>
+          Za drugi faktor koristimo pravilo \( \left(\frac{1}{a}\right)^{-n} = a^n \):
+        </p>
+        <div class="math-block">
+          \[ \left(\frac{1}{2}\right)^{-11} = 2^{11} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Računamo \( S_1 \): množimo stepene sa istom osnovom</h3>
+        <p>
+          Sabiramo eksponente:
+        </p>
+        <div class="math-block">
+          \[ S_1 = 2^{-10} \cdot 2^{11} = 2^{-10+11} = 2^1 = 2 \]
+        </div>
+        <p class="note">Ključ: sabiranje eksponenata pri množenju stepena iste osnove.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \( 2^{-10} \cdot 2^{11} \)?</summary>
+      <div class="answer">
+        \( 2^{-10} \cdot 2^{11} = 2^{-10+11} = 2^1 = 2 \). Možemo i drugačije: \( \frac{2^{11}}{2^{10}} = \frac{2048}{1024} = 2 \).
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Računamo \( S_2 \): sabiramo razlomke u zagradi</h3>
+        <p>
+          Tražimo zajednički imenilac za razlomke \( \frac{1}{1+\sqrt{5}} \) i \( \frac{1}{1-\sqrt{5}} \).
+          Zajednički imenilac je proizvod \( (1+\sqrt{5})(1-\sqrt{5}) \):
+        </p>
+        <div class="math-block">
+          \[ (1+\sqrt{5})(1-\sqrt{5}) = 1^2 - (\sqrt{5})^2 = 1 - 5 = -4 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Računamo \( S_2 \): formiramo brojilac</h3>
+        <p>
+          Sabiranje razlomaka sa zajedničkim imeniocem:
+        </p>
+        <div class="math-block">
+          \[ \frac{1}{1+\sqrt{5}} + \frac{1}{1-\sqrt{5}} = \frac{(1-\sqrt{5}) + (1+\sqrt{5})}{(1+\sqrt{5})(1-\sqrt{5})} \]
+        </div>
+        <p>
+          Članovi sa \( \sqrt{5} \) se poništavaju:
+        </p>
+        <div class="math-block">
+          \[ = \frac{1-\sqrt{5}+1+\sqrt{5}}{-4} = \frac{2}{-4} = -\frac{1}{2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Računamo \( S_2 \): primenjujemo recipročnu vrednost</h3>
+        <p>
+          Sada uzimamo recipročnu vrednost (eksponent \( -1 \)):
+        </p>
+        <div class="math-block">
+          \[ S_2 = \left(-\frac{1}{2}\right)^{-1} = \frac{1}{-\frac{1}{2}} = -2 \]
+        </div>
+        <p class="note">Recipročna vrednost razlomka \( -\frac{1}{2} \) je \( -2 \), jer \( \left(-\frac{1}{2}\right) \cdot (-2) = 1 \).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \( S_1 + S_2 \)?</summary>
+      <div class="answer">
+        \( S_1 + S_2 = 2 + (-2) = 0 \). Prva dva sabirka se poništavaju!
+      </div>
+    </details>
+
+    <!-- Step 8 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3>Računamo \( S_3 \): delimo decimalne brojeve</h3>
+        <p>
+          Dvotačka \( : \) označava deljenje. Pretvaramo decimalne brojeve u razlomke:
+        </p>
+        <div class="math-block">
+          \[ 0{,}5 = \frac{1}{2}, \quad 1{,}25 = \frac{5}{4} \]
+        </div>
+        <p>
+          Delimo razlomke (množimo prvim sa recipročnom vrednošću drugog):
+        </p>
+        <div class="math-block">
+          \[ 0{,}5 : 1{,}25 = \frac{1}{2} \div \frac{5}{4} = \frac{1}{2} \cdot \frac{4}{5} = \frac{4}{10} = \frac{2}{5} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 9 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">9</div>
+      <div class="step-content">
+        <h3>Računamo \( S_3 \): primenjujemo recipročnu vrednost</h3>
+        <p>
+          Uzimamo recipročnu vrednost (eksponent \( -1 \)):
+        </p>
+        <div class="math-block">
+          \[ S_3 = \left(\frac{2}{5}\right)^{-1} = \frac{5}{2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri se: Koliko je \( \frac{2}{5} \cdot \frac{5}{2} \)?</summary>
+      <div class="answer">
+        \( \frac{2}{5} \cdot \frac{5}{2} = \frac{10}{10} = 1 \). To potvrđuje da je \( \frac{5}{2} \) zaista recipročna vrednost od \( \frac{2}{5} \).
+      </div>
+    </details>
+
+    <!-- Step 10 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">10</div>
+      <div class="step-content">
+        <h3>Sabiramo sve tri vrednosti</h3>
+        <p>
+          Konačno, sabiramo rezultate sva tri sabirka:
+        </p>
+        <div class="math-block">
+          \[ S_1 + S_2 + S_3 = 2 + (-2) + \frac{5}{2} \]
+        </div>
+        <p>
+          Prva dva se poništavaju:
+        </p>
+        <div class="math-block">
+          \[ = 0 + \frac{5}{2} = \frac{5}{2} \]
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2 style="justify-content: center;">Ključno zapažanje</h2>
+    <p>
+      Prva dva sabirka se savršeno poništavaju: \( S_1 = 2 \) i \( S_2 = -2 \) daju zbir nula. Zato ceo izraz zavisi samo od trećeg sabirka \( S_3 = \frac{5}{2} \). Ovo je elegantna osobina ovog zadatka!
+    </p>
+    <div class="big-formula">
+      \[ 2 + (-2) + \frac{5}{2} = \frac{5}{2} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">
+      \( \dfrac{5}{2} = 2{,}5 \)
+    </div>
+    <div class="options-row">
+      <div class="option-card correct">(A) \( \dfrac{5}{2} \)</div>
+      <div class="option-card">(B) \( 1{,}5 \)</div>
+      <div class="option-card">(C) \( \dfrac{11}{2} \)</div>
+      <div class="option-card">(D) \( \dfrac{1}{2} \)</div>
+      <div class="option-card">(E) \( -\dfrac{5}{2} \)</div>
+    </div>
+    <p class="verification-note">
+      <strong>Verifikacija:</strong>
+      Prvi sabirak: \( 2^{-10} \cdot 2^{11} = 2 \). Drugi sabirak: recipročna vrednost od \( -\frac{1}{2} \) je \( -2 \). Treći sabirak: recipročna vrednost od \( \frac{2}{5} \) je \( \frac{5}{2} \). Ukupno: \( 2 - 2 + \frac{5}{2} = \frac{5}{2} \). Tačan odgovor je <strong>(A)</strong>.
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Česte greške</h2>
+    <ul class="pitfall-list">
+      <li>
+        <span class="pitfall-label">Greška 1:</span>
+        Pogrešno primenjivanje pravila za negativan eksponent. Na primer, \( \left(\frac{1}{2}\right)^{-11} \neq \frac{1}{2^{11}} \). Negativan eksponent znači recipročnu vrednost, pa je \( \left(\frac{1}{2}\right)^{-11} = 2^{11} \).
+      </li>
+      <li>
+        <span class="pitfall-label">Greška 2:</span>
+        Zaboravljanje znaka pri računanju \( S_2 \). Imenilac \( (1+\sqrt{5})(1-\sqrt{5}) = -4 \) je <em>negativan</em>, pa je zbir razlomaka \( -\frac{1}{2} \), a ne \( \frac{1}{2} \). Ovo menja recipročnu vrednost iz \( 2 \) u \( -2 \), što suštinski utiče na konačan rezultat.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Izračunajte vrednost izraza: \( (27)^{-2} \cdot \left(\frac{1}{3}\right)^{-7} + \left(\frac{1}{1+\sqrt{3}} + \frac{1}{1-\sqrt{3}}\right)^{-1} \)
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="padding-top: 10px; color: #cbd5e1;">
+        Primenite istu strategiju: \( 27 = 3^3 \), pa je \( (27)^{-2} = 3^{-6} \) i \( \left(\frac{1}{3}\right)^{-7} = 3^7 \). Za drugi sabirak, koristite razliku kvadrata u imeniocu: \( (1+\sqrt{3})(1-\sqrt{3}) = 1-3 = -2 \). Rezultat je \( 3 + (-1) = 2 \).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click interactivity
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+
+  // Main canvas — visualization of the three parts of the expression
+  var canvas = document.getElementById('mainCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  var dpr = window.devicePixelRatio || 1;
+  var W = 700, H = 420;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function drawArrow(fromX, fromY, toX, toY, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY - 8);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - 5, toY - 10);
+    ctx.lineTo(toX + 5, toY - 10);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Clear
+  ctx.fillStyle = '#0c1222';
+  ctx.fillRect(0, 0, W, H);
+
+  // Title
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Struktura izraza: tri sabirka', W / 2, 30);
+
+  // Box dimensions
+  var boxW = 185;
+  var boxH = 100;
+  var topY = 50;
+  var gap = 20;
+  var totalWidth = 3 * boxW + 2 * gap;
+  var startX = (W - totalWidth) / 2;
+
+  // Colors for each part
+  var colors = ['#60a5fa', '#a78bfa', '#f472b6'];
+  var bgColors = ['rgba(96,165,250,0.08)', 'rgba(167,139,250,0.08)', 'rgba(244,114,182,0.08)'];
+  var labels = ['S\u2081', 'S\u2082', 'S\u2083'];
+  var expressions = [
+    ['(32)\u207B\u00B2 \u00B7 (\u00BD)\u207B\u00B9\u00B9', '= 2\u207B\u00B9\u2070 \u00B7 2\u00B9\u00B9', '= 2'],
+    ['(1/(1+\u221A5)', '+ 1/(1\u2212\u221A5))\u207B\u00B9', '= (\u22121/2)\u207B\u00B9 = \u22122'],
+    ['(0,5 : 1,25)\u207B\u00B9', '= (2/5)\u207B\u00B9', '= 5/2']
+  ];
+  var results = ['2', '\u22122', '5/2'];
+
+  // Draw the three boxes
+  for (var i = 0; i < 3; i++) {
+    var bx = startX + i * (boxW + gap);
+    var by = topY;
+
+    // Box
+    ctx.fillStyle = bgColors[i];
+    roundRect(bx, by, boxW, boxH, 10);
+    ctx.fill();
+    ctx.strokeStyle = colors[i];
+    ctx.lineWidth = 2;
+    roundRect(bx, by, boxW, boxH, 10);
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = colors[i];
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(labels[i], bx + boxW / 2, by + 24);
+
+    // Expression lines
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    for (var j = 0; j < expressions[i].length; j++) {
+      ctx.fillText(expressions[i][j], bx + boxW / 2, by + 44 + j * 16);
+    }
+  }
+
+  // Result boxes below each
+  var resY = topY + boxH + 50;
+  var resH = 44;
+  for (var i = 0; i < 3; i++) {
+    var bx = startX + i * (boxW + gap);
+
+    // Arrow
+    drawArrow(bx + boxW / 2, topY + boxH + 5, bx + boxW / 2, resY - 2, colors[i]);
+
+    // Result box
+    ctx.fillStyle = bgColors[i];
+    roundRect(bx + 30, resY, boxW - 60, resH, 8);
+    ctx.fill();
+    ctx.strokeStyle = colors[i];
+    ctx.lineWidth = 2;
+    roundRect(bx + 30, resY, boxW - 60, resH, 8);
+    ctx.stroke();
+
+    ctx.fillStyle = colors[i];
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(results[i], bx + boxW / 2, resY + 29);
+  }
+
+  // Plus signs between result boxes
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  for (var i = 0; i < 2; i++) {
+    var bx1 = startX + i * (boxW + gap) + boxW;
+    var bx2 = startX + (i + 1) * (boxW + gap);
+    ctx.fillText('+', (bx1 + bx2) / 2, resY + 30);
+  }
+
+  // Arrow down to sum
+  var sumArrowY = resY + resH + 10;
+  var sumBoxY = resY + resH + 55;
+  drawArrow(W / 2, sumArrowY, W / 2, sumBoxY - 2, '#4ade80');
+
+  // Label on arrow
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('2 + (\u22122) + 5/2 = 0 + 5/2', W / 2, sumArrowY + 22);
+
+  // Sum result box
+  var sumBoxW = 200;
+  var sumBoxH = 54;
+  ctx.fillStyle = 'rgba(74,222,128,0.08)';
+  roundRect(W / 2 - sumBoxW / 2, sumBoxY, sumBoxW, sumBoxH, 12);
+  ctx.fill();
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 3;
+  roundRect(W / 2 - sumBoxW / 2, sumBoxY, sumBoxW, sumBoxH, 12);
+  ctx.stroke();
+
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('5/2 = 2,5', W / 2, sumBoxY + 35);
+
+  // Glow effect
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  var grd = ctx.createRadialGradient(W / 2, sumBoxY + sumBoxH / 2, 10, W / 2, sumBoxY + sumBoxH / 2, 120);
+  grd.addColorStop(0, '#4ade80');
+  grd.addColorStop(1, 'transparent');
+  ctx.fillStyle = grd;
+  ctx.fillRect(W / 2 - 120, sumBoxY - 30, 240, sumBoxH + 60);
+  ctx.restore();
+
+  // Bottom note
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '13px Segoe UI, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Odgovor: (A) 5/2', W / 2, sumBoxY + sumBoxH + 28);
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Izračunavanje vrednosti složenog izraza sa stepenima i korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["stepeni", "negativan eksponent", "racionalizacija", "recipročna vrednost", "decimalni razlomci", "razlika kvadrata"]
+}
+BRAINSPARK_META-->

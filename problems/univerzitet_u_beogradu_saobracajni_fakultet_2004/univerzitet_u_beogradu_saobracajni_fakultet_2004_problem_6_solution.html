@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logaritamski izraz sa promenom osnove</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Ako je log_3(7) = a i log_7(2) = b, onda je log_7(72) = ?
+
+Strategy:
+1. Rastavimo 72 na proste faktore: 72 = 8 * 9 = 2^3 * 3^2
+2. log_7(72) = log_7(2^3 * 3^2) = log_7(2^3) + log_7(3^2) = 3*log_7(2) + 2*log_7(3)
+3. log_7(2) = b (dato)
+4. log_7(3) = ? Koristimo formulu za promenu osnove:
+   log_7(3) = 1 / log_3(7) = 1/a
+5. Dakle: log_7(72) = 3b + 2*(1/a) = 3b + 2/a = (3ab + 2)/a
+
+Proverimo opcije:
+(A) 2a + 3b — NE
+(B) 3a + 2b — NE
+(C) (b + 3a)/a — NE (to bi bilo b/a + 3, ne odgovara)
+(D) (2 + 3ab)/a — DA! To je (2 + 3ab)/a = 2/a + 3b = 3b + 2/a ✓
+(E) b/(2ba + 3) — NE
+
+Tačan odgovor: (D)
+
+Verifikacija sa konkretnim brojevima:
+log_3(7) = a ≈ 1,7712
+log_7(2) = b ≈ 0,3562
+log_7(72) = ln(72)/ln(7) ≈ 4,2767/1,9459 ≈ 2,1986
+
+Provera (D): (2 + 3ab)/a = (2 + 3*1,7712*0,3562)/1,7712 = (2 + 1,8920)/1,7712 = 3,8920/1,7712 ≈ 2,1978 ≈ 2,1986 ✓
+
+Common mistakes:
+- Ne koristiti pravilno formulu za promenu osnove logaritma
+- Mešanje redosleda u formuli log_a(b) = 1/log_b(a)
+- Pogrešno rastavljanje broja 72 na proste činioce
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Logaritamski izraz sa promenom osnove</h1>
+  <p class="subtitle">Logaritmi, promena osnove, rastavljanje na proste činioce</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Ako je <span class="highlight-val">\(\log_3 7 = a\)</span> i <span class="highlight-val">\(\log_7 2 = b\)</span>, onda je \(\log_7 72\):
+    </div>
+    <div class="given-grid" style="margin-bottom: 16px;">
+      <div class="given-item">
+        <div class="label">Dato</div>
+        <div class="value">\(\log_3 7 = a\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Dato</div>
+        <div class="value">\(\log_7 2 = b\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Traži se</div>
+        <div class="value">\(\log_7 72 = ?\)</div>
+      </div>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(2a + 3b\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(3a + 2b\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{b + 3a}{a}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{2 + 3ab}{a}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{b}{2ba + 3}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Rastavićemo broj 72 na proste činioce (\(72 = 2^3 \cdot 3^2\)), primeniti svojstva logaritama (logaritam proizvoda i logaritam stepena), a zatim izraziti sve logaritme preko datih veličina \(a\) i \(b\) koristeći formulu za promenu osnove.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Svojstva logaritama</summary>
+      <ul style="margin-top: 10px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 8px;"><strong>Logaritam proizvoda:</strong> \(\log_a(xy) = \log_a x + \log_a y\)</li>
+        <li style="margin-bottom: 8px;"><strong>Logaritam stepena:</strong> \(\log_a(x^n) = n \cdot \log_a x\)</li>
+        <li style="margin-bottom: 8px;"><strong>Promena osnove:</strong> \(\log_a b = \dfrac{1}{\log_b a}\)</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Rastavljanje broja na proste činioce</summary>
+      <div class="math-box">
+        \[ 72 = 8 \cdot 9 = 2^3 \cdot 3^2 \]
+      </div>
+      <p style="color: #cbd5e1;">Broj 72 se može prikazati kao proizvod stepena prostih brojeva 2 i 3, što je idealno jer nam je dat \(\log_7 2 = b\), a \(\log_7 3\) možemo izraziti preko \(a\).</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz rastavljanja</div>
+    <canvas id="logCanvas" width="700" height="420"></canvas>
+    <p class="drag-hint">Dijagram prikazuje kako se log&#8327;72 rastavlja na poznate veličine</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Rastavljamo broj 72 na proste činioce</div>
+      <p class="step-explanation">
+        Prvo rastavimo broj 72 na proste činioce, jer nam to omogućava da koristimo svojstva logaritama:
+      </p>
+      <div class="math-box">
+        \[ 72 = 8 \cdot 9 = 2^3 \cdot 3^2 \]
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Primenjujemo logaritam proizvoda</div>
+      <p class="step-explanation">
+        Koristimo pravilo da je logaritam proizvoda jednak zbiru logaritama:
+      </p>
+      <div class="math-box">
+        \[ \log_7 72 = \log_7(2^3 \cdot 3^2) = \log_7 2^3 + \log_7 3^2 \]
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Primenjujemo logaritam stepena</div>
+      <p class="step-explanation">
+        Koristimo pravilo da se stepen ispred logaritma spušta kao množilac:
+      </p>
+      <div class="math-box">
+        \[ \log_7 2^3 + \log_7 3^2 = 3\log_7 2 + 2\log_7 3 \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Koliko je \(\log_7 2\) u zadatku?</summary>
+      <p>Direktno nam je dato: \(\log_7 2 = b\). Dakle, \(3\log_7 2 = 3b\).</p>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Uvrštavamo \(\log_7 2 = b\)</div>
+      <p class="step-explanation">
+        Vrednost \(\log_7 2 = b\) je direktno data, pa je zamenjujemo:
+      </p>
+      <div class="math-box">
+        \[ \log_7 72 = 3b + 2\log_7 3 \]
+      </div>
+      <p class="step-explanation">
+        Ostaje nam da izrazimo \(\log_7 3\) preko poznatih veličina \(a\) i \(b\).
+      </p>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Izražavamo \(\log_7 3\) pomoću promene osnove</div>
+      <p class="step-explanation">
+        Dato nam je \(\log_3 7 = a\). Koristimo formulu za promenu osnove koja kaže da je:
+      </p>
+      <div class="math-box">
+        \[ \log_a b = \frac{1}{\log_b a} \]
+      </div>
+      <p class="step-explanation">
+        Primenjujemo ovo na naše veličine:
+      </p>
+      <div class="math-box">
+        \[ \log_7 3 = \frac{1}{\log_3 7} = \frac{1}{a} \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Zašto važi \(\log_7 3 = \frac{1}{\log_3 7}\)?</summary>
+      <p>Ovo sledi iz formule za promenu osnove: \(\log_a b \cdot \log_b a = 1\). Ako pomnožimo \(\log_7 3 \cdot \log_3 7\), dobijamo \(\frac{\ln 3}{\ln 7} \cdot \frac{\ln 7}{\ln 3} = 1\), pa je \(\log_7 3 = \frac{1}{\log_3 7} = \frac{1}{a}\).</p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Uvrštavamo \(\log_7 3 = \frac{1}{a}\)</div>
+      <p class="step-explanation">
+        Sada zamenjujemo u izraz iz koraka 4:
+      </p>
+      <div class="math-box">
+        \[ \log_7 72 = 3b + 2 \cdot \frac{1}{a} = 3b + \frac{2}{a} \]
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">7</span> Svodimo na zajednički imenilac</div>
+      <p class="step-explanation">
+        Sabiramo razlomke svođenjem na zajednički imenilac \(a\):
+      </p>
+      <div class="math-box">
+        \[ \log_7 72 = \frac{3ab}{a} + \frac{2}{a} = \frac{3ab + 2}{a} = \frac{2 + 3ab}{a} \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Da li se \(3b + \frac{2}{a}\) zaista svodi na \(\frac{2 + 3ab}{a}\)?</summary>
+      <p>Da! Član \(3b\) zapišemo kao \(\frac{3b \cdot a}{a} = \frac{3ab}{a}\). Sada imamo: \(\frac{3ab}{a} + \frac{2}{a} = \frac{3ab + 2}{a} = \frac{2 + 3ab}{a}\). Sabiranje je komutativno, pa je redosled u brojiocu nebitan.</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Ceo zadatak se svodi na dve ideje: <strong>rastavljanje argumenta na proste činioce</strong> (\(72 = 2^3 \cdot 3^2\)) i <strong>promenu osnove logaritma</strong> (\(\log_7 3 = 1/a\)). Kad god u zadatku imate logaritme sa različitim osnovama i treba da ih povežete, tražite vezu \(\log_a b = 1/\log_b a\).
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.1rem;">
+      \[ \log_7 72 = 3\underbrace{\log_7 2}_{b} + 2\underbrace{\log_7 3}_{1/a} = \frac{2 + 3ab}{a} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(\log_7 72 = \dfrac{2 + 3ab}{a}\)</div>
+    <div class="answer-options">
+      <span class="opt">(A) \(2a + 3b\)</span>
+      <span class="opt">(B) \(3a + 2b\)</span>
+      <span class="opt">(C) \(\frac{b + 3a}{a}\)</span>
+      <span class="opt correct">(D) \(\frac{2 + 3ab}{a}\)</span>
+      <span class="opt">(E) \(\frac{b}{2ba + 3}\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Za \(a = \log_3 7 \approx 1{,}771\) i \(b = \log_7 2 \approx 0{,}356\), izračunamo \(\frac{2 + 3 \cdot 1{,}771 \cdot 0{,}356}{1{,}771} \approx \frac{3{,}891}{1{,}771} \approx 2{,}198\). Direktno: \(\log_7 72 = \frac{\ln 72}{\ln 7} \approx \frac{4{,}277}{1{,}946} \approx 2{,}198\). Vrednosti se poklapaju. &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Mešanje smera formule za promenu osnove</div>
+      <p>Iz \(\log_3 7 = a\) sledi \(\log_7 3 = \frac{1}{a}\), a ne \(\log_7 3 = a\). Česta greška je da se \(a\) direktno koristi umesto recipročne vrednosti.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešno rastavljanje broja 72</div>
+      <p>Broj 72 se rastavlja kao \(2^3 \cdot 3^2\), a ne npr. \(2^2 \cdot 3^3\) (to bi bilo \(4 \cdot 27 = 108\)). Proverite: \(8 \cdot 9 = 72\). &#10004;</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Koristeći iste veličine \(a = \log_3 7\) i \(b = \log_7 2\), izrazite \(\log_{14} 63\) preko \(a\) i \(b\).
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Rastavite: \(14 = 2 \cdot 7\) i \(63 = 7 \cdot 9 = 7 \cdot 3^2\). Koristite formulu \(\log_{14} 63 = \frac{\log_7 63}{\log_7 14}\) i primenite ista svojstva kao u glavnom zadatku.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('logCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 420 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 420;
+    const isMobile = W < 600;
+
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const fontSize = isMobile ? 13 : 15;
+    const largeFontSize = isMobile ? 16 : 20;
+    const smallFontSize = isMobile ? 11 : 13;
+
+    // Title
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold ' + (isMobile ? 16 : 20) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Rastavljanje log\u2087 72', W / 2, 30);
+
+    // Main expression box at top
+    const mainBoxY = 60;
+    const mainBoxW = isMobile ? W - 40 : 360;
+    const mainBoxH = 50;
+    const mainBoxX = (W - mainBoxW) / 2;
+
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.12)';
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    roundRect(ctx, mainBoxX, mainBoxY, mainBoxW, mainBoxH, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold ' + largeFontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('log\u2087 72 = log\u2087 (2\u00B3 \u00B7 3\u00B2)', W / 2, mainBoxY + mainBoxH / 2);
+
+    // Arrow down
+    drawArrow(ctx, W / 2, mainBoxY + mainBoxH + 5, W / 2, mainBoxY + mainBoxH + 30, '#94a3b8');
+    ctx.font = smallFontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('logaritam proizvoda', W / 2, mainBoxY + mainBoxH + 20);
+
+    // Split into two branches
+    const splitY = mainBoxY + mainBoxH + 45;
+    const branchW = isMobile ? (W - 60) / 2 : 180;
+    const branchH = 45;
+    const gap = isMobile ? 20 : 40;
+    const leftX = W / 2 - gap / 2 - branchW;
+    const rightX = W / 2 + gap / 2;
+
+    // Left branch: 3 log_7 2
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.12)';
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    roundRect(ctx, leftX, splitY, branchW, branchH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('3 \u00B7 log\u2087 2', leftX + branchW / 2, splitY + branchH / 2);
+
+    // Right branch: 2 log_7 3
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.12)';
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    roundRect(ctx, rightX, splitY, branchW, branchH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('2 \u00B7 log\u2087 3', rightX + branchW / 2, splitY + branchH / 2);
+
+    // Connecting lines from main to branches
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - 20, mainBoxY + mainBoxH + 35);
+    ctx.lineTo(leftX + branchW / 2, splitY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(W / 2 + 20, mainBoxY + mainBoxH + 35);
+    ctx.lineTo(rightX + branchW / 2, splitY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrows down from branches
+    const arrowEndY = splitY + branchH + 35;
+    drawArrow(ctx, leftX + branchW / 2, splitY + branchH + 5, leftX + branchW / 2, arrowEndY, '#a78bfa');
+    drawArrow(ctx, rightX + branchW / 2, splitY + branchH + 5, rightX + branchW / 2, arrowEndY, '#f472b6');
+
+    // Labels on arrows
+    ctx.font = smallFontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('dato: log\u2087 2 = b', leftX + branchW / 2, splitY + branchH + 20);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('log\u2087 3 = 1/a', rightX + branchW / 2, splitY + branchH + 20);
+
+    // Substitution boxes
+    const subY = arrowEndY + 10;
+    const subH = 40;
+
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.15)';
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    roundRect(ctx, leftX, subY, branchW, subH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('3b', leftX + branchW / 2, subY + subH / 2);
+
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.15)';
+    ctx.strokeStyle = '#f472b6';
+    roundRect(ctx, rightX, subY, branchW, subH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold ' + fontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('2/a', rightX + branchW / 2, subY + subH / 2);
+
+    // Plus sign between boxes
+    ctx.font = 'bold ' + (isMobile ? 20 : 24) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('+', W / 2, subY + subH / 2);
+
+    // Arrows converging down to final result
+    const finalY = subY + subH + 45;
+    const finalBoxW = isMobile ? W - 40 : 300;
+    const finalBoxH = 55;
+    const finalBoxX = (W - finalBoxW) / 2;
+
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(leftX + branchW / 2, subY + subH);
+    ctx.lineTo(W / 2, finalY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(rightX + branchW / 2, subY + subH);
+    ctx.lineTo(W / 2, finalY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label
+    ctx.font = smallFontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('zajednički imenilac', W / 2, subY + subH + 20);
+
+    // Final result box
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.12)';
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2.5;
+    roundRect(ctx, finalBoxX, finalY, finalBoxW, finalBoxH, 14);
+    ctx.fill();
+    ctx.stroke();
+
+    // Glow effect
+    ctx.shadowColor = '#34d399';
+    ctx.shadowBlur = 15;
+    ctx.font = 'bold ' + (isMobile ? 18 : 22) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('(2 + 3ab) / a', W / 2, finalY + finalBoxH / 2);
+    ctx.shadowBlur = 0;
+
+    // Info panel - given values
+    const panelW = isMobile ? W - 20 : 200;
+    const panelH = 80;
+    const panelX = isMobile ? 10 : 20;
+    const panelY = H - panelH - 10;
+
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    roundRect(ctx, panelX, panelY, panelW, panelH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.font = 'bold ' + (isMobile ? 12 : 13) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Poznate veličine:', panelX + 12, panelY + 18);
+
+    ctx.font = (isMobile ? 12 : 13) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('log\u2083 7 = a  \u21D2  log\u2087 3 = 1/a', panelX + 12, panelY + 40);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('log\u2087 2 = b', panelX + 12, panelY + 60);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function drawArrow(ctx, x1, y1, x2, y2, color) {
+    const headLen = 8;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(step) {
+    step.addEventListener('click', function() {
+      stepContainers.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Logaritamski izraz sa promenom osnove",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["logaritmi", "promena osnove logaritma", "svojstva logaritama", "rastavljanje na proste činioce"]
+}
+BRAINSPARK_META-->

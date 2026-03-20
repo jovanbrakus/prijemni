@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Procentualno poskupljenje nakon pojeftinjenja</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Roba je pojeftinila za 50%. Da bi imala istu cenu kao pre pojeftinjenja, treba da poskupi za koliko procenata?
+
+Step 1: Let the original price be P.
+After a 50% decrease: new price = P - 0.5*P = 0.5*P
+
+Step 2: We need to find x% increase from 0.5*P to get back to P.
+0.5*P * (1 + x/100) = P
+
+Step 3: Solve for x.
+1 + x/100 = P / (0.5*P) = 2
+x/100 = 1
+x = 100
+
+Step 4: Check against options:
+(A) 50% — WRONG. This would give 0.5P * 1.5 = 0.75P
+(C) 75% — WRONG. This would give 0.5P * 1.75 = 0.875P
+(E) 80% — WRONG. This would give 0.5P * 1.8 = 0.9P
+(G) 100% — CORRECT! 0.5P * 2.0 = P ✓
+(I) 125% — WRONG. This would give 0.5P * 2.25 = 1.125P
+
+Answer: (G) 100%
+
+Key insight: A 50% decrease halves the price. To double back, you need a 100% increase.
+The common trap is thinking 50% decrease requires 50% increase to recover — but percentages
+are calculated on different bases! The decrease is from P, but the increase is from 0.5P.
+
+Common mistakes:
+1. Choosing 50% (option A) — thinking that the same percentage undoes the change.
+   But 50% of the reduced price is only 0.25P, not 0.5P.
+2. Not recognizing that the base changes after the price reduction.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Procentualno poskupljenje nakon pojeftinjenja</h1>
+  <p class="subtitle">Procenti i razlomci &mdash; koliko treba da poskupi roba posle smanjenja cene da bi se vratila na prvobitnu cenu</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Roba je pojeftinila za <span class="highlight-val">\(50\%\)</span>. Da bi imala istu cenu kao pre pojeftinjenja treba da poskupi za:
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(50\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(C)</div>
+        <div class="value">\(75\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(E)</div>
+        <div class="value">\(80\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(G)</div>
+        <div class="value">\(100\%\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(I)</div>
+        <div class="value">\(125\%\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Označićemo početnu cenu sa \(P\), izračunati cenu nakon pojeftinjenja od \(50\%\), a zatim odrediti za koliko procenata ta snižena cena treba da poraste da bi se vratila na \(P\). Ključno je uočiti da se procenat poskupljenja računa u odnosu na <strong>novu (sniženu) cenu</strong>, a ne u odnosu na početnu.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Procentualno smanjenje</summary>
+      <p style="margin-top: 8px;">
+        Ako neka veličina \(P\) opadne za \(p\%\), nova vrednost je:
+      </p>
+      <div class="math-box">
+        \[ P_{\text{nova}} = P \cdot \left(1 - \frac{p}{100}\right) \]
+      </div>
+      <p>Na primer, smanjenje za \(50\%\) znači: \(P_{\text{nova}} = P \cdot 0{,}5\).</p>
+    </details>
+    <details>
+      <summary>Procentualno povećanje</summary>
+      <p style="margin-top: 8px;">
+        Ako neka veličina \(Q\) poraste za \(x\%\), nova vrednost je:
+      </p>
+      <div class="math-box">
+        \[ Q_{\text{nova}} = Q \cdot \left(1 + \frac{x}{100}\right) \]
+      </div>
+      <p>Na primer, povećanje za \(100\%\) znači: \(Q_{\text{nova}} = Q \cdot 2\), tj. vrednost se udvostruči.</p>
+    </details>
+    <details>
+      <summary>Zašto se baza menja?</summary>
+      <p style="margin-top: 8px;">
+        Kad kažemo &bdquo;pojeftinjenje za \(50\%\)&ldquo;, tih \(50\%\) se računa od <strong>početne cene</strong> \(P\). Ali kad kažemo &bdquo;poskupljenje za \(x\%\)&ldquo;, tih \(x\%\) se računa od <strong>nove (snižene) cene</strong>. Pošto je baza različita, isti procenat daje različit iznos.
+      </p>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz: cena pre i posle</div>
+    <canvas id="mainCanvas" width="900" height="480"></canvas>
+    <p class="drag-hint">Pomerajte klizač da vidite efekat različitih procenata poskupljenja</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Označavamo početnu cenu</div>
+      <p class="step-explanation">
+        Neka je početna cena robe \(P\). Konkretan iznos ne znamo, ali to i nije potrebno &mdash; radimo sa procentima.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Računamo cenu nakon pojeftinjenja</div>
+      <p class="step-explanation">
+        Roba je pojeftinila za \(50\%\). To znači da je nova cena jednaka polovini prvobitne:
+      </p>
+      <div class="math-box">
+        \[ P_{\text{nova}} = P - 50\% \cdot P = P - 0{,}5 \cdot P = 0{,}5 \cdot P \]
+      </div>
+      <p class="step-explanation">
+        Dakle, posle pojeftinjenja cena iznosi \(0{,}5P\), tj. <strong>pola početne cene</strong>.
+      </p>
+    </div>
+
+    <details>
+      <summary>Proveri se: Ako je P = 1000 din, kolika je cena posle pojeftinjenja?</summary>
+      <p>Nova cena: \(0{,}5 \cdot 1000 = 500\) dinara. Cena se prepolovila.</p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Postavljamo jednačinu za poskupljenje</div>
+      <p class="step-explanation">
+        Sada treba da nađemo procenat \(x\) za koji cena \(0{,}5P\) treba da poraste da bi ponovo bila jednaka \(P\):
+      </p>
+      <div class="math-box">
+        \[ 0{,}5P \cdot \left(1 + \frac{x}{100}\right) = P \]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Rešavamo jednačinu</div>
+      <p class="step-explanation">
+        Delimo obe strane sa \(0{,}5P\) (što je različito od nule):
+      </p>
+      <div class="math-box">
+        \[ 1 + \frac{x}{100} = \frac{P}{0{,}5P} \]
+      </div>
+      <p class="step-explanation">
+        Skraćujemo \(P\) na desnoj strani:
+      </p>
+      <div class="math-box">
+        \[ 1 + \frac{x}{100} = \frac{1}{0{,}5} = 2 \]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Izražavamo \(x\)</div>
+      <p class="step-explanation">
+        Oduzimamo \(1\) sa obe strane:
+      </p>
+      <div class="math-box">
+        \[ \frac{x}{100} = 2 - 1 = 1 \]
+      </div>
+      <p class="step-explanation">
+        Množimo sa \(100\):
+      </p>
+      <div class="math-box">
+        \[ x = 100 \]
+      </div>
+      <p class="step-explanation">
+        Roba treba da poskupi za <strong>\(100\%\)</strong> da bi se vratila na početnu cenu.
+      </p>
+    </div>
+
+    <details>
+      <summary>Proveri se: Ako je snižena cena 500 din, kolika je cena posle poskupljenja od 100%?</summary>
+      <p>\(500 + 100\% \cdot 500 = 500 + 500 = 1000\) dinara. To je upravo početna cena!</p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Intuitivno objašnjenje</div>
+      <p class="step-explanation">
+        Zašto baš \(100\%\)? Razmislimo ovako:
+      </p>
+      <p class="step-explanation">
+        Pojeftinjenje od \(50\%\) je <strong>prepolovilo</strong> cenu. Da bismo od pola vratili ceo iznos, moramo da <strong>udvostručimo</strong> sniženu cenu. A udvostručiti nešto znači povećati ga za \(100\%\).
+      </p>
+      <div class="math-box">
+        \[ \text{Prepoloviti} \;\longrightarrow\; \text{udvostručiti} \;\longrightarrow\; +100\% \]
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Procentualno smanjenje i procentualno povećanje se ne &bdquo;poništavaju&ldquo; istim brojem, jer se računaju od <strong>različitih baza</strong>! Smanjenje od \(50\%\) se računa od veće cene \(P\), dok se potrebno povećanje računa od manje cene \(0{,}5P\).
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ P \;\xrightarrow{-50\%}\; 0{,}5P \;\xrightarrow{+100\%}\; P \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\( 100\% \)</div>
+    <div class="answer-options">
+      <span class="opt">(A) \(50\%\)</span>
+      <span class="opt">(B) \(75\%\)</span>
+      <span class="opt">(C) \(80\%\)</span>
+      <span class="opt correct">(D) \(100\%\)</span>
+      <span class="opt">(E) \(125\%\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: \(0{,}5P \cdot (1 + 1) = 0{,}5P \cdot 2 = P\). Cena se zaista vraća na početnu vrednost. &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Biranje odgovora 50% (opcija A)</div>
+      <p>Najčešća greška je pomisliti da se isti procenat &bdquo;vraća&ldquo; nazad. Ali \(50\%\) od snižene cene \(0{,}5P\) je samo \(0{,}25P\), pa bi nova cena bila \(0{,}75P\) &mdash; što nije početna cena.</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zaboravljanje da se baza menja</div>
+      <p>Procenat pojeftinjenja se računa od prvobitne cene, ali procenat poskupljenja se računa od nove (niže) cene. Ovo je izvor gotovo svih grešaka u ovakvim zadacima.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Roba je pojeftinila za \(p\%\). Za koliko procenata treba da poskupi da bi se vratila na početnu cenu? Izvedite opštu formulu za proizvoljno \(p\).
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Postavite istu jednačinu kao u zadatku, ali sa \(p\) umesto \(50\). Dobićete:
+      \(\displaystyle x = \frac{100p}{100 - p}\). Proverite: za \(p = 50\), dobijate \(x = \frac{100 \cdot 50}{100 - 50} = \frac{5000}{50} = 100\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let sliderValue = 100; // current increase percentage
+  let draggingSlider = false;
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 480 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 480;
+    const isMobile = W < 600;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const barMaxHeight = H * 0.6;
+    const barWidth = isMobile ? 60 : 90;
+    const barGap = isMobile ? 40 : 80;
+    const barY = H * 0.78;
+
+    // Three bars: Original (P), After decrease (0.5P), After increase (0.5P * (1 + slider/100))
+    const originalHeight = barMaxHeight;
+    const decreasedHeight = barMaxHeight * 0.5;
+    const increasedHeight = decreasedHeight * (1 + sliderValue / 100);
+    const clampedIncreasedHeight = Math.min(increasedHeight, barMaxHeight * 1.15);
+
+    const totalBarsWidth = 3 * barWidth + 2 * barGap;
+    const startX = (W - totalBarsWidth) / 2;
+
+    const bar1X = startX;
+    const bar2X = startX + barWidth + barGap;
+    const bar3X = startX + 2 * (barWidth + barGap);
+
+    // Draw reference dashed line at original price
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bar1X - 20, barY - originalHeight);
+    ctx.lineTo(bar3X + barWidth + 20, barY - originalHeight);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label for reference line
+    ctx.fillStyle = '#64748b';
+    ctx.font = (isMobile ? '10' : '12') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('P (polazna cena)', bar1X - 25, barY - originalHeight);
+
+    // Bar 1: Original price P
+    var grad1 = ctx.createLinearGradient(bar1X, barY - originalHeight, bar1X, barY);
+    grad1.addColorStop(0, '#60a5fa');
+    grad1.addColorStop(1, '#3b82f6');
+    ctx.fillStyle = grad1;
+    ctx.beginPath();
+    ctx.roundRect(bar1X, barY - originalHeight, barWidth, originalHeight, [8, 8, 0, 0]);
+    ctx.fill();
+
+    // Bar 2: After 50% decrease
+    var grad2 = ctx.createLinearGradient(bar2X, barY - decreasedHeight, bar2X, barY);
+    grad2.addColorStop(0, '#a78bfa');
+    grad2.addColorStop(1, '#8b5cf6');
+    ctx.fillStyle = grad2;
+    ctx.beginPath();
+    ctx.roundRect(bar2X, barY - decreasedHeight, barWidth, decreasedHeight, [8, 8, 0, 0]);
+    ctx.fill();
+
+    // Bar 3: After increase by sliderValue%
+    var isCorrect = Math.abs(sliderValue - 100) < 1;
+    var isOver = increasedHeight > originalHeight + 2;
+    var barColor1, barColor2;
+    if (isCorrect) {
+      barColor1 = '#4ade80';
+      barColor2 = '#22c55e';
+    } else if (isOver) {
+      barColor1 = '#f472b6';
+      barColor2 = '#ec4899';
+    } else {
+      barColor1 = '#fbbf24';
+      barColor2 = '#f59e0b';
+    }
+
+    var grad3 = ctx.createLinearGradient(bar3X, barY - clampedIncreasedHeight, bar3X, barY);
+    grad3.addColorStop(0, barColor1);
+    grad3.addColorStop(1, barColor2);
+    ctx.fillStyle = grad3;
+    ctx.beginPath();
+    ctx.roundRect(bar3X, barY - clampedIncreasedHeight, barWidth, clampedIncreasedHeight, [8, 8, 0, 0]);
+    ctx.fill();
+
+    // Glow for correct answer
+    if (isCorrect) {
+      ctx.shadowColor = 'rgba(74, 222, 128, 0.4)';
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = 'rgba(74, 222, 128, 0.1)';
+      ctx.beginPath();
+      ctx.roundRect(bar3X, barY - clampedIncreasedHeight, barWidth, clampedIncreasedHeight, [8, 8, 0, 0]);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Bar labels
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = 'bold ' + (isMobile ? '12' : '14') + 'px Segoe UI, system-ui, sans-serif';
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('P', bar1X + barWidth / 2, barY + 10);
+    ctx.font = (isMobile ? '10' : '12') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Polazna', bar1X + barWidth / 2, barY + (isMobile ? 26 : 30));
+
+    ctx.font = 'bold ' + (isMobile ? '12' : '14') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('0,5P', bar2X + barWidth / 2, barY + 10);
+    ctx.font = (isMobile ? '10' : '12') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Posle -50%', bar2X + barWidth / 2, barY + (isMobile ? 26 : 30));
+
+    ctx.font = 'bold ' + (isMobile ? '12' : '14') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = isCorrect ? '#4ade80' : (isOver ? '#f472b6' : '#fbbf24');
+    var resultVal = (0.5 * (1 + sliderValue / 100));
+    var resultText = resultVal.toFixed(2).replace('.', ',') + 'P';
+    ctx.fillText(resultText, bar3X + barWidth / 2, barY + 10);
+    ctx.font = (isMobile ? '10' : '12') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Posle +' + Math.round(sliderValue) + '%', bar3X + barWidth / 2, barY + (isMobile ? 26 : 30));
+
+    // Value labels on top of bars
+    ctx.textBaseline = 'bottom';
+    ctx.font = 'bold ' + (isMobile ? '11' : '13') + 'px Segoe UI, system-ui, sans-serif';
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('100%', bar1X + barWidth / 2, barY - originalHeight - 6);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('50%', bar2X + barWidth / 2, barY - decreasedHeight - 6);
+
+    ctx.fillStyle = '#e2e8f0';
+    var finalPercent = (50 * (1 + sliderValue / 100)).toFixed(0);
+    ctx.fillText(finalPercent + '%', bar3X + barWidth / 2, barY - clampedIncreasedHeight - 6);
+
+    // Arrow from bar 1 to bar 2 with -50%
+    var arrowY1 = barY - originalHeight * 0.7;
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(bar1X + barWidth + 5, arrowY1);
+    ctx.lineTo(bar2X - 5, arrowY1);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // arrowhead
+    ctx.fillStyle = '#a78bfa';
+    ctx.beginPath();
+    ctx.moveTo(bar2X - 5, arrowY1);
+    ctx.lineTo(bar2X - 13, arrowY1 - 5);
+    ctx.lineTo(bar2X - 13, arrowY1 + 5);
+    ctx.closePath();
+    ctx.fill();
+    // label
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold ' + (isMobile ? '11' : '13') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('-50%', (bar1X + barWidth + bar2X) / 2, arrowY1 - 5);
+
+    // Arrow from bar 2 to bar 3 with +x%
+    var arrowY2 = barY - decreasedHeight * 0.6;
+    ctx.strokeStyle = isCorrect ? '#4ade80' : (isOver ? '#f472b6' : '#fbbf24');
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(bar2X + barWidth + 5, arrowY2);
+    ctx.lineTo(bar3X - 5, arrowY2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // arrowhead
+    ctx.fillStyle = isCorrect ? '#4ade80' : (isOver ? '#f472b6' : '#fbbf24');
+    ctx.beginPath();
+    ctx.moveTo(bar3X - 5, arrowY2);
+    ctx.lineTo(bar3X - 13, arrowY2 - 5);
+    ctx.lineTo(bar3X - 13, arrowY2 + 5);
+    ctx.closePath();
+    ctx.fill();
+    // label
+    ctx.font = 'bold ' + (isMobile ? '11' : '13') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('+' + Math.round(sliderValue) + '%', (bar2X + barWidth + bar3X) / 2, arrowY2 - 5);
+
+    // Status message
+    ctx.font = 'bold ' + (isMobile ? '13' : '16') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    if (isCorrect) {
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText('Cena se vratila na polaznu vrednost!', W / 2, barY + (isMobile ? 48 : 56));
+    } else if (isOver) {
+      ctx.fillStyle = '#f472b6';
+      ctx.fillText('Previše! Cena je veća od polazne.', W / 2, barY + (isMobile ? 48 : 56));
+    } else {
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText('Nedovoljno. Cena je još manja od polazne.', W / 2, barY + (isMobile ? 48 : 56));
+    }
+
+    // Slider
+    var sliderY = H - (isMobile ? 30 : 40);
+    var sliderLeft = W * 0.15;
+    var sliderRight = W * 0.85;
+    var sliderWidth = sliderRight - sliderLeft;
+
+    // Track
+    ctx.fillStyle = '#334155';
+    ctx.beginPath();
+    ctx.roundRect(sliderLeft, sliderY - 4, sliderWidth, 8, 4);
+    ctx.fill();
+
+    // Filled portion
+    var fillFrac = (sliderValue - 0) / 200;
+    var filledGrad = ctx.createLinearGradient(sliderLeft, 0, sliderLeft + sliderWidth * fillFrac, 0);
+    filledGrad.addColorStop(0, '#60a5fa');
+    filledGrad.addColorStop(1, '#a78bfa');
+    ctx.fillStyle = filledGrad;
+    ctx.beginPath();
+    ctx.roundRect(sliderLeft, sliderY - 4, sliderWidth * fillFrac, 8, 4);
+    ctx.fill();
+
+    // Thumb
+    var thumbX = sliderLeft + sliderWidth * fillFrac;
+    ctx.shadowColor = 'rgba(96, 165, 250, 0.5)';
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.beginPath();
+    ctx.arc(thumbX, sliderY, isMobile ? 10 : 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Slider label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (isMobile ? '11' : '13') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('0%', sliderLeft - (isMobile ? 24 : 30), sliderY);
+    ctx.textAlign = 'right';
+    ctx.fillText('200%', sliderRight + (isMobile ? 30 : 36), sliderY);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold ' + (isMobile ? '12' : '14') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(Math.round(sliderValue) + '%', thumbX, sliderY - (isMobile ? 14 : 18));
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (isMobile ? '12' : '14') + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Podesite procenat poskupljenja i posmatrajte efekat', W / 2, 10);
+  }
+
+  function getSliderPos(clientX) {
+    var rect = canvas.getBoundingClientRect();
+    var W = rect.width;
+    var sliderLeft = W * 0.15;
+    var sliderRight = W * 0.85;
+    var sliderWidth = sliderRight - sliderLeft;
+    var x = clientX - rect.left;
+    var frac = (x - sliderLeft) / sliderWidth;
+    frac = Math.max(0, Math.min(1, frac));
+    return frac * 200;
+  }
+
+  function isOnSlider(clientX, clientY) {
+    var rect = canvas.getBoundingClientRect();
+    var W = rect.width;
+    var H = 480;
+    var isMobile = W < 600;
+    var sliderY = H - (isMobile ? 30 : 40);
+    var y = clientY - rect.top;
+    return Math.abs(y - sliderY) < 25;
+  }
+
+  canvas.addEventListener('mousedown', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    if (isOnSlider(e.clientX, e.clientY)) {
+      draggingSlider = true;
+      sliderValue = getSliderPos(e.clientX);
+      draw();
+    }
+  });
+
+  canvas.addEventListener('mousemove', function(e) {
+    if (draggingSlider) {
+      sliderValue = getSliderPos(e.clientX);
+      draw();
+    } else {
+      var rect = canvas.getBoundingClientRect();
+      canvas.style.cursor = isOnSlider(e.clientX, e.clientY) ? 'grab' : 'default';
+    }
+  });
+
+  canvas.addEventListener('mouseup', function() {
+    draggingSlider = false;
+    canvas.style.cursor = 'default';
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    draggingSlider = false;
+    canvas.style.cursor = 'default';
+  });
+
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (e.touches.length > 0) {
+      var touch = e.touches[0];
+      if (isOnSlider(touch.clientX, touch.clientY)) {
+        draggingSlider = true;
+        sliderValue = getSliderPos(touch.clientX);
+        draw();
+      }
+    }
+  });
+
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (draggingSlider && e.touches.length > 0) {
+      sliderValue = getSliderPos(e.touches[0].clientX);
+      draw();
+    }
+  });
+
+  canvas.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    draggingSlider = false;
+  });
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(step) {
+    step.addEventListener('click', function() {
+      stepContainers.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Procentualno poskupljenje nakon pojeftinjenja",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["procenti", "procentualno povećanje", "procentualno smanjenje", "promena baze", "razlomci"]
+}
+BRAINSPARK_META-->

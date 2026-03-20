@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broj načina ocenjivanja učenika</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Učenik ima 20 predmeta. Za svaki predmet dobije jednu ocenu od 1 do 5.
+Na koliko različitih načina učenik može biti ocenjen?
+
+Analiza:
+- Imamo 20 predmeta (nezavisnih izbora)
+- Za svaki predmet: 5 mogućih ocena {1, 2, 3, 4, 5}
+- Izbori su potpuno nezavisni — ocena iz jednog predmeta ne utiče na ocene iz drugih
+- Ovo je klasičan primer primene principa množenja (dekartov proizvod)
+
+Princip množenja:
+Ako se prvi izbor može napraviti na n₁ načina, drugi na n₂ načina, ..., k-ti na nₖ načina,
+ukupan broj načina = n₁ × n₂ × ... × nₖ
+
+Ovde: n₁ = n₂ = ... = n₂₀ = 5
+Ukupno = 5 × 5 × 5 × ... × 5 (20 puta) = 5^20
+
+Proverimo odgovore (originalne oznake A,C,E,G,I mapirane na A,B,C,D,E):
+(A) 20^5 — ovo bi bilo da imamo 5 predmeta sa 20 mogućih ocena za svaki. POGREŠNO.
+(B) C(20,5) = 20!/(5!·15!) — binomni koeficijent, bira 5 predmeta od 20. Nema veze sa problemom. POGREŠNO.
+(C) 20!/5! = 20 × 19 × 18 × ... × 6 — permutacije, ali nije primenjivo ovde. POGREŠNO.
+(D) 20 · 19 · 18 · 17 · 16 = P(20,5) — varijacije bez ponavljanja, tj. bira se 5 od 20 razl. Nema veze. POGREŠNO.
+(E) 5^20 — TAČNO! 5 mogućih ocena za svaki od 20 predmeta.
+
+Ključna razlika (A) vs (E):
+- 20^5 = 20 izbora za svaku od 5 pozicija = 3.200.000
+- 5^20 = 5 izbora za svaku od 20 pozicija ≈ 95.367.431.640.625
+
+Odgovor: (E) 5^20
+
+Mapiranje originalnih oznaka: A→A, C→B, E→C, G→D, I→E.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.given-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.given-data-item {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 10px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.given-data-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-data-item .value {
+  color: #60a5fa;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Broj načina ocenjivanja učenika</h1>
+  <p class="subtitle">Kombinatorika, princip množenja sa ponavljanjem — nezavisni izbori za više predmeta</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Reći ćemo da je učenik ocenjen, ako iz svakog od <span class="highlight-val">20</span> predmeta dobije jednu ocenu od <span class="highlight-val">1</span> do <span class="highlight-val">5</span> (prirodan broj). Broj različitih načina na koje učenik može biti ocenjen je:
+    </div>
+    <div class="given-data-grid">
+      <div class="given-data-item">
+        <div class="label">Broj predmeta</div>
+        <div class="value">\(20\)</div>
+      </div>
+      <div class="given-data-item">
+        <div class="label">Moguce ocene</div>
+        <div class="value">\(\{1, 2, 3, 4, 5\}\)</div>
+      </div>
+      <div class="given-data-item">
+        <div class="label">Izbora po predmetu</div>
+        <div class="value">\(5\)</div>
+      </div>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(20^5\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\binom{20}{5}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\frac{20!}{5!}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(20 \cdot 19 \cdot 18 \cdot 17 \cdot 16\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(5^{20}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Za svaki od 20 predmeta učenik nezavisno bira jednu od 5 ocena. Primenićemo <strong>princip množenja sa ponavljanjem</strong> — kada imamo \(n\) nezavisnih izbora sa po \(k\) mogućnosti, ukupan broj kombinacija je \(k^n\). Zatim ćemo razjasniti zašto su ostali ponuđeni odgovori pogrešni.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Princip množenja (pravilo proizvoda)</summary>
+      <p>Ako se prvi izbor može napraviti na \(n_1\) načina, drugi na \(n_2\) načina, ..., i \(k\)-ti na \(n_k\) načina, onda je ukupan broj načina:</p>
+      <div class="math-box">
+        \[ n_1 \cdot n_2 \cdot \ldots \cdot n_k \]
+      </div>
+    </details>
+    <details>
+      <summary>Varijacije sa ponavljanjem</summary>
+      <p>Kada iz skupa od \(k\) elemenata biramo \(n\) puta <strong>sa ponavljanjem</strong> (isti element može biti izabran više puta), a redosled je bitan, broj takvih varijacija je:</p>
+      <div class="math-box">
+        \[ \overline{V}_k^n = k^n \]
+      </div>
+      <p>Ovo je upravo princip množenja gde je svaki od \(n\) izbora nezavisan i ima po \(k\) mogućnosti.</p>
+    </details>
+    <details>
+      <summary>Razlika: sa ponavljanjem vs. bez ponavljanja</summary>
+      <p><strong>Bez ponavljanja:</strong> svaki element se koristi najviše jednom. Broj varijacija \(V_k^n = k \cdot (k-1) \cdot \ldots \cdot (k - n + 1) = \frac{k!}{(k-n)!}\).</p>
+      <p><strong>Sa ponavljanjem:</strong> elementi se mogu koristiti koliko god puta. Broj varijacija \(\overline{V}_k^n = k^n\).</p>
+      <p>U našem problemu: ocene se ponavljaju (više predmeta može imati istu ocenu), pa koristimo varijantu <strong>sa ponavljanjem</strong>.</p>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz strukture problema</div>
+    <canvas id="mainCanvas" width="900" height="520"></canvas>
+    <p class="drag-hint">Dijagram prikazuje princip množenja: svaki predmet ima 5 nezavisnih izbora za ocenu</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Definišemo problem</div>
+      <p class="step-explanation">
+        Učenik ima <span class="highlight-val">20 predmeta</span>. Za svaki predmet dobija tačno jednu ocenu iz skupa \(\{1, 2, 3, 4, 5\}\).
+      </p>
+      <p class="step-explanation">
+        Tražimo ukupan broj različitih načina na koje učenik može biti ocenjen, tj. koliko različitih „kombinacija ocena" postoji.
+      </p>
+      <p class="step-explanation">
+        Svaku kombinaciju ocena možemo zapisati kao uređenu 20-torku:
+      </p>
+      <div class="math-box">
+        \[ (o_1, o_2, o_3, \ldots, o_{20}) \]
+      </div>
+      <p class="step-explanation">
+        gde je \(o_i \in \{1, 2, 3, 4, 5\}\) ocena iz \(i\)-tog predmeta.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Identifikujemo tip problema</div>
+      <p class="step-explanation">
+        Ključno zapažanje: ocene iz različitih predmeta su <strong>potpuno nezavisne</strong>. Učenik može dobiti istu ocenu iz više predmeta — na primer, petica iz matematike ne sprečava peticu iz fizike.
+      </p>
+      <p class="step-explanation">
+        To znači da je ovo problem <strong>varijacija sa ponavljanjem</strong>: biramo 20 puta iz skupa od 5 elemenata, uz dozvoljeno ponavljanje.
+      </p>
+    </div>
+
+    <details>
+      <summary>Proveri se: Zašto ocene mogu da se ponavljaju?</summary>
+      <p>Zamislite konkretnu situaciju: učenik može dobiti peticu iz matematike, peticu iz fizike, i peticu iz hemije. Ocena „5" se koristi tri puta — u različitim predmetima. Nema ograničenja koje sprečava da se ista ocena pojavi više puta. Zato koristimo formulu <strong>sa ponavljanjem</strong>.</p>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Primenjujemo princip množenja</div>
+      <p class="step-explanation">
+        Za svaki predmet imamo 5 izbora. Pošto su izbori nezavisni, primenjujemo princip množenja:
+      </p>
+      <div class="math-box">
+        \[ \underbrace{5 \cdot 5 \cdot 5 \cdot \ldots \cdot 5}_{20 \text{ puta}} = 5^{20} \]
+      </div>
+      <p class="step-explanation">
+        Detaljnije:
+      </p>
+      <div class="math-box">
+        \[ \text{Predmet 1: } 5 \text{ izbora} \]
+        \[ \text{Predmet 2: } 5 \text{ izbora} \]
+        \[ \vdots \]
+        \[ \text{Predmet 20: } 5 \text{ izbora} \]
+      </div>
+      <p class="step-explanation">
+        Ukupan broj načina:
+      </p>
+      <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+        \[ 5^{20} \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Koliko je zapravo \(5^{20}\)?</summary>
+      <p>\(5^{20} = (5^{10})^2 = 9\,765\,625^2 = 95\,367\,431\,640\,625\). To je broj sa 14 cifara — ogroman broj, ali to je logično jer svaki od 20 predmeta umnožava mogućnosti sa faktorom 5.</p>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Zašto su ostali odgovori pogrešni?</div>
+      <p class="step-explanation">
+        Razmotrimo svaki ponuđeni odgovor:
+      </p>
+      <div class="math-box">
+        \[ \textbf{(A)} \; 20^5 \text{ — ovo bi bilo 5 predmeta sa 20 mogućih ocena} \]
+      </div>
+      <p class="step-explanation">
+        Odgovor (A) meša bazu i eksponent. Ovde bismo imali 5 izbora gde svaki nudi 20 mogućnosti — potpuno obrnuta situacija od naše.
+      </p>
+      <div class="math-box">
+        \[ \textbf{(B)} \; \binom{20}{5} = \frac{20!}{5! \cdot 15!} \text{ — bira 5 predmeta od 20} \]
+      </div>
+      <p class="step-explanation">
+        Binomni koeficijent broji <em>podskupove</em>, ne uređene n-torke sa ponavljanjem. Ovo bi odgovaralo pitanju „Na koliko načina izabrati 5 predmeta od 20?" — što nije naš problem.
+      </p>
+      <div class="math-box">
+        \[ \textbf{(C)} \; \frac{20!}{5!} \text{ — varijacije bez ponavljanja } V_{20}^{15} \]
+      </div>
+      <p class="step-explanation">
+        Ovo je broj načina da se 15 elemenata rasporedi iz skupa od 20, bez ponavljanja. Nema veze sa ocenjivanjem.
+      </p>
+      <div class="math-box">
+        \[ \textbf{(D)} \; 20 \cdot 19 \cdot 18 \cdot 17 \cdot 16 = \frac{20!}{15!} \text{ — varijacije bez ponavljanja } V_{20}^5 \]
+      </div>
+      <p class="step-explanation">
+        Ovo broji načine da se od 20 objekata izabere i rasporedi 5, bez ponavljanja. Opet pogrešan model za naš problem.
+      </p>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Zaključak</div>
+      <p class="step-explanation">
+        Jedini tačan odgovor je:
+      </p>
+      <div class="math-box" style="text-align: center; font-size: 1.25rem;">
+        \[ \boxed{5^{20}} \]
+      </div>
+      <p class="step-explanation">
+        Učenik na svakom od 20 predmeta nezavisno bira jednu od 5 ocena, pa je ukupan broj kombinacija \(5^{20}\).
+      </p>
+    </div>
+
+    <details>
+      <summary>Proveri se: Probaj sa manjim brojevima</summary>
+      <p>Ako bi učenik imao samo \(2\) predmeta i \(3\) moguće ocene (1, 2, 3), koliko bi bilo kombinacija? Nabrojmo ih: (1,1), (1,2), (1,3), (2,1), (2,2), (2,3), (3,1), (3,2), (3,3) — ukupno \(9 = 3^2\). Analogno, za 20 predmeta sa 5 ocena: \(5^{20}\).</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Ovo je klasičan primer <strong>varijacija sa ponavljanjem</strong>. Kada biramo \(n\) puta nezavisno iz skupa od \(k\) elemenata (uz dozvoljeno ponavljanje), ukupan broj rezultata je \(k^n\). Kritično je pravilno identifikovati šta je „broj izbora" (\(k = 5\) ocena), a šta je „broj ponavljanja" (\(n = 20\) predmeta) — zamena ova dva broja daje potpuno pogrešan odgovor (A) \(20^5\) umesto tačnog (E) \(5^{20}\).
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ \underbrace{5 \times 5 \times \ldots \times 5}_{20} = 5^{20} \neq 20^5 = \underbrace{20 \times 20 \times \ldots \times 20}_{5} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\(5^{20}\)</div>
+    <div class="answer-options">
+      <span class="opt">(A) \(20^5\)</span>
+      <span class="opt">(B) \(\binom{20}{5}\)</span>
+      <span class="opt">(C) \(\frac{20!}{5!}\)</span>
+      <span class="opt">(D) \(20 \cdot 19 \cdot 18 \cdot 17 \cdot 16\)</span>
+      <span class="opt correct">(E) \(5^{20}\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Za svaki od 20 predmeta postoji 5 mogućih ocena. Izbori su nezavisni, pa po principu množenja dobijamo \(5 \times 5 \times \ldots \times 5 = 5^{20}\). Za mali primer: 2 predmeta sa 3 ocene daju \(3^2 = 9\) kombinacija, što se lako proverava nabrajanjem.
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Zamena baze i eksponenta</div>
+      <p>Najčešća greška je napisati \(20^5\) umesto \(5^{20}\). Zapamtite: baza je <strong>broj mogućnosti po jednom izboru</strong> (5 ocena), a eksponent je <strong>broj nezavisnih izbora</strong> (20 predmeta). Pomislite ovako: za svaki predmet množimo sa 5, a imamo 20 predmeta — dakle \(5^{20}\).</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Korišćenje formula bez ponavljanja</div>
+      <p>Odgovori (B), (C) i (D) koriste kombinacije ili varijacije <strong>bez ponavljanja</strong>. Ovi obrasci bi bili tačni samo ako bi svaka ocena mogla da se dodeli tačno jednom. Ali učenik može dobiti istu ocenu iz više predmeta — petica iz matematike ne isključuje peticu iz fizike. Zato je dozvoljeno ponavljanje, i formula je \(5^{20}\).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Na koliko načina učenik može biti ocenjen ako iz svakog od 20 predmeta dobije ocenu od 1 do 5, ali <strong>mora imati bar jednu peticu</strong>?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Koristite princip komplementa: od ukupnog broja načina (\(5^{20}\)) oduzmite broj načina gde <strong>nema nijedne petice</strong> — tj. sve ocene su iz skupa \(\{1, 2, 3, 4\}\). Broj načina bez petice je \(4^{20}\). Dakle, odgovor je \(5^{20} - 4^{20}\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 520;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const midX = W / 2;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Princip množenja: 20 predmeta \u00D7 5 ocena', midX, 24);
+
+    // Draw subject columns — show first 5, ellipsis, and last 2
+    var subjects = ['Predmet 1', 'Predmet 2', 'Predmet 3', 'Predmet 4', '\u2026', 'Predmet 19', 'Predmet 20'];
+    var numCols = subjects.length;
+    var colW = Math.min(110, (W - 60) / numCols - 8);
+    var colGap = Math.min(12, (W - numCols * colW) / (numCols + 1));
+    var totalW = numCols * colW + (numCols - 1) * colGap;
+    var startX = (W - totalW) / 2;
+
+    var headerY = 55;
+    var gradeBoxH = 34;
+    var gradeGap = 6;
+    var gradesStartY = headerY + 44;
+
+    subjects.forEach(function(subj, i) {
+      var cx = startX + i * (colW + colGap) + colW / 2;
+
+      // Subject header
+      var isEllipsis = subj === '\u2026';
+      if (isEllipsis) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('\u2026', cx, headerY + 16);
+
+        // Vertical dots for grades
+        for (var g = 0; g < 5; g++) {
+          var gy = gradesStartY + g * (gradeBoxH + gradeGap) + gradeBoxH / 2;
+          ctx.fillStyle = '#64748b';
+          ctx.font = '16px Segoe UI, system-ui, sans-serif';
+          ctx.fillText('\u2026', cx, gy);
+        }
+        return;
+      }
+
+      // Header box
+      ctx.fillStyle = 'rgba(96, 165, 250, 0.12)';
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(startX + i * (colW + colGap), headerY, colW, 34, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(subj, cx, headerY + 17);
+
+      // Grade boxes (1-5)
+      for (var g = 0; g < 5; g++) {
+        var gx = startX + i * (colW + colGap);
+        var gy = gradesStartY + g * (gradeBoxH + gradeGap);
+
+        var colors = [
+          { bg: 'rgba(239, 68, 68, 0.12)', border: '#ef4444', text: '#fca5a5' },
+          { bg: 'rgba(249, 115, 22, 0.12)', border: '#c2783a', text: '#d4956a' },
+          { bg: 'rgba(167, 139, 250, 0.10)', border: '#a78bfa', text: '#c4b5fd' },
+          { bg: 'rgba(96, 165, 250, 0.12)', border: '#60a5fa', text: '#93c5fd' },
+          { bg: 'rgba(74, 222, 128, 0.12)', border: '#4ade80', text: '#86efac' }
+        ];
+
+        ctx.fillStyle = colors[g].bg;
+        ctx.strokeStyle = colors[g].border;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(gx, gy, colW, gradeBoxH, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = colors[g].text;
+        ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Ocena ' + (g + 1), cx, gy + gradeBoxH / 2);
+      }
+
+      // Brace/bracket: "5 izbora"
+      var braceX = startX + i * (colW + colGap) + colW + 6;
+      if (i === 0 || i === numCols - 1) {
+        var topBrace = gradesStartY;
+        var bottomBrace = gradesStartY + 4 * (gradeBoxH + gradeGap) + gradeBoxH;
+        var midBrace = (topBrace + bottomBrace) / 2;
+
+        ctx.strokeStyle = '#4ade80';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(braceX, topBrace + 4);
+        ctx.lineTo(braceX + 6, topBrace + 4);
+        ctx.lineTo(braceX + 6, midBrace - 6);
+        ctx.lineTo(braceX + 12, midBrace);
+        ctx.lineTo(braceX + 6, midBrace + 6);
+        ctx.lineTo(braceX + 6, bottomBrace - 4);
+        ctx.lineTo(braceX, bottomBrace - 4);
+        ctx.stroke();
+
+        if (i === 0) {
+          ctx.fillStyle = '#4ade80';
+          ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('5 izbora', braceX + 16, midBrace + 1);
+        }
+      }
+    });
+
+    // Bottom section: multiplication formula
+    var formulaY = gradesStartY + 5 * (gradeBoxH + gradeGap) + 20;
+
+    // Dividing line
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(40, formulaY);
+    ctx.lineTo(W - 40, formulaY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Formula
+    var fY = formulaY + 35;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Princip množenja:', midX, fY);
+
+    fY += 30;
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = '15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('5 \u00D7 5 \u00D7 5 \u00D7 5 \u00D7 \u2026 \u00D7 5 \u00D7 5', midX, fY);
+
+    // Underbrace text
+    fY += 22;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(20 puta)', midX, fY);
+
+    // Equals sign and final result
+    fY += 30;
+
+    // Green glow for final result
+    var grad = ctx.createRadialGradient(midX, fY + 6, 0, midX, fY + 6, 100);
+    grad.addColorStop(0, 'rgba(74, 222, 128, 0.18)');
+    grad.addColorStop(1, 'rgba(74, 222, 128, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(midX, fY + 6, 100, 0, 2 * Math.PI);
+    ctx.fill();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 24px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('= 5\u00B2\u2070', midX, fY + 8);
+
+    // Small note below
+    fY += 36;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('= 95 367 431 640 625 načina', midX, fY);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(step) {
+    step.addEventListener('click', function() {
+      stepContainers.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Broj načina ocenjivanja učenika — varijacije sa ponavljanjem",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "varijacije sa ponavljanjem", "princip množenja", "stepenovanje"]
+}
+BRAINSPARK_META-->

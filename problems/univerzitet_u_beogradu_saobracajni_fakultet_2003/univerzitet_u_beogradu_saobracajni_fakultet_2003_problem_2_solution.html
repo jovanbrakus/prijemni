@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uprošćavanje algebarskog izraza sa stepenima i korenima</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: For a = 1.05 and b = 0.05, compute:
+  (a^2 + ab + b^2)^{-2}           sqrt(a^3*b^2 - a^2*b^3)
+  ----------------------   :   ---------------------------
+      ab * sqrt(a - b)            (a^4*b - a*b^4)^2
+
+Key observation: a - b = 1.05 - 0.05 = 1, so sqrt(a - b) = 1.
+
+Step 1: Factor the second fraction's numerator.
+  a^3*b^2 - a^2*b^3 = a^2*b^2*(a - b)
+  sqrt(a^2*b^2*(a - b)) = a*b*sqrt(a - b)
+
+Step 2: Factor the second fraction's denominator.
+  a^4*b - a*b^4 = a*b*(a^3 - b^3) = a*b*(a - b)*(a^2 + ab + b^2)
+  (a^4*b - a*b^4)^2 = a^2*b^2*(a - b)^2*(a^2 + ab + b^2)^2
+
+Step 3: Simplify the second fraction.
+  sqrt(a^3*b^2 - a^2*b^3) / (a^4*b - a*b^4)^2
+  = a*b*sqrt(a - b) / [a^2*b^2*(a - b)^2*(a^2 + ab + b^2)^2]
+  = 1 / [a*b*(a - b)^{3/2}*(a^2 + ab + b^2)^2]
+
+Step 4: The first fraction.
+  (a^2 + ab + b^2)^{-2} / (a*b*sqrt(a - b))
+  = 1 / [(a^2 + ab + b^2)^2 * a*b*sqrt(a - b)]
+
+Step 5: Division (first : second = first * reciprocal of second).
+  [1 / ((a^2+ab+b^2)^2 * ab * sqrt(a-b))] * [ab*(a-b)^{3/2}*(a^2+ab+b^2)^2]
+  = (a-b)^{3/2} / sqrt(a-b)
+  = (a-b)^{3/2 - 1/2}
+  = (a - b)^1
+  = a - b
+
+Step 6: Substitute values.
+  a - b = 1.05 - 0.05 = 1
+
+Answer: 1, which is option (C).
+
+Verification with numerical values:
+  a^2 + ab + b^2 = 1.1025 + 0.0525 + 0.0025 = 1.1575
+  ab = 0.0525, sqrt(a-b) = 1
+  First part: (1.1575)^{-2} / (0.0525*1) = 1/1.3398 / 0.0525 = 0.74627/0.0525 = 14.2147
+
+  a^3b^2 - a^2b^3 = 0.00275625, sqrt = 0.0525
+  (a^4b - ab^4) = 0.06077, squared = 0.003693
+  Second part: 0.0525 / 0.003693 = 14.2147
+
+  Result: 14.2147 / 14.2147 = 1 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.highlight-val {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.math-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.step-explanation {
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.step-container {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+}
+
+.step-container:hover {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-container.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+details {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.insight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-left: 4px solid #60a5fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.insight-box .insight-title {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.final-answer-card {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-answer-card .label {
+  color: #34d399;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.final-answer-card .answer {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #4ade80;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+}
+
+.pitfall-item {
+  background: rgba(244, 114, 182, 0.08);
+  border-left: 3px solid #f472b6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: #fbb6ce;
+}
+
+.pitfall-title {
+  color: #f472b6;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+canvas {
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.note-box {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .container { padding: 10px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+  .final-answer-card .answer { font-size: 1.7rem; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 6px 14px; font-size: 0.95rem; }
+  .step-container { padding: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Uprošćavanje algebarskog izraza sa stepenima i korenima</h1>
+  <p class="subtitle">Algebra &mdash; faktorizacija, stepeni, koreni i razlomci</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128221;</span> Tekst zadatka</div>
+    <div class="problem-text">
+      Za <span class="highlight-val">\(a = 1{,}05\)</span> i <span class="highlight-val">\(b = 0{,}05\)</span> izraz
+      \[\frac{\left(a^2 + ab + b^2\right)^{-2}}{ab\sqrt{a - b}} \; : \; \frac{\sqrt{a^3 b^2 - a^2 b^3}}{\left(a^4 b - ab^4\right)^2}\]
+      ima vrednost:
+    </div>
+    <div class="given-grid">
+      <div class="given-item" style="grid-column: span 1;">
+        <div class="label">\(a\)</div>
+        <div class="value">\(1{,}05\)</div>
+      </div>
+      <div class="given-item" style="grid-column: span 1;">
+        <div class="label">\(b\)</div>
+        <div class="value">\(0{,}05\)</div>
+      </div>
+      <div class="given-item" style="grid-column: span 1;">
+        <div class="label">\(a - b\)</div>
+        <div class="value">\(1\)</div>
+      </div>
+    </div>
+    <div class="given-grid" style="margin-top: 12px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(1{,}05\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(0{,}05\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="G">
+        <div class="label">(G)</div>
+        <div class="value">\(1{,}1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="I">
+        <div class="label">(I)</div>
+        <div class="value">\(0{,}0525\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Umesto da odmah uvrštavamo brojeve, prvo ćemo algebarski uprosti izraz tako što ćemo faktorizovati sve članove koristeći identitete za razliku kubova i zajedničke faktore. Na kraju, izraz će se svesti na jednostavan oblik koji zavisi od \(a - b\), pa ćemo tek tada uvrstiti vrednosti.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Razlika kubova</summary>
+      <p style="margin-top: 8px;">
+        Razlika kubova se faktorše pomoću formule:
+      </p>
+      <div class="math-box">
+        \[ a^3 - b^3 = (a - b)(a^2 + ab + b^2) \]
+      </div>
+      <p>Izraz \(a^2 + ab + b^2\) se često pojavljuje upravo kao faktor razlike kubova.</p>
+    </details>
+    <details>
+      <summary>Izvlačenje zajedničkog faktora ispod korena</summary>
+      <p style="margin-top: 8px;">
+        Kada imamo izraz pod korenom, prvo izdvajamo zajedničke faktore:
+      </p>
+      <div class="math-box">
+        \[ \sqrt{a^3 b^2 - a^2 b^3} = \sqrt{a^2 b^2 (a - b)} = ab\sqrt{a - b} \]
+      </div>
+      <p>Slično, za proizvod sa stepenima:</p>
+      <div class="math-box">
+        \[ a^4 b - ab^4 = ab(a^3 - b^3) \]
+      </div>
+    </details>
+    <details>
+      <summary>Deljenje razlomaka (operacija ":")</summary>
+      <p style="margin-top: 8px;">
+        Deljenje razlomaka se svodi na množenje prvog razlomka recipročnom vrednošću drugog:
+      </p>
+      <div class="math-box">
+        \[ \frac{A}{B} : \frac{C}{D} = \frac{A}{B} \cdot \frac{D}{C} = \frac{A \cdot D}{B \cdot C} \]
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Diagram -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127912;</span> Vizuelni prikaz: struktura izraza</div>
+    <canvas id="mainCanvas" width="900" height="480"></canvas>
+    <p class="drag-hint">Dijagram prikazuje kako se složen izraz korak po korak uprošćava</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128736;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">1</span> Uočavamo ključnu osobinu: \(a - b = 1\)</div>
+      <p class="step-explanation">
+        Pre bilo kakvog računanja, primetimo da:
+      </p>
+      <div class="math-box">
+        \[ a - b = 1{,}05 - 0{,}05 = 1 \]
+      </div>
+      <p class="step-explanation">
+        To znači da je \(\sqrt{a - b} = \sqrt{1} = 1\), što će značajno uprosti izraz. Ali nemojmo žuriti &mdash; prvo ćemo algebarski srediti izraz u potpunosti.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">2</span> Faktorizujemo brojilac drugog razlomka</div>
+      <p class="step-explanation">
+        Pod korenom imamo:
+      </p>
+      <div class="math-box">
+        \[ a^3 b^2 - a^2 b^3 = a^2 b^2(a - b) \]
+      </div>
+      <p class="step-explanation">
+        Izvlačimo ispod korena:
+      </p>
+      <div class="math-box">
+        \[ \sqrt{a^3 b^2 - a^2 b^3} = \sqrt{a^2 b^2(a - b)} = ab\sqrt{a - b} \]
+      </div>
+      <p class="note-box">Koristimo pravilo: \(\sqrt{x^2 \cdot y} = |x| \cdot \sqrt{y}\). Pošto su \(a, b > 0\), važi \(\sqrt{a^2 b^2} = ab\).</p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">3</span> Faktorizujemo imenilac drugog razlomka</div>
+      <p class="step-explanation">
+        Izdvajamo zajednički faktor \(ab\):
+      </p>
+      <div class="math-box">
+        \[ a^4 b - ab^4 = ab(a^3 - b^3) \]
+      </div>
+      <p class="step-explanation">
+        Sada primenjujemo formulu za razliku kubova:
+      </p>
+      <div class="math-box">
+        \[ a^3 - b^3 = (a - b)(a^2 + ab + b^2) \]
+      </div>
+      <p class="step-explanation">
+        Dakle:
+      </p>
+      <div class="math-box">
+        \[ a^4 b - ab^4 = ab(a - b)(a^2 + ab + b^2) \]
+      </div>
+      <p class="step-explanation">
+        I na kvadrat:
+      </p>
+      <div class="math-box">
+        \[ \left(a^4 b - ab^4\right)^2 = a^2 b^2 (a - b)^2 (a^2 + ab + b^2)^2 \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Koliko je \(a^3 - b^3\) za naše vrednosti?</summary>
+      <p>\(a^3 - b^3 = 1{,}05^3 - 0{,}05^3 = 1{,}157625 - 0{,}000125 = 1{,}1575\). A \((a-b)(a^2+ab+b^2) = 1 \cdot 1{,}1575 = 1{,}1575\). Rezultati se poklapaju!</p>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">4</span> Zapisujemo drugi razlomak u faktorizovanom obliku</div>
+      <p class="step-explanation">
+        Zamenjujemo faktorizovane oblike u drugi razlomak:
+      </p>
+      <div class="math-box">
+        \[ \frac{\sqrt{a^3 b^2 - a^2 b^3}}{(a^4 b - ab^4)^2} = \frac{ab\sqrt{a-b}}{a^2 b^2 (a-b)^2 (a^2+ab+b^2)^2} \]
+      </div>
+      <p class="step-explanation">
+        Skraćujemo \(ab\) u brojiocu i imeniocu:
+      </p>
+      <div class="math-box">
+        \[ = \frac{1}{ab \cdot (a-b)^{\frac{3}{2}} \cdot (a^2+ab+b^2)^2} \]
+      </div>
+      <p class="note-box">Jer je \(\frac{\sqrt{a-b}}{(a-b)^2} = \frac{(a-b)^{1/2}}{(a-b)^2} = (a-b)^{-3/2}\).</p>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">5</span> Zapisujemo prvi razlomak</div>
+      <p class="step-explanation">
+        Prvi razlomak je:
+      </p>
+      <div class="math-box">
+        \[ \frac{(a^2 + ab + b^2)^{-2}}{ab\sqrt{a-b}} = \frac{1}{(a^2+ab+b^2)^2 \cdot ab \cdot \sqrt{a-b}} \]
+      </div>
+      <p class="note-box">Koristimo pravilo: \(x^{-2} = \frac{1}{x^2}\).</p>
+    </div>
+
+    <details>
+      <summary>Proveri se: Koliko je \((a^2+ab+b^2)^2\) za naše vrednosti?</summary>
+      <p>\(a^2+ab+b^2 = 1{,}1025 + 0{,}0525 + 0{,}0025 = 1{,}1575\). Dakle \((a^2+ab+b^2)^2 = 1{,}1575^2 \approx 1{,}3398\).</p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">6</span> Delimo prvi razlomak drugim</div>
+      <p class="step-explanation">
+        Operacija deljenja "\(:\)" znači da množimo prvi razlomak recipročnom vrednošću drugog:
+      </p>
+      <div class="math-box">
+        \[ \frac{1}{(a^2+ab+b^2)^2 \cdot ab \cdot \sqrt{a-b}} \; \cdot \; ab \cdot (a-b)^{\frac{3}{2}} \cdot (a^2+ab+b^2)^2 \]
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">7</span> Skraćujemo zajedničke faktore</div>
+      <p class="step-explanation">
+        Pogledajmo šta se skraćuje:
+      </p>
+      <p class="step-explanation">
+        &bull; \((a^2+ab+b^2)^2\) u imeniocu i brojiocu &mdash; <strong>skraćuje se</strong>
+      </p>
+      <p class="step-explanation">
+        &bull; \(ab\) u imeniocu i brojiocu &mdash; <strong>skraćuje se</strong>
+      </p>
+      <p class="step-explanation">
+        Ostaje samo:
+      </p>
+      <div class="math-box">
+        \[ \frac{(a-b)^{\frac{3}{2}}}{\sqrt{a-b}} = \frac{(a-b)^{\frac{3}{2}}}{(a-b)^{\frac{1}{2}}} = (a-b)^{\frac{3}{2} - \frac{1}{2}} = (a-b)^1 = a - b \]
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step-container">
+      <div class="step-title"><span class="step-badge">8</span> Uvrštavamo vrednosti</div>
+      <p class="step-explanation">
+        Ceo izraz se sveo na:
+      </p>
+      <div class="math-box">
+        \[ a - b = 1{,}05 - 0{,}05 = 1 \]
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Numerička verifikacija</summary>
+      <p>
+        Prvi razlomak: \(\frac{1{,}1575^{-2}}{0{,}0525 \cdot 1} = \frac{0{,}7463}{0{,}0525} \approx 14{,}216\).<br>
+        Drugi razlomak: \(\frac{0{,}0525}{0{,}060769^2} = \frac{0{,}0525}{0{,}003693} \approx 14{,}216\).<br>
+        Deljenje: \(14{,}216 : 14{,}216 = 1\). Potvrđeno!
+      </p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-title">Ključni uvid</div>
+    <p>
+      Umesto da uvrštavamo decimalne brojeve u složen izraz (što bi dovelo do dugih računa sa decimalama), prepoznajemo algebarsku strukturu. Sve se gradi oko identiteta za <strong>razliku kubova</strong>: izraz \(a^2 + ab + b^2\) se pojavljuje i u prvom razlomku (na \(-2\) stepen) i u drugom (iz faktorizacije \(a^3 - b^3\)), pa se pri deljenju <strong>potpuno skrati</strong>.
+    </p>
+    <div class="math-box" style="text-align: center; font-size: 1.2rem;">
+      \[ \text{Ceo izraz} = a - b = 1 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <div class="label">Konačni odgovor</div>
+    <div class="answer">\( a - b = 1 \)</div>
+    <div class="answer-options">
+      <span class="opt">(A) \(1{,}05\)</span>
+      <span class="opt correct">(C) \(1\)</span>
+      <span class="opt">(E) \(0{,}05\)</span>
+      <span class="opt">(G) \(1{,}1\)</span>
+      <span class="opt">(I) \(0{,}0525\)</span>
+    </div>
+    <p class="verification-note">
+      Verifikacija: Oba razlomka imaju istu numeričku vrednost \(\approx 14{,}216\), pa je njihov količnik tačno \(1\). Rezultat je logičan jer se svi složeni faktori (\(ab\), \((a^2+ab+b^2)^2\)) potpuno skrate. &#10004;
+    </p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Uvrštavanje decimalnih vrednosti bez uprošćavanja</div>
+      <p>Mnogi učenici odmah uvrste \(a = 1{,}05\) i \(b = 0{,}05\) u izraz i pokušavaju da izračunaju numerički. To dovodi do veoma komplikovanih računa sa decimalama i velike šanse za grešku. Uvek prvo algebarski uprosti!</p>
+    </div>
+    <div class="pitfall-item">
+      <div class="pitfall-title">Pogrešno tumačenje eksponenta \(-2\)</div>
+      <p>Eksponent \(-2\) stoji na \((a^2+ab+b^2)^{-2}\), što znači \(\frac{1}{(a^2+ab+b^2)^2}\). Česta greška je protumačiti ovo kao da je ceo razlomak na \(-2\) stepen, što bi dalo potpuno drugačiji rezultat.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p class="step-explanation">
+      Za koja sve \(a\) i \(b\) (gde je \(a > b > 0\)) ovaj izraz ima vrednost \(1\)?
+    </p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p>Izraz se uvek svodi na \(a - b\), bez obzira na konkretne vrednosti \(a\) i \(b\) (dokle god je \(a > b > 0\)). Dakle, tražimo sve parove \((a, b)\) za koje važi \(a - b = 1\). To je beskonačno mnogo parova!</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 480 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = 480;
+    const isMobile = W < 600;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    var fontSize = isMobile ? 12 : 15;
+    var smallFontSize = isMobile ? 10 : 12;
+    var titleFontSize = isMobile ? 14 : 18;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold ' + titleFontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Dijagram uprošćavanja izraza', W / 2, 12);
+
+    // Draw a flowchart-style diagram showing the simplification process
+    var boxW = isMobile ? W * 0.85 : 380;
+    var boxH = isMobile ? 52 : 56;
+    var centerX = W / 2;
+    var startY = 50;
+    var gap = isMobile ? 18 : 22;
+
+    function drawBox(x, y, w, h, text, color, bgAlpha) {
+      var r = 10;
+      ctx.fillStyle = color.replace(')', ', ' + bgAlpha + ')').replace('rgb', 'rgba');
+      ctx.beginPath();
+      ctx.moveTo(x - w/2 + r, y);
+      ctx.lineTo(x + w/2 - r, y);
+      ctx.quadraticCurveTo(x + w/2, y, x + w/2, y + r);
+      ctx.lineTo(x + w/2, y + h - r);
+      ctx.quadraticCurveTo(x + w/2, y + h, x + w/2 - r, y + h);
+      ctx.lineTo(x - w/2 + r, y + h);
+      ctx.quadraticCurveTo(x - w/2, y + h, x - w/2, y + h - r);
+      ctx.lineTo(x - w/2, y + r);
+      ctx.quadraticCurveTo(x - w/2, y, x - w/2 + r, y);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = fontSize + 'px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      if (Array.isArray(text)) {
+        for (var i = 0; i < text.length; i++) {
+          ctx.fillText(text[i], x, y + h/2 + (i - (text.length-1)/2) * (fontSize + 4));
+        }
+      } else {
+        ctx.fillText(text, x, y + h / 2);
+      }
+    }
+
+    function drawArrow(x, y1, y2, label) {
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y1);
+      ctx.lineTo(x, y2 - 8);
+      ctx.stroke();
+
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.moveTo(x - 6, y2 - 10);
+      ctx.lineTo(x + 6, y2 - 10);
+      ctx.lineTo(x, y2);
+      ctx.closePath();
+      ctx.fill();
+
+      if (label) {
+        ctx.fillStyle = '#a78bfa';
+        ctx.font = smallFontSize + 'px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, x + 10, (y1 + y2) / 2);
+      }
+    }
+
+    var y = startY;
+
+    // Box 1: Original expression
+    drawBox(centerX, y, boxW, boxH, isMobile ?
+      ['(a\u00B2+ab+b\u00B2)\u207B\u00B2 / (ab\u221A(a-b))'] :
+      ['(a\u00B2+ab+b\u00B2)\u207B\u00B2 / (ab\u00B7\u221A(a-b))  :  \u221A(a\u00B3b\u00B2-a\u00B2b\u00B3) / (a\u2074b-ab\u2074)\u00B2'],
+      'rgb(96, 165, 250)', 0.12);
+    y += boxH;
+    drawArrow(centerX, y, y + gap, 'Faktorizacija');
+    y += gap;
+
+    // Box 2: After factoring
+    var factH = isMobile ? 68 : 56;
+    drawBox(centerX, y, boxW, factH, isMobile ?
+      ['a\u00B3b\u00B2-a\u00B2b\u00B3 = a\u00B2b\u00B2(a-b)', 'a\u2074b-ab\u2074 = ab(a-b)(a\u00B2+ab+b\u00B2)'] :
+      ['a\u00B3b\u00B2-a\u00B2b\u00B3 = a\u00B2b\u00B2(a-b)  |  a\u2074b-ab\u2074 = ab(a-b)(a\u00B2+ab+b\u00B2)'],
+      'rgb(167, 139, 250)', 0.12);
+    y += factH;
+    drawArrow(centerX, y, y + gap, 'Delimo razlomke');
+    y += gap;
+
+    // Box 3: After division
+    drawBox(centerX, y, boxW, boxH, isMobile ?
+      ['1/[(a\u00B2+ab+b\u00B2)\u00B2\u00B7ab\u00B7\u221A(a-b)]', '\u00D7 ab\u00B7(a-b)^(3/2)\u00B7(a\u00B2+ab+b\u00B2)\u00B2'] :
+      ['1/[(a\u00B2+ab+b\u00B2)\u00B2 \u00B7 ab \u00B7 \u221A(a-b)]  \u00D7  ab \u00B7 (a-b)^(3/2) \u00B7 (a\u00B2+ab+b\u00B2)\u00B2'],
+      'rgb(167, 139, 250)', 0.12);
+    y += boxH;
+    drawArrow(centerX, y, y + gap, 'Skraćivanje');
+    y += gap;
+
+    // Box 4: After cancellation - show what cancels
+    var cancelH = isMobile ? 76 : 64;
+    ctx.save();
+    drawBox(centerX, y, boxW, cancelH, '', 'rgb(244, 114, 182)', 0.08);
+
+    ctx.font = fontSize + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    var lineH = fontSize + 6;
+    var cy = y + cancelH / 2;
+
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('Skraćuje se:', centerX, cy - lineH);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = (fontSize - 1) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(a\u00B2+ab+b\u00B2)\u00B2 \u2714   ab \u2714', centerX, cy + 2);
+    ctx.fillText('Ostaje: (a-b)^(3/2) / (a-b)^(1/2) = a - b', centerX, cy + lineH + 2);
+    ctx.restore();
+
+    y += cancelH;
+    drawArrow(centerX, y, y + gap, 'Uvršćivanje');
+    y += gap;
+
+    // Box 5: Final result
+    var finalH = isMobile ? 56 : 60;
+    ctx.save();
+    var r = 12;
+    var fx = centerX - boxW/2;
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.15)';
+    ctx.beginPath();
+    ctx.moveTo(fx + r, y);
+    ctx.lineTo(fx + boxW - r, y);
+    ctx.quadraticCurveTo(fx + boxW, y, fx + boxW, y + r);
+    ctx.lineTo(fx + boxW, y + finalH - r);
+    ctx.quadraticCurveTo(fx + boxW, y + finalH, fx + boxW - r, y + finalH);
+    ctx.lineTo(fx + r, y + finalH);
+    ctx.quadraticCurveTo(fx, y + finalH, fx, y + finalH - r);
+    ctx.lineTo(fx, y + r);
+    ctx.quadraticCurveTo(fx, y, fx + r, y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold ' + (isMobile ? 16 : 20) + 'px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('a - b = 1,05 - 0,05 = 1', centerX, y + finalH / 2);
+    ctx.restore();
+
+    // Side annotation: a - b = 1
+    if (!isMobile) {
+      var annotX = centerX + boxW/2 + 30;
+      var annotY = startY + (y + finalH - startY) / 2;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(annotX, startY + 20);
+      ctx.lineTo(annotX, y + finalH - 10);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Ključ: a - b = 1', annotX + 8, annotY - 10);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('\u221A(a-b) = 1', annotX + 8, annotY + 10);
+    }
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // Step click interaction
+  var stepContainers = document.querySelectorAll('.step-container');
+  stepContainers.forEach(function(step) {
+    step.addEventListener('click', function() {
+      stepContainers.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Uprošćavanje algebarskog izraza sa stepenima i korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["razlika kubova", "faktorizacija", "stepeni", "koreni", "razlomci", "algebarski izrazi"]
+}
+BRAINSPARK_META-->

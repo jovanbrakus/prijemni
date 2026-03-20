@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logaritamski izraz — promena osnove</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: If log_5(8) = a and log_5(9) = b, find log_12(5).
+
+  Step 1: Express log_5(2) and log_5(3) from given data.
+    log_5(8) = a  =>  log_5(2³) = a  =>  3·log_5(2) = a  =>  log_5(2) = a/3
+    log_5(9) = b  =>  log_5(3²) = b  =>  2·log_5(3) = b  =>  log_5(3) = b/2
+
+  Step 2: Use change-of-base formula.
+    log_12(5) = 1 / log_5(12)
+
+  Step 3: Express log_5(12).
+    12 = 4 · 3 = 2² · 3
+    log_5(12) = log_5(2²·3) = 2·log_5(2) + log_5(3)
+             = 2·(a/3) + (b/2)
+             = 2a/3 + b/2
+             = (4a + 3b) / 6
+
+  Step 4: Therefore:
+    log_12(5) = 1 / ((4a + 3b)/6) = 6 / (4a + 3b)
+
+  Answer: E) 6/(4a+3b)
+
+  Verification with actual values:
+    log_5(8) = ln8/ln5 = 3·ln2/ln5 ≈ 3·0.6931/1.6094 ≈ 1.2920
+    log_5(9) = ln9/ln5 = 2·ln3/ln5 ≈ 2·1.0986/1.6094 ≈ 1.3652
+    a ≈ 1.2920, b ≈ 1.3652
+    6/(4a+3b) = 6/(4·1.2920 + 3·1.3652) = 6/(5.1680 + 4.0956) = 6/9.2636 ≈ 0.6477
+    log_12(5) = ln5/ln12 = 1.6094/2.4849 ≈ 0.6477  ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  min-width: 90px;
+  cursor: default;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.step-container:hover {
+  background: rgba(96,165,250,0.05);
+  border-left: 3px solid #4ade80;
+  padding-left: 13px;
+}
+
+.step-container.active {
+  background: rgba(96,165,250,0.05);
+  border-left: 3px solid #4ade80;
+  padding-left: 13px;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.muted {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+details {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.theory-card details {
+  background: rgba(96,165,250,0.06);
+  border-color: rgba(96,165,250,0.15);
+}
+
+.theory-card details summary {
+  color: #60a5fa;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box .insight-label {
+  color: #a78bfa;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.35);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-box .answer-label {
+  color: #34d399;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.opt {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.opt.correct {
+  border-color: #34d399;
+  background: rgba(52,211,153,0.12);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.pitfall-card {
+  border-left: 3px solid #e09468;
+}
+
+.pitfall-card h2 {
+  color: #e09468;
+}
+
+.canvas-container {
+  text-align: center;
+  margin: 16px 0;
+}
+
+.canvas-container canvas {
+  border-radius: 12px;
+  border: 1px solid #334155;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(52,211,153,0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(52,211,153,0.15);
+}
+
+ul {
+  padding-left: 20px;
+}
+
+ul li {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 80px; padding: 10px 12px; }
+  .step-container { flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Logaritamski izraz — promena osnove</h1>
+  <p class="subtitle">Algebra — logaritmi, promena osnove, rastavljanje na proste činioce</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>
+      Ako je <span class="highlight-blue">\(\log_5 8 = a\)</span> i
+      <span class="highlight-blue">\(\log_5 9 = b\)</span>, onda je
+      \(\log_{12} 5\) jednak:
+    </p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Dato</div>
+        <div class="value">\(\log_5 8 = a\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Dato</div>
+        <div class="value">\(\log_5 9 = b\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Traženo</div>
+        <div class="value">\(\log_{12} 5\)</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top: 20px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{4}{3a+2b}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{1}{2a+3b}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{2}{2a+3b}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{1}{3a+2b}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{6}{4a+3b}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Primenićemo formulu za promenu osnove logaritma da izrazimo \(\log_{12} 5\) preko
+      \(\log_5 12\). Zatim ćemo rastaviti broj \(12\) na proste činioce i iskoristiti
+      poznate vrednosti \(\log_5 8 = a\) i \(\log_5 9 = b\) da izrazimo \(\log_5 2\) i \(\log_5 3\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <ul>
+        <li><strong>Promena osnove:</strong> \(\log_b a = \dfrac{1}{\log_a b}\), tj. \(\log_b a \cdot \log_a b = 1\).</li>
+        <li><strong>Logaritam stepena:</strong> \(\log_a x^n = n \cdot \log_a x\).</li>
+        <li><strong>Logaritam proizvoda:</strong> \(\log_a (x \cdot y) = \log_a x + \log_a y\).</li>
+        <li><strong>Rastavljanje na proste činioce:</strong> \(8 = 2^3\), \(9 = 3^2\), \(12 = 2^2 \cdot 3\).</li>
+        <li><strong>Opšta promena osnove:</strong> \(\log_b a = \dfrac{\log_c a}{\log_c b}\) za proizvoljnu osnovu \(c\).</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <div class="canvas-container">
+      <canvas id="mainCanvas" width="740" height="420"></canvas>
+      <p class="canvas-hint">Dijagram transformacija — od poznatih logaritama do traženog izraza</p>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Izrazimo \(\log_5 2\) i \(\log_5 3\) iz datih podataka</h3>
+        <p>Rastavimo brojeve \(8\) i \(9\) na proste činioce i primenimo pravilo za logaritam stepena:</p>
+        <div class="math-block">
+          \[ \log_5 8 = \log_5 2^3 = 3\log_5 2 = a \implies \log_5 2 = \frac{a}{3} \]
+        </div>
+        <div class="math-block">
+          \[ \log_5 9 = \log_5 3^2 = 2\log_5 3 = b \implies \log_5 3 = \frac{b}{2} \]
+        </div>
+        <p class="muted">Ovo su osnovni „građevinski blokovi" — pomoću njih ćemo izraziti bilo koji logaritam po osnovi 5 čiji je argument složen od dvojki i trojki.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details>
+      <summary>Proveri se: Zašto rastavljamo na proste činioce?</summary>
+      <p style="margin-top: 8px;">
+        Zato što su \(8 = 2^3\) i \(9 = 3^2\) stepeni prostih brojeva, pa primenom pravila
+        \(\log_a x^n = n\log_a x\) lako izolujemo \(\log_5 2\) i \(\log_5 3\).
+        Pošto je \(12 = 2^2 \cdot 3\), upravo su nam potrebna ta dva logaritma.
+      </p>
+    </details>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Primenimo formulu za promenu osnove</h3>
+        <p>Koristimo vezu između recipročnih logaritama:</p>
+        <div class="math-block">
+          \[ \log_{12} 5 = \frac{1}{\log_5 12} \]
+        </div>
+        <p class="muted">Ova formula sledi direktno iz definicije: ako je \(\log_5 12 = t\), tada je \(5^t = 12\), pa je \(t = \log_5 12\), a \(\log_{12} 5 = \frac{1}{t}\).</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Izračunamo \(\log_5 12\)</h3>
+        <p>Rastavimo \(12\) na proste činioce i primenimo pravila:</p>
+        <div class="math-block">
+          \[ 12 = 4 \cdot 3 = 2^2 \cdot 3 \]
+        </div>
+        <div class="math-block">
+          \[ \log_5 12 = \log_5(2^2 \cdot 3) = \log_5 2^2 + \log_5 3 = 2\log_5 2 + \log_5 3 \]
+        </div>
+        <p>Unesemo vrednosti iz koraka 1:</p>
+        <div class="math-block">
+          \[ \log_5 12 = 2 \cdot \frac{a}{3} + \frac{b}{2} = \frac{2a}{3} + \frac{b}{2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details>
+      <summary>Proveri se: Da li smo pravilno rastavili 12?</summary>
+      <p style="margin-top: 8px;">
+        Da: \(12 = 2^2 \cdot 3\). Zato je \(\log_5 12 = 2\log_5 2 + \log_5 3\),
+        a ne npr. \(3\log_5 2 + \log_5 3\) (što bi bilo \(\log_5 24\)).
+        Čest izvor greške je zamena \(12 = 2^2 \cdot 3\) sa \(12 = 2^3 \cdot 3\) ili \(12 = 2 \cdot 6\)
+        bez daljeg rastavljanja.
+      </p>
+    </details>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Svedemo razlomke na zajednički imenilac</h3>
+        <p>Zajednički imenilac za \(\frac{2a}{3}\) i \(\frac{b}{2}\) je \(6\):</p>
+        <div class="math-block">
+          \[ \log_5 12 = \frac{2a}{3} + \frac{b}{2} = \frac{4a}{6} + \frac{3b}{6} = \frac{4a + 3b}{6} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Izračunamo konačan rezultat</h3>
+        <p>Vratimo se na formulu iz koraka 2:</p>
+        <div class="math-block">
+          \[ \log_{12} 5 = \frac{1}{\log_5 12} = \frac{1}{\;\dfrac{4a + 3b}{6}\;} = \frac{6}{4a + 3b} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details>
+      <summary>Proveri se: Numerička verifikacija</summary>
+      <p style="margin-top: 8px;">
+        <strong>Stvarne vrednosti:</strong><br>
+        \(\log_5 8 = \frac{3\ln 2}{\ln 5} \approx 1{,}292\), dakle \(a \approx 1{,}292\).<br>
+        \(\log_5 9 = \frac{2\ln 3}{\ln 5} \approx 1{,}365\), dakle \(b \approx 1{,}365\).<br><br>
+        <strong>Naša formula:</strong> \(\frac{6}{4 \cdot 1{,}292 + 3 \cdot 1{,}365} = \frac{6}{5{,}168 + 4{,}096} = \frac{6}{9{,}264} \approx 0{,}648\).<br>
+        <strong>Direktno:</strong> \(\log_{12} 5 = \frac{\ln 5}{\ln 12} \approx \frac{1{,}609}{2{,}485} \approx 0{,}648\).<br>
+        <span class="highlight-green">Vrednosti se poklapaju.</span>
+      </p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-label">Ključni uvid</div>
+    <p style="margin-bottom: 12px; color: #e2e8f0;">
+      Suština zadatka je uočiti da su svi brojevi (\(8\), \(9\) i \(12\)) sastavljeni samo od
+      prostih činilaca \(2\) i \(3\). Rastavljanjem na proste činioce i primenom pravila za
+      logaritam stepena, sve se svodi na dva osnovna logaritma: \(\log_5 2 = \frac{a}{3}\)
+      i \(\log_5 3 = \frac{b}{2}\).
+    </p>
+    <div style="font-size: 1.4rem; font-weight: 700; color: #a78bfa; margin-top: 8px;">
+      \(\log_{12} 5 = \dfrac{6}{4a + 3b}\)
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konačan odgovor</div>
+    <div class="answer-value">\(\dfrac{6}{4a + 3b}\)</div>
+
+    <div class="final-options">
+      <div class="opt">(A) \(\dfrac{4}{3a+2b}\)</div>
+      <div class="opt">(B) \(\dfrac{1}{2a+3b}\)</div>
+      <div class="opt">(C) \(\dfrac{2}{2a+3b}\)</div>
+      <div class="opt">(D) \(\dfrac{1}{3a+2b}\)</div>
+      <div class="opt correct">(E) \(\dfrac{6}{4a+3b}\)</div>
+    </div>
+
+    <div class="verification-note">
+      <strong>Provera:</strong> \(\log_5 2 = \frac{a}{3}\), \(\log_5 3 = \frac{b}{2}\),
+      \(\log_5 12 = 2 \cdot \frac{a}{3} + \frac{b}{2} = \frac{4a+3b}{6}\),
+      pa je \(\log_{12} 5 = \frac{6}{4a+3b}\).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>
+        <strong>Pogrešno rastavljanje broja 12:</strong> Pisanje \(12 = 2 \cdot 6\) ili \(12 = 3 \cdot 4\) bez
+        daljeg rastavljanja na <em>proste</em> činioce. Mora se doći do \(12 = 2^2 \cdot 3\) da bi se
+        mogla primeniti pravila za logaritam stepena.
+      </li>
+      <li>
+        <strong>Zamena \(\log_{12} 5\) sa \(\log_5 12\):</strong> Ove dve vrednosti su recipročne,
+        ne jednake! \(\log_{12} 5 = \frac{1}{\log_5 12}\). Zaboravljanje recipročne vrednosti
+        dovodi do odgovora \(\frac{4a+3b}{6}\) umesto \(\frac{6}{4a+3b}\).
+      </li>
+      <li>
+        <strong>Greška u koeficijentima:</strong> Pisanje \(\log_5 2 = \frac{a}{3}\) je ispravno,
+        ali čest lapsus je pisanje \(\log_5 4 = \frac{a}{3}\) umesto \(\log_5 4 = \frac{2a}{3}\).
+        Uvek treba proveriti: \(\log_5 4 = \log_5 2^2 = 2\log_5 2 = \frac{2a}{3}\).
+      </li>
+      <li>
+        <strong>Greška pri svođenju na zajednički imenilac:</strong> Zbir \(\frac{2a}{3} + \frac{b}{2}\)
+        se ponekad pogrešno računa kao \(\frac{2a + b}{5}\) (sabiranjem imenilaca).
+        Ispravan postupak: \(\frac{4a}{6} + \frac{3b}{6} = \frac{4a + 3b}{6}\).
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      Ako je \(\log_5 8 = a\) i \(\log_5 9 = b\), izračunajte \(\log_{36} 40\) u funkciji od \(a\) i \(b\).
+    </p>
+    <details>
+      <summary>Pomoć i rešenje</summary>
+      <p style="margin-top: 8px;">
+        Rastavimo: \(40 = 2^3 \cdot 5\) i \(36 = 2^2 \cdot 3^2\).<br><br>
+        \(\log_{36} 40 = \frac{\log_5 40}{\log_5 36}\).<br><br>
+        \(\log_5 40 = \log_5(2^3 \cdot 5) = 3\log_5 2 + \log_5 5 = a + 1\).<br>
+        \(\log_5 36 = \log_5(2^2 \cdot 3^2) = 2\log_5 2 + 2\log_5 3 = \frac{2a}{3} + b = \frac{2a + 3b}{3}\).<br><br>
+        Dakle: \(\log_{36} 40 = \frac{a + 1}{\;\frac{2a + 3b}{3}\;} = \frac{3(a + 1)}{2a + 3b}\).
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  var canvas = document.getElementById('mainCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Lanac transformacija: od log\u2085 8 i log\u2085 9 do log\u2081\u2082 5', W / 2, 24);
+
+    // Draw flow diagram
+    var boxW = 155;
+    var boxH = 50;
+    var gap = 32;
+    var startY = 55;
+
+    // Row 1: Given values
+    var row1Y = startY;
+    var boxes1 = [
+      { x: W / 2 - boxW - gap, text: 'log\u2085 8 = a', sub: '= log\u2085 2\u00B3', color: '#60a5fa' },
+      { x: W / 2 + gap, text: 'log\u2085 9 = b', sub: '= log\u2085 3\u00B2', color: '#a78bfa' }
+    ];
+
+    boxes1.forEach(function(box) {
+      // Box
+      ctx.fillStyle = 'rgba(96,165,250,0.08)';
+      ctx.strokeStyle = box.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(box.x, row1Y, boxW, boxH, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = box.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(box.text, box.x + boxW / 2, row1Y + 22);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(box.sub, box.x + boxW / 2, row1Y + 40);
+    });
+
+    // Arrows down from row 1
+    var arrowY1 = row1Y + boxH + 5;
+    var arrowY2 = row1Y + boxH + gap - 5;
+
+    boxes1.forEach(function(box) {
+      var cx = box.x + boxW / 2;
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx, arrowY1);
+      ctx.lineTo(cx, arrowY2);
+      ctx.stroke();
+      // Arrowhead
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.moveTo(cx, arrowY2);
+      ctx.lineTo(cx - 4, arrowY2 - 7);
+      ctx.lineTo(cx + 4, arrowY2 - 7);
+      ctx.fill();
+    });
+
+    // Row 2: Derived values
+    var row2Y = row1Y + boxH + gap;
+    var boxes2 = [
+      { x: W / 2 - boxW - gap, text: 'log\u2085 2 = a/3', sub: '\u00F7 3 (eksponent)', color: '#60a5fa' },
+      { x: W / 2 + gap, text: 'log\u2085 3 = b/2', sub: '\u00F7 2 (eksponent)', color: '#a78bfa' }
+    ];
+
+    boxes2.forEach(function(box) {
+      ctx.fillStyle = 'rgba(96,165,250,0.08)';
+      ctx.strokeStyle = box.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(box.x, row2Y, boxW, boxH, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = box.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(box.text, box.x + boxW / 2, row2Y + 22);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(box.sub, box.x + boxW / 2, row2Y + 40);
+    });
+
+    // Arrows down converging
+    var arrowY3 = row2Y + boxH + 5;
+    var arrowY4 = row2Y + boxH + gap - 5;
+    var centerX = W / 2;
+
+    // Left arrow
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(boxes2[0].x + boxW / 2, arrowY3);
+    ctx.lineTo(centerX, arrowY4);
+    ctx.stroke();
+
+    // Right arrow
+    ctx.beginPath();
+    ctx.moveTo(boxes2[1].x + boxW / 2, arrowY3);
+    ctx.lineTo(centerX, arrowY4);
+    ctx.stroke();
+
+    // Arrowhead
+    ctx.fillStyle = '#475569';
+    ctx.beginPath();
+    ctx.moveTo(centerX, arrowY4);
+    ctx.lineTo(centerX - 4, arrowY4 - 7);
+    ctx.lineTo(centerX + 4, arrowY4 - 7);
+    ctx.fill();
+
+    // Row 3: log_5(12) computation
+    var row3Y = row2Y + boxH + gap;
+    var bigBoxW = 340;
+
+    ctx.fillStyle = 'rgba(244,114,182,0.08)';
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(centerX - bigBoxW / 2, row3Y, bigBoxW, 55, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('12 = 2\u00B2 \u00B7 3', centerX, row3Y + 20);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('log\u2085 12 = 2\u00B7(a/3) + (b/2) = (4a + 3b)/6', centerX, row3Y + 42);
+
+    // Arrow down
+    var arrowY5 = row3Y + 55 + 5;
+    var arrowY6 = row3Y + 55 + gap - 5;
+
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(centerX, arrowY5);
+    ctx.lineTo(centerX, arrowY6);
+    ctx.stroke();
+
+    ctx.fillStyle = '#475569';
+    ctx.beginPath();
+    ctx.moveTo(centerX, arrowY6);
+    ctx.lineTo(centerX - 4, arrowY6 - 7);
+    ctx.lineTo(centerX + 4, arrowY6 - 7);
+    ctx.fill();
+
+    // Label on arrow
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('recipro\u010Dna vrednost', centerX + 8, (arrowY5 + arrowY6) / 2 + 3);
+
+    // Row 4: Final result
+    var row4Y = row3Y + 55 + gap;
+    var resultBoxW = 280;
+
+    ctx.fillStyle = 'rgba(52,211,153,0.12)';
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(centerX - resultBoxW / 2, row4Y, resultBoxW, 55, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('log\u2081\u2082 5 = 6 / (4a + 3b)', centerX, row4Y + 24);
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Odgovor: (E)', centerX, row4Y + 44);
+
+    // Side note: decomposition of 12
+    var noteX = 50;
+    var noteY = 340;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Rastavljanje na proste \u010Dinioce:', noteX, noteY);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('8 = 2\u00B3', noteX, noteY + 20);
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('9 = 3\u00B2', noteX, noteY + 40);
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('12 = 2\u00B2 \u00B7 3', noteX, noteY + 60);
+
+    // Formula reminder on right
+    var fNoteX = W - 230;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Kori\u0161\u0107ene formule:', fNoteX, noteY);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('log\u2090 x\u207F = n \u00B7 log\u2090 x', fNoteX, noteY + 20);
+    ctx.fillText('log\u2090 (x\u00B7y) = log\u2090 x + log\u2090 y', fNoteX, noteY + 40);
+    ctx.fillText('log_b a = 1 / log_a b', fNoteX, noteY + 60);
+  }
+
+  draw();
+
+  // Step click interaction
+  document.querySelectorAll('.step-container').forEach(function(step) {
+    step.addEventListener('click', function() {
+      var wasActive = step.classList.contains('active');
+      document.querySelectorAll('.step-container').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      if (!wasActive) {
+        step.classList.add('active');
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Logaritamski izraz — promena osnove",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["logaritmi", "promena osnove", "logaritam stepena", "logaritam proizvoda", "rastavljanje na proste činioce"]
+}
+BRAINSPARK_META-->

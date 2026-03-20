@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binomni razvoj — odnos članova i zbir koeficijenata</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: In the expansion of (sqrt(3) + 1/sqrt(3))^n, (n in N), the ratio of the 3rd
+  to the 5th term equals 6:5. Find the sum of all binomial coefficients.
+
+  Step 1: General term of binomial expansion.
+    T_{k+1} = C(n, k) * (sqrt(3))^{n-k} * (1/sqrt(3))^k
+            = C(n, k) * 3^{(n-k)/2} * 3^{-k/2}
+            = C(n, k) * 3^{(n-2k)/2}
+
+  Step 2: Third term (k=2):
+    T_3 = C(n, 2) * 3^{(n-4)/2}
+
+  Step 3: Fifth term (k=4):
+    T_5 = C(n, 4) * 3^{(n-8)/2}
+
+  Step 4: Ratio T_3 / T_5 = 6/5
+    T_3 / T_5 = [C(n,2) * 3^{(n-4)/2}] / [C(n,4) * 3^{(n-8)/2}]
+              = [C(n,2) / C(n,4)] * 3^{(n-4)/2 - (n-8)/2}
+              = [C(n,2) / C(n,4)] * 3^{4/2}
+              = [C(n,2) / C(n,4)] * 9
+
+  Step 5: Compute C(n,2)/C(n,4):
+    C(n,2)/C(n,4) = [n!/(2!(n-2)!)] / [n!/(4!(n-4)!)]
+                  = 4! / 2! * (n-4)! / (n-2)!
+                  = 24/2 * 1/[(n-2)(n-3)]
+                  = 12 / [(n-2)(n-3)]
+
+  Step 6: Set up equation:
+    [12 / ((n-2)(n-3))] * 9 = 6/5
+    108 / [(n-2)(n-3)] = 6/5
+    (n-2)(n-3) = 108 * 5 / 6 = 90
+
+  Step 7: Solve (n-2)(n-3) = 90:
+    n^2 - 5n + 6 = 90
+    n^2 - 5n - 84 = 0
+    D = 25 + 336 = 361 = 19^2
+    n = (5 + 19)/2 = 12  or  n = (5 - 19)/2 = -7 (rejected, n in N)
+    So n = 12.
+
+  Step 8: Sum of binomial coefficients = 2^n = 2^12 = 4096 = 4^6.
+
+  Answer: C) 4^6 = 4096.
+
+  Verification:
+    - C(12,2) = 66, C(12,4) = 495
+    - T_3 = 66 * 3^{(12-4)/2} = 66 * 3^4 = 66 * 81 = 5346
+    - T_5 = 495 * 3^{(12-8)/2} = 495 * 3^2 = 495 * 9 = 4455
+    - T_3/T_5 = 5346/4455 = 6/5. Correct!
+    - Sum of binomial coefficients = 2^12 = 4096 = 4^6. Matches answer C.
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answer-option {
+  min-width: 90px;
+  cursor: default;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.step-container:hover {
+  background: rgba(96,165,250,0.05);
+  border-left: 3px solid #4ade80;
+  padding-left: 13px;
+}
+
+.step-container.active {
+  background: rgba(96,165,250,0.05);
+  border-left: 3px solid #4ade80;
+  padding-left: 13px;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin-bottom: 8px;
+}
+
+.muted {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+details {
+  margin: 15px 0;
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+.theory-card details {
+  background: rgba(96,165,250,0.06);
+  border-color: rgba(96,165,250,0.15);
+}
+
+.theory-card details summary {
+  color: #60a5fa;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box .insight-label {
+  color: #a78bfa;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box {
+  background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(74,222,128,0.1));
+  border: 2px solid rgba(52,211,153,0.35);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-box .answer-label {
+  color: #34d399;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.final-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.final-option {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.final-option.correct {
+  border-color: #34d399;
+  background: rgba(52,211,153,0.12);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.pitfall-card {
+  border-left: 3px solid #e09468;
+}
+
+.pitfall-card h2 {
+  color: #e09468;
+}
+
+.canvas-container {
+  text-align: center;
+  margin: 16px 0;
+}
+
+.canvas-container canvas {
+  border-radius: 12px;
+  border: 1px solid #334155;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(52,211,153,0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(52,211,153,0.15);
+}
+
+ul {
+  padding-left: 20px;
+}
+
+ul li {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 80px; padding: 10px 12px; }
+  .step-container { flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Binomni razvoj — odnos članova i zbir koeficijenata</h1>
+  <p class="subtitle">Kombinatorika i algebra — binomna formula i svojstva binomnih koeficijenata</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>
+      U razvoju <span class="highlight-blue">\(\left(\sqrt{3} + \dfrac{1}{\sqrt{3}}\right)^n\)</span>,
+      \((n \in \mathbb{N})\), odnos trećeg i petog člana razvoja jednak je \(6 : 5\).
+      Zbir svih binomnih koeficijenata u tom razvoju jednak je:
+    </p>
+
+    <div class="given-grid">
+      <div class="given-item">
+        <div class="label">Izraz</div>
+        <div class="value">\(\left(\sqrt{3} + \dfrac{1}{\sqrt{3}}\right)^n\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Uslov</div>
+        <div class="value">\(T_3 : T_5 = 6 : 5\)</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Traženo</div>
+        <div class="value">Zbir binomnih koef.</div>
+      </div>
+    </div>
+
+    <div class="given-grid" style="margin-top: 20px;">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(8192\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(8^3\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(4^6\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(2048\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(1024\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>
+      Koristeći binomnu formulu, izrazićemo treći i peti član razvoja u zavisnosti od \(n\).
+      Iz datog odnosa \(T_3 : T_5 = 6 : 5\) dobićemo jednačinu za \(n\).
+      Kada odredimo \(n\), iskoristićemo poznato svojstvo da je zbir svih binomnih koeficijenata jednak \(2^n\).
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <ul>
+        <li><strong>Binomna formula:</strong> \((a + b)^n = \displaystyle\sum_{k=0}^{n} \binom{n}{k} a^{n-k} b^k\)</li>
+        <li><strong>Opšti član:</strong> \(T_{k+1} = \binom{n}{k} a^{n-k} b^k\), gde je \(T_{k+1}\) \((k+1)\)-ti član razvoja</li>
+        <li><strong>Zbir binomnih koeficijenata:</strong> \(\displaystyle\sum_{k=0}^{n} \binom{n}{k} = 2^n\). Dobija se stavljanjem \(a = b = 1\) u binomnu formulu.</li>
+        <li><strong>Količnik binomnih koeficijenata:</strong> \(\dfrac{\binom{n}{k}}{\binom{n}{k+2}} = \dfrac{(k+1)(k+2)}{(n-k)(n-k-1)}\)</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <div class="canvas-container">
+      <canvas id="mainCanvas" width="740" height="400"></canvas>
+      <p class="canvas-hint">Paskalni trougao i binomni koeficijenti za n = 12 — kliknite na red za prikaz vrednosti</p>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Zapišemo opšti član razvoja</h3>
+        <p>Označimo \(a = \sqrt{3}\) i \(b = \dfrac{1}{\sqrt{3}} = 3^{-1/2}\). Opšti \((k+1)\)-ti član binomnog razvoja je:</p>
+        <div class="math-block">
+          \[ T_{k+1} = \binom{n}{k} \cdot (\sqrt{3})^{n-k} \cdot \left(\frac{1}{\sqrt{3}}\right)^k \]
+        </div>
+        <p>Izrazimo stepene trojke:</p>
+        <div class="math-block">
+          \[ T_{k+1} = \binom{n}{k} \cdot 3^{(n-k)/2} \cdot 3^{-k/2} = \binom{n}{k} \cdot 3^{(n-2k)/2} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Zapišemo treći član (\(k = 2\))</h3>
+        <p>Treći član odgovara vrednosti \(k = 2\):</p>
+        <div class="math-block">
+          \[ T_3 = \binom{n}{2} \cdot 3^{(n-4)/2} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Zapišemo peti član (\(k = 4\))</h3>
+        <p>Peti član odgovara vrednosti \(k = 4\):</p>
+        <div class="math-block">
+          \[ T_5 = \binom{n}{4} \cdot 3^{(n-8)/2} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details>
+      <summary>Proveri se: Koji eksponent trojke ima T_3, a koji T_5?</summary>
+      <p style="margin-top: 8px;">
+        Za \(T_3\) (k=2): eksponent je \(\frac{n-4}{2}\).
+        Za \(T_5\) (k=4): eksponent je \(\frac{n-8}{2}\).
+        Razlika eksponenata je \(\frac{n-4}{2} - \frac{n-8}{2} = \frac{4}{2} = 2\), dakle \(T_3\) ima faktor \(3^2 = 9\) više od \(T_5\) (u smislu stepena trojke).
+      </p>
+    </details>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izračunamo odnos \(T_3 / T_5\)</h3>
+        <p>Podelimo treći sa petim članom:</p>
+        <div class="math-block">
+          \[ \frac{T_3}{T_5} = \frac{\binom{n}{2}}{\binom{n}{4}} \cdot 3^{(n-4)/2 - (n-8)/2} \]
+        </div>
+        <p>Eksponent trojke se pojednostavljuje:</p>
+        <div class="math-block">
+          \[ \frac{n-4}{2} - \frac{n-8}{2} = \frac{n - 4 - n + 8}{2} = \frac{4}{2} = 2 \]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[ \frac{T_3}{T_5} = \frac{\binom{n}{2}}{\binom{n}{4}} \cdot 3^2 = \frac{\binom{n}{2}}{\binom{n}{4}} \cdot 9 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Pojednostavimo količnik binomnih koeficijenata</h3>
+        <p>Izračunajmo \(\dfrac{\binom{n}{2}}{\binom{n}{4}}\) koristeći definiciju:</p>
+        <div class="math-block">
+          \[ \frac{\binom{n}{2}}{\binom{n}{4}} = \frac{\dfrac{n!}{2!(n-2)!}}{\dfrac{n!}{4!(n-4)!}} = \frac{4!}{2!} \cdot \frac{(n-4)!}{(n-2)!} \]
+        </div>
+        <p>Izračunamo svaki faktor:</p>
+        <div class="math-block">
+          \[ \frac{4!}{2!} = \frac{24}{2} = 12 \]
+        </div>
+        <div class="math-block">
+          \[ \frac{(n-4)!}{(n-2)!} = \frac{1}{(n-3)(n-2)} \]
+        </div>
+        <p>Konačno:</p>
+        <div class="math-block">
+          \[ \frac{\binom{n}{2}}{\binom{n}{4}} = \frac{12}{(n-2)(n-3)} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details>
+      <summary>Proveri se: Koliko iznosi odnos T_3/T_5 za n = 12?</summary>
+      <p style="margin-top: 8px;">
+        \(\dfrac{\binom{12}{2}}{\binom{12}{4}} = \dfrac{66}{495} = \dfrac{2}{15}\).
+        Tada \(\dfrac{T_3}{T_5} = \dfrac{2}{15} \cdot 9 = \dfrac{18}{15} = \dfrac{6}{5}\). Tačno!
+      </p>
+    </details>
+
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Postavimo jednačinu iz datog uslova</h3>
+        <p>Dato je da je \(T_3 : T_5 = 6 : 5\), tj. \(\dfrac{T_3}{T_5} = \dfrac{6}{5}\). Uvrstimo:</p>
+        <div class="math-block">
+          \[ \frac{12}{(n-2)(n-3)} \cdot 9 = \frac{6}{5} \]
+        </div>
+        <div class="math-block">
+          \[ \frac{108}{(n-2)(n-3)} = \frac{6}{5} \]
+        </div>
+        <p>Rešimo po \((n-2)(n-3)\):</p>
+        <div class="math-block">
+          \[ (n-2)(n-3) = \frac{108 \cdot 5}{6} = 90 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Rešimo kvadratnu jednačinu</h3>
+        <p>Razvijemo levu stranu:</p>
+        <div class="math-block">
+          \[ n^2 - 5n + 6 = 90 \]
+        </div>
+        <div class="math-block">
+          \[ n^2 - 5n - 84 = 0 \]
+        </div>
+        <p>Diskriminanta:</p>
+        <div class="math-block">
+          \[ D = 25 + 336 = 361 = 19^2 \]
+        </div>
+        <p>Rešenja:</p>
+        <div class="math-block">
+          \[ n = \frac{5 + 19}{2} = 12 \qquad \text{ili} \qquad n = \frac{5 - 19}{2} = -7 \]
+        </div>
+        <p>Pošto je \(n \in \mathbb{N}\), odbacujemo \(n = -7\), pa je <span class="highlight-green">\(n = 12\)</span>.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details>
+      <summary>Proveri se: Da li (12-2)(12-3) zaista daje 90?</summary>
+      <p style="margin-top: 8px;">
+        \((12 - 2)(12 - 3) = 10 \cdot 9 = 90\). Tačno!
+      </p>
+    </details>
+
+    <div class="step-container" id="step8">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3>Izračunamo zbir svih binomnih koeficijenata</h3>
+        <p>Poznato svojstvo binomne formule: ako stavimo \(a = b = 1\) u \((a+b)^n\), dobijamo:</p>
+        <div class="math-block">
+          \[ \sum_{k=0}^{n} \binom{n}{k} = 2^n \]
+        </div>
+        <p>Za \(n = 12\):</p>
+        <div class="math-block">
+          \[ \sum_{k=0}^{12} \binom{12}{k} = 2^{12} = 4096 = 4^6 \]
+        </div>
+        <p class="muted">Napomena: \(4^6 = (2^2)^6 = 2^{12} = 4096\).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="insight-label">Ključni uvid</div>
+    <p style="margin-bottom: 12px; color: #e2e8f0;">
+      Zbir svih binomnih koeficijenata u razvoju \((a + b)^n\) uvek iznosi \(2^n\),
+      bez obzira na to šta su \(a\) i \(b\). Ovo se dobija zamenom \(a = b = 1\)
+      u binomnoj formuli. Zato je ključ ovog zadatka odrediti \(n\) iz datog uslova o odnosu članova.
+    </p>
+    <div style="font-size: 1.6rem; font-weight: 700; color: #a78bfa; margin-top: 8px;">
+      \( 2^{12} = 4^6 = 4096 \)
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konačan odgovor</div>
+    <div class="answer-value">\( 4^6 = 4096 \)</div>
+
+    <div class="final-options">
+      <div class="final-option">(A) \(8192\)</div>
+      <div class="final-option">(B) \(8^3\)</div>
+      <div class="final-option correct">(C) \(4^6\)</div>
+      <div class="final-option">(D) \(2048\)</div>
+      <div class="final-option">(E) \(1024\)</div>
+    </div>
+
+    <div class="verification-note">
+      <strong>Provera:</strong> Za \(n = 12\): \(\binom{12}{2} = 66\), \(\binom{12}{4} = 495\).
+      \(T_3 = 66 \cdot 3^4 = 5346\), \(T_5 = 495 \cdot 3^2 = 4455\).
+      Odnos: \(\frac{5346}{4455} = \frac{6}{5}\). Potvrda!
+      Takođe, \(8192 = 2^{13}\), \(8^3 = 512\), \(2048 = 2^{11}\), \(1024 = 2^{10}\) — nijedan ne odgovara \(2^{12}\).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfall-card">
+    <h2>Česte greške</h2>
+    <ul>
+      <li>
+        <strong>Pogrešna identifikacija članova:</strong> Treći član ima \(k = 2\) (ne \(k = 3\)),
+        a peti član ima \(k = 4\) (ne \(k = 5\)). U binomnom razvoju, \(T_{k+1}\) odgovara indeksu \(k\),
+        počevši od \(k = 0\). Zamena \(k = 3\) za treći član dovodi do potpuno pogrešnog rezultata.
+      </li>
+      <li>
+        <strong>Zamena \(4^6\) i \(8^3\):</strong> Neki učenici izračunaju \(n = 12\) tačno,
+        ali pogrešno zapišu \(2^{12}\). Zapamtite: \(4^6 = 2^{12} = 4096\), dok je \(8^3 = 2^9 = 512\)
+        — potpuno različiti brojevi!
+      </li>
+      <li>
+        <strong>Zaboravljanje da zbir binomnih koeficijenata ne zavisi od \(a\) i \(b\):</strong>
+        Neki pokušavaju da izračunaju \((\sqrt{3} + \frac{1}{\sqrt{3}})^{12}\) direktno.
+        To nije zbir koeficijenata, nego vrednost celog izraza. Zbir koeficijenata je uvek \(2^n\).
+      </li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2>Dodatni izazov</h2>
+    <p>
+      U istom razvoju \(\left(\sqrt{3} + \dfrac{1}{\sqrt{3}}\right)^{12}\), odredite
+      koji je član razvoja konstantan (ne zavisi od \(\sqrt{3}\)).
+    </p>
+    <details>
+      <summary>Pomoć i rešenje</summary>
+      <p style="margin-top: 8px;">
+        Opšti član je \(T_{k+1} = \binom{12}{k} \cdot 3^{(12-2k)/2}\). Član je konstantan kada
+        je eksponent trojke jednak nuli: \(\frac{12 - 2k}{2} = 0\), tj. \(k = 6\).
+        Dakle, sedmi član \(T_7 = \binom{12}{6} = 924\) je konstantan.
+      </p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  var canvas = document.getElementById('mainCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  var selectedRow = 12;
+
+  function binomial(n, k) {
+    if (k < 0 || k > n) return 0;
+    if (k === 0 || k === n) return 1;
+    if (k > n - k) k = n - k;
+    var result = 1;
+    for (var i = 0; i < k; i++) {
+      result = result * (n - i) / (i + 1);
+    }
+    return Math.round(result);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    var maxRow = 12;
+    var topPad = 20;
+    var rowHeight = 28;
+    var centerX = W / 2;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Paskalov trougao (redovi 0\u201312)', centerX, topPad);
+
+    // Draw rows 0 to 12
+    for (var n = 0; n <= maxRow; n++) {
+      var y = topPad + 20 + n * rowHeight;
+      var numItems = n + 1;
+      var spacing = Math.min(58, (W - 40) / (maxRow + 1));
+      var startX = centerX - (numItems - 1) * spacing / 2;
+
+      var isSelected = n === selectedRow;
+
+      for (var k = 0; k <= n; k++) {
+        var x = startX + k * spacing;
+        var val = binomial(n, k);
+
+        if (n <= 6) {
+          // Show values for small rows
+          if (isSelected) {
+            ctx.fillStyle = '#4ade80';
+            ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+          } else {
+            ctx.fillStyle = '#64748b';
+            ctx.font = '11px Segoe UI, system-ui, sans-serif';
+          }
+          ctx.textAlign = 'center';
+          ctx.fillText(val.toString(), x, y);
+        } else if (n <= 10) {
+          // Show dots for medium rows
+          var radius = isSelected ? 4 : 2.5;
+          ctx.fillStyle = isSelected ? '#4ade80' : '#475569';
+          ctx.beginPath();
+          ctx.arc(x, y - 4, radius, 0, 2 * Math.PI);
+          ctx.fill();
+        } else {
+          // Show dots for large rows
+          var radius2 = isSelected ? 4.5 : 2;
+          ctx.fillStyle = isSelected ? '#4ade80' : '#334155';
+          ctx.beginPath();
+          ctx.arc(x, y - 4, radius2, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+      }
+
+      // Row label on left
+      ctx.fillStyle = isSelected ? '#60a5fa' : '#475569';
+      ctx.font = isSelected ? 'bold 11px Segoe UI, system-ui, sans-serif' : '10px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('n=' + n, startX - 14, y);
+    }
+
+    // Show sum for selected row
+    var sumY = topPad + 20 + maxRow * rowHeight + 35;
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Red n = ' + selectedRow + ':', centerX - 120, sumY);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    var sum = Math.pow(2, selectedRow);
+    ctx.fillText('Zbir koeficijenata = 2\u00B9\u00B2 = ' + sum, centerX + 60, sumY);
+
+    // Show the highlighted row's actual values at the bottom
+    var detailY = sumY + 28;
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    var vals12 = [];
+    for (var j = 0; j <= 12; j++) {
+      vals12.push(binomial(12, j));
+    }
+    var valStr = vals12.join(', ');
+    ctx.fillText('C(12,k): ' + valStr, centerX, detailY);
+
+    // Highlight T3 and T5 positions
+    var detailY2 = detailY + 20;
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('T\u2083 \u2192 C(12,2) = 66     |     T\u2085 \u2192 C(12,4) = 495', centerX, detailY2);
+  }
+
+  draw();
+
+  // Click handler for row selection
+  canvas.addEventListener('click', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var clickY = (e.clientY - rect.top) * scaleX;
+    var topPad = 20;
+    var rowHeight = 28;
+
+    for (var n = 0; n <= 12; n++) {
+      var y = topPad + 20 + n * rowHeight;
+      if (Math.abs(clickY - y) < 14) {
+        selectedRow = n;
+        draw();
+        return;
+      }
+    }
+  });
+
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var touch = e.touches[0];
+    var clickY = (touch.clientY - rect.top) * scaleX;
+    var topPad = 20;
+    var rowHeight = 28;
+
+    for (var n = 0; n <= 12; n++) {
+      var y = topPad + 20 + n * rowHeight;
+      if (Math.abs(clickY - y) < 14) {
+        selectedRow = n;
+        draw();
+        return;
+      }
+    }
+  });
+
+  // Step click interaction
+  document.querySelectorAll('.step-container').forEach(function(step) {
+    step.addEventListener('click', function() {
+      var wasActive = step.classList.contains('active');
+      document.querySelectorAll('.step-container').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      if (!wasActive) {
+        step.classList.add('active');
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Binomni razvoj — odnos članova i zbir koeficijenata",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["binomna formula", "binomni koeficijenti", "Njutnov binom", "zbir binomnih koeficijenata", "Paskalov trougao"]
+}
+BRAINSPARK_META-->

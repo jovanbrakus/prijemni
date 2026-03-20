@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kompozicija funkcija – parna i neparna komponenta</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM:
+Given f(1/x) = x^2 + 1/x^3 and g(x) = (1/2)(f(x) + f(-x)), where x ≠ 0, find g(x).
+
+Options:
+A) g(x) = x^2
+B) g(x) = x^3
+C) g(x) = 1/x^2
+D) g(x) = 1/x^3
+E) g(x) = 0
+
+STEP 1: Find f(x) explicitly.
+We know f(1/x) = x^2 + 1/x^3.
+Let t = 1/x, so x = 1/t.
+Substituting: f(t) = (1/t)^2 + t^3 = 1/t^2 + t^3
+
+Therefore: f(x) = 1/x^2 + x^3
+
+STEP 2: Find f(-x).
+f(-x) = 1/(-x)^2 + (-x)^3
+      = 1/x^2 + (-x^3)
+      = 1/x^2 - x^3
+
+STEP 3: Compute g(x) = (1/2)(f(x) + f(-x)).
+g(x) = (1/2)( (1/x^2 + x^3) + (1/x^2 - x^3) )
+     = (1/2)( 1/x^2 + x^3 + 1/x^2 - x^3 )
+     = (1/2)( 2/x^2 )
+     = 1/x^2
+
+ANSWER: C) g(x) = 1/x^2 ✓
+
+VERIFICATION:
+Let x = 2:
+f(1/2) = 2^2 + 1/2^3 = 4 + 1/8 = 33/8 ✓ (from definition)
+f(x) = 1/x^2 + x^3, so f(2) = 1/4 + 8 = 33/4
+f(-2) = 1/4 + (-8) = -31/4
+g(2) = (1/2)(33/4 + (-31/4)) = (1/2)(2/4) = (1/2)(1/2) = 1/4 = 1/2^2 ✓
+
+KEY INSIGHT: g(x) = (1/2)(f(x)+f(-x)) extracts the "even part" of f.
+Since f(x) = 1/x^2 + x^3, the even part is 1/x^2 (since 1/x^2 is even)
+and x^3 is odd so it cancels out.
+</script>
+
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  background: #1e293b;
+  border: 2px solid #a78bfa;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.given-item.answer-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.given-item.answer-option .label {
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.given-item.answer-option .value {
+  color: #e2e8f0;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin-bottom: 1.5rem;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin: 15px 0;
+  font-size: 0.95rem;
+  color: #a78bfa;
+}
+
+.checkpoint-label {
+  font-weight: 700;
+  margin-right: 0.25rem;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.answer-options .opt {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.answer-options .opt.correct {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  body { padding: 0.5rem; }
+  .card, .problem-statement, details .detail-content, .final-answer,
+  .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Kompozicija funkcija &ndash; parna komponenta</h1>
+  <p class="subtitle">Funkcije: nalaženje eksplicitnog oblika i izdvajanje parnog dela funkcije</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Ako je \(f\!\left(\dfrac{1}{x}\right) = x^2 + \dfrac{1}{x^3}\) i \(g(x) = \dfrac{1}{2}\bigl(f(x) + f(-x)\bigr)\), gde je \(x \neq 0\), onda je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A"><div class="label">(A)</div><div class="value">\(g(x) = x^2\)</div></div>
+      <div class="given-item answer-option" data-option="B"><div class="label">(B)</div><div class="value">\(g(x) = x^3\)</div></div>
+      <div class="given-item answer-option" data-option="C"><div class="label">(C)</div><div class="value">\(g(x) = \dfrac{1}{x^2}\)</div></div>
+      <div class="given-item answer-option" data-option="D"><div class="label">(D)</div><div class="value">\(g(x) = \dfrac{1}{x^3}\)</div></div>
+      <div class="given-item answer-option" data-option="E"><div class="label">(E)</div><div class="value">\(g(x) = 0\)</div></div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</div>
+    <ol class="plan-list">
+      <li>Iz date definicije \(f(1/x)\) naći ćemo eksplicitan oblik \(f(x)\) smenom \(t = 1/x\)</li>
+      <li>Izračunaćemo \(f(-x)\) i primeniti formulu za \(g(x)\), koja izdvaja parni deo funkcije \(f\)</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>&#128208; Podsetnik iz teorije</summary>
+    <div class="detail-content">
+      <p><strong>Smena promenljive u definiciji funkcije:</strong></p>
+      <p>Ako je data funkcija \(f(1/x)\), da bismo našli \(f(x)\) uvodimo smenu \(t = 1/x\), tj. \(x = 1/t\), i svuda zamenimo \(x\) sa \(1/t\).</p>
+
+      <p style="margin-top:0.75rem"><strong>Parna i neparna funkcija:</strong></p>
+      <p>Funkcija \(h(x)\) je <em>parna</em> ako važi \(h(-x) = h(x)\), a <em>neparna</em> ako važi \(h(-x) = -h(x)\).</p>
+
+      <p style="margin-top:0.75rem"><strong>Izdvajanje parnog dela:</strong></p>
+      \[\text{Parni deo od } f(x) = \frac{f(x) + f(-x)}{2}\]
+      <p>Ova formula „poništava" neparne članove i zadržava samo parne.</p>
+
+      <p style="margin-top:0.75rem"><strong>Osobine parnosti stepena:</strong></p>
+      <ul style="margin-left:1.2rem; margin-top:0.3rem;">
+        <li>\((-x)^n = x^n\) za paran \(n\) &mdash; parna funkcija</li>
+        <li>\((-x)^n = -x^n\) za neparan \(n\) &mdash; neparna funkcija</li>
+      </ul>
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Grafički prikaz</div>
+    <p class="muted" style="margin-bottom:0.75rem;">Dijagram prikazuje kako se f(x) rastavlja na parni i neparni deo, i kako g(x) izdvaja samo parni deo.</p>
+    <div class="canvas-wrap">
+      <canvas id="graph" width="700" height="420"></canvas>
+      <p class="drag-hint">Koristite klizač ispod za promenu vrednosti x</p>
+    </div>
+    <div style="text-align:center; margin-top:0.5rem;">
+      <label class="muted" style="font-size:0.9rem;">x = <span id="xVal">1,50</span></label><br>
+      <input type="range" id="xSlider" min="0.3" max="3.0" step="0.05" value="1.5" style="width:80%; max-width:400px; margin-top:0.3rem; accent-color:#60a5fa;">
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Nađimo eksplicitan oblik f(x)</div>
+      <p>Dato nam je da je:</p>
+      \[f\!\left(\frac{1}{x}\right) = x^2 + \frac{1}{x^3}\]
+      <p>Da bismo dobili \(f(x)\), uvodimo smenu \(t = \dfrac{1}{x}\), što znači da je \(x = \dfrac{1}{t}\).</p>
+      <p>Zamenom u levu stranu dobijamo \(f(t)\), a u desnu stranu zamenjujemo svako \(x\) sa \(\dfrac{1}{t}\):</p>
+      \[f(t) = \left(\frac{1}{t}\right)^2 + t^3\]
+      <p>Uprošćavamo:</p>
+      \[f(t) = \frac{1}{t^2} + t^3\]
+      <p>Pošto je \(t\) samo pomoćna promenljiva, možemo je nazvati \(x\):</p>
+      \[\boxed{f(x) = \frac{1}{x^2} + x^3}\]
+      <div class="checkpoint">
+        <span class="checkpoint-label">Proveri sebe:</span> Ako u \(f(x) = \frac{1}{x^2} + x^3\) zamenimo \(x\) sa \(\frac{1}{x}\), da li dobijamo polaznu jednakost?
+        <details style="margin: 10px 0 0; background: transparent; border: none;">
+          <summary style="color:#a78bfa; padding: 0.3rem 0;">Pogledaj odgovor</summary>
+          <div style="padding-top:0.3rem;">
+            \(f\!\left(\frac{1}{x}\right) = \frac{1}{(1/x)^2} + \left(\frac{1}{x}\right)^3 = x^2 + \frac{1}{x^3}\) &check; Tačno!
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Izračunajmo f(&minus;x)</div>
+      <p>Sada kada znamo da je \(f(x) = \dfrac{1}{x^2} + x^3\), zamenjujemo \(x\) sa \(-x\):</p>
+      \[f(-x) = \frac{1}{(-x)^2} + (-x)^3\]
+      <p>Koristimo osobine stepena:</p>
+      <ul style="margin-left:1.2rem; margin-top:0.3rem; margin-bottom:0.5rem;">
+        <li>\((-x)^2 = x^2\) &mdash; paran stepen, znak se gubi</li>
+        <li>\((-x)^3 = -x^3\) &mdash; neparan stepen, znak se menja</li>
+      </ul>
+      \[f(-x) = \frac{1}{x^2} - x^3\]
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Saberimo f(x) i f(&minus;x)</div>
+      <p>Saberimo oba izraza:</p>
+      \[f(x) + f(-x) = \left(\frac{1}{x^2} + x^3\right) + \left(\frac{1}{x^2} - x^3\right)\]
+      <p>Neparni član \(x^3\) se poništava:</p>
+      \[f(x) + f(-x) = \frac{1}{x^2} + \cancel{x^3} + \frac{1}{x^2} - \cancel{x^3} = \frac{2}{x^2}\]
+      <div class="checkpoint">
+        <span class="checkpoint-label">Proveri sebe:</span> Koji član funkcije \(f(x)\) se poništava pri sabiranju \(f(x) + f(-x)\)?
+        <details style="margin: 10px 0 0; background: transparent; border: none;">
+          <summary style="color:#a78bfa; padding: 0.3rem 0;">Pogledaj odgovor</summary>
+          <div style="padding-top:0.3rem;">
+            Član \(x^3\) jer je neparna funkcija: \((-x)^3 = -x^3\), pa se pri sabiranju dobija \(x^3 + (-x^3) = 0\).
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Izračunajmo g(x)</div>
+      <p>Primenimo definiciju funkcije \(g\):</p>
+      \[g(x) = \frac{1}{2}\bigl(f(x) + f(-x)\bigr) = \frac{1}{2} \cdot \frac{2}{x^2}\]
+      <p>Dvojke se krate:</p>
+      \[\boxed{g(x) = \frac{1}{x^2}}\]
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Ključni uvid</div>
+    <p>Formula \(g(x) = \frac{1}{2}(f(x) + f(-x))\) predstavlja <strong>izdvajanje parnog dela</strong> funkcije \(f\). Funkcija \(f(x) = \frac{1}{x^2} + x^3\) se sastoji od dva člana: \(\frac{1}{x^2}\) je <strong>parna funkcija</strong> (jer \(\frac{1}{(-x)^2} = \frac{1}{x^2}\)), a \(x^3\) je <strong>neparna funkcija</strong> (jer \((-x)^3 = -x^3\)). Kada primenimo formulu za parni deo, neparni član se poništava, a ostaje samo parni: \(g(x) = \frac{1}{x^2}\).</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konačan odgovor</div>
+    <div class="value">\(g(x) = \dfrac{1}{x^2}\)</div>
+    <div class="answer-options">
+      <span class="opt">(A) \(g(x) = x^2\)</span>
+      <span class="opt">(B) \(g(x) = x^3\)</span>
+      <span class="opt correct">(C) \(g(x) = \dfrac{1}{x^2}\)</span>
+      <span class="opt">(D) \(g(x) = \dfrac{1}{x^3}\)</span>
+      <span class="opt">(E) \(g(x) = 0\)</span>
+    </div>
+    <p class="muted" style="margin-top:0.75rem;font-size:0.9rem;">
+      <strong>Verifikacija:</strong> Za \(x = 2\): \(f(2) = \frac{1}{4} + 8 = \frac{33}{4}\), \(f(-2) = \frac{1}{4} - 8 = -\frac{31}{4}\).
+      Tada \(g(2) = \frac{1}{2}\!\left(\frac{33}{4} - \frac{31}{4}\right) = \frac{1}{2} \cdot \frac{2}{4} = \frac{1}{4} = \frac{1}{2^2}\). Tačno!
+    </p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall">
+      <strong>Pogrešna smena za nalaženje f(x):</strong> Česta greška je da se u izrazu za \(f(1/x)\) jednostavno zameni \(1/x\) sa \(x\) bez pravilnog korišćenja smene. Morate zameniti svako \(x\) sa \(1/t\) u celom izrazu na desnoj strani, ne samo u argumentu.
+    </div>
+    <div class="pitfall">
+      <strong>Brkanje parnosti stepena:</strong> Kod izračunavanja \(f(-x)\), treba pažljivo primeniti pravila: \((-x)^2 = x^2\) (paran stepen čuva znak), ali \((-x)^3 = -x^3\) (neparan stepen menja znak). Posebno, \(\frac{1}{(-x)^2} = \frac{1}{x^2}\), a ne \(-\frac{1}{x^2}\).
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Koristeći isti oblik \(f(x) = \frac{1}{x^2} + x^3\), nađite <strong>neparni deo</strong> funkcije \(f\), tj. izračunajte \(h(x) = \frac{1}{2}(f(x) - f(-x))\).</p>
+    <details style="margin: 15px 0; background: transparent; border-color: #34d399;">
+      <summary style="color: #34d399;">Pogledaj nagoveštaj</summary>
+      <div class="detail-content">
+        <p>Formula za neparni deo radi suprotno od parnog dela &mdash; sada se parni član poništava, a neparni ostaje.</p>
+        <p>Rezultat: \(h(x) = x^3\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('graph');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const slider = document.getElementById('xSlider');
+  const xValLabel = document.getElementById('xVal');
+
+  function f(x) {
+    return 1 / (x * x) + x * x * x;
+  }
+
+  function fNeg(x) {
+    return 1 / (x * x) - x * x * x;
+  }
+
+  function g(x) {
+    return 1 / (x * x);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    var padL = 60;
+    var padR = 30;
+    var padT = 40;
+    var padB = 50;
+    var plotW = W - padL - padR;
+    var plotH = H - padT - padB;
+
+    var xMin = 0.25;
+    var xMax = 3.2;
+    var yMin = -6;
+    var yMax = 12;
+
+    function toCanvasX(x) { return padL + (x - xMin) / (xMax - xMin) * plotW; }
+    function toCanvasY(y) { return padT + (yMax - y) / (yMax - yMin) * plotH; }
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (var yi = Math.ceil(yMin); yi <= yMax; yi += 2) {
+      ctx.beginPath();
+      ctx.moveTo(padL, toCanvasY(yi));
+      ctx.lineTo(W - padR, toCanvasY(yi));
+      ctx.stroke();
+    }
+    for (var xi = 0.5; xi <= xMax; xi += 0.5) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(xi), padT);
+      ctx.lineTo(toCanvasX(xi), padT + plotH);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(padL, toCanvasY(0));
+    ctx.lineTo(W - padR, toCanvasY(0));
+    ctx.stroke();
+
+    // Y-axis labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (var yi2 = Math.ceil(yMin); yi2 <= yMax; yi2 += 2) {
+      if (yi2 === 0) continue;
+      ctx.fillText(yi2.toString(), padL - 8, toCanvasY(yi2));
+    }
+
+    // X-axis labels
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (var xi2 = 0.5; xi2 <= xMax; xi2 += 0.5) {
+      ctx.fillText(xi2.toFixed(1).replace('.', ','), toCanvasX(xi2), toCanvasY(0) + 5);
+    }
+
+    // Draw curves
+    function drawCurve(fn, color, dash) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash(dash || []);
+      ctx.beginPath();
+      var started = false;
+      for (var px = 0; px <= plotW; px++) {
+        var x = xMin + px / plotW * (xMax - xMin);
+        if (x < 0.28) continue;
+        var y = fn(x);
+        if (y < yMin - 2 || y > yMax + 2) { started = false; continue; }
+        var cx = toCanvasX(x);
+        var cy = toCanvasY(y);
+        if (!started) { ctx.moveTo(cx, cy); started = true; }
+        else { ctx.lineTo(cx, cy); }
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    drawCurve(f, '#60a5fa', []);
+    drawCurve(fNeg, '#a78bfa', [6, 4]);
+    drawCurve(g, '#4ade80', []);
+
+    // Current x marker
+    var xCur = parseFloat(slider.value);
+    var fVal = f(xCur);
+    var fNegVal = fNeg(xCur);
+    var gVal = g(xCur);
+
+    function drawDot(x, y, color, labelText, side) {
+      var cx = toCanvasX(x);
+      var cy = toCanvasY(y);
+      if (cy < padT || cy > padT + plotH) return;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      ctx.fillStyle = color;
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textBaseline = 'middle';
+      if (side === 'left') {
+        ctx.textAlign = 'right';
+        ctx.fillText(labelText, cx - 10, cy);
+      } else {
+        ctx.textAlign = 'left';
+        ctx.fillText(labelText, cx + 10, cy);
+      }
+    }
+
+    // Vertical line at x
+    ctx.strokeStyle = 'rgba(226,232,240,0.2)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(xCur), padT);
+    ctx.lineTo(toCanvasX(xCur), padT + plotH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    drawDot(xCur, fVal, '#60a5fa', 'f(x) = ' + fVal.toFixed(2).replace('.', ','), 'right');
+    drawDot(xCur, fNegVal, '#a78bfa', 'f(-x) = ' + fNegVal.toFixed(2).replace('.', ','), 'right');
+    drawDot(xCur, gVal, '#4ade80', 'g(x) = ' + gVal.toFixed(2).replace('.', ','), 'left');
+
+    // Legend
+    var legX = padL + 15;
+    var legY = padT + 12;
+    var legItems = [
+      { color: '#60a5fa', dash: false, text: 'f(x) = 1/x\u00B2 + x\u00B3' },
+      { color: '#a78bfa', dash: true, text: 'f(\u2212x) = 1/x\u00B2 \u2212 x\u00B3' },
+      { color: '#4ade80', dash: false, text: 'g(x) = 1/x\u00B2' }
+    ];
+
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    for (var i = 0; i < legItems.length; i++) {
+      var ly = legY + i * 22;
+      ctx.strokeStyle = legItems[i].color;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash(legItems[i].dash ? [6, 4] : []);
+      ctx.beginPath();
+      ctx.moveTo(legX, ly);
+      ctx.lineTo(legX + 30, ly);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = legItems[i].color;
+      ctx.fillText(legItems[i].text, legX + 38, ly);
+    }
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillText('g(x) = srednja vrednost f(x) i f(\u2212x)', W - padR - 10, padT + 8);
+  }
+
+  draw();
+
+  slider.addEventListener('input', function() {
+    var val = parseFloat(this.value);
+    xValLabel.textContent = val.toFixed(2).replace('.', ',');
+    draw();
+  });
+
+  // Step click highlighting
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Kompozicija funkcija – parna komponenta","subject":"math","unit":"algebra","topic_tags":["kompozicija funkcija","parna i neparna funkcija","smena promenljive","parni deo funkcije","osobine stepena"]}
+BRAINSPARK_META-->

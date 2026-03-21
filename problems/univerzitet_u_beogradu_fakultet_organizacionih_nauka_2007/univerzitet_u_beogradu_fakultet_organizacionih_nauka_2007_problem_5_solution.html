@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Racionalni članovi u razvoju binoma</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: U razvoju stepena binoma (sqrt(3) + 5throot(2))^2007, naći broj članova koji su racionalni.
+
+Binomna formula:
+(a + b)^n = sum_{k=0}^{n} C(n,k) * a^(n-k) * b^k
+
+Ovde: a = sqrt(3) = 3^(1/2), b = 5throot(2) = 2^(1/5), n = 2007
+
+Opšti član:
+T_{k+1} = C(2007, k) * (3^(1/2))^(2007-k) * (2^(1/5))^k
+         = C(2007, k) * 3^((2007-k)/2) * 2^(k/5)
+
+C(2007, k) je uvek ceo (racionalan) broj.
+
+Da bi T_{k+1} bio racionalan:
+1) 3^((2007-k)/2) mora biti racionalan => (2007-k)/2 mora biti ceo broj
+   => 2007 - k mora biti paran
+   => k mora biti neparan (jer je 2007 neparan, i 2007 - k parno samo kad je k neparan)
+
+2) 2^(k/5) mora biti racionalan => k/5 mora biti ceo broj
+   => k mora biti deljiv sa 5
+
+Dakle, k mora biti neparan I deljiv sa 5.
+
+k ≡ 0 (mod 5) i k neparan.
+
+Deljivi sa 5: k = 0, 5, 10, 15, 20, ...
+Od tih, neparni su: k = 5, 15, 25, 35, ...
+
+To su k ≡ 5 (mod 10): k = 5, 15, 25, ..., do 2005 (jer 2005 <= 2007).
+
+Provera: k = 2005: (2007-2005)/2 = 1 (ceo), 2005/5 = 401 (ceo). OK.
+k = 2015 > 2007, pa ne ulazi.
+
+Broj članova: od k=5 do k=2005, korak 10.
+Broj = (2005 - 5)/10 + 1 = 2000/10 + 1 = 200 + 1 = 201.
+
+Odgovor: A) 201
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement p {
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 1rem;
+}
+
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+
+.answer-option .label {
+  font-weight: 700;
+  color: #a78bfa;
+  flex-shrink: 0;
+}
+
+.answer-option .value {
+  flex: 1;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] > summary {
+  margin-bottom: 10px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 12px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.04);
+}
+
+.step-badge {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.step-content p, .step-content div {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.key-insight {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.key-insight .card-title {
+  color: #60a5fa;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid #34d399;
+}
+
+.final-answer .answer-value {
+  font-size: 1.5rem;
+  color: #4ade80;
+  margin: 16px 0;
+  font-weight: 700;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.answer-options .opt {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.answer-options .opt.correct {
+  border-color: #34d399;
+  color: #4ade80;
+  background: rgba(52, 211, 153, 0.1);
+  font-weight: 700;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  font-style: italic;
+}
+
+.pitfall {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+.condition-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.condition-card {
+  flex: 1;
+  min-width: 220px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.condition-card .cond-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.condition-card .cond-value {
+  font-size: 1.05rem;
+  color: #e2e8f0;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { grid-template-columns: 1fr 1fr; }
+  .answer-options { flex-direction: column; align-items: center; }
+  .step { flex-direction: column; gap: 8px; }
+  .condition-box { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Racionalni članovi u razvoju binoma</h1>
+  <p class="subtitle">Algebra — binomna formula, racionalnost izraza sa korenima</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title">Zadatak</div>
+    <p>U razvoju stepena binoma \( (\sqrt{3} + \sqrt[5]{2})^{2007} \) broj članova koji su racionalni brojevi je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\( 201 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\( 200 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\( 400 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\( 401 \)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\( 402 \)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title">Plan rešavanja</div>
+    <p class="plan-text">Primenićemo binomnu formulu da zapišemo opšti član razvoja. Zatim ćemo odrediti za koje vrednosti indeksa \( k \) su izložioci broja 3 i broja 2 celi brojevi — jer samo tada je odgovarajući član racionalan. Na kraju, prebrojićemo koliko takvih vrednosti \( k \) postoji.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title">Teorijska osnova</div>
+    <details>
+      <summary>Binomna formula</summary>
+      <p style="margin-top:10px;">Razvoj binoma \( (a + b)^n \) dat je sa:</p>
+      <p>\[ (a + b)^n = \sum_{k=0}^{n} \binom{n}{k} \, a^{n-k} \, b^k \]</p>
+      <p>Opšti (\( (k+1) \)-vi) član je: \( T_{k+1} = \binom{n}{k} \, a^{n-k} \, b^k \), gde \( k = 0, 1, 2, \ldots, n \).</p>
+    </details>
+    <details>
+      <summary>Racionalnost stepena iracionalnih brojeva</summary>
+      <p style="margin-top:10px;">Za prost broj \( p \) važi:</p>
+      <p>\[ p^{m/n} \in \mathbb{Q} \iff \frac{m}{n} \in \mathbb{Z} \]</p>
+      <p>Dakle, \( \sqrt{3} = 3^{1/2} \) je racionalan samo kad je na celobrojnom stepenu, tj. kad je izložilac ceo broj. Isto važi za \( \sqrt[5]{2} = 2^{1/5} \).</p>
+    </details>
+    <details>
+      <summary>Aritmetički niz — prebrojavanje članova</summary>
+      <p style="margin-top:10px;">Broj članova aritmetičkog niza od \( a_1 \) do \( a_n \) sa razlikom \( d \) je:</p>
+      <p>\[ n = \frac{a_n - a_1}{d} + 1 \]</p>
+    </details>
+  </div>
+
+  <!-- Canvas Visualization -->
+  <div class="card">
+    <div class="card-title">Vizuelni prikaz — racionalni članovi u razvoju</div>
+    <div class="canvas-wrapper">
+      <canvas id="binomCanvas" width="700" height="420"></canvas>
+    </div>
+    <p class="canvas-hint">Pomerajte klizač da istražite različite opsege vrednosti \( k \)</p>
+  </div>
+
+  <!-- Step by Step Solution -->
+  <div class="card">
+    <div class="card-title">Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Zapisujemo binom u pogodnom obliku</div>
+        <p>Zapisujemo bazu binoma koristeći razlomljene izložioce:</p>
+        <div class="math-block">
+          \[ \sqrt{3} = 3^{1/2}, \qquad \sqrt[5]{2} = 2^{1/5} \]
+        </div>
+        <p>Dakle, naš binom je:</p>
+        <div class="math-block">
+          \[ \left(3^{1/2} + 2^{1/5}\right)^{2007} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Zapisujemo opšti član razvoja</div>
+        <p>Prema binomnoj formuli, opšti \( (k+1) \)-vi član je:</p>
+        <div class="math-block">
+          \[ T_{k+1} = \binom{2007}{k} \cdot \left(3^{1/2}\right)^{2007-k} \cdot \left(2^{1/5}\right)^{k} \]
+        </div>
+        <p>Primenjujemo pravilo o stepenu stepena \( (a^m)^n = a^{mn} \):</p>
+        <div class="math-block">
+          \[ T_{k+1} = \binom{2007}{k} \cdot 3^{\frac{2007-k}{2}} \cdot 2^{\frac{k}{5}} \]
+        </div>
+        <p>gde \( k = 0, 1, 2, \ldots, 2007 \).</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Uslov racionalnosti</div>
+        <p>Binomni koeficijent \( \binom{2007}{k} \) je uvek ceo (racionalan) broj.</p>
+        <p>Da bi ceo član \( T_{k+1} \) bio <span class="highlight-green">racionalan</span>, potrebno je da oba stepena budu racionalna, tj. da im izložioci budu <span class="highlight-blue">celi brojevi</span>:</p>
+        <div class="condition-box">
+          <div class="condition-card">
+            <div class="cond-label">Uslov 1</div>
+            <div class="cond-value">\( \dfrac{2007 - k}{2} \in \mathbb{Z} \)</div>
+          </div>
+          <div class="condition-card">
+            <div class="cond-label">Uslov 2</div>
+            <div class="cond-value">\( \dfrac{k}{5} \in \mathbb{Z} \)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Analiza prvog uslova</div>
+        <p>Iz uslova \( \dfrac{2007 - k}{2} \in \mathbb{Z} \) sledi da \( 2007 - k \) mora biti <span class="highlight-pink">paran broj</span>.</p>
+        <p>Pošto je \( 2007 \) neparan broj:</p>
+        <div class="math-block">
+          \[ 2007 - k \text{ je paran} \iff k \text{ je neparan} \]
+        </div>
+        <p style="color:#94a3b8; font-size:0.95rem;">Napomena: razlika neparnog i parnog je neparan, a razlika neparnog i neparnog je paran. Zato \( k \) mora biti neparan.</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Ako je \( k = 10 \), da li je prvi uslov ispunjen?</summary>
+      <p style="margin-top:8px;">Za \( k = 10 \): \( \frac{2007 - 10}{2} = \frac{1997}{2} = 998{,}5 \) — nije ceo broj. Dakle, <span class="highlight-pink">nije ispunjen</span>, jer je \( k = 10 \) paran.</p>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Analiza drugog uslova</div>
+        <p>Iz uslova \( \dfrac{k}{5} \in \mathbb{Z} \) sledi da \( k \) mora biti <span class="highlight-pink">deljiv sa 5</span>:</p>
+        <div class="math-block">
+          \[ k \equiv 0 \pmod{5} \]
+        </div>
+        <p>Tj. \( k \) mora biti oblika \( k = 5m \) za neko \( m \in \mathbb{N}_0 \).</p>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <div class="step-title">Kombinujemo oba uslova</div>
+        <p>Potrebno je da \( k \) bude istovremeno:</p>
+        <ul style="margin: 8px 0 8px 20px; color: #cbd5e1;">
+          <li><span class="highlight-blue">neparan</span> (iz uslova 1)</li>
+          <li><span class="highlight-blue">deljiv sa 5</span> (iz uslova 2)</li>
+        </ul>
+        <p>Brojevi deljivi sa 5 su: \( 0, 5, 10, 15, 20, 25, \ldots \)</p>
+        <p>Od tih, neparni su: \( 5, 15, 25, 35, \ldots \)</p>
+        <p>Vidimo da su to brojevi oblika:</p>
+        <div class="math-block">
+          \[ k = 10m + 5, \quad m = 0, 1, 2, \ldots \]
+        </div>
+        <p>tj. svi brojevi koji daju ostatak 5 pri deljenju sa 10:</p>
+        <div class="math-block">
+          \[ k \equiv 5 \pmod{10} \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Proverite da li \( k = 25 \) zadovoljava oba uslova.</summary>
+      <p style="margin-top:8px;">Za \( k = 25 \): (1) \( \frac{2007 - 25}{2} = \frac{1982}{2} = 991 \in \mathbb{Z} \) — ispunjen. (2) \( \frac{25}{5} = 5 \in \mathbb{Z} \) — ispunjen. Dakle, \( T_{26} \) je <span class="highlight-green">racionalan</span> broj.</p>
+    </details>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <div class="step-title">Određivanje opsega za \( k \)</div>
+        <p>Indeks \( k \) mora zadovoljavati \( 0 \leq k \leq 2007 \).</p>
+        <p>Najmanji neparan broj deljiv sa 5 je:</p>
+        <div class="math-block">
+          \[ k_{\min} = 5 \]
+        </div>
+        <p>Najveći neparan broj deljiv sa 5 koji ne prelazi 2007:</p>
+        <div class="math-block">
+          \[ k_{\max} = 2005 \]
+        </div>
+        <p style="color:#94a3b8; font-size:0.95rem;">Provera: \( 2005 \leq 2007 \) i \( 2005 = 10 \cdot 200 + 5 \) — jeste oblika \( 10m + 5 \). Sledeći bi bio \( 2015 > 2007 \).</p>
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="step">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <div class="step-title">Prebrojavanje racionalnih članova</div>
+        <p>Vrednosti \( k \) čine aritmetički niz:</p>
+        <div class="math-block">
+          \[ k \in \{5,\ 15,\ 25,\ 35,\ \ldots,\ 1995,\ 2005\} \]
+        </div>
+        <p>sa prvim članom \( a_1 = 5 \), poslednjim članom \( a_n = 2005 \) i razlikom \( d = 10 \).</p>
+        <p>Broj članova niza:</p>
+        <div class="math-block">
+          \[ n = \frac{a_n - a_1}{d} + 1 = \frac{2005 - 5}{10} + 1 = \frac{2000}{10} + 1 = 200 + 1 = \boxed{201} \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Zašto \( k = 0 \) ne ulazi u brojanje?</summary>
+      <p style="margin-top:8px;">Za \( k = 0 \): \( \frac{2007-0}{2} = \frac{2007}{2} = 1003{,}5 \) — nije ceo broj. Dakle, \( k = 0 \) ne zadovoljava prvi uslov (izložilac broja 3 nije ceo), pa odgovarajući član \( T_1 = 3^{2007/2} \) nije racionalan.</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="key-insight">
+    <div class="card-title">Ključni uvid</div>
+    <p>Problem se svodi na pitanje iz <span class="highlight-blue">teorije brojeva</span>: tražimo koliko je celih brojeva \( k \) u intervalu \( [0, 2007] \) koji su istovremeno neparni i deljivi sa 5. To je isto što i tražiti koliko brojeva daje ostatak 5 pri deljenju sa 10 — a to su članovi aritmetičkog niza \( 5, 15, 25, \ldots, 2005 \).</p>
+    <p style="text-align:center; font-size:1.3rem; margin-top: 16px;">
+      \[ k \equiv 5 \pmod{10}, \quad k \in [0, 2007] \implies \text{201 vrednost} \]
+    </p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <div class="card-title" style="justify-content:center;">Konačan odgovor</div>
+    <div class="answer-value">Broj racionalnih članova: \( 201 \)</div>
+    <div class="answer-options">
+      <span class="opt correct">(A) \( 201 \)</span>
+      <span class="opt">(B) \( 200 \)</span>
+      <span class="opt">(C) \( 400 \)</span>
+      <span class="opt">(D) \( 401 \)</span>
+      <span class="opt">(E) \( 402 \)</span>
+    </div>
+    <p class="verification">Verifikacija: Za svako \( k = 10m + 5 \) (gde je \( m = 0, 1, \ldots, 200 \)), izložilac broja 3 je \( \frac{2007 - (10m+5)}{2} = \frac{2002 - 10m}{2} = 1001 - 5m \in \mathbb{Z} \), a izložilac broja 2 je \( \frac{10m+5}{5} = 2m + 1 \in \mathbb{Z} \). Ukupno 201 vrednost parametra \( m \).</p>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title">Česte greške</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#9888;</span>
+      <p><strong>Zaboravljanje jednog uslova:</strong> Mnogi studenti traže samo deljivost sa 5 (ili samo neparnost) i dobiju pogrešan broj 402 ili 401. Oba uslova moraju biti ispunjena istovremeno — \( k \) mora biti i neparan i deljiv sa 5.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#9888;</span>
+      <p><strong>Pogrešan opseg:</strong> Ako se uključi \( k = 0 \) (paran, ne zadovoljava prvi uslov) ili se izračuna \( k_{\max} \) pogrešno, može se dobiti 200 umesto 201. Pažljivo proveriti granice: \( k_{\min} = 5 \), \( k_{\max} = 2005 \).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#9888;</span>
+      <p><strong>Zamena korena:</strong> Peti koren iz 2 (\( \sqrt[5]{2} = 2^{1/5} \)) zahteva deljivost sa 5, dok drugi koren iz 3 (\( \sqrt{3} = 3^{1/2} \)) zahteva parnost. Ne mešajte ova dva uslova.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title">Dodatni izazov</div>
+    <p>Koliko bi racionalnih članova bilo u razvoju binoma \( (\sqrt[3]{5} + \sqrt[4]{7})^{2400} \)?</p>
+    <details>
+      <summary>Nagoveštaj</summary>
+      <p style="margin-top:8px;">Opšti član bi bio \( \binom{2400}{k} \cdot 5^{(2400-k)/3} \cdot 7^{k/4} \). Uslov racionalnosti: \( 3 \mid (2400 - k) \) i \( 4 \mid k \). Pošto je \( 2400 \equiv 0 \pmod{3} \), prvi uslov daje \( k \equiv 0 \pmod{3} \). Tražite koliko je brojeva od 0 do 2400 koji su deljivi i sa 3 i sa 4, tj. deljivi sa \( \text{NZS}(3, 4) = 12 \). Rezultat: \( \frac{2400}{12} + 1 = 201 \).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('binomCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Slider for offset exploration
+  let viewStart = 0;
+  const viewWidth = 100; // show 100 values of k at a time
+  let dragging = false;
+
+  const sliderX = 60;
+  const sliderW = W - 120;
+  const sliderY = H - 30;
+  const knobRadius = 10;
+
+  const maxStart = 2007 - viewWidth;
+
+  function startToSliderX(s) {
+    return sliderX + (s / maxStart) * sliderW;
+  }
+
+  function sliderXToStart(x) {
+    let s = Math.round(((x - sliderX) / sliderW) * maxStart);
+    return Math.max(0, Math.min(maxStart, s));
+  }
+
+  function isRational(k) {
+    return k % 2 === 1 && k % 5 === 0;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const chartTop = 40;
+    const chartBottom = H - 70;
+    const chartLeft = 60;
+    const chartRight = W - 30;
+    const chartW = chartRight - chartLeft;
+    const chartH = chartBottom - chartTop;
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Vrednosti k od ' + viewStart + ' do ' + (viewStart + viewWidth), W / 2, 22);
+
+    // Legend
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#34d399';
+    ctx.fillRect(chartLeft, chartTop - 20, 12, 12);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Racionalan clan (k neparan i deljiv sa 5)', chartLeft + 18, chartTop - 10);
+
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(chartLeft + 340, chartTop - 20, 12, 12);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Iracionalan clan', chartLeft + 358, chartTop - 10);
+
+    // Draw bars
+    const barW = Math.max(2, (chartW / viewWidth) - 1);
+    const barGap = chartW / viewWidth;
+
+    let rationalCount = 0;
+    let totalRational = 0;
+
+    // Count total rational in full range
+    for (let k = 5; k <= 2005; k += 10) {
+      totalRational++;
+    }
+
+    for (let i = 0; i < viewWidth && (viewStart + i) <= 2007; i++) {
+      const k = viewStart + i;
+      const x = chartLeft + i * barGap;
+      const rational = isRational(k);
+
+      if (rational) rationalCount++;
+
+      // Bar height represents "rationality status" - rational bars are tall, others short
+      const barH = rational ? chartH * 0.85 : chartH * 0.15;
+
+      if (rational) {
+        // Green glow
+        const gradient = ctx.createLinearGradient(x, chartBottom - barH, x, chartBottom);
+        gradient.addColorStop(0, '#34d399');
+        gradient.addColorStop(1, '#059669');
+        ctx.fillStyle = gradient;
+      } else {
+        ctx.fillStyle = '#1e293b';
+      }
+
+      ctx.fillRect(x, chartBottom - barH, Math.max(barW, 2), barH);
+
+      // Subtle border for rational bars
+      if (rational) {
+        ctx.strokeStyle = '#4ade80';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(x, chartBottom - barH, Math.max(barW, 2), barH);
+      }
+    }
+
+    // Axis line
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(chartLeft, chartBottom);
+    ctx.lineTo(chartRight, chartBottom);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const labelCount = 10;
+    for (let i = 0; i <= labelCount; i++) {
+      const k = viewStart + Math.round((i / labelCount) * viewWidth);
+      if (k > 2007) break;
+      const x = chartLeft + (i / labelCount) * chartW;
+      ctx.fillText(k.toString(), x, chartBottom + 16);
+    }
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('k', chartRight + 5, chartBottom + 5);
+
+    // Stats box
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+    const statsX = chartRight - 210;
+    const statsY = chartTop + 10;
+    ctx.beginPath();
+    ctx.roundRect(statsX, statsY, 200, 64, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('U prikazu: ' + rationalCount + ' racionalnih', statsX + 12, statsY + 22);
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Ukupno: ' + totalRational + ' racionalnih', statsX + 12, statsY + 46);
+
+    // Slider track
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.roundRect(sliderX, sliderY - 4, sliderW, 8, 4);
+    ctx.fill();
+
+    // Slider progress
+    const knobX = startToSliderX(viewStart);
+    ctx.fillStyle = '#60a5fa';
+    ctx.beginPath();
+    ctx.roundRect(sliderX, sliderY - 4, knobX - sliderX, 8, 4);
+    ctx.fill();
+
+    // Slider knob
+    ctx.beginPath();
+    ctx.arc(knobX, sliderY, knobRadius, 0, Math.PI * 2);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fill();
+    ctx.strokeStyle = '#93c5fd';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Slider label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('k = 0', sliderX, sliderY + 22);
+    ctx.textAlign = 'right';
+    ctx.fillText('k = 2007', sliderX + sliderW, sliderY + 22);
+  }
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function onDown(e) {
+    const pos = getPos(e);
+    const knobX = startToSliderX(viewStart);
+    if (Math.abs(pos.x - knobX) < knobRadius * 2 && Math.abs(pos.y - sliderY) < knobRadius * 2) {
+      dragging = true;
+      e.preventDefault();
+    }
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    viewStart = sliderXToStart(pos.x);
+    draw();
+  }
+
+  function onUp() {
+    dragging = false;
+  }
+
+  canvas.addEventListener('mousedown', onDown);
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('mouseup', onUp);
+  canvas.addEventListener('mouseleave', onUp);
+  canvas.addEventListener('touchstart', onDown, { passive: false });
+  canvas.addEventListener('touchmove', onMove, { passive: false });
+  canvas.addEventListener('touchend', onUp);
+
+  draw();
+
+  // Step click interaction
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) {
+        s.classList.remove('active');
+      });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Racionalni članovi u razvoju binoma",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["binomna formula", "racionalnost", "iracionalni brojevi", "aritmetički niz", "teorija brojeva"]
+}
+BRAINSPARK_META-->

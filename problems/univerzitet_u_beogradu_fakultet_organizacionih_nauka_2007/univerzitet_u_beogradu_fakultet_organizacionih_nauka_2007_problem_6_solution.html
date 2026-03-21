@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje algebarskog izraza</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Ako je x ∈ R \ {-1, 0, 1}, tada je izraz
+  ((x^3+1)/(x^4-x) - 1/(x-1)) : (x+1)/(x-x^3)
+jednak:
+A) 1
+B) (x^2+x-1)/(x^2+x+1)
+C) -(x^2+x+1)/(x^2+x-1)
+D) (x+1)/(x^2+x+1)
+E) (x^2+x-1)/(x^3-x^2)
+
+Korak 1: Faktorizacija
+  x^3 + 1 = (x+1)(x^2 - x + 1)   [zbir kubova]
+  x^4 - x = x(x^3 - 1) = x(x-1)(x^2 + x + 1)   [razlika kubova]
+
+Korak 2: Prva razlomak
+  (x^3+1)/(x^4-x) = (x+1)(x^2-x+1) / [x(x-1)(x^2+x+1)]
+
+Korak 3: Oduzimanje 1/(x-1)
+  Zajednički imenilac: x(x-1)(x^2+x+1)
+
+  Drugi razlomak: 1/(x-1) = x(x^2+x+1) / [x(x-1)(x^2+x+1)]
+
+  Brojilac razlike:
+    (x+1)(x^2-x+1) - x(x^2+x+1)
+    = x^3 + 1 - x^3 - x^2 - x
+    = 1 - x^2 - x
+    = -(x^2 + x - 1)
+
+  Rezultat zagrade: -(x^2+x-1) / [x(x-1)(x^2+x+1)]
+
+Korak 4: Deljenje sa (x+1)/(x-x^3)
+  x - x^3 = x(1-x^2) = x(1-x)(1+x) = -x(x-1)(x+1)
+
+  Deliti sa (x+1)/(x-x^3) znači množiti sa (x-x^3)/(x+1):
+    (x-x^3)/(x+1) = -x(x-1)(x+1)/(x+1) = -x(x-1)
+
+  Konačno:
+    [-(x^2+x-1)] / [x(x-1)(x^2+x+1)] * [-x(x-1)]
+    = (x^2+x-1) * x(x-1) / [x(x-1)(x^2+x+1)]
+    = (x^2+x-1) / (x^2+x+1)
+
+Odgovor: B) (x^2+x-1)/(x^2+x+1) ✓
+
+Verifikacija: za x = 2:
+  Brojilac: (x^3+1)/(x^4-x) - 1/(x-1) = 9/14 - 1/1 = 9/14 - 14/14 = -5/14
+  Delilac: (x+1)/(x-x^3) = 3/(2-8) = 3/(-6) = -1/2
+  Rezultat: (-5/14) / (-1/2) = (-5/14) * (-2/1) = 10/14 = 5/7
+
+  B za x=2: (4+2-1)/(4+2+1) = 5/7 ✓
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #cbd5e1;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+.theory-list {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+  color: #cbd5e1;
+}
+
+.theory-list li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  cursor: pointer;
+  transition: border-left 0.2s, padding-left 0.2s;
+  border-left: 3px solid transparent;
+  padding-left: 0;
+}
+
+.step-container:hover, .step-container.active {
+  border-left: 3px solid #4ade80;
+  padding-left: 12px;
+}
+
+.step-container:last-of-type {
+  border-bottom: none;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint p {
+  color: #cbd5e1;
+  padding-top: 8px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-box .formula {
+  font-size: 1.3rem;
+  color: #e2e8f0;
+  margin: 12px 0;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid rgba(74,222,128,0.3);
+  background: rgba(74,222,128,0.06);
+}
+
+.final-answer h2 {
+  color: #4ade80;
+}
+
+.answer-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.answer-options-final {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.answer-options-final .opt {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(51,65,85,0.5);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.answer-options-final .opt.correct {
+  background: rgba(74,222,128,0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #334155;
+  color: #cbd5e1;
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-icon {
+  color: #e09468;
+  margin-right: 8px;
+}
+
+.challenge-box {
+  border-left: 3px solid #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 700px;
+  border-radius: 10px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.slider-container label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.slider-container input[type="range"] {
+  width: 200px;
+  accent-color: #60a5fa;
+}
+
+.slider-value {
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 1rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { gap: 10px; }
+  .slider-container input[type="range"] { width: 140px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Pojednostavljivanje racionalnog izraza</h1>
+  <p class="subtitle">Algebra razlomaka — faktorizacija suma i razlika kubova, skraćivanje i deljenje racionalnih izraza</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Ako je \(x \in \mathbb{R} \setminus \{-1, 0, 1\}\), tada je izraz:</p>
+    <div class="math-block">
+      \[ \left(\frac{x^3+1}{x^4-x} - \frac{1}{x-1}\right) : \frac{x+1}{x-x^3} \]
+    </div>
+    <p>jednak:</p>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{x^2+x-1}{x^2+x+1}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(-\dfrac{x^2+x+1}{x^2+x-1}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{x+1}{x^2+x+1}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{x^2+x-1}{x^3-x^2}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Faktorizujemo sve polinome koristeći formule za zbir i razliku kubova. Zatim nalazimo zajednički imenilac za oduzimanje razlomaka u zagradi, a potom delimo rezultat datim razlomkom (množimo recipročnom vrednošću). Na kraju skraćujemo zajedničke faktore.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>&#128208; Ključne formule i teoreme</summary>
+      <ul class="theory-list">
+        <li><strong>Zbir kubova:</strong> \(a^3 + b^3 = (a + b)(a^2 - ab + b^2)\)</li>
+        <li><strong>Razlika kubova:</strong> \(a^3 - b^3 = (a - b)(a^2 + ab + b^2)\)</li>
+        <li><strong>Izvlačenje zajedničkog faktora:</strong> \(x^4 - x = x(x^3 - 1)\), \(x - x^3 = x(1 - x^2) = -x(x-1)(x+1)\)</li>
+        <li><strong>Deljenje razlomaka:</strong> \(\dfrac{A}{B} : \dfrac{C}{D} = \dfrac{A}{B} \cdot \dfrac{D}{C}\) — deljenje se svodi na množenje recipročnom vrednošću</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="vizCanvas" width="700" height="400"></canvas>
+    <p class="canvas-hint">Pomeri klizač da proveriš jednakost za različite vrednosti \(x\)</p>
+    <div class="slider-container">
+      <label for="xSlider">Vrednost \(x\):</label>
+      <input type="range" id="xSlider" min="-40" max="40" value="20" step="1">
+      <span class="slider-value" id="xDisplay">2,0</span>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje — korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Faktorizujemo brojilac \(x^3 + 1\)</h3>
+        <p>Primenjujemo formulu za zbir kubova sa \(a = x\) i \(b = 1\):</p>
+        <div class="math-block">
+          \[ x^3 + 1 = (x + 1)(x^2 - x + 1) \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Faktorizujemo imenilac \(x^4 - x\)</h3>
+        <p>Prvo izvlačimo \(x\) ispred zagrade, a zatim primenjujemo formulu za razliku kubova:</p>
+        <div class="math-block">
+          \[ x^4 - x = x(x^3 - 1) \]
+        </div>
+        <div class="math-block">
+          \[ x^3 - 1 = (x - 1)(x^2 + x + 1) \]
+        </div>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[ x^4 - x = x(x - 1)(x^2 + x + 1) \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Zapišemo prvi razlomak u faktorizovanom obliku</h3>
+        <p>Zamenjujemo faktorizovane izraze:</p>
+        <div class="math-block">
+          \[ \frac{x^3 + 1}{x^4 - x} = \frac{(x+1)(x^2 - x + 1)}{x(x-1)(x^2 + x + 1)} \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>&#9989; Proveri sebe: Koji je zajednički imenilac za razlomke \(\frac{(x+1)(x^2-x+1)}{x(x-1)(x^2+x+1)}\) i \(\frac{1}{x-1}\)?</summary>
+      <p>Zajednički imenilac je \(x(x-1)(x^2+x+1)\), jer se \((x-1)\) već pojavljuje u prvom imeniocu. Drugi razlomak samo treba proširiti sa \(x(x^2+x+1)\).</p>
+    </details>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Nađemo zajednički imenilac i oduzmemo razlomke</h3>
+        <p>Zajednički imenilac je \(x(x-1)(x^2+x+1)\). Proširimo drugi razlomak:</p>
+        <div class="math-block">
+          \[ \frac{1}{x-1} = \frac{x(x^2+x+1)}{x(x-1)(x^2+x+1)} \]
+        </div>
+        <p>Sada oduzimamo:</p>
+        <div class="math-block">
+          \[ \frac{(x+1)(x^2-x+1) - x(x^2+x+1)}{x(x-1)(x^2+x+1)} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Razvijemo i sredimo brojilac razlike</h3>
+        <p>Razvijemo prvi proizvod:</p>
+        <div class="math-block">
+          \[ (x+1)(x^2-x+1) = x^3 - x^2 + x + x^2 - x + 1 = x^3 + 1 \]
+        </div>
+        <p>Razvijemo drugi proizvod:</p>
+        <div class="math-block">
+          \[ x(x^2+x+1) = x^3 + x^2 + x \]
+        </div>
+        <p>Njihova razlika:</p>
+        <div class="math-block">
+          \[ x^3 + 1 - x^3 - x^2 - x = -(x^2 + x - 1) \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Zapišemo rezultat zagrade</h3>
+        <p>Izraz u zagradi je sada:</p>
+        <div class="math-block">
+          \[ \frac{-(x^2 + x - 1)}{x(x-1)(x^2+x+1)} \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>&#9989; Proveri sebe: Kako se faktorizuje \(x - x^3\)?</summary>
+      <p>Izvlačimo \(x\) ispred: \(x - x^3 = x(1 - x^2) = x(1-x)(1+x) = -x(x-1)(x+1)\).</p>
+    </details>
+
+    <div class="step-container" id="step7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Faktorizujemo imenilac delioca \(x - x^3\)</h3>
+        <p>Izvlačimo zajednički faktor i koristimo razliku kvadrata:</p>
+        <div class="math-block">
+          \[ x - x^3 = x(1 - x^2) = -x(x^2 - 1) = -x(x-1)(x+1) \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step8">
+      <div class="step-badge">8</div>
+      <div class="step-content">
+        <h3>Deljenje pretvaramo u množenje</h3>
+        <p>Deljenje sa \(\frac{x+1}{x-x^3}\) je isto što i množenje sa \(\frac{x-x^3}{x+1}\):</p>
+        <div class="math-block">
+          \[ \frac{x - x^3}{x+1} = \frac{-x(x-1)(x+1)}{x+1} = -x(x-1) \]
+        </div>
+        <p class="note">Skratili smo faktor \((x+1)\), što je dozvoljeno jer je \(x \neq -1\).</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step9">
+      <div class="step-badge">9</div>
+      <div class="step-content">
+        <h3>Pomnožimo i skratimo</h3>
+        <p>Množimo rezultat zagrade sa recipročnom vrednošću:</p>
+        <div class="math-block">
+          \[ \frac{-(x^2+x-1)}{x(x-1)(x^2+x+1)} \cdot \big(-x(x-1)\big) \]
+        </div>
+        <p>Minus puta minus daje plus. Skraćujemo \(x\) i \((x-1)\):</p>
+        <div class="math-block">
+          \[ = \frac{(x^2+x-1) \cdot \cancel{x} \cdot \cancel{(x-1)}}{\cancel{x} \cdot \cancel{(x-1)} \cdot (x^2+x+1)} \]
+        </div>
+        <div class="math-block">
+          \[ = \frac{x^2+x-1}{x^2+x+1} \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>&#9989; Proveri sebe: Za \(x = 2\), koliko iznosi \(\frac{x^2+x-1}{x^2+x+1}\)?</summary>
+      <p>\(\frac{4+2-1}{4+2+1} = \frac{5}{7}\). Možeš proveriti uvrštavanjem \(x = 2\) u originalni izraz da dobiješ isti rezultat.</p>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>Ključno zapažanje</h2>
+    <p style="color: #cbd5e1; margin-bottom: 12px;">Čitav zadatak se svodi na pravilnu primenu formula za zbir i razliku kubova. Ključ je uočiti da se \(x^3 + 1\) i \(x^3 - 1\) pojavljuju u različitim delovima izraza, te da se mnogi faktori na kraju skrate.</p>
+    <div class="formula">
+      \[ x^3 + 1 = (x+1)(x^2-x+1) \quad \text{i} \quad x^3 - 1 = (x-1)(x^2+x+1) \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">
+      \[ \frac{x^2 + x - 1}{x^2 + x + 1} \]
+    </div>
+
+    <div class="answer-options-final">
+      <span class="opt">(A) \(1\)</span>
+      <span class="opt correct">(B) \(\dfrac{x^2+x-1}{x^2+x+1}\)</span>
+      <span class="opt">(C) \(-\dfrac{x^2+x+1}{x^2+x-1}\)</span>
+      <span class="opt">(D) \(\dfrac{x+1}{x^2+x+1}\)</span>
+      <span class="opt">(E) \(\dfrac{x^2+x-1}{x^3-x^2}\)</span>
+    </div>
+
+    <div class="verification">
+      <strong>Verifikacija:</strong> Za \(x = 2\): originalni izraz daje \(\frac{9/14 - 1}{-1/2} = \frac{-5/14}{-1/2} = \frac{5}{7}\). Odgovor (B) za \(x = 2\): \(\frac{4+2-1}{4+2+1} = \frac{5}{7}\). Rezultati se poklapaju.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Najčešće greške</h2>
+    <ul class="pitfall-list">
+      <li><span class="pitfall-icon">&#9888;</span> <strong>Zamena znaka kod \(x - x^3\):</strong> Mnogi učenici zaborave da je \(x - x^3 = -x(x-1)(x+1)\) (sa negativnim predznakom!). Greška u znaku vodi do odgovora (C) umesto (B).</li>
+      <li><span class="pitfall-icon">&#9888;</span> <strong>Mešanje \(x^2-x+1\) i \(x^2+x+1\):</strong> Ova dva trinoma su veoma slična, ali dolaze iz različitih formula (zbir vs. razlika kubova). Pažljivo pratite koji odakle potiče.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-box">
+    <h2>Izazov za razmišljanje</h2>
+    <p>Pokušaj da odgonetneš: za koje vrednosti \(x\) (iz dozvoljenog domena) je dati izraz jednak nuli?</p>
+    <details>
+      <summary>&#128161; Nagoveštaj</summary>
+      <p>Razlomak je nula kada mu je brojilac nula: \(x^2 + x - 1 = 0\). Reši kvadratnu jednačinu i proveri da rešenja nisu iz skupa \(\{-1, 0, 1\}\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Step click handling
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.toggle('active');
+    });
+  });
+
+  // Canvas visualization
+  const canvas = document.getElementById('vizCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('xSlider');
+  const display = document.getElementById('xDisplay');
+
+  function formatNum(n) {
+    if (!isFinite(n) || isNaN(n)) return 'N/D';
+    const s = n.toFixed(4);
+    return s.replace('.', ',');
+  }
+
+  function formatShort(n) {
+    if (!isFinite(n) || isNaN(n)) return 'N/D';
+    const s = n.toFixed(1);
+    return s.replace('.', ',');
+  }
+
+  function evalOriginal(x) {
+    const num1 = x * x * x + 1;
+    const den1 = x * x * x * x - x;
+    const frac1 = num1 / den1;
+    const frac2 = 1 / (x - 1);
+    const bracket = frac1 - frac2;
+    const divisor = (x + 1) / (x - x * x * x);
+    return bracket / divisor;
+  }
+
+  function evalSimplified(x) {
+    return (x * x + x - 1) / (x * x + x + 1);
+  }
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const xVal = parseFloat(slider.value) / 10;
+    display.textContent = formatShort(xVal);
+
+    const excluded = (Math.abs(xVal) < 0.05) || (Math.abs(xVal - 1) < 0.05) || (Math.abs(xVal + 1) < 0.05);
+
+    // Draw coordinate system
+    const padL = 60;
+    const padR = 40;
+    const padT = 50;
+    const padB = 60;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const xMin = -4;
+    const xMax = 4;
+    const yMin = -3;
+    const yMax = 3;
+
+    function toPixX(v) { return padL + (v - xMin) / (xMax - xMin) * plotW; }
+    function toPixY(v) { return padT + (yMax - v) / (yMax - yMin) * plotH; }
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let gx = Math.ceil(xMin); gx <= xMax; gx++) {
+      ctx.beginPath();
+      ctx.moveTo(toPixX(gx), padT);
+      ctx.lineTo(toPixX(gx), padT + plotH);
+      ctx.stroke();
+    }
+    for (let gy = Math.ceil(yMin); gy <= yMax; gy++) {
+      ctx.beginPath();
+      ctx.moveTo(padL, toPixY(gy));
+      ctx.lineTo(padL + plotW, toPixY(gy));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(toPixX(xMin), toPixY(0));
+    ctx.lineTo(toPixX(xMax), toPixY(0));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toPixX(0), toPixY(yMin));
+    ctx.lineTo(toPixX(0), toPixY(yMax));
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let gx = Math.ceil(xMin); gx <= xMax; gx++) {
+      if (gx === 0) continue;
+      ctx.fillText(gx.toString(), toPixX(gx), toPixY(0) + 18);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = Math.ceil(yMin); gy <= yMax; gy++) {
+      if (gy === 0) continue;
+      ctx.fillText(gy.toString(), toPixX(0) - 8, toPixY(gy) + 4);
+    }
+
+    // Draw simplified function curve: (x^2+x-1)/(x^2+x+1)
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let started = false;
+    for (let px = 0; px <= plotW; px++) {
+      const xv = xMin + (px / plotW) * (xMax - xMin);
+      const den = xv * xv + xv + 1;
+      if (Math.abs(den) < 0.001) { started = false; continue; }
+      const yv = (xv * xv + xv - 1) / den;
+      if (yv < yMin - 1 || yv > yMax + 1) { started = false; continue; }
+      const py = toPixY(yv);
+      if (!started) { ctx.moveTo(padL + px, py); started = true; }
+      else { ctx.lineTo(padL + px, py); }
+    }
+    ctx.stroke();
+
+    // Draw asymptote y = 1
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, toPixY(1));
+    ctx.lineTo(padL + plotW, toPixY(1));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#475569';
+    ctx.textAlign = 'left';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('y = 1 (asimptota)', padL + plotW - 110, toPixY(1) - 6);
+
+    // Draw excluded points as small open circles
+    const excPts = [-1, 0, 1];
+    excPts.forEach(ex => {
+      if (ex >= xMin && ex <= xMax) {
+        const den = ex * ex + ex + 1;
+        if (Math.abs(den) > 0.001) {
+          const ey = (ex * ex + ex - 1) / den;
+          if (ey >= yMin && ey <= yMax) {
+            ctx.beginPath();
+            ctx.arc(toPixX(ex), toPixY(ey), 5, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#f472b6';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = '#0c1222';
+            ctx.fill();
+          }
+        }
+      }
+    });
+
+    // Highlight current point
+    if (!excluded && xVal >= xMin && xVal <= xMax) {
+      const orig = evalOriginal(xVal);
+      const simp = evalSimplified(xVal);
+
+      if (isFinite(orig) && isFinite(simp) && Math.abs(simp) <= yMax + 0.5) {
+        // Draw the point
+        ctx.beginPath();
+        ctx.arc(toPixX(xVal), toPixY(simp), 7, 0, 2 * Math.PI);
+        ctx.fillStyle = '#4ade80';
+        ctx.fill();
+        ctx.strokeStyle = '#166534';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw dashed lines to axes
+        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = 'rgba(74,222,128,0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(toPixX(xVal), toPixY(simp));
+        ctx.lineTo(toPixX(xVal), toPixY(0));
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(toPixX(xVal), toPixY(simp));
+        ctx.lineTo(toPixX(0), toPixY(simp));
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    // Legend and info
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('f(x) = (x\u00B2+x\u22121) / (x\u00B2+x+1)', padL + 10, padT + 20);
+
+    // Values box
+    const boxX = W - padR - 230;
+    const boxY = padT + 4;
+    ctx.fillStyle = 'rgba(30,41,59,0.9)';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, 220, excluded ? 50 : 78, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('x = ' + formatShort(xVal), boxX + 12, boxY + 20);
+
+    if (excluded) {
+      ctx.fillStyle = '#f472b6';
+      ctx.fillText('x nije u domenu!', boxX + 12, boxY + 40);
+    } else {
+      const origVal = evalOriginal(xVal);
+      const simpVal = evalSimplified(xVal);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText('Originalni izraz = ' + formatNum(origVal), boxX + 12, boxY + 40);
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText('Pojednostavljeno = ' + formatNum(simpVal), boxX + 12, boxY + 58);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      const match = Math.abs(origVal - simpVal) < 0.0001;
+      ctx.fillText(match ? 'Jednaki su!' : 'Greska u racunu', boxX + 12, boxY + 74);
+    }
+
+    // Pink label for excluded points
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x = -1, 0, 1 isključeni', toPixX(0), padT + plotH + 45);
+  }
+
+  slider.addEventListener('input', draw);
+
+  // Handle touch/mouse on canvas for curiosity (not interactive beyond slider)
+  draw();
+
+  // Redraw on resize (for DPR changes)
+  window.addEventListener('resize', () => {
+    canvas.width = 700;
+    canvas.height = 400;
+    draw();
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje racionalnog izraza sa sumom i razlikom kubova",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["racionalni izrazi", "faktorizacija", "zbir kubova", "razlika kubova", "algebarski razlomci"]
+}
+BRAINSPARK_META-->

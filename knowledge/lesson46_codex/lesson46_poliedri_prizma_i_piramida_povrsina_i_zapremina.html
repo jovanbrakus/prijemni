@@ -1,0 +1,2630 @@
+<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poliedri: prizma i piramida (površina i zapremina)</title>
+<meta name="description" content="Detaljna lekcija iz stereometrije za pripremu prijemnog ispita: prizme, piramide i zarubljene piramide, mreže poliedara, površina, zapremina, vođeni primeri i interaktivni canvas laboratorijum.">
+
+<script>
+(() => {
+  window.MathJax = {
+    tex: {
+      inlineMath: [["\\(", "\\)"]],
+      displayMath: [["\\[", "\\]"]]
+    },
+    svg: {
+      fontCache: "global"
+    }
+  };
+})();
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #090403;
+  --bg-2: #120805;
+  --panel: rgba(27, 14, 9, 0.9);
+  --panel-soft: rgba(236, 91, 19, 0.07);
+  --panel-strong: rgba(38, 18, 11, 0.96);
+  --border: rgba(236, 91, 19, 0.16);
+  --border-strong: rgba(255, 170, 126, 0.28);
+  --text: #f6eee9;
+  --muted: #ceb9ac;
+  --muted-strong: #ead6c8;
+  --primary: #ec5b13;
+  --primary-soft: #ff9a6a;
+  --gold: #ffd08c;
+  --success: #6ed7b2;
+  --warning: #ffbe86;
+  --danger: #ff8b8b;
+  --shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+  --radius-xl: 34px;
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-sm: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Public Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  line-height: 1.7;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(236, 91, 19, 0.17), transparent 28%),
+    radial-gradient(circle at 82% 14%, rgba(255, 154, 106, 0.12), transparent 24%),
+    radial-gradient(circle at 50% 120%, rgba(236, 91, 19, 0.12), transparent 28%),
+    linear-gradient(180deg, #140806 0%, #0b0403 34%, #060202 100%);
+  padding: 26px 16px 80px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.ambient-orb {
+  position: fixed;
+  z-index: 0;
+  border-radius: 999px;
+  filter: blur(120px);
+  pointer-events: none;
+}
+
+.ambient-orb.one {
+  top: -70px;
+  left: -30px;
+  width: 240px;
+  height: 240px;
+  background: rgba(236, 91, 19, 0.22);
+}
+
+.ambient-orb.two {
+  right: -90px;
+  top: 22vh;
+  width: 320px;
+  height: 320px;
+  background: rgba(255, 154, 106, 0.1);
+}
+
+.ambient-orb.three {
+  left: 24%;
+  bottom: -120px;
+  width: 300px;
+  height: 300px;
+  background: rgba(236, 91, 19, 0.08);
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.hero,
+.nav-panel,
+.section,
+.insight-card {
+  background: linear-gradient(180deg, rgba(35, 18, 12, 0.92), rgba(21, 10, 7, 0.96));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.hero,
+.section,
+.nav-panel,
+.insight-card {
+  border-radius: var(--radius-xl);
+  padding: 34px;
+}
+
+.hero {
+  margin-bottom: 22px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(236, 91, 19, 0.1);
+  color: var(--primary-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+.hero-copy h1 {
+  margin: 0 0 18px;
+  font-size: clamp(3rem, 7vw, 5.8rem);
+  line-height: 0.94;
+  letter-spacing: -0.05em;
+  font-weight: 900;
+}
+
+.gradient-text {
+  display: block;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lead {
+  max-width: 720px;
+  margin: 0 0 26px;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.mini-grid,
+.importance-grid,
+.concept-grid,
+.formula-grid,
+.example-grid,
+.mistake-grid,
+.exercise-grid,
+.summary-grid,
+.quick-nav,
+.stat-row,
+.result-grid,
+.control-grid,
+.comparison-grid,
+.exam-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.mini-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mini-card,
+.stat-card,
+.nav-link,
+.importance-card,
+.concept-card,
+.formula-card,
+.example-card,
+.mistake-card,
+.exercise-card,
+.summary-card,
+.result-card,
+.lab-panel,
+.comparison-card,
+.exam-card,
+.callout,
+.derivation-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.mini-card,
+.importance-card,
+.concept-card,
+.formula-card,
+.example-card,
+.mistake-card,
+.exercise-card,
+.summary-card,
+.result-card,
+.lab-panel,
+.comparison-card,
+.exam-card,
+.callout,
+.derivation-card {
+  padding: 20px;
+}
+
+.card-kicker,
+.section-kicker,
+.label,
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.mini-card p,
+.importance-card p,
+.concept-card p,
+.formula-card p,
+.example-card p,
+.mistake-card p,
+.exercise-card p,
+.summary-card p,
+.result-card p,
+.lab-panel p,
+.comparison-card p,
+.exam-card p,
+.callout p {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
+.hero-visual {
+  min-width: 0;
+}
+
+.hero-image-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px;
+  min-height: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  min-height: 420px;
+  opacity: 0.34;
+  filter: grayscale(0.15) saturate(0.8);
+}
+
+.hero-image-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(8, 4, 3, 0.1), rgba(8, 4, 3, 0.66)),
+    radial-gradient(circle at 25% 24%, rgba(236, 91, 19, 0.18), transparent 32%);
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 24px;
+}
+
+.overlay-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.overlay-chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(9, 4, 3, 0.56);
+  border: 1px solid rgba(255, 208, 140, 0.22);
+  color: var(--muted-strong);
+  font-size: 0.82rem;
+  backdrop-filter: blur(12px);
+}
+
+.overlay-note {
+  max-width: 420px;
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(12, 5, 3, 0.72);
+  border: 1px solid rgba(255, 154, 106, 0.18);
+}
+
+.overlay-note strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.overlay-note p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.stat-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 22px;
+}
+
+.stat-card {
+  padding: 18px 20px;
+}
+
+.stat-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted-strong);
+  font-size: 0.96rem;
+}
+
+.stat-card span {
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.nav-panel {
+  margin-bottom: 22px;
+}
+
+.section-header,
+.nav-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.section h2,
+.nav-panel h2,
+.insight-card h2 {
+  margin: 6px 0 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+}
+
+.section-intro,
+.nav-panel p,
+.section-header p {
+  margin: 0;
+  max-width: 700px;
+  color: var(--muted);
+}
+
+.quick-nav {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.nav-link {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.nav-link:hover,
+.nav-link:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  background: rgba(236, 91, 19, 0.08);
+}
+
+.nav-link strong {
+  color: var(--muted-strong);
+}
+
+.nav-link span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.section {
+  margin-bottom: 22px;
+}
+
+.importance-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.importance-card h3,
+.concept-card h3,
+.formula-card strong,
+.example-card strong,
+.mistake-card strong,
+.exercise-card strong,
+.summary-card strong,
+.comparison-card strong,
+.exam-card strong,
+.derivation-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.12rem;
+  color: var(--muted-strong);
+}
+
+.split-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.concept-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.math-block,
+.math-box {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(9, 4, 3, 0.58);
+  border: 1px solid rgba(255, 154, 106, 0.16);
+  overflow-x: auto;
+}
+
+.note,
+.tip,
+.warning-note {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(236, 91, 19, 0.06);
+  color: var(--muted-strong);
+}
+
+.tip {
+  border-color: rgba(110, 215, 178, 0.26);
+  background: rgba(110, 215, 178, 0.08);
+}
+
+.warning-note {
+  border-color: rgba(255, 190, 134, 0.24);
+  background: rgba(255, 190, 134, 0.08);
+}
+
+.comparison-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.comparison-card ul,
+.exam-card ul,
+.summary-card ul {
+  margin: 12px 0 0 18px;
+  padding: 0;
+  color: var(--muted);
+}
+
+.comparison-card li,
+.exam-card li,
+.summary-card li {
+  margin-bottom: 8px;
+}
+
+.formula-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.example-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.example-card.wide,
+.exercise-card.wide,
+.exam-card.wide {
+  grid-column: 1 / -1;
+}
+
+.example-card ol,
+.exercise-card ol {
+  margin: 14px 0 0 20px;
+  color: var(--muted);
+}
+
+.example-card li,
+.exercise-card li {
+  margin-bottom: 8px;
+}
+
+.mistake-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mistake-card {
+  border-color: rgba(255, 139, 139, 0.18);
+  background: rgba(255, 139, 139, 0.04);
+}
+
+.mistake-card p {
+  color: #f0cdc2;
+}
+
+.derivation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.step-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.step-card {
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), var(--gold));
+  color: #281108;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.step-card strong {
+  display: block;
+  color: var(--muted-strong);
+  margin-bottom: 8px;
+}
+
+.step-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.lab-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.88fr) minmax(0, 1.12fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.mode-row,
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mode-button,
+.preset-button {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted-strong);
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.mode-button:hover,
+.mode-button:focus-visible,
+.preset-button:hover,
+.preset-button:focus-visible {
+  background: rgba(236, 91, 19, 0.08);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.mode-button.active,
+.preset-button.active {
+  background: linear-gradient(135deg, rgba(236, 91, 19, 0.24), rgba(255, 208, 140, 0.14));
+  border-color: rgba(255, 208, 140, 0.34);
+}
+
+.field {
+  display: grid;
+  gap: 10px;
+}
+
+.field label,
+.field .label {
+  color: var(--muted-strong);
+}
+
+.control-grid {
+  grid-template-columns: 1fr;
+  margin-top: 16px;
+}
+
+.range-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.range-meta strong {
+  color: var(--muted-strong);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.mode-block.is-hidden {
+  display: none;
+}
+
+.canvas-wrap {
+  position: relative;
+  border-radius: 28px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)),
+    rgba(8, 4, 3, 0.72);
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+#polyCanvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.result-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.result-card .value {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.28rem;
+  line-height: 1.2;
+  color: var(--muted-strong);
+}
+
+.lab-note,
+.lab-interpretation {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(236, 91, 19, 0.05);
+  color: var(--muted);
+}
+
+.exam-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.exercise-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.insight-card {
+  margin-bottom: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 208, 140, 0.14), transparent 32%),
+    linear-gradient(135deg, rgba(236, 91, 19, 0.13), rgba(25, 11, 7, 0.96));
+}
+
+.insight-card p {
+  max-width: 920px;
+  margin: 14px 0 0;
+  color: var(--muted-strong);
+  font-size: 1.08rem;
+}
+
+details {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+
+summary {
+  padding: 16px 18px;
+  cursor: pointer;
+  color: var(--muted-strong);
+  font-weight: 600;
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+details[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+details > *:not(summary) {
+  padding: 0 18px 18px;
+}
+
+.footer-note {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.flow-top {
+  margin-top: 16px;
+}
+
+@media (max-width: 1080px) {
+  .hero-grid,
+  .lab-layout,
+  .split-grid,
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mini-grid,
+  .quick-nav,
+  .formula-grid,
+  .mistake-grid,
+  .derivation-grid,
+  .exam-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    padding: 18px 12px 64px;
+  }
+
+  .hero,
+  .nav-panel,
+  .section,
+  .insight-card {
+    padding: 22px;
+    border-radius: 28px;
+  }
+
+  .mini-grid,
+  .importance-grid,
+  .concept-grid,
+  .formula-grid,
+  .example-grid,
+  .mistake-grid,
+  .exercise-grid,
+  .summary-grid,
+  .quick-nav,
+  .stat-row,
+  .result-grid,
+  .derivation-grid,
+  .step-strip,
+  .exam-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy h1 {
+    font-size: 2.66rem;
+  }
+
+  .hero-image {
+    min-height: 320px;
+  }
+
+  .overlay-note {
+    max-width: none;
+  }
+
+  .section-header,
+  .nav-header {
+    align-items: start;
+  }
+}
+</style>
+</head>
+<body>
+<div class="ambient-orb one"></div>
+<div class="ambient-orb two"></div>
+<div class="ambient-orb three"></div>
+
+<main class="page">
+  <header class="hero">
+    <div class="badge">Matoteka znanje · Lekcija 46</div>
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <h1>Poliedri:<span class="gradient-text">prizma i piramida</span></h1>
+        <p class="lead">
+          Ova lekcija te vodi kroz prizme, piramide i zarubljene piramide tako da formule ne učiš napamet, nego iz mreže, preseka i jasne slike tela. Glavni cilj je da na prijemnom odmah razlikuješ šta je površina baze \(B\), šta je obim baze \(O_b\), šta je prava visina \(H\), a šta bočna visina \(s\) ili bočna ivica.
+        </p>
+
+        <div class="mini-grid">
+          <article class="mini-card">
+            <div class="card-kicker">Šta ćeš naučiti</div>
+            <p>Kako da iz mreže dobiješ formule za ukupnu površinu i kako da za svako telo prepoznaš koja visina ulazi u zapreminu.</p>
+          </article>
+          <article class="mini-card">
+            <div class="card-kicker">Najveća zamka</div>
+            <p>Da u kosoj prizmi ili pravilnoj piramidi pomešaš pravu visinu \(H\) sa bočnom ivicom ili bočnom visinom \(s\).</p>
+          </article>
+          <article class="mini-card">
+            <div class="card-kicker">Prijemni fokus</div>
+            <p>Prepoznavanje tipa tela, brz obračun preko baze i pravog preseka, i disciplina da površinu računaš preko lica, a ne preko „lične intuicije“.</p>
+          </article>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <!-- Future hero image prompt: Premium edukativna ilustracija za lekciju Poliedri: prizma i piramida (površina i zapremina): tamna matematička tabla sa toplim narandžastim osvetljenjem, 3D mreža pravilne četvorougaone prizme i pravilne četvorougaone piramide, istaknute visine H i bočna visina s, formule S=2B+M, V=BH, S=B+M, V=BH/3, suptilno prikazana zarubljena piramida i rasklopljeni omotač, precizna akademska estetika, cinematic studio lighting, bez ljudi, premium knowledge-base stil. -->
+        <div class="hero-image-wrap">
+          <img class="hero-image" src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&amp;fit=crop&amp;q=80&amp;w=1200" alt="Apstraktna matematička ilustracija kao privremena hero slika za lekciju o prizmi, piramidi i površini i zapremini poliedara.">
+          <div class="hero-overlay">
+            <div class="overlay-chips">
+              <span class="overlay-chip">\(S_{\text{prizme}} = 2B + M\)</span>
+              <span class="overlay-chip">\(V_{\text{prizme}} = BH\)</span>
+              <span class="overlay-chip">\(V_{\text{piramide}} = \frac{BH}{3}\)</span>
+            </div>
+            <div class="overlay-note">
+              <strong>Ključna ideja lekcije</strong>
+              <p>Površina se čita iz mreže tela, a zapremina iz baze i prave visine. Kada to držiš pod kontrolom, većina stereometrijskih zadataka postaje mirna i pregledna.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="stat-row" aria-label="Informacije o lekciji">
+    <article class="stat-card">
+      <strong>Trajanje</strong>
+      <span>90 do 110 minuta sa detaljnom teorijom, interaktivnim delom, vođenim primerima i završnim vežbama.</span>
+    </article>
+    <article class="stat-card">
+      <strong>Predznanje</strong>
+      <span>Lekcije 42 do 45: trouglovi, Pitagorina teorema, površine ravnih figura, sličnost i rad sa pravilnim mnogouglovima.</span>
+    </article>
+    <article class="stat-card">
+      <strong>Glavna veština</strong>
+      <span>Da iz slike ili teksta zadatka izdvojiš bazu, pravu visinu i odgovarajuću bočnu veličinu, pa zatim složiš površinu i zapreminu bez pogrešne formule.</span>
+    </article>
+    <article class="stat-card">
+      <strong>Interaktivni deo</strong>
+      <span>Canvas laboratorija koja poredi pravu prizmu, kosu prizmu, pravilnu četvorougaonu piramidu i zarubljenu piramidu uz mrežu i ključne vrednosti.</span>
+    </article>
+  </section>
+
+  <nav class="nav-panel" aria-label="Brza navigacija">
+    <div class="nav-header">
+      <div>
+        <div class="section-kicker">Meni lekcije</div>
+        <h2>Brza navigacija</h2>
+      </div>
+      <p>Najbolje je da lekciju pratiš redom, ali slobodno se vrati direktno na deo koji ti pravi problem: vrste tela, mreže, formule, vođene primere ili prijemne zamke.</p>
+    </div>
+    <div class="quick-nav">
+      <a class="nav-link" href="#zasto-vazna"><strong>Zašto važna</strong><span>Gde se ova tema koristi i zašto je česta na prijemnom.</span></a>
+      <a class="nav-link" href="#osnove"><strong>Osnovni pojmovi</strong><span>Poliedri, baze, omotač, visina i mreža tela.</span></a>
+      <a class="nav-link" href="#prizma"><strong>Prizma</strong><span>Prava, kosa i pravilna prizma, površina i zapremina.</span></a>
+      <a class="nav-link" href="#piramida"><strong>Piramida</strong><span>Pravilna i zarubljena piramida, bočna visina i faktor \(\frac{1}{3}\).</span></a>
+      <a class="nav-link" href="#mreze"><strong>Mreže i izvođenje</strong><span>Kako se formule dobijaju iz lica, a ne iz pamćenja.</span></a>
+      <a class="nav-link" href="#lab"><strong>Interaktivna laboratorija</strong><span>Vizuelno proveri koja veličina ulazi u koju formulu.</span></a>
+      <a class="nav-link" href="#primeri"><strong>Vođeni primeri</strong><span>Pet tipičnih modela sa prijemnog, korak po korak.</span></a>
+      <a class="nav-link" href="#formule"><strong>Ključne formule</strong><span>Sažetak koji treba da prepoznaš na prvi pogled.</span></a>
+      <a class="nav-link" href="#greske"><strong>Česte greške</strong><span>Greške koje učenici prave u žurbi.</span></a>
+      <a class="nav-link" href="#prijemni"><strong>Veza sa prijemnim</strong><span>Kako da čitaš stereometrijski zadatak pod pritiskom vremena.</span></a>
+      <a class="nav-link" href="#vezbe"><strong>Vežbe</strong><span>Kratki zadaci sa rešenjima u `details` blokovima.</span></a>
+      <a class="nav-link" href="#rezime"><strong>Rezime</strong><span>Šta mora da ostane u glavi posle ove lekcije.</span></a>
+    </div>
+  </nav>
+
+  <section class="section" id="zasto-vazna">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">Zašto je ova lekcija važna</div>
+        <h2>Stereometrija testira da li zaista vidiš telo, a ne samo formulu</h2>
+      </div>
+      <p>Na prijemnom stereometrijski zadatak često izgleda zastrašujuće samo zato što je u prostoru. U stvarnosti, većina poena se osvaja time što pravilno protumačiš figuru i prevedeš je na poznate ravanske površine i pravu visinu.</p>
+    </div>
+
+    <div class="importance-grid">
+      <article class="importance-card">
+        <div class="card-kicker">Prostorna inteligencija</div>
+        <h3>Ne računaš „u magli“ nego iz jasne skice</h3>
+        <p>Kada umeš da izdvojiš bazu, bočna lica i osni presek, telo prestaje da bude komplikovan 3D objekat i postaje zbir poznatih 2D figura. To je osnovna veština stereometrije.</p>
+      </article>
+      <article class="importance-card">
+        <div class="card-kicker">Formule sa smislom</div>
+        <h3>Površina dolazi iz mreže, zapremina iz pravog rastojanja</h3>
+        <p>Ako zapamtiš samo ovu ideju, mnogo teže ćeš napraviti tipične greške: da u zapreminu ubaciš bočnu ivicu ili da u površini zaboraviš jednu bazu ili pomešaš obim i površinu.</p>
+      </article>
+      <article class="importance-card">
+        <div class="card-kicker">Prijemni trening</div>
+        <h3>Zadatak je često skrivena planimetrija</h3>
+        <p>Vrlo često se prava nepoznata ne nalazi direktno na telu, nego u preseku: trougao kroz visinu piramide, pravougaonik na mreži prizme ili slični trouglovi kod zarubljene piramide.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="osnove">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">1. Osnovni pojmovi</div>
+        <h2>Pre formule moraš znati šta tačno gledaš</h2>
+      </div>
+      <p>U stereometriji najveći broj grešaka ne nastaje u računu, već u pogrešnom imenovanju delova tela. Zato prvo raščistimo jezik: šta je poliedar, šta su baze, šta je omotač i koja visina je „prava“.</p>
+    </div>
+
+    <div class="concept-grid">
+      <article class="concept-card">
+        <div class="card-kicker">Definicija</div>
+        <h3>Poliedar</h3>
+        <p>Poliedar je geometrijsko telo omeđeno mnogouglovima. Ta lica mogu biti trouglovi, četvorouglovi ili drugi mnogouglovi, ali su uvek ravne figure.</p>
+        <div class="note">Za ovu lekciju posebno su važni poliedri kod kojih možeš jasno da razlikuješ baze i bočna lica.</div>
+      </article>
+
+      <article class="concept-card">
+        <div class="card-kicker">Elementi</div>
+        <h3>Baze i omotač</h3>
+        <p>Kod prizme postoje dve međusobno paralelne i podudarne baze. Kod piramide postoji jedna baza, a sva bočna lica sastaju se u jednom vrhu. Omotač je skup bočnih lica bez baze ili baza.</p>
+        <div class="math-block">\[
+          S = \text{zbir površina svih lica} = \text{baze} + M
+        \]</div>
+      </article>
+
+      <article class="concept-card">
+        <div class="card-kicker">Najvažnija veličina</div>
+        <h3>Prava visina \(H\)</h3>
+        <p>Prava visina tela je rastojanje između ravni baza ili rastojanje vrha od ravni baze. To je uvek rastojanje pod pravim uglom, a ne proizvoljna kosa duž.</p>
+        <div class="tip">U zapremini se koristi upravo ova visina, čak i kada telo „izgleda nagnuto“.</div>
+      </article>
+
+      <article class="concept-card">
+        <div class="card-kicker">Razlikuj pojmove</div>
+        <h3>Bočna ivica i bočna visina</h3>
+        <p>Bočna ivica je ivica bočnog lica. Bočna visina \(s\) je visina tog bočnog lica, na primer visina trougla kod pravilne piramide ili visina trapeza kod zarubljene piramide. To nije isto što i prava visina \(H\).</p>
+      </article>
+
+      <article class="concept-card">
+        <div class="card-kicker">Pedagoški alat</div>
+        <h3>Mreža tela</h3>
+        <p>Mreža je ravanski raspored svih lica poliedra dobijen „rasklapanjem“ tela. Kada uradiš mrežu, površina postaje običan zbir površina ravnih figura koje već znaš da računaš.</p>
+      </article>
+
+      <article class="concept-card">
+        <div class="card-kicker">Oznake</div>
+        <h3>Jezik koji koristimo</h3>
+        <p>U ovoj lekciji \(B\) označava površinu baze, \(O_b\) obim baze, \(M\) površinu omotača, \(S\) ukupnu površinu, \(H\) pravu visinu tela, a \(s\) bočnu visinu odgovarajućeg bočnog lica.</p>
+        <div class="math-block">\[
+          \text{baza} \Rightarrow B,\ O_b \qquad \text{omotač} \Rightarrow M
+        \]</div>
+      </article>
+    </div>
+
+    <div class="split-grid">
+      <article class="callout">
+        <div class="card-kicker">Intuicija</div>
+        <strong>Kako da mentalno „spustiš“ 3D na 2D</strong>
+        <p>Zamisli da telo rastvoriš na sto. Sve što pripada površini sada vidiš kao pravougaonike, trouglove ili trapeze. Zato je mreža prirodan alat za površinu. Sa druge strane, zapremina meri koliko prostora telo zauzima, pa zato zavisi od površine baze i pravog rastojanja do druge baze ili vrha.</p>
+      </article>
+
+      <article class="callout">
+        <div class="card-kicker">Formalni zapis</div>
+        <strong>Dve osnovne ideje cele lekcije</strong>
+        <div class="math-block">\[
+          \text{površina} = \text{zbir površina svih lica},
+          \qquad
+          \text{zapremina} = \text{površina baze} \cdot \text{prava visina}
+        \]</div>
+        <p>Kod prizme se ta druga ideja primenjuje direktno. Kod piramide je zapremina tri puta manja nego kod prizme sa istom bazom i istom visinom.</p>
+      </article>
+    </div>
+
+    <div class="comparison-grid">
+      <article class="comparison-card">
+        <div class="card-kicker">Mini primer</div>
+        <strong>Ista baza, ista visina, drugačiji izgled</strong>
+        <p>Ako dve prizme imaju istu površinu baze \(B\) i istu pravu visinu \(H\), one imaju istu zapreminu, čak i ako je jedna prava, a druga kosa. Izgled omotača se menja, ali se broj „slojeva“ iste debljine ne menja.</p>
+        <div class="math-block">\[
+          V = BH
+        \]</div>
+      </article>
+      <article class="comparison-card">
+        <div class="card-kicker">Mini primer</div>
+        <strong>Poređenje prizme i piramide</strong>
+        <p>Ako prizma i piramida imaju istu bazu i istu visinu, piramida zauzima tačno trećinu zapremine prizme. To je jedna od najvažnijih relacija u stereometriji.</p>
+        <div class="math-block">\[
+          V_{\text{piramide}} = \frac{1}{3}V_{\text{prizme}}
+        \]</div>
+      </article>
+    </div>
+
+    <details>
+      <summary>Mikro-provera 1: da li u zapremini smeš koristiti bočnu ivicu?</summary>
+      <p>Ne. Zapremina koristi samo pravu visinu \(H\), tj. rastojanje pod pravim uglom. Bočna ivica može biti duža od te visine i pripadati kosom licu, pa bi dala pogrešan rezultat.</p>
+    </details>
+
+    <details>
+      <summary>Mikro-provera 2: zašto je mreža korisna baš za površinu?</summary>
+      <p>Zato što se površina tela sastoji od površina lica. Kada telo rasklopiš, ta lica dobijaš kao ravne figure čije površine znaš da izračunaš. Mreža zato uklanja prostornu konfuziju.</p>
+    </details>
+  </section>
+
+  <section class="section" id="prizma">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">2. Prizma</div>
+        <h2>Prava, kosa i pravilna prizma</h2>
+      </div>
+      <p>Prizma nastaje kada se jedan mnogougao „prenese“ paralelno samom sebi. Zbog toga ima dve podudarne i paralelne baze, a bočna lica su paralelogrami. Ako su bočne ivice normalne na baze, dobijaš pravu prizmu.</p>
+    </div>
+
+    <div class="split-grid">
+      <article class="callout">
+        <div class="card-kicker">Definicija</div>
+        <strong>Šta je prizma</strong>
+        <p>Prizma je poliedar sa dve podudarne i paralelne baze. Bočna lica povezuju odgovarajuće stranice baza. Kod prave prizme ta bočna lica su pravougaonici. Kod kose prizme su to opšti paralelogrami.</p>
+        <div class="math-block">\[
+          V_{\text{prizme}} = B \cdot H
+        \]</div>
+        <p>Ova formula važi za svaku prizmu, ne samo za pravu.</p>
+      </article>
+
+      <article class="callout">
+        <div class="card-kicker">Vrste</div>
+        <strong>Kako razlikovati tri česta naziva</strong>
+        <p><strong>Prava prizma</strong> ima bočne ivice normalne na ravan baze. <strong>Kosa prizma</strong> nema tu normalnost. <strong>Pravilna prizma</strong> se u školskom programu najčešće misli kao prava prizma sa pravilnim mnogouglom u osnovi.</p>
+        <div class="warning-note">Na prijemnom pažljivo čitaj formulaciju. Nije dovoljno da je baza pravilna; moraš znati i da li je prizma prava ili kosa.</div>
+      </article>
+    </div>
+
+    <div class="formula-grid">
+      <article class="formula-card">
+        <span class="tag">Osnovna formula</span>
+        <strong>Zapremina svake prizme</strong>
+        <div class="math-box">\[
+          V = B \cdot H
+        \]</div>
+        <p>Ne zanima te da li je prizma nagnuta, nego kolika je baza i kolika je prava visina između ravni baza.</p>
+      </article>
+
+      <article class="formula-card">
+        <span class="tag">Prava prizma</span>
+        <strong>Površina omotača</strong>
+        <div class="math-box">\[
+          M = O_b \cdot H
+        \]</div>
+        <p>Ovo važi zato što su bočna lica pravougaonici visine \(H\), pa njihov zbir daje obim baze puta visina.</p>
+      </article>
+
+      <article class="formula-card">
+        <span class="tag">Prava prizma</span>
+        <strong>Ukupna površina</strong>
+        <div class="math-box">\[
+          S = 2B + M = 2B + O_bH
+        \]</div>
+        <p>Na površinu ulaze obe baze. Ova formula se vrlo često pogrešno prepolovi jer učenik zaboravi drugu bazu.</p>
+      </article>
+
+      <article class="formula-card">
+        <span class="tag">Specijalan slučaj</span>
+        <strong>Četvorougaona prava prizma</strong>
+        <div class="math-box">\[
+          B = ab,\quad O_b = 2(a+b),\quad S = 2ab + 2H(a+b)
+        \]</div>
+        <p>Ovaj oblik je najčešći u školskim zadacima zato što sve možeš da pratiš preko pravougaonika.</p>
+      </article>
+
+      <article class="formula-card">
+        <span class="tag">Kosa prizma</span>
+        <strong>Kako razmišljati o površini</strong>
+        <p>Kod opšte kose prizme najsigurniji put je mreža: saberi površine svih bočnih paralelograma i obe baze. Prečica \(M=O_bH\) tu, uopšteno, ne važi.</p>
+      </article>
+
+      <article class="formula-card">
+        <span class="tag">Intuicija</span>
+        <strong>Zašto se zapremina ne menja kada je prizma kosa</strong>
+        <p>Ako telo samo „nagnete“, ali baza i prava visina ostanu iste, svaki horizontalni presek ima istu površinu kao ranije. Zbog toga zapremina ostaje \(BH\).</p>
+      </article>
+    </div>
+
+    <div class="example-grid">
+      <article class="example-card">
+        <span class="tag">Mini primer</span>
+        <strong>Prava prizma sa poznatom bazom</strong>
+        <p>Ako je \(B=18\ \text{cm}^2\), \(O_b=20\ \text{cm}\) i \(H=7\ \text{cm}\), onda je</p>
+        <div class="math-box">\[
+          M = O_bH = 20 \cdot 7 = 140,\qquad
+          S = 2B + M = 36 + 140 = 176,
+        \]</div>
+        <div class="math-box">\[
+          V = BH = 18 \cdot 7 = 126.
+        \]</div>
+        <p>Ovo je odličan podsetnik da ti za opštu bazu nisu potrebne stranice baze ako su \(B\) i \(O_b\) već dati.</p>
+      </article>
+
+      <article class="example-card">
+        <span class="tag">Mini primer</span>
+        <strong>Kosa prizma i visina</strong>
+        <p>U kosoj prizmi bočna ivica može biti, na primer, \(10\) cm, a prava visina samo \(8\) cm. Za zapreminu koristiš \(8\), ne \(10\). Ako je baza \(25\ \text{cm}^2\), onda je</p>
+        <div class="math-box">\[
+          V = 25 \cdot 8 = 200\ \text{cm}^3.
+        \]</div>
+        <p>Bočna ivica pomaže kod površine nekih lica, ali ne menja definiciju zapremine.</p>
+      </article>
+    </div>
+
+    <details>
+      <summary>Mikro-provera 3: kada formula \(M=O_bH\) sigurno važi?</summary>
+      <p>Kada je prizma prava. Tada su sva bočna lica pravougaonici čija je jedna stranica upravo \(H\), pa zbir njihovih površina daje obim baze puta visina.</p>
+    </details>
+
+    <details>
+      <summary>Mikro-provera 4: šta je potrebno za zapreminu prizme?</summary>
+      <p>Dovoljni su površina baze \(B\) i prava visina \(H\). Nisu ti obavezno potrebne pojedinačne stranice baze ako je \(B\) već poznato.</p>
+    </details>
+  </section>
+
+  <section class="section" id="piramida">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">3. Piramida</div>
+        <h2>Pravilna piramida i zarubljena piramida</h2>
+      </div>
+      <p>Piramida ima jednu bazu, a sva bočna lica su trouglovi koji se sastaju u vrhu. Kod pravilne piramide baza je pravilan mnogougao, a vrh se nalazi iznad centra baze. Tada je račun posebno uredan jer su bočna lica podudarna.</p>
+    </div>
+
+    <div class="split-grid">
+      <article class="callout">
+        <div class="card-kicker">Osnovni model</div>
+        <strong>Šta tačno meri bočna visina \(s\)</strong>
+        <p>Kod pravilne piramide svako bočno lice je jednakokraki trougao. Bočna visina \(s\) je visina tog trougla, merena od vrha piramide do sredine odgovarajuće stranice baze. To nije isto što i prava visina \(H\), koja pada na centar baze.</p>
+        <div class="math-block">\[
+          M = \frac{O_b \cdot s}{2}
+        \]</div>
+      </article>
+
+      <article class="callout">
+        <div class="card-kicker">Najveći koncept</div>
+        <strong>Zašto se javlja faktor \(\frac{1}{3}\)</strong>
+        <p>Zapremina piramide sa bazom \(B\) i visinom \(H\) jednaka je trećini zapremine prizme sa istom bazom i istom visinom. Ova relacija nije slučajna formula, nego duboka geometrijska činjenica koja se može dokazivati presecanjem ili Cavalierijevim principom.</p>
+        <div class="math-block">\[
+          V_{\text{piramide}} = \frac{B \cdot H}{3}
+        \]</div>
+      </article>
+    </div>
+
+    <div class="formula-grid">
+      <article class="formula-card">
+        <span class="tag">Svaka piramida</span>
+        <strong>Zapremina</strong>
+        <div class="math-box">\[
+          V = \frac{B \cdot H}{3}
+        \]</div>
+        <p>Važi bez obzira na oblik baze. Jedino moraš pravilno odrediti površinu baze i pravu visinu tela.</p>
+      </article>
+
+      <article class="formula-card">
+        <span class="tag">Pravilna piramida</span>
+        <strong>Površina omotača</strong>
+        <div class="math-box">\[
+          M = \frac{O_b \cdot s}{2}
+        \]</div>
+        <p>Bočna lica su podudarni trouglovi, pa ukupna površina omotača postaje zbir njihovih površina.</p>
+      </article>
+
+      <article class="formula-card">
+        <span class="tag">Pravilna piramida</span>
+        <strong>Ukupna površina</strong>
+        <div class="math-box">\[
+          S = B + M = B + \frac{O_bs}{2}
+        \]</div>
+        <p>Za razliku od prizme, ovde postoji samo jedna baza, pa se ne pojavljuje \(2B\).</p>
+      </article>
+
+      <article class="formula-card">
+        <span class="tag">Četvorougaona pravilna</span>
+        <strong>Kvadratna baza stranice \(a\)</strong>
+        <div class="math-box">\[
+          B = a^2,\quad O_b = 4a,\quad M = 2as,\quad S = a^2 + 2as
+        \]</div>
+        <p>Ovo je najčešći oblik na prijemnom jer se bočna visina lako vidi u osnom preseku.</p>
+      </article>
+
+      <article class="formula-card">
+        <span class="tag">Veza \(H\) i \(s\)</span>
+        <strong>Osni presek daje Pitagoru</strong>
+        <div class="math-box">\[
+          s^2 = H^2 + r^2
+        \]</div>
+        <p>Ovde je \(r\) apotema baze, odnosno rastojanje centra pravilne baze do sredine stranice. Za kvadrat važi \(r=\frac{a}{2}\).</p>
+      </article>
+
+      <article class="formula-card">
+        <span class="tag">Zarubljena piramida</span>
+        <strong>Zapremina</strong>
+        <div class="math-box">\[
+          V = \frac{H}{3}\left(B_1 + B_2 + \sqrt{B_1B_2}\right)
+        \]</div>
+        <p>Ovu formulu dobijaš kao razliku dve slične piramide. Na prijemnom se često javlja baš zato što proverava sličnost i rad sa presecima.</p>
+      </article>
+    </div>
+
+    <div class="example-grid">
+      <article class="example-card">
+        <span class="tag">Mini primer</span>
+        <strong>Iz visine do bočne visine</strong>
+        <p>Pravilna četvorougaona piramida ima \(a=6\) cm i \(H=4\) cm. Pošto je apotema baze \(r=\frac{a}{2}=3\), dobijaš</p>
+        <div class="math-box">\[
+          s = \sqrt{H^2 + r^2} = \sqrt{4^2 + 3^2} = 5\ \text{cm}.
+        \]</div>
+        <p>Tek tada možeš računati bočnu površinu.</p>
+      </article>
+
+      <article class="example-card">
+        <span class="tag">Mini primer</span>
+        <strong>Zarubljena piramida kao „odsečena“ prava piramida</strong>
+        <p>Kada se piramida odseče ravni paralelnom osnovi, dobijaš zarubljenu piramidu sa dve slične baze. Zbog te sličnosti mnoge nepoznate dužine možeš dobiti preko razmera, a zatim koristiti formule za površinu i zapreminu.</p>
+      </article>
+    </div>
+
+    <details>
+      <summary>Mikro-provera 5: zašto u pravilnoj četvorougaonoj piramidi uzimaš \(\frac{a}{2}\), a ne dijagonalu baze?</summary>
+      <p>Zato što se bočna visina \(s\) spušta na sredinu stranice baze, pa u osnom preseku dobijaš pravougli trougao čija je jedna kateta rastojanje od centra kvadrata do sredine stranice, a to je \(\frac{a}{2}\).</p>
+    </details>
+
+    <details>
+      <summary>Mikro-provera 6: koliko baza ima zarubljena piramida?</summary>
+      <p>Dve. Donja i gornja baza su slični mnogouglovi. Zato u ukupnoj površini učestvuju obe, a u zapremini obe kroz formulu sa \(B_1\), \(B_2\) i \(\sqrt{B_1B_2}\).</p>
+    </details>
+  </section>
+
+  <section class="section" id="mreze">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">4. Mreže i izvođenje formula</div>
+        <h2>Mreža je najkraći put do pravilne površine</h2>
+      </div>
+      <p>Učenici često pokušavaju da „pogode“ formulu za površinu. Bolji pristup je da nacrtaš ili makar zamisliš mrežu tela. Tada svaka formula postaje posledica sabiranja poznatih ravnih figura.</p>
+    </div>
+
+    <div class="derivation-grid">
+      <article class="derivation-card">
+        <div class="card-kicker">Prava prizma</div>
+        <strong>Dve baze i traka pravougaonika</strong>
+        <p>Mreža prave prizme sastoji se od dve podudarne baze i niza pravougaonika. Širine tih pravougaonika zajedno daju obim baze \(O_b\), a visina svakog je \(H\).</p>
+        <div class="math-box">\[
+          M = O_bH,\qquad S = 2B + O_bH
+        \]</div>
+      </article>
+
+      <article class="derivation-card">
+        <div class="card-kicker">Pravilna piramida</div>
+        <strong>Baza i niz podudarnih trouglova</strong>
+        <p>Mreža pravilne piramide sastoji se od jedne baze i više podudarnih trouglova. Svaki trougao ima osnovicu jednu stranicu baze i visinu \(s\), pa njihov zbir daje \(\frac{O_bs}{2}\).</p>
+        <div class="math-box">\[
+          M = \frac{O_bs}{2},\qquad S = B + \frac{O_bs}{2}
+        \]</div>
+      </article>
+
+      <article class="derivation-card">
+        <div class="card-kicker">Zarubljena piramida</div>
+        <strong>Dve baze i bočni trapezi</strong>
+        <p>Kod pravilne zarubljene piramide bočna lica su podudarni trapezi. Ako je \(s\) njihova visina, zbir njihovih površina je poluzbir obima baza puta \(s\).</p>
+        <div class="math-box">\[
+          M = \frac{(O_1 + O_2)s}{2}
+        \]</div>
+      </article>
+    </div>
+
+    <div class="step-strip">
+      <article class="step-card">
+        <div class="step-number">1</div>
+        <strong>Prepoznaj telo</strong>
+        <p>Prizma ili piramida? Prava ili kosa? Pravilna ili ne? Od toga zavisi koja prečica uopšte sme da se koristi.</p>
+      </article>
+      <article class="step-card">
+        <div class="step-number">2</div>
+        <strong>Odredi bazu</strong>
+        <p>Nađi površinu baze \(B\) i, kada treba, njen obim \(O_b\). Nemoj mešati te dve veličine.</p>
+      </article>
+      <article class="step-card">
+        <div class="step-number">3</div>
+        <strong>Odredi pravu i bočnu visinu</strong>
+        <p>Zapremina traži \(H\). Površina omotača pravilne piramide ili frustuma traži \(s\). Ako neka od tih dužina nije data, traži je u preseku.</p>
+      </article>
+      <article class="step-card">
+        <div class="step-number">4</div>
+        <strong>Saberi lica bez preskakanja</strong>
+        <p>Kod prizme su dve baze, kod piramide jedna, kod zarubljene piramide dve. Napiši sabiranje lica pre nego što računaš brojeve.</p>
+      </article>
+    </div>
+
+    <details>
+      <summary>Mikro-provera 7: zašto mreža štiti od greške u formuli?</summary>
+      <p>Zato što na mreži vidiš tačno koliko lica postoji i kog su oblika. Ako si površinu napisao kao zbir tih lica, formula više nije „na pamet“, nego rezultat konkretne slike.</p>
+    </details>
+  </section>
+
+  <section class="section" id="lab">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">5. Interaktivna laboratorija</div>
+        <h2>Promeni telo i proveri koja visina ide u koju formulu</h2>
+      </div>
+      <p>U laboratoriji porediš četiri modela: pravu prizmu, specijalan model kose četvorougaone prizme, pravilnu četvorougaonu piramidu i zarubljenu pravilnu piramidu. Levo je skica tela, desno njegova mreža, a ispod su ključne vrednosti koje se menjaju zajedno sa parametrima.</p>
+    </div>
+
+    <div class="lab-layout">
+      <article class="lab-panel">
+        <h3>Kontrole</h3>
+        <p>Najbolje radi ovako: prvo proceni rezultat, zatim promeni parametre i proveri da li si dobro razdvojio \(H\), \(s\) i bočnu ivicu. Tada interaktivni deo zaista služi učenju.</p>
+
+        <div class="mode-row" role="tablist" aria-label="Izbor tela">
+          <button class="mode-button active" type="button" data-mode="right-prism">Prava prizma</button>
+          <button class="mode-button" type="button" data-mode="oblique-prism">Kosa prizma</button>
+          <button class="mode-button" type="button" data-mode="pyramid">Pravilna piramida</button>
+          <button class="mode-button" type="button" data-mode="frustum">Zarubljena piramida</button>
+        </div>
+
+        <div class="control-grid">
+          <div class="field">
+            <label for="baseRange">Stranica donje baze \(a\)</label>
+            <input id="baseRange" type="range" min="3" max="10" step="0.5" value="6">
+            <div class="range-meta">
+              <span>Osnovna dimenzija tela</span>
+              <strong id="baseValue">6 cm</strong>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="heightRange">Prava visina \(H\)</label>
+            <input id="heightRange" type="range" min="3" max="12" step="0.5" value="8">
+            <div class="range-meta">
+              <span>Rastojanje pod pravim uglom</span>
+              <strong id="heightValue">8 cm</strong>
+            </div>
+          </div>
+
+          <div class="mode-block is-hidden" data-mode-block="oblique-prism">
+            <div class="field">
+              <label for="offsetRange">Horizontalni pomeraj \(d\)</label>
+              <input id="offsetRange" type="range" min="0" max="6" step="0.5" value="3">
+              <div class="range-meta">
+                <span>Koliko je gornja baza pomerena</span>
+                <strong id="offsetValue">3 cm</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="mode-block is-hidden" data-mode-block="frustum">
+            <div class="field">
+              <label for="topRange">Stranica gornje baze \(b\)</label>
+              <input id="topRange" type="range" min="1" max="5" step="0.5" value="3">
+              <div class="range-meta">
+                <span>Manja, gornja baza</span>
+                <strong id="topValue">3 cm</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <div class="card-kicker">Kako da koristiš laboratoriju</div>
+          <p>U modu prave prizme prati kako se omotač ponaša kao traka pravougaonika. U modu kose prizme gledaj da se zapremina oslanja na \(H\), a ne na bočnu ivicu. Kod piramide i frustuma obrati pažnju da površina traži bočnu visinu lica, ne samo vertikalu.</p>
+        </div>
+      </article>
+
+      <article class="lab-panel">
+        <h3 id="labTitle">Prava četvorougaona prizma i njena mreža</h3>
+        <p id="labDescription">Na levoj strani je telo, a na desnoj mreža. Posmatraj kako dve baze i četiri pravougaonika daju ukupnu površinu.</p>
+
+        <div class="canvas-wrap">
+          <canvas id="polyCanvas" width="920" height="540"></canvas>
+        </div>
+
+        <div class="result-grid" id="labResults">
+          <article class="result-card">
+            <span class="label" id="resultLabel1">Površina baze</span>
+            <strong class="value" id="resultValue1">36 cm²</strong>
+            <p id="resultDesc1">Za kvadratnu osnovu važi \(B=a^2\).</p>
+          </article>
+          <article class="result-card">
+            <span class="label" id="resultLabel2">Omotač</span>
+            <strong class="value" id="resultValue2">192 cm²</strong>
+            <p id="resultDesc2">Kod prave prizme važi \(M=O_bH=4aH\).</p>
+          </article>
+          <article class="result-card">
+            <span class="label" id="resultLabel3">Ukupna površina</span>
+            <strong class="value" id="resultValue3">264 cm²</strong>
+            <p id="resultDesc3">Saberi dve baze i omotač.</p>
+          </article>
+          <article class="result-card">
+            <span class="label" id="resultLabel4">Zapremina</span>
+            <strong class="value" id="resultValue4">288 cm³</strong>
+            <p id="resultDesc4">Zapremina uvek koristi bazu i pravu visinu.</p>
+          </article>
+        </div>
+
+        <div class="lab-note" id="labNote">Ako se telo samo nagne, ali \(B\) i \(H\) ostanu isti, zapremina se ne menja. To proveri prebacivanjem na kosu prizmu.</div>
+        <div class="lab-interpretation" id="labInterpretation">Pedagoški signal: za površinu gledaj mrežu, za zapreminu gledaj rastojanje pod pravim uglom.</div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="primeri">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">6. Vođeni primeri</div>
+        <h2>Primeri koji grade sigurnost za prijemni</h2>
+      </div>
+      <p>Primeri su poređani od osnovnog ka složenijem. Prvo rešavaš zadatak kada su \(B\) i \(O_b\) već dati, zatim prolaziš kroz kosu prizmu, pravilnu piramidu, obrnuti zadatak sa traženjem visine i na kraju zarubljenu piramidu.</p>
+    </div>
+
+    <div class="example-grid">
+      <article class="example-card">
+        <span class="tag">Primer 1</span>
+        <strong>Prava prizma sa opštom bazom</strong>
+        <p>Data je prava prizma čija je površina baze \(B=24\ \text{cm}^2\), obim baze \(O_b=22\ \text{cm}\), a visina \(H=9\ \text{cm}\). Odredi ukupnu površinu i zapreminu.</p>
+        <ol>
+          <li>Pošto je prizma prava, omotač računaš formulom \(M=O_bH\).</li>
+          <li>Dobijaš \(M = 22 \cdot 9 = 198\ \text{cm}^2\).</li>
+          <li>Ukupna površina je \(S = 2B + M = 2\cdot 24 + 198 = 246\ \text{cm}^2\).</li>
+          <li>Zapremina je \(V = BH = 24 \cdot 9 = 216\ \text{cm}^3\).</li>
+        </ol>
+        <div class="math-box">\[
+          S = 246\ \text{cm}^2,\qquad V = 216\ \text{cm}^3
+        \]</div>
+        <p>Najvažniji uvid: ako su \(B\) i \(O_b\) dati, ne moraš posebno rekonstruisati stranicu baze.</p>
+      </article>
+
+      <article class="example-card">
+        <span class="tag">Primer 2</span>
+        <strong>Kosa četvorougaona prizma u specijalnom modelu</strong>
+        <p>Donja baza je kvadrat stranice \(a=5\) cm. Gornja baza je pomerena horizontalno za \(d=6\) cm, a prava visina prizme je \(H=8\) cm. Odredi zapreminu i ukupnu površinu.</p>
+        <ol>
+          <li>Površina baze je \(B=a^2=25\ \text{cm}^2\), pa je zapremina odmah</li>
+        </ol>
+        <div class="math-box">\[
+          V = BH = 25 \cdot 8 = 200\ \text{cm}^3.
+        \]</div>
+        <ol start="2">
+          <li>Bočna ivica specijalnog modela iznosi \(k=\sqrt{H^2+d^2}=\sqrt{8^2+6^2}=10\) cm.</li>
+          <li>Dva bočna lica imaju površinu \(aH=5\cdot 8=40\), a druga dva \(ak=5\cdot 10=50\).</li>
+          <li>Zato je omotač \(M = 2\cdot 40 + 2\cdot 50 = 180\ \text{cm}^2\).</li>
+          <li>Ukupna površina je \(S = 2B + M = 50 + 180 = 230\ \text{cm}^2\).</li>
+        </ol>
+        <div class="math-box">\[
+          S = 230\ \text{cm}^2,\qquad V = 200\ \text{cm}^3
+        \]</div>
+        <p>Poenta: zapremina je koristila \(H=8\), a ne kosu bočnu ivicu \(10\).</p>
+      </article>
+
+      <article class="example-card">
+        <span class="tag">Primer 3</span>
+        <strong>Pravilna četvorougaona piramida</strong>
+        <p>Pravilna četvorougaona piramida ima osnovicu stranice \(a=6\) cm i visinu \(H=4\) cm. Odredi ukupnu površinu i zapreminu.</p>
+        <ol>
+          <li>Za kvadratnu osnovu je \(B=a^2=36\ \text{cm}^2\).</li>
+          <li>Apotema baze je \(\frac{a}{2}=3\) cm, pa preko Pitagore dobijaš bočnu visinu:</li>
+        </ol>
+        <div class="math-box">\[
+          s=\sqrt{4^2+3^2}=5\ \text{cm}.
+        \]</div>
+        <ol start="3">
+          <li>Omotač je \(M=2as=2\cdot 6 \cdot 5=60\ \text{cm}^2\).</li>
+          <li>Ukupna površina: \(S=B+M=36+60=96\ \text{cm}^2\).</li>
+          <li>Zapremina: \(V=\frac{BH}{3}=\frac{36\cdot 4}{3}=48\ \text{cm}^3\).</li>
+        </ol>
+        <div class="math-box">\[
+          S = 96\ \text{cm}^2,\qquad V = 48\ \text{cm}^3
+        \]</div>
+      </article>
+
+      <article class="example-card">
+        <span class="tag">Primer 4</span>
+        <strong>Iz ukupne površine do visine piramide</strong>
+        <p>Pravilna četvorougaona piramida ima osnovicu stranice \(a=12\) cm i ukupnu površinu \(S=384\ \text{cm}^2\). Odredi bočnu visinu i pravu visinu piramide.</p>
+        <ol>
+          <li>Površina baze je \(B=12^2=144\ \text{cm}^2\).</li>
+          <li>Omotač zato iznosi \(M=S-B=384-144=240\ \text{cm}^2\).</li>
+          <li>Pošto je \(M=2as\), sledi</li>
+        </ol>
+        <div class="math-box">\[
+          240 = 2\cdot 12 \cdot s \Rightarrow 240 = 24s \Rightarrow s=10\ \text{cm}.
+        \]</div>
+        <ol start="4">
+          <li>Za kvadrat važi \(\frac{a}{2}=6\), pa iz pravouglog trougla dobijaš</li>
+        </ol>
+        <div class="math-box">\[
+          H = \sqrt{s^2-\left(\frac{a}{2}\right)^2}
+            = \sqrt{10^2-6^2}
+            = \sqrt{64}
+            = 8\ \text{cm}.
+        \]</div>
+        <p>Ovaj tip zadatka često proverava da li znaš da ideš unazad: od ukupne površine do omotača, pa do visine.</p>
+      </article>
+
+      <article class="example-card wide">
+        <span class="tag">Primer 5</span>
+        <strong>Zarubljena pravilna četvorougaona piramida</strong>
+        <p>Zarubljena pravilna četvorougaona piramida ima donju osnovu stranice \(a=8\) cm, gornju osnovu stranice \(b=4\) cm i pravu visinu \(H=6\) cm. Odredi ukupnu površinu i zapreminu.</p>
+        <ol>
+          <li>Površine baza su \(B_1=8^2=64\) i \(B_2=4^2=16\).</li>
+          <li>Bočna visina trapeza dobija se iz pravouglog preseka:</li>
+        </ol>
+        <div class="math-box">\[
+          s=\sqrt{H^2+\left(\frac{a-b}{2}\right)^2}
+           = \sqrt{6^2+2^2}
+           = \sqrt{40}
+           = 2\sqrt{10}.
+        \]</div>
+        <ol start="3">
+          <li>Za kvadratne baze važi \(O_1=4a=32\), \(O_2=4b=16\), pa je</li>
+        </ol>
+        <div class="math-box">\[
+          M=\frac{(O_1+O_2)s}{2}
+           = \frac{48 \cdot 2\sqrt{10}}{2}
+           = 48\sqrt{10}\ \text{cm}^2.
+        \]</div>
+        <ol start="4">
+          <li>Ukupna površina:</li>
+        </ol>
+        <div class="math-box">\[
+          S = B_1 + B_2 + M = 64 + 16 + 48\sqrt{10} = 80 + 48\sqrt{10}\ \text{cm}^2.
+        \]</div>
+        <ol start="5">
+          <li>Zapremina:</li>
+        </ol>
+        <div class="math-box">\[
+          V = \frac{H}{3}\left(B_1 + B_2 + \sqrt{B_1B_2}\right)
+            = \frac{6}{3}\left(64 + 16 + 32\right)
+            = 2 \cdot 112
+            = 224\ \text{cm}^3.
+        \]</div>
+        <p>Ovde se vidi kako zarubljena piramida spaja tri ideje: sličnost, Pitagoru i zbir površina lica.</p>
+      </article>
+    </div>
+
+    <details>
+      <summary>Mikro-provera 8: kada u zadatku prvo računaš \(s\), a ne \(H\)?</summary>
+      <p>Kada se traži površina pravilne piramide ili zarubljene pravilne piramide. Tada omotač zavisi od bočne visine lica \(s\), a ne direktno od vertikalne visine \(H\).</p>
+    </details>
+  </section>
+
+  <section class="section" id="formule">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">7. Ključne formule i obrasci</div>
+        <h2>Formula mora da ti prizove sliku tela</h2>
+      </div>
+      <p>Ovaj deo služi kao sažetak. Nemoj ga učiti odvojeno od prethodnih sekcija. Svaka formula ovde treba odmah da ti prizove telo, mrežu i pravu vrstu visine.</p>
+    </div>
+
+    <div class="formula-grid">
+      <article class="formula-card">
+        <strong>Prizma: zapremina</strong>
+        <div class="math-box">\[
+          V = B \cdot H
+        \]</div>
+        <p>Važi za svaku prizmu, pravu i kosu.</p>
+      </article>
+
+      <article class="formula-card">
+        <strong>Prava prizma: omotač</strong>
+        <div class="math-box">\[
+          M = O_b \cdot H
+        \]</div>
+        <p>Važi kada su bočna lica pravougaonici.</p>
+      </article>
+
+      <article class="formula-card">
+        <strong>Prava prizma: ukupna površina</strong>
+        <div class="math-box">\[
+          S = 2B + O_bH
+        \]</div>
+        <p>Ne zaboravi da prizma ima dve baze.</p>
+      </article>
+
+      <article class="formula-card">
+        <strong>Piramida: zapremina</strong>
+        <div class="math-box">\[
+          V = \frac{BH}{3}
+        \]</div>
+        <p>Ključni faktor \(\frac{1}{3}\) razlikuje je od prizme.</p>
+      </article>
+
+      <article class="formula-card">
+        <strong>Pravilna piramida: omotač</strong>
+        <div class="math-box">\[
+          M = \frac{O_bs}{2}
+        \]</div>
+        <p>Bočna visina \(s\) pripada trouglastim licima.</p>
+      </article>
+
+      <article class="formula-card">
+        <strong>Pravilna piramida: ukupna površina</strong>
+        <div class="math-box">\[
+          S = B + \frac{O_bs}{2}
+        \]</div>
+        <p>Ovde postoji samo jedna baza.</p>
+      </article>
+
+      <article class="formula-card">
+        <strong>Zarubljena pravilna piramida: omotač</strong>
+        <div class="math-box">\[
+          M = \frac{(O_1+O_2)s}{2}
+        \]</div>
+        <p>Bočna lica su trapezi, pa se javlja poluzbir obima baza.</p>
+      </article>
+
+      <article class="formula-card">
+        <strong>Zarubljena piramida: ukupna površina</strong>
+        <div class="math-box">\[
+          S = B_1 + B_2 + M
+        \]</div>
+        <p>Uvek saberi obe baze i omotač.</p>
+      </article>
+
+      <article class="formula-card">
+        <strong>Zarubljena piramida: zapremina</strong>
+        <div class="math-box">\[
+          V = \frac{H}{3}\left(B_1+B_2+\sqrt{B_1B_2}\right)
+        \]</div>
+        <p>Formula potiče iz razlike dve slične piramide.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="greske">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">8. Česte greške</div>
+        <h2>Ovde se gube laki poeni</h2>
+      </div>
+      <p>Većina grešaka u ovoj temi nije teška matematika, nego brzopletost. Ako unapred znaš koje su tipične zamke, mnogo lakše ćeš ih prepoznati dok radiš zadatak.</p>
+    </div>
+
+    <div class="mistake-grid">
+      <article class="mistake-card">
+        <div class="card-kicker">Greška 1</div>
+        <strong>Ubaciš bočnu ivicu u zapreminu</strong>
+        <p>Zapremina ne zna ništa o „nagnutosti“ lica. Zna samo za površinu baze i pravu visinu \(H\).</p>
+      </article>
+
+      <article class="mistake-card">
+        <div class="card-kicker">Greška 2</div>
+        <strong>Pomešaš \(B\) i \(O_b\)</strong>
+        <p>Površina baze i obim baze nisu slične veličine. Jedna je u kvadratnim jedinicama, druga u linearnim.</p>
+      </article>
+
+      <article class="mistake-card">
+        <div class="card-kicker">Greška 3</div>
+        <strong>Za kosu prizmu napišeš \(M=O_bH\)</strong>
+        <p>Ta formula je sigurna za pravu prizmu. Kod kose prizme treba da pogledaš konkretna bočna lica ili mrežu.</p>
+      </article>
+
+      <article class="mistake-card">
+        <div class="card-kicker">Greška 4</div>
+        <strong>Kod piramide uzmeš \(s=H\)</strong>
+        <p>Bočna visina pripada bočnom trouglu, a prava visina pada na bazu. Jednake su samo u trivijalnim ili pogrešno nacrtanim situacijama.</p>
+      </article>
+
+      <article class="mistake-card">
+        <div class="card-kicker">Greška 5</div>
+        <strong>Zaboraviš broj baza</strong>
+        <p>Prizma ima dve baze. Piramida jednu. Zarubljena piramida opet dve. Jedna propuštena baza odmah ruši ceo rezultat.</p>
+      </article>
+
+      <article class="mistake-card">
+        <div class="card-kicker">Greška 6</div>
+        <strong>Ne nacrtaš pomoćni presek</strong>
+        <p>Često je prava nepoznata skrivena u pravouglom preseku. Bez tog crteža Pitagora i sličnost ostaju „nevidljive“.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="prijemni">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">9. Veza sa prijemnim zadacima</div>
+        <h2>Kako da stereometrijski zadatak čitaš pod pritiskom vremena</h2>
+      </div>
+      <p>Na prijemnom nemaš luksuz da dugo lutaš. Potreban ti je kratak i pouzdan protokol čitanja zadatka, tako da u prvoj minuti znaš koje veličine tražiš i koja formula uopšte dolazi u obzir.</p>
+    </div>
+
+    <div class="exam-grid">
+      <article class="exam-card">
+        <div class="card-kicker">Prvi pogled</div>
+        <strong>Identifikuj telo i vrstu visine</strong>
+        <ul>
+          <li>Da li je telo prizma, piramida ili zarubljena piramida?</li>
+          <li>Da li je telo pravo, koso ili pravilno?</li>
+          <li>Koja duž je prava visina, a koja bočna visina ili bočna ivica?</li>
+        </ul>
+      </article>
+
+      <article class="exam-card">
+        <div class="card-kicker">Skrivena planimetrija</div>
+        <strong>Traži pomoćni trougao ili trapez</strong>
+        <ul>
+          <li>Kod pravilne piramide često tražiš \(s\) preko Pitagore.</li>
+          <li>Kod zarubljene piramide često radiš sa sličnim presekom.</li>
+          <li>Kod baze ponekad prvo moraš rešiti planimetrijski zadatak da bi dobio \(B\) ili \(O_b\).</li>
+        </ul>
+      </article>
+
+      <article class="exam-card">
+        <div class="card-kicker">Kontrola</div>
+        <strong>Proveri rezultat pre predaje</strong>
+        <ul>
+          <li>Da li je površina u \(\text{cm}^2\), a zapremina u \(\text{cm}^3\)?</li>
+          <li>Da li su uračunate sve baze?</li>
+          <li>Da li si u zapremini koristio pravo rastojanje, a ne kosu duž?</li>
+        </ul>
+      </article>
+    </div>
+
+    <article class="exam-card wide flow-top">
+      <div class="card-kicker">Prijemni signal</div>
+      <strong>Kada zadatak deluje složeno, vrati ga na dve rečenice</strong>
+      <p>Prva rečenica: „Koja je baza i kolika joj je površina?“ Druga rečenica: „Koja je prava visina i koja bočna veličina mi treba za površinu?“ Ako te dve stvari jasno napišeš na papiru, zadatak se obično raspadne na poznate korake.</p>
+    </article>
+  </section>
+
+  <section class="section" id="vezbe">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">10. Vežbe</div>
+        <h2>Kratki zadaci za proveru razumevanja</h2>
+      </div>
+      <p>Reši samostalno, pa tek onda otvori rešenje. Cilj nije samo tačan broj, nego da vidiš da li si izabrao pravu formulu i pravu vrstu visine.</p>
+    </div>
+
+    <div class="exercise-grid">
+      <article class="exercise-card">
+        <div class="card-kicker">Vežba 1</div>
+        <strong>Prava prizma sa datim \(B\) i \(O_b\)</strong>
+        <p>Za pravu prizmu dati su \(B=30\ \text{cm}^2\), \(O_b=26\ \text{cm}\) i \(H=7\ \text{cm}\). Nađi \(S\) i \(V\).</p>
+        <details>
+          <summary>Rešenje</summary>
+          <p>Omotač je \(M=O_bH=26\cdot 7=182\ \text{cm}^2\). Ukupna površina je \(S=2B+M=60+182=242\ \text{cm}^2\). Zapremina je \(V=BH=30\cdot 7=210\ \text{cm}^3\).</p>
+        </details>
+      </article>
+
+      <article class="exercise-card">
+        <div class="card-kicker">Vežba 2</div>
+        <strong>Pravilna četvorougaona piramida</strong>
+        <p>Data je pravilna četvorougaona piramida sa \(a=8\) cm i \(H=3\) cm. Nađi \(s\), \(S\) i \(V\).</p>
+        <details>
+          <summary>Rešenje</summary>
+          <p>Za kvadrat važi \(\frac{a}{2}=4\), pa je \(s=\sqrt{3^2+4^2}=5\) cm. Površina baze je \(B=8^2=64\), omotač \(M=2as=2\cdot 8\cdot 5=80\), pa je \(S=144\ \text{cm}^2\). Zapremina je \(V=\frac{64\cdot 3}{3}=64\ \text{cm}^3\).</p>
+        </details>
+      </article>
+
+      <article class="exercise-card">
+        <div class="card-kicker">Vežba 3</div>
+        <strong>Kosa četvorougaona prizma</strong>
+        <p>U specijalnom modelu kose kvadratne prizme dati su \(a=4\) cm, \(H=6\) cm i horizontalni pomeraj \(d=8\) cm. Nađi bočnu ivicu, ukupnu površinu i zapreminu.</p>
+        <details>
+          <summary>Rešenje</summary>
+          <p>Bočna ivica je \(k=\sqrt{6^2+8^2}=10\) cm. Baza je \(B=4^2=16\), pa je \(V=16\cdot 6=96\ \text{cm}^3\). Omotač je \(M=2aH+2ak=2\cdot4\cdot6+2\cdot4\cdot10=48+80=128\ \text{cm}^2\). Ukupna površina je \(S=2B+M=32+128=160\ \text{cm}^2\).</p>
+        </details>
+      </article>
+
+      <article class="exercise-card">
+        <div class="card-kicker">Vežba 4</div>
+        <strong>Zarubljena pravilna četvorougaona piramida</strong>
+        <p>Data je zarubljena pravilna četvorougaona piramida sa \(a=9\) cm, \(b=3\) cm i \(H=4\) cm. Nađi \(S\) i \(V\).</p>
+        <details>
+          <summary>Rešenje</summary>
+          <p>Površine baza su \(B_1=81\) i \(B_2=9\). Bočna visina je \(s=\sqrt{4^2+\left(\frac{9-3}{2}\right)^2}=\sqrt{16+9}=5\). Omotač je \(M=\frac{(4\cdot 9 + 4\cdot 3)\cdot 5}{2}=\frac{48\cdot 5}{2}=120\). Zato je \(S=81+9+120=210\ \text{cm}^2\). Zapremina je \(V=\frac{4}{3}(81+9+\sqrt{729})=\frac{4}{3}(117)=156\ \text{cm}^3\).</p>
+        </details>
+      </article>
+
+      <article class="exercise-card wide">
+        <div class="card-kicker">Vežba 5</div>
+        <strong>Poređenje prizme i piramide</strong>
+        <p>Prizma i piramida imaju istu bazu površine \(20\ \text{cm}^2\) i istu visinu \(9\) cm. Nađi njihove zapremine i objasni odnos rezultata.</p>
+        <details>
+          <summary>Rešenje</summary>
+          <p>Za prizmu je \(V_{\text{prizme}}=BH=20\cdot 9=180\ \text{cm}^3\). Za piramidu je \(V_{\text{piramide}}=\frac{BH}{3}=\frac{20\cdot 9}{3}=60\ \text{cm}^3\). Piramida ima tačno trećinu zapremine prizme sa istom bazom i istom visinom.</p>
+        </details>
+      </article>
+    </div>
+  </section>
+
+  <section class="insight-card">
+    <div class="section-kicker">Ključni uvid</div>
+    <h2>Dve rečenice koje rešavaju najveći deo lekcije</h2>
+    <p>Površinu dobijaš kada telo rastvoriš u mrežu i sabereš lica. Zapreminu dobijaš iz površine baze i prave visine, a kod piramide uz dodatni faktor \(\frac{1}{3}\). Kad god se zbuniš, vrati se na te dve rečenice i problem će se ponovo „smiriti“.</p>
+  </section>
+
+  <section class="section" id="rezime">
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">11. Završni rezime</div>
+        <h2>Šta moraš da zapamtiš posle ove lekcije</h2>
+      </div>
+      <p>Cilj nije da izađeš sa deset formula u glavi, nego sa jasnim sistemom razmišljanja koji možeš odmah da primeniš na prijemnom zadatku.</p>
+    </div>
+
+    <div class="summary-grid">
+      <article class="summary-card">
+        <strong>1. Prvo identifikuj telo</strong>
+        <p>Prizma ima dve baze. Piramida jednu. Zarubljena piramida dve slične baze i bočne trapeze.</p>
+      </article>
+      <article class="summary-card">
+        <strong>2. Zapremina traži \(B\) i \(H\)</strong>
+        <p>Za prizmu važi \(V=BH\), a za piramidu \(V=\frac{BH}{3}\). Uvek koristi pravu visinu, ne kosu duž.</p>
+      </article>
+      <article class="summary-card">
+        <strong>3. Površina se čita iz mreže</strong>
+        <p>Prava prizma: \(S=2B+O_bH\). Pravilna piramida: \(S=B+\frac{O_bs}{2}\). Frustum: saberi obe baze i trapezasti omotač.</p>
+      </article>
+      <article class="summary-card">
+        <strong>4. Pomoćni presek je pola rešenja</strong>
+        <p>Kada nedostaje \(s\), \(H\) ili neka ivica, nacrtaj odgovarajući pravougli presek i koristi Pitagoru ili sličnost.</p>
+      </article>
+    </div>
+
+    <p class="footer-note">Sledeći logičan korak je da ove ideje povežeš sa obrtim telima i zadacima sa upisanim i opisanim telima, gde se 3D problem često rešava preko pažljivo izabranog preseka.</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  const state = {
+    mode: "right-prism",
+    a: 6,
+    h: 8,
+    d: 3,
+    b: 3
+  };
+
+  const modeButtons = Array.from(document.querySelectorAll(".mode-button"));
+  const modeBlocks = Array.from(document.querySelectorAll("[data-mode-block]"));
+  const baseRange = document.getElementById("baseRange");
+  const heightRange = document.getElementById("heightRange");
+  const offsetRange = document.getElementById("offsetRange");
+  const topRange = document.getElementById("topRange");
+
+  const baseValue = document.getElementById("baseValue");
+  const heightValue = document.getElementById("heightValue");
+  const offsetValue = document.getElementById("offsetValue");
+  const topValue = document.getElementById("topValue");
+
+  const labTitle = document.getElementById("labTitle");
+  const labDescription = document.getElementById("labDescription");
+  const labNote = document.getElementById("labNote");
+  const labInterpretation = document.getElementById("labInterpretation");
+
+  const resultLabel1 = document.getElementById("resultLabel1");
+  const resultLabel2 = document.getElementById("resultLabel2");
+  const resultLabel3 = document.getElementById("resultLabel3");
+  const resultLabel4 = document.getElementById("resultLabel4");
+  const resultValue1 = document.getElementById("resultValue1");
+  const resultValue2 = document.getElementById("resultValue2");
+  const resultValue3 = document.getElementById("resultValue3");
+  const resultValue4 = document.getElementById("resultValue4");
+  const resultDesc1 = document.getElementById("resultDesc1");
+  const resultDesc2 = document.getElementById("resultDesc2");
+  const resultDesc3 = document.getElementById("resultDesc3");
+  const resultDesc4 = document.getElementById("resultDesc4");
+
+  const canvas = document.getElementById("polyCanvas");
+  const ctx = canvas.getContext("2d");
+
+  function fmt(value) {
+    const rounded = Math.round(value * 100) / 100;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.00$/, "");
+  }
+
+  function syncTopRange() {
+    const maxTop = Math.max(1, state.a - 1);
+    topRange.max = String(maxTop);
+    if (state.b >= maxTop) {
+      state.b = maxTop;
+      topRange.value = String(maxTop);
+    }
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    modeButtons.forEach((button) => {
+      button.classList.toggle("active", button.dataset.mode === mode);
+    });
+    modeBlocks.forEach((block) => {
+      block.classList.toggle("is-hidden", block.dataset.modeBlock !== mode);
+    });
+    render();
+  }
+
+  modeButtons.forEach((button) => {
+    button.addEventListener("click", () => setMode(button.dataset.mode));
+  });
+
+  baseRange.addEventListener("input", (event) => {
+    state.a = Number(event.target.value);
+    syncTopRange();
+    render();
+  });
+
+  heightRange.addEventListener("input", (event) => {
+    state.h = Number(event.target.value);
+    render();
+  });
+
+  offsetRange.addEventListener("input", (event) => {
+    state.d = Number(event.target.value);
+    render();
+  });
+
+  topRange.addEventListener("input", (event) => {
+    state.b = Math.min(Number(event.target.value), Math.max(1, state.a - 1));
+    render();
+  });
+
+  function resizeCanvas() {
+    const ratio = window.devicePixelRatio || 1;
+    const width = canvas.clientWidth || 920;
+    const height = Math.max(420, Math.min(560, width * 0.58));
+    canvas.width = Math.round(width * ratio);
+    canvas.height = Math.round(height * ratio);
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    canvas.style.height = `${height}px`;
+  }
+
+  function clearCanvas() {
+    const width = canvas.clientWidth || 920;
+    const height = parseFloat(canvas.style.height) || 540;
+
+    const bg = ctx.createLinearGradient(0, 0, 0, height);
+    bg.addColorStop(0, "rgba(25, 11, 7, 0.95)");
+    bg.addColorStop(1, "rgba(10, 4, 3, 0.96)");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "rgba(236, 91, 19, 0.04)";
+    for (let x = 0; x < width; x += 36) {
+      ctx.fillRect(x, 0, 1, height);
+    }
+    for (let y = 0; y < height; y += 36) {
+      ctx.fillRect(0, y, width, 1);
+    }
+
+    ctx.strokeStyle = "rgba(255, 154, 106, 0.16)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(18, 18, width - 36, height - 36);
+
+    ctx.fillStyle = "rgba(255, 208, 140, 0.88)";
+    ctx.font = "600 15px Public Sans";
+    ctx.fillText("Telo", 36, 44);
+    ctx.fillText("Mreža", width * 0.56, 44);
+  }
+
+  function line(points, options = {}) {
+    const {
+      stroke = "rgba(255, 228, 214, 0.92)",
+      width = 2.2,
+      dash = []
+    } = options;
+    ctx.beginPath();
+    ctx.setLineDash(dash);
+    ctx.moveTo(points[0][0], points[0][1]);
+    for (let index = 1; index < points.length; index += 1) {
+      ctx.lineTo(points[index][0], points[index][1]);
+    }
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = width;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function polygon(points, options = {}) {
+    const {
+      fill = "rgba(236, 91, 19, 0.16)",
+      stroke = "rgba(255, 228, 214, 0.92)",
+      width = 2
+    } = options;
+    ctx.beginPath();
+    ctx.moveTo(points[0][0], points[0][1]);
+    for (let index = 1; index < points.length; index += 1) {
+      ctx.lineTo(points[index][0], points[index][1]);
+    }
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = width;
+    ctx.stroke();
+  }
+
+  function label(text, x, y, color = "#ffe7d6") {
+    ctx.fillStyle = color;
+    ctx.font = "600 14px Public Sans";
+    ctx.fillText(text, x, y);
+  }
+
+  function measurement(fromX, fromY, toX, toY, text, color = "#ffcf95") {
+    line([[fromX, fromY], [toX, toY]], { stroke: color, width: 1.8 });
+    const midX = (fromX + toX) / 2;
+    const midY = (fromY + toY) / 2;
+    ctx.font = "600 14px Public Sans";
+    ctx.fillStyle = "rgba(9, 4, 3, 0.8)";
+    const pad = 8;
+    const textWidth = ctx.measureText(text).width;
+    ctx.fillRect(midX - textWidth / 2 - pad, midY - 14, textWidth + pad * 2, 22);
+    label(text, midX - textWidth / 2, midY + 2, color);
+  }
+
+  function drawRightPrism(width, height) {
+    const leftX = width * 0.12;
+    const baseY = height * 0.72;
+    const scale = 10 + state.a * 5;
+    const prismW = scale * 2.3;
+    const prismH = 28 + state.h * 14;
+    const dx = 42;
+    const dy = -26;
+
+    const front = [
+      [leftX, baseY],
+      [leftX + prismW, baseY],
+      [leftX + prismW, baseY - prismH],
+      [leftX, baseY - prismH]
+    ];
+    const back = front.map(([x, y]) => [x + dx, y + dy]);
+
+    polygon(front, { fill: "rgba(236, 91, 19, 0.18)" });
+    polygon(back, { fill: "rgba(255, 208, 140, 0.1)" });
+    for (let i = 0; i < front.length; i += 1) {
+      line([front[i], back[i]], { stroke: "rgba(255, 228, 214, 0.84)" });
+    }
+    polygon([front[1], back[1], back[2], front[2]], { fill: "rgba(255, 175, 124, 0.12)" });
+    polygon([front[2], back[2], back[3], front[3]], { fill: "rgba(255, 208, 140, 0.08)" });
+
+    measurement(front[0][0], front[0][1] + 22, front[1][0], front[1][1] + 22, `a = ${fmt(state.a)}`);
+    measurement(front[0][0] - 18, front[0][1], front[3][0] - 18, front[3][1], `H = ${fmt(state.h)}`);
+
+    const netX = width * 0.58;
+    const netY = height * 0.3;
+    const rectW = 26 + state.a * 10;
+    const rectH = 26 + state.h * 12;
+    const square = rectW;
+
+    for (let i = 0; i < 4; i += 1) {
+      polygon([
+        [netX + i * rectW, netY],
+        [netX + (i + 1) * rectW, netY],
+        [netX + (i + 1) * rectW, netY + rectH],
+        [netX + i * rectW, netY + rectH]
+      ], {
+        fill: i % 2 === 0 ? "rgba(236, 91, 19, 0.14)" : "rgba(255, 208, 140, 0.08)"
+      });
+    }
+
+    polygon([
+      [netX + rectW, netY - square - 18],
+      [netX + rectW + square, netY - square - 18],
+      [netX + rectW + square, netY - 18],
+      [netX + rectW, netY - 18]
+    ], { fill: "rgba(110, 215, 178, 0.12)" });
+
+    polygon([
+      [netX + rectW, netY + rectH + 18],
+      [netX + rectW + square, netY + rectH + 18],
+      [netX + rectW + square, netY + rectH + square + 18],
+      [netX + rectW, netY + rectH + square + 18]
+    ], { fill: "rgba(110, 215, 178, 0.12)" });
+
+    label("dve baze", netX + rectW + 18, netY - square - 28, "#8de5c3");
+    label("četiri pravougaonika", netX + 18, netY + rectH + 46, "#ffd08c");
+  }
+
+  function drawObliquePrism(width, height) {
+    const leftX = width * 0.11;
+    const baseY = height * 0.76;
+    const scale = 12 + state.a * 5;
+    const prismW = scale * 2.1;
+    const prismD = scale * 0.76;
+    const prismH = 26 + state.h * 11;
+    const shift = 18 + state.d * 12;
+    const projY = -24;
+
+    const base = [
+      [leftX, baseY],
+      [leftX + prismW, baseY],
+      [leftX + prismW + prismD, baseY - prismD * 0.38],
+      [leftX + prismD, baseY - prismD * 0.38]
+    ];
+    const top = base.map(([x, y]) => [x + shift, y - prismH + projY]);
+
+    polygon(base, { fill: "rgba(236, 91, 19, 0.16)" });
+    polygon(top, { fill: "rgba(255, 208, 140, 0.08)" });
+    for (let i = 0; i < base.length; i += 1) {
+      line([base[i], top[i]], { stroke: "rgba(255, 228, 214, 0.9)" });
+    }
+    polygon([base[1], base[2], top[2], top[1]], { fill: "rgba(255, 175, 124, 0.12)" });
+    polygon([base[0], base[1], top[1], top[0]], { fill: "rgba(255, 208, 140, 0.09)" });
+
+    const centerBase = [
+      (base[0][0] + base[2][0]) / 2,
+      (base[0][1] + base[2][1]) / 2
+    ];
+    const centerTop = [
+      (top[0][0] + top[2][0]) / 2,
+      (top[0][1] + top[2][1]) / 2
+    ];
+    line([[centerBase[0], centerBase[1]], [centerBase[0], centerTop[1]]], {
+      stroke: "rgba(110, 215, 178, 0.9)",
+      dash: [6, 5]
+    });
+    line([[centerBase[0], centerTop[1]], centerTop], {
+      stroke: "rgba(255, 190, 134, 0.9)",
+      dash: [6, 5]
+    });
+
+    measurement(base[0][0], base[0][1] + 22, base[1][0], base[1][1] + 22, `a = ${fmt(state.a)}`);
+    measurement(centerBase[0] - 18, centerBase[1], centerBase[0] - 18, centerTop[1], `H = ${fmt(state.h)}`, "#8de5c3");
+    measurement(base[0][0] - 8, base[0][1] - 4, top[0][0] - 8, top[0][1] - 4, `k`, "#ffcf95");
+
+    const netX = width * 0.58;
+    const netY = height * 0.34;
+    const faceW = 24 + state.a * 9;
+    const faceH = 26 + state.h * 10;
+    const slant = state.d * 8 + 18;
+
+    polygon([
+      [netX, netY],
+      [netX + faceW, netY],
+      [netX + faceW, netY + faceH],
+      [netX, netY + faceH]
+    ], { fill: "rgba(236, 91, 19, 0.14)" });
+
+    polygon([
+      [netX + faceW, netY],
+      [netX + 2 * faceW, netY - slant * 0.18],
+      [netX + 2 * faceW, netY + faceH - slant * 0.18],
+      [netX + faceW, netY + faceH]
+    ], { fill: "rgba(255, 208, 140, 0.1)" });
+
+    polygon([
+      [netX + 2 * faceW, netY],
+      [netX + 3 * faceW, netY],
+      [netX + 3 * faceW, netY + faceH],
+      [netX + 2 * faceW, netY + faceH]
+    ], { fill: "rgba(236, 91, 19, 0.14)" });
+
+    polygon([
+      [netX + 3 * faceW, netY],
+      [netX + 4 * faceW, netY - slant * 0.18],
+      [netX + 4 * faceW, netY + faceH - slant * 0.18],
+      [netX + 3 * faceW, netY + faceH]
+    ], { fill: "rgba(255, 208, 140, 0.1)" });
+
+    polygon([
+      [netX + faceW, netY - faceW - 18],
+      [netX + 2 * faceW, netY - faceW - 18],
+      [netX + 2 * faceW, netY - 18],
+      [netX + faceW, netY - 18]
+    ], { fill: "rgba(110, 215, 178, 0.12)" });
+
+    polygon([
+      [netX + faceW, netY + faceH + 18],
+      [netX + 2 * faceW, netY + faceH + 18],
+      [netX + 2 * faceW, netY + faceH + faceW + 18],
+      [netX + faceW, netY + faceH + faceW + 18]
+    ], { fill: "rgba(110, 215, 178, 0.12)" });
+
+    label("paralelogrami", netX + faceW + 10, netY + faceH + 46, "#ffd08c");
+    label("dve kvadratne baze", netX + faceW - 10, netY - faceW - 28, "#8de5c3");
+  }
+
+  function drawPyramid(width, height) {
+    const leftX = width * 0.12;
+    const baseY = height * 0.76;
+    const scale = 14 + state.a * 5;
+    const baseW = scale * 2.2;
+    const dx = 40;
+    const dy = -24;
+    const peakX = leftX + baseW * 0.5 + dx * 0.3;
+    const peakY = baseY - (34 + state.h * 16);
+
+    const base = [
+      [leftX, baseY],
+      [leftX + baseW, baseY],
+      [leftX + baseW + dx, baseY + dy],
+      [leftX + dx, baseY + dy]
+    ];
+    const center = [
+      (base[0][0] + base[2][0]) / 2,
+      (base[0][1] + base[2][1]) / 2
+    ];
+    polygon(base, { fill: "rgba(236, 91, 19, 0.12)" });
+    polygon([base[0], base[1], [peakX, peakY]], { fill: "rgba(255, 208, 140, 0.08)" });
+    polygon([base[1], base[2], [peakX, peakY]], { fill: "rgba(236, 91, 19, 0.16)" });
+    polygon([base[2], base[3], [peakX, peakY]], { fill: "rgba(255, 208, 140, 0.08)" });
+    polygon([base[3], base[0], [peakX, peakY]], { fill: "rgba(236, 91, 19, 0.16)" });
+
+    line([[peakX, peakY], center], { stroke: "rgba(110, 215, 178, 0.92)", dash: [6, 5] });
+    const midFront = [
+      (base[0][0] + base[1][0]) / 2,
+      (base[0][1] + base[1][1]) / 2
+    ];
+    line([[peakX, peakY], midFront], { stroke: "rgba(255, 208, 140, 0.92)", dash: [6, 5] });
+
+    measurement(base[0][0], base[0][1] + 22, base[1][0], base[1][1] + 22, `a = ${fmt(state.a)}`);
+    measurement(center[0] + 16, center[1], center[0] + 16, peakY, `H = ${fmt(state.h)}`, "#8de5c3");
+    measurement(peakX + 10, peakY + 8, midFront[0] + 10, midFront[1] + 8, "s", "#ffcf95");
+
+    const netX = width * 0.61;
+    const netY = height * 0.38;
+    const square = 28 + state.a * 10;
+    const triH = 40 + state.h * 10;
+
+    polygon([
+      [netX, netY],
+      [netX + square, netY],
+      [netX + square, netY + square],
+      [netX, netY + square]
+    ], { fill: "rgba(110, 215, 178, 0.12)" });
+
+    polygon([
+      [netX, netY],
+      [netX + square, netY],
+      [netX + square / 2, netY - triH]
+    ], { fill: "rgba(236, 91, 19, 0.16)" });
+    polygon([
+      [netX + square, netY],
+      [netX + square, netY + square],
+      [netX + square + triH * 0.72, netY + square / 2]
+    ], { fill: "rgba(255, 208, 140, 0.1)" });
+    polygon([
+      [netX, netY + square],
+      [netX + square, netY + square],
+      [netX + square / 2, netY + square + triH]
+    ], { fill: "rgba(236, 91, 19, 0.16)" });
+    polygon([
+      [netX, netY],
+      [netX, netY + square],
+      [netX - triH * 0.72, netY + square / 2]
+    ], { fill: "rgba(255, 208, 140, 0.1)" });
+
+    label("jedna baza", netX + 10, netY + square + triH + 24, "#8de5c3");
+    label("četiri trougla", netX - 10, netY - triH - 18, "#ffd08c");
+  }
+
+  function drawFrustum(width, height) {
+    const leftX = width * 0.11;
+    const baseY = height * 0.78;
+    const bottomW = 42 + state.a * 14;
+    const topW = Math.max(40, 22 + state.b * 14);
+    const depth = 34;
+    const topDepth = depth * (topW / bottomW);
+    const bodyH = 24 + state.h * 13;
+
+    const bottom = [
+      [leftX, baseY],
+      [leftX + bottomW, baseY],
+      [leftX + bottomW + depth, baseY - depth * 0.34],
+      [leftX + depth, baseY - depth * 0.34]
+    ];
+
+    const offsetX = (bottomW - topW) / 2;
+    const offsetY = 14;
+    const top = [
+      [leftX + offsetX + 10, baseY - bodyH - offsetY],
+      [leftX + offsetX + 10 + topW, baseY - bodyH - offsetY],
+      [leftX + offsetX + 10 + topW + topDepth, baseY - bodyH - offsetY - topDepth * 0.34],
+      [leftX + offsetX + 10 + topDepth, baseY - bodyH - offsetY - topDepth * 0.34]
+    ];
+
+    polygon(bottom, { fill: "rgba(236, 91, 19, 0.12)" });
+    polygon(top, { fill: "rgba(110, 215, 178, 0.14)" });
+    for (let i = 0; i < bottom.length; i += 1) {
+      line([bottom[i], top[i]], { stroke: "rgba(255, 228, 214, 0.9)" });
+    }
+    polygon([bottom[0], bottom[1], top[1], top[0]], { fill: "rgba(255, 208, 140, 0.08)" });
+    polygon([bottom[1], bottom[2], top[2], top[1]], { fill: "rgba(236, 91, 19, 0.16)" });
+
+    const centerBottom = [
+      (bottom[0][0] + bottom[2][0]) / 2,
+      (bottom[0][1] + bottom[2][1]) / 2
+    ];
+    const centerTop = [
+      (top[0][0] + top[2][0]) / 2,
+      (top[0][1] + top[2][1]) / 2
+    ];
+    const midFrontBottom = [
+      (bottom[0][0] + bottom[1][0]) / 2,
+      (bottom[0][1] + bottom[1][1]) / 2
+    ];
+    const midFrontTop = [
+      (top[0][0] + top[1][0]) / 2,
+      (top[0][1] + top[1][1]) / 2
+    ];
+
+    line([[centerBottom[0], centerBottom[1]], [centerBottom[0], centerTop[1]]], {
+      stroke: "rgba(110, 215, 178, 0.92)",
+      dash: [6, 5]
+    });
+    line([midFrontBottom, midFrontTop], { stroke: "rgba(255, 208, 140, 0.92)", dash: [6, 5] });
+
+    measurement(bottom[0][0], bottom[0][1] + 24, bottom[1][0], bottom[1][1] + 24, `a = ${fmt(state.a)}`);
+    measurement(top[0][0], top[0][1] - 22, top[1][0], top[1][1] - 22, `b = ${fmt(state.b)}`, "#8de5c3");
+    measurement(centerBottom[0] + 20, centerBottom[1], centerBottom[0] + 20, centerTop[1], `H = ${fmt(state.h)}`, "#8de5c3");
+    measurement(midFrontBottom[0] - 10, midFrontBottom[1] - 4, midFrontTop[0] - 10, midFrontTop[1] - 4, "s", "#ffcf95");
+
+    const netX = width * 0.58;
+    const netY = height * 0.36;
+    const bottomNet = 28 + state.a * 10;
+    const topNet = Math.max(26, 20 + state.b * 10);
+    const trapH = 36 + state.h * 10;
+    const trapOffset = (bottomNet - topNet) / 2;
+
+    polygon([
+      [netX + 42, netY - bottomNet - 24],
+      [netX + 42 + topNet, netY - bottomNet - 24],
+      [netX + 42 + topNet, netY - bottomNet - 24 + topNet],
+      [netX + 42, netY - bottomNet - 24 + topNet]
+    ], { fill: "rgba(110, 215, 178, 0.12)" });
+
+    polygon([
+      [netX, netY],
+      [netX + bottomNet, netY],
+      [netX + bottomNet - trapOffset, netY - trapH],
+      [netX + trapOffset, netY - trapH]
+    ], { fill: "rgba(236, 91, 19, 0.16)" });
+    polygon([
+      [netX + bottomNet, netY],
+      [netX + bottomNet + trapH * 0.58, netY + trapOffset],
+      [netX + bottomNet + trapH * 0.58, netY + trapOffset + topNet],
+      [netX + bottomNet, netY + bottomNet]
+    ], { fill: "rgba(255, 208, 140, 0.08)" });
+    polygon([
+      [netX, netY + bottomNet],
+      [netX + bottomNet, netY + bottomNet],
+      [netX + bottomNet - trapOffset, netY + bottomNet + trapH],
+      [netX + trapOffset, netY + bottomNet + trapH]
+    ], { fill: "rgba(236, 91, 19, 0.16)" });
+    polygon([
+      [netX, netY],
+      [netX, netY + bottomNet],
+      [netX - trapH * 0.58, netY + trapOffset + topNet],
+      [netX - trapH * 0.58, netY + trapOffset]
+    ], { fill: "rgba(255, 208, 140, 0.08)" });
+
+    polygon([
+      [netX + 42, netY + bottomNet + trapH + 26],
+      [netX + 42 + bottomNet, netY + bottomNet + trapH + 26],
+      [netX + 42 + bottomNet, netY + bottomNet + trapH + 26 + bottomNet],
+      [netX + 42, netY + bottomNet + trapH + 26 + bottomNet]
+    ], { fill: "rgba(110, 215, 178, 0.12)" });
+
+    label("dve baze", netX + 54, netY + bottomNet + trapH + bottomNet + 52, "#8de5c3");
+    label("četiri trapeza", netX + 18, netY - trapH - 18, "#ffd08c");
+  }
+
+  function drawScene() {
+    const width = canvas.clientWidth || 920;
+    const height = parseFloat(canvas.style.height) || 540;
+    clearCanvas();
+
+    if (state.mode === "right-prism") {
+      drawRightPrism(width, height);
+    } else if (state.mode === "oblique-prism") {
+      drawObliquePrism(width, height);
+    } else if (state.mode === "pyramid") {
+      drawPyramid(width, height);
+    } else {
+      drawFrustum(width, height);
+    }
+  }
+
+  function updateResults() {
+    const a = state.a;
+    const h = state.h;
+    const d = state.d;
+    const b = Math.min(state.b, Math.max(1, a - 1));
+
+    if (state.mode === "right-prism") {
+      const B = a * a;
+      const M = 4 * a * h;
+      const S = 2 * B + M;
+      const V = B * h;
+
+      labTitle.textContent = "Prava četvorougaona prizma i njena mreža";
+      labDescription.textContent = "Na levoj strani je telo, a na desnoj mreža. Posmatraj kako dve baze i četiri pravougaonika daju ukupnu površinu.";
+      labNote.textContent = "Ovde važi najčistija logika prizme: omotač je obim baze puta visina, a zapremina površina baze puta prava visina.";
+      labInterpretation.textContent = "Pedagoški signal: čim vidiš pravu prizmu, odmah razmišljaj o dve baze i traci pravougaonika širine O_b.";
+
+      resultLabel1.textContent = "Površina baze";
+      resultValue1.textContent = `${fmt(B)} cm²`;
+      resultDesc1.textContent = "Za kvadratnu osnovu važi B = a².";
+
+      resultLabel2.textContent = "Omotač";
+      resultValue2.textContent = `${fmt(M)} cm²`;
+      resultDesc2.textContent = "Kod prave prizme važi M = O_bH = 4aH.";
+
+      resultLabel3.textContent = "Ukupna površina";
+      resultValue3.textContent = `${fmt(S)} cm²`;
+      resultDesc3.textContent = "Saberi dve baze i omotač.";
+
+      resultLabel4.textContent = "Zapremina";
+      resultValue4.textContent = `${fmt(V)} cm³`;
+      resultDesc4.textContent = "Zapremina koristi bazu i pravu visinu.";
+    } else if (state.mode === "oblique-prism") {
+      const B = a * a;
+      const k = Math.sqrt(h * h + d * d);
+      const M = 2 * a * h + 2 * a * k;
+      const V = B * h;
+
+      labTitle.textContent = "Kosa četvorougaona prizma i posebna mreža";
+      labDescription.textContent = "Model prikazuje kosu prizmu dobijenu horizontalnim pomeranjem gornje baze. Dva bočna lica ostaju pravougaonici, a dva postaju paralelogrami.";
+      labNote.textContent = "Pogledaj da se bočna ivica menja sa pomerajem d, ali da zapremina i dalje koristi samo površinu baze i pravu visinu H.";
+      labInterpretation.textContent = "Pedagoški signal: kod kose prizme prvo sačuvaj V = BH, a površinu rešavaj preko konkretnih lica ili mreže.";
+
+      resultLabel1.textContent = "Površina baze";
+      resultValue1.textContent = `${fmt(B)} cm²`;
+      resultDesc1.textContent = "Baza ostaje kvadrat: B = a².";
+
+      resultLabel2.textContent = "Bočna ivica";
+      resultValue2.textContent = `${fmt(k)} cm`;
+      resultDesc2.textContent = "U ovom modelu k = √(H² + d²).";
+
+      resultLabel3.textContent = "Omotač";
+      resultValue3.textContent = `${fmt(M)} cm²`;
+      resultDesc3.textContent = "Sabrani su pravougaonici aH i paralelogrami ak.";
+
+      resultLabel4.textContent = "Zapremina";
+      resultValue4.textContent = `${fmt(V)} cm³`;
+      resultDesc4.textContent = "Zapremina ostaje V = B · H.";
+    } else if (state.mode === "pyramid") {
+      const B = a * a;
+      const s = Math.sqrt(h * h + (a / 2) * (a / 2));
+      const S = B + 2 * a * s;
+      const V = (B * h) / 3;
+
+      labTitle.textContent = "Pravilna četvorougaona piramida i njena mreža";
+      labDescription.textContent = "Na skici su odvojeno obeleženi prava visina H i bočna visina s. Na mreži vidiš kvadratnu bazu i četiri podudarna trougla.";
+      labNote.textContent = "Ako ti treba površina, prvo traži bočnu visinu s. Ako ti treba zapremina, presudan je vertikalni pad H na bazu.";
+      labInterpretation.textContent = "Pedagoški signal: mreža ti pokazuje zašto se u površini javlja trougao, a osni presek zašto se u računu javlja Pitagora.";
+
+      resultLabel1.textContent = "Površina baze";
+      resultValue1.textContent = `${fmt(B)} cm²`;
+      resultDesc1.textContent = "Za kvadratnu osnovu važi B = a².";
+
+      resultLabel2.textContent = "Bočna visina";
+      resultValue2.textContent = `${fmt(s)} cm`;
+      resultDesc2.textContent = "s = √(H² + (a/2)²) za kvadratnu bazu.";
+
+      resultLabel3.textContent = "Ukupna površina";
+      resultValue3.textContent = `${fmt(S)} cm²`;
+      resultDesc3.textContent = "Za kvadratnu osnovu: S = a² + 2as.";
+
+      resultLabel4.textContent = "Zapremina";
+      resultValue4.textContent = `${fmt(V)} cm³`;
+      resultDesc4.textContent = "Piramida zauzima trećinu zapremine odgovarajuće prizme.";
+    } else {
+      const B1 = a * a;
+      const B2 = b * b;
+      const s = Math.sqrt(h * h + ((a - b) / 2) * ((a - b) / 2));
+      const S = B1 + B2 + 2 * (a + b) * s;
+      const V = (h / 3) * (B1 + B2 + a * b);
+
+      labTitle.textContent = "Zarubljena pravilna četvorougaona piramida";
+      labDescription.textContent = "Na mreži se vide dve baze i četiri trapeza. Posmatraj kako bočna visina trapeza zavisi i od vertikalne visine i od razlike stranica baza.";
+      labNote.textContent = "Kada su baze sve sličnije jedna drugoj, telo se približava prizmi. Kada je gornja baza sve manja, približavaš se punoj piramidi.";
+      labInterpretation.textContent = "Pedagoški signal: zarubljena piramida traži i sličnost i Pitagoru. Bez jasne skice lako se pomešaju H, s i stranice baza.";
+
+      resultLabel1.textContent = "Baze";
+      resultValue1.textContent = `${fmt(B1)} cm² i ${fmt(B2)} cm²`;
+      resultDesc1.textContent = "Donja i gornja kvadratna baza: B₁ = a², B₂ = b².";
+
+      resultLabel2.textContent = "Bočna visina";
+      resultValue2.textContent = `${fmt(s)} cm`;
+      resultDesc2.textContent = "s = √(H² + ((a-b)/2)²) za kvadratne baze.";
+
+      resultLabel3.textContent = "Ukupna površina";
+      resultValue3.textContent = `${fmt(S)} cm²`;
+      resultDesc3.textContent = "S = B₁ + B₂ + 2(a+b)s za kvadratni slučaj.";
+
+      resultLabel4.textContent = "Zapremina";
+      resultValue4.textContent = `${fmt(V)} cm³`;
+      resultDesc4.textContent = "V = H/3 · (a² + ab + b²) za kvadratne baze.";
+    }
+  }
+
+  function updateDisplayedValues() {
+    baseValue.textContent = `${fmt(state.a)} cm`;
+    heightValue.textContent = `${fmt(state.h)} cm`;
+    offsetValue.textContent = `${fmt(state.d)} cm`;
+    topValue.textContent = `${fmt(state.b)} cm`;
+  }
+
+  function render() {
+    syncTopRange();
+    updateDisplayedValues();
+    updateResults();
+    drawScene();
+  }
+
+  window.addEventListener("resize", () => {
+    resizeCanvas();
+    drawScene();
+  });
+
+  syncTopRange();
+  resizeCanvas();
+  render();
+})();
+</script>
+</body>
+</html>
+<!--KNOWLEDGE_LESSON_META
+{
+  "content_type": "knowledge_lesson",
+  "lesson_number": 46,
+  "title": "Poliedri: prizma i piramida (površina i zapremina)",
+  "subject": "math",
+  "unit": "stereometrija",
+  "language": "sr-Latn",
+  "source": "matematika-lekcije.md",
+  "source_path_hint": "Kategorija VII: Geometrija > Grupa: Stereometrija",
+  "topic_tags": [
+    "poliedri",
+    "prizma",
+    "prava prizma",
+    "kosa prizma",
+    "pravilna piramida",
+    "zarubljena piramida",
+    "površina",
+    "zapremina",
+    "mreža poliedra",
+    "stereometrija",
+    "prijemni ispit"
+  ],
+  "hero_image": {
+    "current_src": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=1200",
+    "generation_prompt": "Premium edukativna ilustracija za lekciju Poliedri: prizma i piramida (površina i zapremina): tamna matematička tabla sa toplim narandžastim osvetljenjem, 3D mreža pravilne četvorougaone prizme i pravilne četvorougaone piramide, istaknute visine H i bočna visina s, formule S=2B+M, V=BH, S=B+M, V=BH/3, suptilno prikazana zarubljena piramida i rasklopljeni omotač, precizna akademska estetika, cinematic studio lighting, bez ljudi, premium knowledge-base stil."
+  }
+}
+KNOWLEDGE_LESSON_META-->

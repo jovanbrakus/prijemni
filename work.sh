@@ -1,22 +1,18 @@
 #!/bin/bash
 
 files=(
-  "univerzitet_u_beogradu_saobracajni_fakultet_2016.pdf"
-  "univerzitet_u_beogradu_saobracajni_fakultet_2015.pdf"
-  "univerzitet_u_beogradu_saobracajni_fakultet_2014.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2013.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2011.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2010.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2009.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2008.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2007.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2006.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2005.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2004.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2003.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2002.pdf"
-#  "univerzitet_u_beogradu_saobracajni_fakultet_2001.pdf"
+#  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2009.pdf"
+#  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2009_drugi_rok.pdf"
+#  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2008.pdf"
+#  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2008_drugi_rok.pdf"
+  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2007.pdf"
+  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2007_drugi_rok.pdf"
+  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2005.pdf"
+  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2004.pdf"
+  "univerzitet_u_beogradu_fakultet_organizacionih_nauka_2003.pdf"
 )
+
+sleep 1500
 
 for file in "${files[@]}"; do
   echo "Processing : $file"

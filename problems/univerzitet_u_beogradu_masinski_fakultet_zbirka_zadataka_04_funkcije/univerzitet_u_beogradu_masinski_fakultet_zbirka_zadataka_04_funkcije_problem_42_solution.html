@@ -195,6 +195,7 @@ canvas { border-radius: 12px; display: block; margin: 0 auto; touch-action: none
   <div class="card problem-statement">
     <h2>Postavka zadatka</h2>
     <p>Grafik funkcije \( f(x) = ax^2 + bx + c \) je prikazan na slici. Parabola je okrenuta nadole, sa temenom u prvom kvadrantu. Preseca pozitivan deo \( y \)-ose i ima dve pozitivne nule. Tačan je iskaz:</p>
+    <canvas id="problemCanvas" width="500" height="300" style="margin: 16px auto; display: block;"></canvas>
     <div class="given-grid">
       <div class="given-item answer-option" data-option="A">
         <div class="label">(A)</div>
@@ -377,6 +378,131 @@ canvas { border-radius: 12px; display: block; margin: 0 auto; touch-action: none
 </div>
 
 <script>
+(() => {
+  const pc = document.getElementById('problemCanvas');
+  const pctx = pc.getContext('2d');
+  const W = pc.width, H = pc.height;
+
+  // Background
+  pctx.fillStyle = '#0f172a';
+  pctx.fillRect(0, 0, W, H);
+
+  // Coordinate system setup
+  // Origin at left-center area so parabola with two positive roots is visible
+  const ox = 80;   // x pixel of origin
+  const oy = 230;  // y pixel of origin
+  const sx = 70;   // pixels per unit x
+  const sy = 40;   // pixels per unit y
+
+  function toP(x, y) { return [ox + x * sx, oy - y * sy]; }
+
+  // Grid lines
+  pctx.strokeStyle = 'rgba(51, 65, 85, 0.5)';
+  pctx.lineWidth = 0.5;
+  for (let i = -1; i <= 6; i++) {
+    const [px] = toP(i, 0);
+    pctx.beginPath(); pctx.moveTo(px, 15); pctx.lineTo(px, H - 15); pctx.stroke();
+  }
+  for (let j = -2; j <= 5; j++) {
+    const [, py] = toP(0, j);
+    pctx.beginPath(); pctx.moveTo(15, py); pctx.lineTo(W - 15, py); pctx.stroke();
+  }
+
+  // Axes
+  pctx.strokeStyle = '#e2e8f0';
+  pctx.lineWidth = 1.5;
+  // x-axis
+  pctx.beginPath(); pctx.moveTo(15, oy); pctx.lineTo(W - 15, oy); pctx.stroke();
+  // y-axis
+  pctx.beginPath(); pctx.moveTo(ox, H - 15); pctx.lineTo(ox, 15); pctx.stroke();
+
+  // Axis arrows
+  pctx.fillStyle = '#e2e8f0';
+  // x-arrow
+  pctx.beginPath(); pctx.moveTo(W - 15, oy); pctx.lineTo(W - 25, oy - 5); pctx.lineTo(W - 25, oy + 5); pctx.closePath(); pctx.fill();
+  // y-arrow
+  pctx.beginPath(); pctx.moveTo(ox, 15); pctx.lineTo(ox - 5, 25); pctx.lineTo(ox + 5, 25); pctx.closePath(); pctx.fill();
+
+  // Axis labels
+  pctx.fillStyle = '#e2e8f0';
+  pctx.font = '13px Segoe UI, sans-serif';
+  pctx.textAlign = 'center';
+  pctx.fillText('x', W - 18, oy + 18);
+  pctx.fillText('y', ox - 16, 22);
+
+  // Tick marks and numbers
+  pctx.fillStyle = '#94a3b8';
+  pctx.font = '11px Segoe UI, sans-serif';
+  pctx.textAlign = 'center';
+  for (let i = 1; i <= 5; i++) {
+    const [px] = toP(i, 0);
+    pctx.beginPath(); pctx.moveTo(px, oy - 3); pctx.lineTo(px, oy + 3); pctx.stroke();
+    pctx.fillText(i.toString(), px, oy + 16);
+  }
+  pctx.textAlign = 'right';
+  for (let j = 1; j <= 4; j++) {
+    const [, py] = toP(0, j);
+    pctx.beginPath(); pctx.moveTo(ox - 3, py); pctx.lineTo(ox + 3, py); pctx.stroke();
+    pctx.fillText(j.toString(), ox - 8, py + 4);
+  }
+  // negative y tick
+  const [, pyn1] = toP(0, -1);
+  pctx.beginPath(); pctx.moveTo(ox - 3, pyn1); pctx.lineTo(ox + 3, pyn1); pctx.stroke();
+  pctx.fillText('-1', ox - 8, pyn1 + 4);
+
+  // Origin label
+  pctx.textAlign = 'right';
+  pctx.fillText('O', ox - 8, oy + 16);
+
+  // Parabola f(x) = -x^2 + 3x + 2: a < 0, b > 0, c > 0
+  // Roots: x ≈ -0.56, x ≈ 3.56. Vertex: (1.5, 4.25). y-intercept: (0, 2).
+  const fa = -1, fb = 3, fc = 2;
+
+  pctx.strokeStyle = '#60a5fa';
+  pctx.lineWidth = 2.5;
+  pctx.beginPath();
+  let first = true;
+  for (let px = 15; px <= W - 15; px++) {
+    const x = (px - ox) / sx;
+    const y = fa * x * x + fb * x + fc;
+    const [cpx, cpy] = toP(x, y);
+    if (cpy < -20 || cpy > H + 20) { first = true; continue; }
+    if (first) { pctx.moveTo(cpx, cpy); first = false; }
+    else pctx.lineTo(cpx, cpy);
+  }
+  pctx.stroke();
+
+  // Mark y-intercept (0, 2)
+  const [yiX, yiY] = toP(0, fc);
+  pctx.fillStyle = '#4ade80';
+  pctx.beginPath(); pctx.arc(yiX, yiY, 5, 0, 2 * Math.PI); pctx.fill();
+  pctx.fillStyle = '#4ade80';
+  pctx.font = '11px Segoe UI, sans-serif';
+  pctx.textAlign = 'left';
+  pctx.fillText('c > 0', yiX + 8, yiY - 6);
+
+  // Mark x-intercepts
+  const disc = fb * fb - 4 * fa * fc;
+  const r1 = (-fb + Math.sqrt(disc)) / (2 * fa);
+  const r2 = (-fb - Math.sqrt(disc)) / (2 * fa);
+  pctx.fillStyle = '#f59e0b';
+  [r1, r2].forEach(function(r) {
+    const [rx, ry] = toP(r, 0);
+    pctx.beginPath(); pctx.arc(rx, ry, 4, 0, 2 * Math.PI); pctx.fill();
+  });
+
+  // Mark vertex
+  const vx = -fb / (2 * fa);
+  const vy = fa * vx * vx + fb * vx + fc;
+  const [vpx, vpy] = toP(vx, vy);
+  pctx.fillStyle = '#f472b6';
+  pctx.beginPath(); pctx.arc(vpx, vpy, 5, 0, 2 * Math.PI); pctx.fill();
+  pctx.fillStyle = '#f472b6';
+  pctx.font = '11px Segoe UI, sans-serif';
+  pctx.textAlign = 'left';
+  pctx.fillText('teme', vpx + 8, vpy - 6);
+})();
+
 (() => {
   const canvas = document.getElementById('mainCanvas');
   const ctx = canvas.getContext('2d');

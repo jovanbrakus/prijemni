@@ -211,7 +211,8 @@ canvas { border-radius: 12px; display: block; margin: 0 auto; touch-action: none
   <div class="card problem-statement">
     <h2>Postavka zadatka</h2>
     <p>Jednačina krive prikazane na slici je:</p>
-    <p style="margin: 10px 0; color:#cbd5e1;">Na grafiku je prikazana sinusna kriva koja osciluje između \( -2 \) i \( 0 \). Kriva dostiže maksimum \( y = 0 \) blizu \( x = \frac{\pi}{4} \), a minimum \( y = -2 \) blizu \( x = -\frac{3\pi}{4} \). Srednja linija je na \( y = -1 \).</p>
+    <p style="margin: 10px 0; color:#cbd5e1;">Na slici je prikazan grafik krive:</p>
+    <canvas id="problemCanvas" width="500" height="300" style="margin: 12px auto;"></canvas>
     <div class="given-grid">
       <div class="given-item answer-option" data-option="A">
         <div class="label">(A)</div>
@@ -393,6 +394,151 @@ canvas { border-radius: 12px; display: block; margin: 0 auto; touch-action: none
   </div>
 
 </div>
+
+<script>
+(() => {
+  const c = document.getElementById('problemCanvas');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  // Background
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Coordinate system setup
+  const originX = W * 0.5;
+  const originY = H * 0.3;
+  const scaleX = 50;
+  const scaleY = 70;
+
+  function toC(x, y) {
+    return [originX + x * scaleX, originY - y * scaleY];
+  }
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(148,163,184,0.1)';
+  ctx.lineWidth = 1;
+  var piOver4 = Math.PI / 4;
+  for (var gi = -6; gi <= 6; gi++) {
+    var gx = gi * piOver4;
+    var gp = toC(gx, 0);
+    if (gp[0] > 5 && gp[0] < W - 5) {
+      ctx.beginPath(); ctx.moveTo(gp[0], 10); ctx.lineTo(gp[0], H - 10); ctx.stroke();
+    }
+  }
+  for (var gj = -3; gj <= 1; gj++) {
+    var gp2 = toC(0, gj);
+    if (gp2[1] > 5 && gp2[1] < H - 5) {
+      ctx.beginPath(); ctx.moveTo(10, gp2[1]); ctx.lineTo(W - 10, gp2[1]); ctx.stroke();
+    }
+  }
+
+  // Midline y = -1 (dashed)
+  ctx.strokeStyle = 'rgba(148,163,184,0.35)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 4]);
+  var ml = toC(0, -1);
+  ctx.beginPath(); ctx.moveTo(10, ml[1]); ctx.lineTo(W - 10, ml[1]); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px Segoe UI, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('y = \u22121', W - 48, ml[1] - 5);
+
+  // Axes
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 1.5;
+  // x-axis
+  ctx.beginPath(); ctx.moveTo(10, originY); ctx.lineTo(W - 10, originY); ctx.stroke();
+  // y-axis
+  ctx.beginPath(); ctx.moveTo(originX, H - 10); ctx.lineTo(originX, 10); ctx.stroke();
+
+  // Axis arrows
+  ctx.fillStyle = '#e2e8f0';
+  ctx.beginPath(); ctx.moveTo(W - 10, originY); ctx.lineTo(W - 18, originY - 4); ctx.lineTo(W - 18, originY + 4); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(originX, 10); ctx.lineTo(originX - 4, 18); ctx.lineTo(originX + 4, 18); ctx.closePath(); ctx.fill();
+
+  // Axis labels
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '12px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('x', W - 12, originY - 10);
+  ctx.fillText('y', originX + 14, 18);
+
+  // x-axis tick labels at multiples of pi/4
+  var xLabels = [
+    [-Math.PI, '\u2212\u03c0'],
+    [-3*Math.PI/4, '\u2212\u00b3\u2044\u2084\u03c0'],
+    [-Math.PI/2, '\u2212\u00b9\u2044\u2082\u03c0'],
+    [-Math.PI/4, '\u2212\u00b9\u2044\u2084\u03c0'],
+    [Math.PI/4, '\u00b9\u2044\u2084\u03c0'],
+    [Math.PI/2, '\u00b9\u2044\u2082\u03c0'],
+    [3*Math.PI/4, '\u00b3\u2044\u2084\u03c0'],
+    [Math.PI, '\u03c0']
+  ];
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px Segoe UI, sans-serif';
+  ctx.textAlign = 'center';
+  xLabels.forEach(function(l) {
+    var tp = toC(l[0], 0);
+    if (tp[0] > 25 && tp[0] < W - 25) {
+      // tick mark
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(tp[0], originY - 3); ctx.lineTo(tp[0], originY + 3); ctx.stroke();
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(l[1], tp[0], originY + 15);
+    }
+  });
+
+  // y-axis tick labels
+  ctx.textAlign = 'right';
+  ctx.font = '10px Segoe UI, sans-serif';
+  [-2, -1, 1].forEach(function(v) {
+    var tp = toC(0, v);
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(originX - 3, tp[1]); ctx.lineTo(originX + 3, tp[1]); ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(v.toString(), originX - 7, tp[1] + 4);
+  });
+
+  // Origin label
+  ctx.textAlign = 'right';
+  ctx.font = '10px Segoe UI, sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText('0', originX - 7, originY + 14);
+
+  // The curve: y = sin(x + pi/4) - 1
+  ctx.strokeStyle = '#60a5fa';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  var first = true;
+  for (var px = 10; px <= W - 10; px++) {
+    var x = (px - originX) / scaleX;
+    var y = Math.sin(x + Math.PI / 4) - 1;
+    var cp = toC(x, y);
+    if (first) { ctx.moveTo(cp[0], cp[1]); first = false; }
+    else ctx.lineTo(cp[0], cp[1]);
+  }
+  ctx.stroke();
+
+  // Key points: max at (pi/4, 0), min at (-3pi/4, -2)
+  var keyPts = [
+    { x: Math.PI / 4, y: 0, label: 'max (\u00b9\u2044\u2084\u03c0, 0)', color: '#4ade80', above: true },
+    { x: -3 * Math.PI / 4, y: -2, label: 'min (\u2212\u00b3\u2044\u2084\u03c0, \u22122)', color: '#f472b6', above: false }
+  ];
+  keyPts.forEach(function(pt) {
+    var cp = toC(pt.x, pt.y);
+    if (cp[0] < 10 || cp[0] > W - 10) return;
+    ctx.fillStyle = pt.color;
+    ctx.beginPath(); ctx.arc(cp[0], cp[1], 4, 0, 2 * Math.PI); ctx.fill();
+    ctx.font = 'bold 10px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(pt.label, cp[0], cp[1] + (pt.above ? -10 : 16));
+  });
+})();
+</script>
 
 <script>
 (() => {

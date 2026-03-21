@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jednačina sa apsolutnom vrednošću — broj rešenja u zavisnosti od parametra</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: |x^2 + x| = a (a ∈ R) ima četiri različita realna rešenja akko a pripada kom skupu?
+
+Analysis:
+|x^2 + x| = a splits into two cases:
+  Case 1: x^2 + x = a   =>  x^2 + x - a = 0  =>  D1 = 1 + 4a
+  Case 2: x^2 + x = -a  =>  x^2 + x + a = 0  =>  D2 = 1 - 4a
+
+For a < 0: equation has no solutions since |...| >= 0 > a.
+For a = 0: both cases reduce to x^2 + x = 0, giving x = 0 or x = -1. Only 2 solutions.
+
+For a > 0:
+  Case 1 solutions: D1 = 1 + 4a > 0 always (since a > 0), so 2 real solutions.
+    x = (-1 ± sqrt(1 + 4a)) / 2
+  Case 2 solutions: D2 = 1 - 4a
+    - If 1 - 4a > 0  (a < 1/4 = 0.25): 2 real solutions
+    - If 1 - 4a = 0  (a = 1/4): 1 real solution (double root at x = -1/2)
+    - If 1 - 4a < 0  (a > 1/4): no real solutions
+
+Check for overlapping solutions between cases:
+If x satisfies both x^2 + x = a AND x^2 + x = -a, then a = -a => a = 0.
+So for a ≠ 0, no overlap.
+
+Total distinct real solutions:
+  a < 0:       0 solutions
+  a = 0:       2 solutions
+  0 < a < 1/4: 4 solutions (2 from Case 1 + 2 from Case 2, no overlap)
+  a = 1/4:     3 solutions (2 from Case 1 + 1 double root from Case 2)
+  a > 1/4:     2 solutions (only Case 1)
+
+Therefore, exactly 4 solutions ⟺ a ∈ (0, 1/4) = (0, 0.25)
+
+Answer key says D) (0, 0.25) ✓ — confirmed.
+
+Geometric verification:
+f(x) = x^2 + x = (x + 0.5)^2 - 0.25, parabola with vertex (-0.5, -0.25)
+Zeros at x = -1, x = 0.
+g(x) = |f(x)| reflects the part between -1 and 0 upward.
+The reflected bump has maximum |f(-0.5)| = 0.25 at x = -0.5.
+
+Horizontal line y = a intersects g(x) at:
+  4 points when 0 < a < 0.25 (line below the bump peak, crosses both branches and the bump)
+  3 points when a = 0.25 (line tangent to bump peak)
+  2 points when a > 0.25 (line only crosses the two outer branches)
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement p {
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 1rem;
+}
+
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+
+.answer-option .label {
+  font-weight: 700;
+  color: #a78bfa;
+  flex-shrink: 0;
+}
+
+.answer-option .value {
+  flex: 1;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] > summary {
+  margin-bottom: 10px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 8px;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.03);
+}
+
+.step-badge {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.step-content p, .step-content div {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+
+.key-insight {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.key-insight .card-title {
+  color: #60a5fa;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid #34d399;
+}
+
+.final-answer .answer-value {
+  font-size: 1.5rem;
+  color: #4ade80;
+  margin: 16px 0;
+  font-weight: 700;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.answer-options .opt {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.answer-options .opt.correct {
+  border-color: #34d399;
+  color: #4ade80;
+  background: rgba(52, 211, 153, 0.1);
+  font-weight: 700;
+}
+
+.pitfall {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.slider-container label {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.slider-container input[type="range"] {
+  width: 250px;
+  accent-color: #a78bfa;
+}
+
+.slider-value {
+  color: #a78bfa;
+  font-weight: 700;
+  font-size: 1rem;
+  min-width: 50px;
+}
+
+.intersections-count {
+  color: #4ade80;
+  font-weight: 700;
+  font-size: 1rem;
+  min-width: 90px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { grid-template-columns: 1fr; }
+  .answer-options { flex-direction: column; align-items: center; }
+  .step { flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Jednačina sa apsolutnom vrednošću i parametrom</h1>
+  <p class="subtitle">Algebra — analiza broja rešenja jednačine \(|x^2 + x| = a\) u zavisnosti od parametra</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title">Zadatak</div>
+    <p>Jednačina \(|x^2 + x| = a\) (\(a \in \mathbb{R}\)) ima četiri različita realna rešenja ako i samo ako \(a\) pripada skupu:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A"><div class="label">(A)</div><div class="value">\((0;\; 0{,}5]\)</div></div>
+      <div class="given-item answer-option" data-option="B"><div class="label">(B)</div><div class="value">\((0;\; 0{,}5)\)</div></div>
+      <div class="given-item answer-option" data-option="C"><div class="label">(C)</div><div class="value">\((0{,}25;\; 0{,}5)\)</div></div>
+      <div class="given-item answer-option" data-option="D"><div class="label">(D)</div><div class="value">\((0;\; 0{,}25)\)</div></div>
+      <div class="given-item answer-option" data-option="E"><div class="label">(E)</div><div class="value">\((0;\; 0{,}25]\)</div></div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title">Plan rešavanja</div>
+    <p class="plan-text">Rastavićemo jednačinu sa apsolutnom vrednošću na dva slučaja, analizirati diskriminante oba kvadratna izraza, a zatim odrediti za koje vrednosti parametra \(a\) obe jednačine daju po dva različita rešenja (ukupno četiri). Grafička analiza funkcije \(y = |x^2 + x|\) će nam pomoći da vizuelno potvrdimo zaključak.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title">Teorijska osnova</div>
+    <details>
+      <summary>Apsolutna vrednost i kvadratna jednačina — ključne formule</summary>
+      <ul style="margin-top: 10px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;"><strong>Definicija apsolutne vrednosti:</strong> \(|f(x)| = a \iff f(x) = a \text{ ili } f(x) = -a\) (za \(a \geq 0\))</li>
+        <li style="margin-bottom: 10px;"><strong>Diskriminanta kvadratne jednačine:</strong> Za \(ax^2 + bx + c = 0\), diskriminanta je \(D = b^2 - 4ac\). Jednačina ima dva različita realna rešenja akko \(D > 0\), jedno dvostruko akko \(D = 0\), nema realnih akko \(D < 0\).</li>
+        <li style="margin-bottom: 10px;"><strong>Kanonski oblik parabole:</strong> \(x^2 + x = \left(x + \frac{1}{2}\right)^2 - \frac{1}{4}\), teme u tački \(\left(-\frac{1}{2},\; -\frac{1}{4}\right)\).</li>
+        <li style="margin-bottom: 10px;"><strong>Grafik \(|f(x)|\):</strong> Delovi grafika \(f(x)\) koji su ispod \(x\)-ose se reflektuju (preslikavaju) iznad \(x\)-ose.</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Interactive Canvas -->
+  <div class="card">
+    <div class="card-title">Interaktivni grafik — funkcija \(y = |x^2 + x|\)</div>
+    <div class="canvas-wrapper">
+      <canvas id="graphCanvas" width="750" height="480"></canvas>
+    </div>
+    <div class="slider-container">
+      <label for="aSlider">Parametar \(a\):</label>
+      <input type="range" id="aSlider" min="0" max="80" value="15" step="1">
+      <span class="slider-value" id="aValue">0,19</span>
+      <span class="intersections-count" id="intersCount">4 preseka</span>
+    </div>
+    <p style="color: #94a3b8; text-align: center; margin-top: 10px; font-size: 0.9rem;">Pomeri klizač da vidiš kako broj presečnih tačaka zavisi od vrednosti \(a\)</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title">Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3 class="step-title">Rastavimo jednačinu na dva slučaja</h3>
+        <p>Jednačina \(|x^2 + x| = a\) važi ako i samo ako je:</p>
+        <div class="math-block">
+          \[ x^2 + x = a \quad \text{ili} \quad x^2 + x = -a \]
+        </div>
+        <p>Napomena: Za \(a < 0\), apsolutna vrednost ne može biti negativna, pa jednačina nema rešenja. Dakle, razmatramo samo \(a \geq 0\).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3 class="step-title">Zapišimo obe jednačine u standardnom obliku</h3>
+        <p><strong>Jednačina I:</strong></p>
+        <div class="math-block">
+          \[ x^2 + x - a = 0 \]
+        </div>
+        <p>Diskriminanta: \(D_1 = 1^2 - 4 \cdot 1 \cdot (-a) = 1 + 4a\)</p>
+        <p><strong>Jednačina II:</strong></p>
+        <div class="math-block">
+          \[ x^2 + x + a = 0 \]
+        </div>
+        <p>Diskriminanta: \(D_2 = 1^2 - 4 \cdot 1 \cdot a = 1 - 4a\)</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3 class="step-title">Odredimo uslove za po dva različita rešenja svake jednačine</h3>
+        <p>Da bismo dobili ukupno <span class="highlight">četiri različita</span> realna rešenja, potrebno je da obe jednačine imaju po dva različita realna rešenja.</p>
+        <p><strong>Uslov za Jednačinu I:</strong></p>
+        <div class="math-block">
+          \[ D_1 > 0 \iff 1 + 4a > 0 \iff a > -\frac{1}{4} \]
+        </div>
+        <p>Ovaj uslov je automatski ispunjen za sve \(a \geq 0\).</p>
+        <p><strong>Uslov za Jednačinu II:</strong></p>
+        <div class="math-block">
+          \[ D_2 > 0 \iff 1 - 4a > 0 \iff a < \frac{1}{4} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details>
+      <summary>Proveri se: Koliko rešenja ima jednačina za \(a = 0{,}5\)?</summary>
+      <p style="color: #cbd5e1; margin-top: 8px;">Za \(a = 0{,}5\): \(D_1 = 1 + 2 = 3 > 0\) (dva rešenja), ali \(D_2 = 1 - 2 = -1 < 0\) (nema rešenja). Ukupno samo <strong>2 rešenja</strong>, ne 4.</p>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3 class="step-title">Proverimo da se rešenja ne poklapaju</h3>
+        <p>Moramo da budemo sigurni da Jednačina I i Jednačina II nemaju zajedničkih rešenja.</p>
+        <p>Pretpostavimo da neko \(x_0\) zadovoljava obe jednačine istovremeno:</p>
+        <div class="math-block">
+          \[ x_0^2 + x_0 = a \quad \text{i} \quad x_0^2 + x_0 = -a \]
+        </div>
+        <p>Iz ovoga sledi: \(a = -a\), tj. \(2a = 0\), tj. \(a = 0\).</p>
+        <p>Dakle, za \(a \neq 0\), jednačine <strong>nemaju zajedničkih rešenja</strong> — sva četiri rešenja su zaista različita.</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3 class="step-title">Proverimo granične slučajeve</h3>
+        <p><strong>Za \(a = 0\):</strong></p>
+        <p>Obe jednačine se svode na \(x^2 + x = 0\), što daje \(x(x+1) = 0\), tj. \(x = 0\) ili \(x = -1\). To su samo <strong>2 rešenja</strong>, ne 4.</p>
+        <p><strong>Za \(a = \frac{1}{4} = 0{,}25\):</strong></p>
+        <p>Jednačina I: \(D_1 = 1 + 1 = 2 > 0\) — dva različita rešenja.</p>
+        <p>Jednačina II: \(D_2 = 1 - 1 = 0\) — jedno dvostruko rešenje \(x = -\frac{1}{2}\).</p>
+        <p>Ukupno: \(2 + 1 = 3\) različita rešenja. Dakle, \(a = 0{,}25\) daje samo <strong>3 rešenja</strong>.</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details>
+      <summary>Proveri se: Kolika je diskriminanta Jednačine II za \(a = 0{,}1\)?</summary>
+      <p style="color: #cbd5e1; margin-top: 8px;">\(D_2 = 1 - 4 \cdot 0{,}1 = 1 - 0{,}4 = 0{,}6 > 0\). Dakle, Jednačina II ima dva različita realna rešenja, što je u skladu sa našim zaključkom da \(a \in (0;\; 0{,}25)\) daje 4 rešenja.</p>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3 class="step-title">Spojimo sve uslove</h3>
+        <p>Četiri različita realna rešenja postoje kad su ispunjeni svi uslovi istovremeno:</p>
+        <div class="math-block">
+          \[ \begin{cases} a > 0 & \text{(da bi jednačine bile različite i } |x^2+x| \geq 0\text{)} \\ D_1 > 0 \iff a > -\frac{1}{4} & \text{(automatski ispunjeno)} \\ D_2 > 0 \iff a < \frac{1}{4} & \text{(ključni uslov)} \end{cases} \]
+        </div>
+        <p>Presek ovih uslova daje:</p>
+        <div class="math-block">
+          \[ \boxed{a \in \left(0;\; \frac{1}{4}\right) = (0;\; 0{,}25)} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step" tabindex="0">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3 class="step-title">Grafička interpretacija</h3>
+        <p>Funkcija \(f(x) = x^2 + x\) je parabola sa temenom u tački \(\left(-\frac{1}{2},\; -\frac{1}{4}\right)\) i nulama u \(x = -1\) i \(x = 0\).</p>
+        <p>Funkcija \(g(x) = |x^2 + x|\) se dobija reflektovanjem dela grafika \(f(x)\) koji je ispod \(x\)-ose (za \(-1 < x < 0\)) iznad nje. Reflektovani „brdašce" dostiže maksimum \(\frac{1}{4}\) u tački \(x = -\frac{1}{2}\).</p>
+        <p>Horizontalna prava \(y = a\) seče grafik \(g(x) = |x^2 + x|\) u <span class="highlight">tačno 4 tačke</span> kada prolazi ispod vrha brdašca — tj. za \(0 < a < \frac{1}{4}\).</p>
+      </div>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details>
+      <summary>Proveri se: Šta se dešava za \(a = 1\)?</summary>
+      <p style="color: #cbd5e1; margin-top: 8px;">Za \(a = 1\): \(D_1 = 5 > 0\) (2 rešenja), \(D_2 = 1 - 4 = -3 < 0\) (0 rešenja). Ukupno samo 2 rešenja. Grafički, prava \(y = 1\) je visoko iznad brdašca i seče samo dva spoljašnja kraka funkcije \(|x^2 + x|\).</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="key-insight">
+    <div class="card-title">Ključni uvid</div>
+    <p style="color: #cbd5e1; margin-bottom: 12px;">Jednačina \(|x^2 + x| = a\) se raspada na dve kvadratne jednačine. Za tačno četiri rešenja, obe moraju imati pozitivnu diskriminantu, a za \(a \neq 0\) rešenja se nikad ne poklapaju.</p>
+    <div class="math-block" style="text-align: center; font-size: 1.2rem;">
+      \[ D_1 = 1 + 4a > 0 \;\;\text{(uvek za } a > 0\text{)}, \qquad D_2 = 1 - 4a > 0 \iff a < \frac{1}{4} \]
+    </div>
+    <p style="color: #cbd5e1; margin-top: 12px; text-align: center;">Presek uslova: \(\; 0 < a < \frac{1}{4}\)</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <div class="card-title" style="justify-content: center;">Konačan odgovor</div>
+    <div class="answer-value">\( a \in \left(0;\; \dfrac{1}{4}\right) = (0;\; 0{,}25) \)</div>
+    <div class="answer-options">
+      <span class="opt">(A) \((0;\; 0{,}5]\)</span>
+      <span class="opt">(B) \((0;\; 0{,}5)\)</span>
+      <span class="opt">(C) \((0{,}25;\; 0{,}5)\)</span>
+      <span class="opt correct">(D) \((0;\; 0{,}25)\)</span>
+      <span class="opt">(E) \((0;\; 0{,}25]\)</span>
+    </div>
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> Za \(a = 0{,}1 \in (0;\; 0{,}25)\): Jednačina I daje \(x = \frac{-1 \pm \sqrt{1{,}4}}{2}\) (dva rešenja), Jednačina II daje \(x = \frac{-1 \pm \sqrt{0{,}6}}{2}\) (dva rešenja). Ukupno 4 različita rešenja. Za \(a = 0{,}25\): Jednačina II ima dvostruko rešenje, pa ukupno 3 rešenja — potvrda da je gornja granica otvorena.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title">Česte greške</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#9888;</span>
+      <p style="color: #cbd5e1;"><strong>Zaboraviti proveru za \(a = 0{,}25\):</strong> Mnogi učenici zaključe \(a \leq 0{,}25\) jer \(D_2 \geq 0\) daje rešenja. Ali za \(D_2 = 0\) postoji dvostruki koren, što daje samo 3 rešenja umesto 4. Mora biti <em>strogo</em> \(a < 0{,}25\). Zato je odgovor (D), a ne (E).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#9888;</span>
+      <p style="color: #cbd5e1;"><strong>Uključiti \(a = 0\):</strong> Za \(a = 0\), obe jednačine se svode na istu, dajući samo 2 rešenja. Zato donja granica mora biti otvorena: \(a > 0\), ne \(a \geq 0\).</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#9888;</span>
+      <p style="color: #cbd5e1;"><strong>Pomešati \(0{,}25\) i \(0{,}5\):</strong> Teme parabole je na \(y = -\frac{1}{4} = -0{,}25\), pa je visina reflektovanog brdašca \(\frac{1}{4}\), a ne \(\frac{1}{2}\). Ova greška vodi ka pogrešnim odgovorima (A) ili (B).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title">Dodatni izazov</div>
+    <p style="color: #cbd5e1; margin-bottom: 12px;">Za koje vrednosti parametra \(a\) jednačina \(|x^2 - 3x + 2| = a\) ima tačno šest različitih realnih rešenja?</p>
+    <details>
+      <summary>Nagovještaj</summary>
+      <p style="color: #cbd5e1; margin-top: 8px;">Funkcija \(x^2 - 3x + 2 = (x-1)(x-2)\) ima nule u \(x = 1\) i \(x = 2\), sa temenom u \(x = \frac{3}{2}\) gde je \(f\left(\frac{3}{2}\right) = -\frac{1}{4}\). Grafik \(|x^2 - 3x + 2|\) ima isti oblik kao u našem problemu. Razmisli: može li jednačina oblika \(|ax^2 + bx + c| = k\) uopšte imati više od 4 rešenja? Šta ako umesto toga posmatraš \(|x^2 - 3x + 2| = a\) samo kao grafički problem sa horizontalnom pravom?</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Interactive graph: y = |x^2 + x| with adjustable horizontal line y = a
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('aSlider');
+  const aValueEl = document.getElementById('aValue');
+  const intersCountEl = document.getElementById('intersCount');
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Coordinate system setup
+  const xMin = -2.5, xMax = 1.5;
+  const yMin = -0.15, yMax = 1.2;
+
+  function toCanvasX(x) { return (x - xMin) / (xMax - xMin) * W; }
+  function toCanvasY(y) { return H - (y - yMin) / (yMax - yMin) * H; }
+
+  function f(x) { return x * x + x; }
+  function g(x) { return Math.abs(f(x)); }
+
+  function draw(aVal) {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(gx), 0);
+      ctx.lineTo(toCanvasX(gx), H);
+      ctx.stroke();
+    }
+    for (let gy = 0; gy <= yMax; gy += 0.25) {
+      ctx.beginPath();
+      ctx.moveTo(0, toCanvasY(gy));
+      ctx.lineTo(W, toCanvasY(gy));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, toCanvasY(0));
+    ctx.lineTo(W, toCanvasY(0));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), 0);
+    ctx.lineTo(toCanvasX(0), H);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      if (gx === 0) continue;
+      ctx.fillText(gx.toString(), toCanvasX(gx), toCanvasY(0) + 18);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = 0.25; gy <= yMax; gy += 0.25) {
+      const label = gy.toFixed(2).replace('.', ',');
+      ctx.fillText(label, toCanvasX(0) - 8, toCanvasY(gy) + 4);
+    }
+
+    // Draw the original f(x) = x^2 + x (dashed, dim)
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    let first = true;
+    for (let px = 0; px <= W; px += 1) {
+      const x = xMin + (px / W) * (xMax - xMin);
+      const y = f(x);
+      if (y < yMin - 0.5 || y > yMax + 0.5) { first = true; continue; }
+      const cy = toCanvasY(y);
+      if (first) { ctx.moveTo(px, cy); first = false; }
+      else { ctx.lineTo(px, cy); }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw |x^2 + x| (solid, bright)
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    first = true;
+    for (let px = 0; px <= W; px += 1) {
+      const x = xMin + (px / W) * (xMax - xMin);
+      const y = g(x);
+      if (y > yMax + 0.5) { first = true; continue; }
+      const cy = toCanvasY(y);
+      if (first) { ctx.moveTo(px, cy); first = false; }
+      else { ctx.lineTo(px, cy); }
+    }
+    ctx.stroke();
+
+    // Draw the reflected bump part in a different color
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    first = true;
+    for (let px = 0; px <= W; px += 1) {
+      const x = xMin + (px / W) * (xMax - xMin);
+      if (x < -1 || x > 0) { first = true; continue; }
+      const y = -f(x); // reflected part
+      const cy = toCanvasY(y);
+      if (first) { ctx.moveTo(px, cy); first = false; }
+      else { ctx.lineTo(px, cy); }
+    }
+    ctx.stroke();
+
+    // Draw horizontal line y = a
+    if (aVal > 0) {
+      ctx.strokeStyle = '#f472b6';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 5]);
+      ctx.beginPath();
+      ctx.moveTo(0, toCanvasY(aVal));
+      ctx.lineTo(W, toCanvasY(aVal));
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Label
+      ctx.fillStyle = '#f472b6';
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('y = ' + aVal.toFixed(2).replace('.', ','), W - 100, toCanvasY(aVal) - 8);
+    }
+
+    // Mark the critical line y = 0.25
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, toCanvasY(0.25));
+    ctx.lineTo(W, toCanvasY(0.25));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#34d399';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('y = 0,25 (granica)', 10, toCanvasY(0.25) - 6);
+
+    // Find intersections
+    const intersections = [];
+    const step = 0.001;
+    for (let x = xMin; x < xMax; x += step) {
+      const y1 = g(x);
+      const y2 = g(x + step);
+      if ((y1 - aVal) * (y2 - aVal) < 0 || Math.abs(y1 - aVal) < 0.0005) {
+        // Refine
+        const xInt = (Math.abs(y1 - aVal) < Math.abs(y2 - aVal)) ? x : x + step;
+        // Check it's not too close to existing
+        let tooClose = false;
+        for (const ix of intersections) {
+          if (Math.abs(ix - xInt) < 0.05) { tooClose = true; break; }
+        }
+        if (!tooClose) { intersections.push(xInt); }
+      }
+    }
+
+    // Draw intersection points
+    for (const ix of intersections) {
+      const px = toCanvasX(ix);
+      const py = toCanvasY(aVal);
+
+      // Glow
+      const grad = ctx.createRadialGradient(px, py, 0, px, py, 14);
+      grad.addColorStop(0, 'rgba(244, 114, 182, 0.5)');
+      grad.addColorStop(1, 'rgba(244, 114, 182, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(px, py, 14, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = '#f472b6';
+      ctx.beginPath();
+      ctx.arc(px, py, 5, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    // Mark vertex of the bump
+    const vx = toCanvasX(-0.5);
+    const vy = toCanvasY(0.25);
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.arc(vx, vy, 5, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('(-0,5; 0,25)', vx, vy - 10);
+
+    // Labels for curves
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa';
+    ctx.textAlign = 'left';
+    ctx.fillText('y = |x² + x|', toCanvasX(0.6), toCanvasY(g(0.6)) - 10);
+
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.5)';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('y = x² + x (original)', toCanvasX(-2.4), toCanvasY(f(-2.3)) - 8);
+
+    // Update intersection count
+    let countText;
+    if (aVal <= 0) {
+      countText = (aVal === 0) ? '2 preseka' : '0 preseka';
+    } else if (aVal < 0.245) {
+      countText = '4 preseka';
+    } else if (aVal < 0.255) {
+      countText = '3 preseka';
+    } else {
+      countText = '2 preseka';
+    }
+    intersCountEl.textContent = countText;
+
+    if (countText === '4 preseka') {
+      intersCountEl.style.color = '#4ade80';
+    } else if (countText === '3 preseka') {
+      intersCountEl.style.color = '#fbbf24';
+    } else {
+      intersCountEl.style.color = '#f472b6';
+    }
+  }
+
+  function onSliderChange() {
+    const rawVal = parseInt(slider.value, 10);
+    const aVal = rawVal / 100;
+    aValueEl.textContent = aVal.toFixed(2).replace('.', ',');
+    draw(aVal);
+  }
+
+  slider.addEventListener('input', onSliderChange);
+
+  // Initial draw
+  onSliderChange();
+
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Jednačina |x² + x| = a — četiri različita rešenja u zavisnosti od parametra",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["apsolutna vrednost", "kvadratna jednačina", "parametar", "diskriminanta", "broj rešenja"]
+}
+BRAINSPARK_META-->

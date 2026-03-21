@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ostatak deljenja polinoma — zbir kubova koeficijenata</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Ako je ostatak deljenja polinoma P(x) = x^8 + 3x^3 + ax + b polinomom x^2 - 1 jednak x,
+naći a^3 + b^3.
+
+Key idea: When dividing P(x) by D(x) = x^2 - 1, we get:
+  P(x) = Q(x) * (x^2 - 1) + R(x)
+where R(x) = x (the remainder, degree < 2).
+
+Since x^2 - 1 = (x - 1)(x + 1), evaluating at x = 1 and x = -1 gives:
+  P(1) = R(1) = 1
+  P(-1) = R(-1) = -1
+
+Compute P(1):
+  P(1) = 1^8 + 3*1^3 + a*1 + b = 1 + 3 + a + b = 4 + a + b
+  So: 4 + a + b = 1  =>  a + b = -3  ... (1)
+
+Compute P(-1):
+  P(-1) = (-1)^8 + 3*(-1)^3 + a*(-1) + b = 1 - 3 - a + b = -2 - a + b
+  So: -2 - a + b = -1  =>  -a + b = 1  ... (2)
+
+From (1) and (2):
+  Adding: (a + b) + (-a + b) = -3 + 1  =>  2b = -2  =>  b = -1
+  Subtracting: (a + b) - (-a + b) = -3 - 1  =>  2a = -4  =>  a = -2
+
+Check: a = -2, b = -1
+  P(x) = x^8 + 3x^3 - 2x - 1
+  P(1) = 1 + 3 - 2 - 1 = 1 ✓
+  P(-1) = 1 - 3 + 2 - 1 = -1 ✓
+
+Now: a^3 + b^3 = (-2)^3 + (-1)^3 = -8 + (-1) = -9
+
+Answer: (A) -9 ✓ (matches answer key)
+
+Alternative verification using factoring:
+  a^3 + b^3 = (a + b)(a^2 - ab + b^2)
+  = (-3)(4 - 2 + 1) = (-3)(3) = -9 ✓
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(96,165,250,0.06);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+
+.plan-card p {
+  color: #c4b5fd;
+  font-size: 1.05rem;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+.theory-content {
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(96,165,250,0.04);
+  border-radius: 10px;
+  border: 1px solid rgba(96,165,250,0.1);
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+  color: #cbd5e1;
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.step:hover, .step.active {
+  background: rgba(96,165,250,0.04);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-formula {
+  font-size: 1.3rem;
+  color: #e2e8f0;
+  margin: 12px 0;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid rgba(52,211,153,0.3);
+  background: rgba(52,211,153,0.05);
+}
+
+.final-answer h2 {
+  color: #34d399;
+}
+
+.answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.answer-options .opt {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(96,165,250,0.06);
+  border: 1px solid rgba(96,165,250,0.15);
+  font-size: 1.1rem;
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+
+.answer-options .opt.correct {
+  background: rgba(52,211,153,0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(52,211,153,0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(52,211,153,0.12);
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.pitfall-card {
+  border-left: 3px solid #f472b6;
+}
+
+.pitfall-card h2 {
+  color: #f472b6;
+}
+
+.pitfall-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-card li {
+  padding: 8px 0;
+  color: #cbd5e1;
+  border-bottom: 1px solid rgba(51,65,85,0.5);
+}
+
+.pitfall-card li:last-child {
+  border-bottom: none;
+}
+
+.pitfall-card li::before {
+  content: "⚠ ";
+  color: #e09468;
+}
+
+.challenge-card {
+  border-left: 3px solid #60a5fa;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 10px;
+  touch-action: none;
+  max-width: 100%;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 16px; }
+  .step { flex-direction: column; gap: 10px; }
+  .given-grid { flex-direction: column; }
+  .answer-options { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Ostatak deljenja polinoma i zbir kubova</h1>
+<p class="subtitle">Algebra polinoma — deljenje polinoma, sistem linearnih jednačina, zbir kubova</p>
+
+<!-- Problem Statement -->
+<div class="card problem-statement">
+  <h2>Tekst zadatka</h2>
+  <p>Ako je ostatak deljenja polinoma \(x^8 + 3x^3 + ax + b\) polinomom \(x^2 - 1\) jednak \(x\), onda je vrednost izraza \(a^3 + b^3\) jednaka:</p>
+  <div class="given-grid">
+    <div class="given-item answer-option" data-option="A">
+      <div class="label">(A)</div>
+      <div class="value">\(-9\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="B">
+      <div class="label">(B)</div>
+      <div class="value">\(5\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="C">
+      <div class="label">(C)</div>
+      <div class="value">\(-7\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="D">
+      <div class="label">(D)</div>
+      <div class="value">\(7\)</div>
+    </div>
+    <div class="given-item answer-option" data-option="E">
+      <div class="label">(E)</div>
+      <div class="value">\(9\)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Plan -->
+<div class="card plan-card">
+  <h2>Plan rešavanja</h2>
+  <p>Iskoristićemo činjenicu da je \(x^2 - 1 = (x-1)(x+1)\), pa za \(x = 1\) i \(x = -1\) vrednost polinoma mora biti jednaka vrednosti ostatka. To daje sistem od dve jednačine sa dve nepoznate \(a\) i \(b\), a zatim računamo \(a^3 + b^3\).</p>
+</div>
+
+<!-- Theory Refresher -->
+<div class="card">
+  <details>
+    <summary>📐 Ključne formule i teoreme</summary>
+    <div class="theory-content">
+      <ul>
+        <li><strong>Deljenje polinoma sa ostatkom:</strong> Za polinome \(P(x)\) i \(D(x)\), važi \(P(x) = Q(x) \cdot D(x) + R(x)\), gde je stepen ostatka \(R(x)\) manji od stepena delioca \(D(x)\).</li>
+        <li><strong>Teorema o ostatku:</strong> Ako je \(D(x) = x - c\), tada je ostatak jednak \(P(c)\). Za \(D(x) = (x - c_1)(x - c_2)\), važi \(P(c_1) = R(c_1)\) i \(P(c_2) = R(c_2)\).</li>
+        <li><strong>Razlaganje:</strong> \(x^2 - 1 = (x - 1)(x + 1)\)</li>
+        <li><strong>Zbir kubova:</strong> \(a^3 + b^3 = (a + b)(a^2 - ab + b^2)\)</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+<!-- Visual Aid -->
+<div class="card">
+  <h2>Vizuelni prikaz</h2>
+  <p style="color:#94a3b8; margin-bottom:12px;">Grafički prikaz polinoma \(P(x)\), delioca \(x^2-1\) i ostatka \(x\). Uočite da se \(P(x)\) i ostatak \(R(x) = x\) poklapaju u tačkama \(x = 1\) i \(x = -1\).</p>
+  <canvas id="polyCanvas" width="700" height="400"></canvas>
+  <p class="canvas-hint">Grafik polinoma i ostatka — tačke poklapanja su označene</p>
+</div>
+
+<!-- Step-by-step Solution -->
+<div class="card">
+  <h2>Rešenje korak po korak</h2>
+
+  <div class="step" id="step1">
+    <div class="step-number">1</div>
+    <div class="step-content">
+      <h3>Postavimo jednakost deljenja</h3>
+      <p>Polinom \(P(x) = x^8 + 3x^3 + ax + b\) delimo polinomom \(D(x) = x^2 - 1\). Ostatak je \(R(x) = x\).</p>
+      <div class="math-block">
+        \[P(x) = Q(x) \cdot (x^2 - 1) + x\]
+      </div>
+      <p class="note">Ostatak mora biti stepena manjeg od stepena delioca (stepen 2), dakle ostatak je linearan: \(R(x) = x\).</p>
+    </div>
+  </div>
+
+  <div class="step" id="step2">
+    <div class="step-number">2</div>
+    <div class="step-content">
+      <h3>Rastavimo delilac na činioce</h3>
+      <p>Polinom \(x^2 - 1\) je razlika kvadrata:</p>
+      <div class="math-block">
+        \[x^2 - 1 = (x - 1)(x + 1)\]
+      </div>
+      <p>To znači da za \(x = 1\) i \(x = -1\) delilac ima vrednost nula, pa važi:</p>
+      <div class="math-block">
+        \[P(1) = R(1) \quad \text{i} \quad P(-1) = R(-1)\]
+      </div>
+    </div>
+  </div>
+
+  <div class="step" id="step3">
+    <div class="step-number">3</div>
+    <div class="step-content">
+      <h3>Izračunajmo \(P(1)\)</h3>
+      <p>Uvrštavamo \(x = 1\) u polinom:</p>
+      <div class="math-block">
+        \[\begin{align}
+        P(1) &= 1^8 + 3 \cdot 1^3 + a \cdot 1 + b \\
+        &= 1 + 3 + a + b \\
+        &= 4 + a + b
+        \end{align}\]
+      </div>
+      <p>Ostatak za \(x = 1\):</p>
+      <div class="math-block">
+        \[R(1) = 1\]
+      </div>
+      <p>Izjednačavamo:</p>
+      <div class="math-block">
+        \[4 + a + b = 1 \quad \Rightarrow \quad a + b = -3 \quad \cdots (1)\]
+      </div>
+    </div>
+  </div>
+
+  <details class="checkpoint">
+    <summary>🔍 Proveri sebe: Koliko iznosi \(P(-1)\)?</summary>
+    <div class="answer">\(P(-1) = 1 - 3 - a + b = -2 - a + b\)</div>
+  </details>
+
+  <div class="step" id="step4">
+    <div class="step-number">4</div>
+    <div class="step-content">
+      <h3>Izračunajmo \(P(-1)\)</h3>
+      <p>Uvrštavamo \(x = -1\) u polinom:</p>
+      <div class="math-block">
+        \[\begin{align}
+        P(-1) &= (-1)^8 + 3 \cdot (-1)^3 + a \cdot (-1) + b \\
+        &= 1 - 3 - a + b \\
+        &= -2 - a + b
+        \end{align}\]
+      </div>
+      <p>Ostatak za \(x = -1\):</p>
+      <div class="math-block">
+        \[R(-1) = -1\]
+      </div>
+      <p>Izjednačavamo:</p>
+      <div class="math-block">
+        \[-2 - a + b = -1 \quad \Rightarrow \quad -a + b = 1 \quad \cdots (2)\]
+      </div>
+    </div>
+  </div>
+
+  <div class="step" id="step5">
+    <div class="step-number">5</div>
+    <div class="step-content">
+      <h3>Rešimo sistem jednačina</h3>
+      <p>Imamo sistem:</p>
+      <div class="math-block">
+        \[\begin{cases}
+        a + b = -3 & \cdots (1) \\
+        -a + b = 1 & \cdots (2)
+        \end{cases}\]
+      </div>
+      <p><strong>Sabiranjem</strong> jednačina (1) i (2):</p>
+      <div class="math-block">
+        \[(a + b) + (-a + b) = -3 + 1 \quad \Rightarrow \quad 2b = -2 \quad \Rightarrow \quad b = -1\]
+      </div>
+      <p><strong>Oduzimanjem</strong> jednačine (2) od (1):</p>
+      <div class="math-block">
+        \[(a + b) - (-a + b) = -3 - 1 \quad \Rightarrow \quad 2a = -4 \quad \Rightarrow \quad a = -2\]
+      </div>
+    </div>
+  </div>
+
+  <details class="checkpoint">
+    <summary>🔍 Proveri sebe: Da li su vrednosti \(a = -2\) i \(b = -1\) ispravne?</summary>
+    <div class="answer">Provera: \(a + b = -2 + (-1) = -3\) ✓ i \(-a + b = 2 + (-1) = 1\) ✓. Tačno!</div>
+  </details>
+
+  <div class="step" id="step6">
+    <div class="step-number">6</div>
+    <div class="step-content">
+      <h3>Izračunajmo \(a^3 + b^3\)</h3>
+      <p>Sada računamo traženi izraz:</p>
+      <div class="math-block">
+        \[\begin{align}
+        a^3 + b^3 &= (-2)^3 + (-1)^3 \\
+        &= -8 + (-1) \\
+        &= -9
+        \end{align}\]
+      </div>
+    </div>
+  </div>
+
+  <details class="checkpoint">
+    <summary>🔍 Alternativni način: Koristi formulu za zbir kubova</summary>
+    <div class="answer">
+      \(a^3 + b^3 = (a+b)(a^2 - ab + b^2)\)<br>
+      \(= (-3)(4 - 2 + 1) = (-3)(3) = -9\) ✓
+    </div>
+  </details>
+</div>
+
+<!-- Key Insight -->
+<div class="insight-box">
+  <h2>Ključni uvid</h2>
+  <p style="color:#cbd5e1;">Nule delioca \(x^2 - 1\) su \(x = 1\) i \(x = -1\). U tim tačkama polinom i ostatak imaju iste vrednosti, što daje sistem jednačina za nepoznate koeficijente.</p>
+  <div class="insight-formula">
+    \[P(c) = R(c) \quad \text{za svaku nulu delioca } c\]
+  </div>
+</div>
+
+<!-- Final Answer -->
+<div class="card final-answer">
+  <h2>Konačan odgovor</h2>
+  <div class="answer-value">\(a^3 + b^3 = -9\)</div>
+  <div class="answer-options">
+    <span class="opt correct">(A) \(-9\)</span>
+    <span class="opt">(B) \(5\)</span>
+    <span class="opt">(C) \(-7\)</span>
+    <span class="opt">(D) \(7\)</span>
+    <span class="opt">(E) \(9\)</span>
+  </div>
+  <div class="verification">
+    <strong>Verifikacija:</strong> Za \(a = -2\), \(b = -1\), polinom je \(P(x) = x^8 + 3x^3 - 2x - 1\). Proveravamo: \(P(1) = 1 + 3 - 2 - 1 = 1 = R(1)\) ✓ i \(P(-1) = 1 - 3 + 2 - 1 = -1 = R(-1)\) ✓. Obe vrednosti se poklapaju sa ostatkom \(R(x) = x\), što potvrđuje tačnost rešenja.
+  </div>
+</div>
+
+<!-- Common Pitfalls -->
+<div class="card pitfall-card">
+  <h2>Česte greške</h2>
+  <ul>
+    <li>Pogrešno izračunavanje \((-1)^8\) — paran eksponent daje pozitivan rezultat: \((-1)^8 = 1\), ne \(-1\).</li>
+    <li>Zamena znakova pri uvrštavanju \(x = -1\): član \(3 \cdot (-1)^3 = -3\) i \(a \cdot (-1) = -a\). Pažljivo pratite znakove!</li>
+    <li>Zaboravljanje da je ostatak \(R(x) = x\), a ne konstanta — za \(x = 1\) ostatak je \(1\), a za \(x = -1\) ostatak je \(-1\).</li>
+  </ul>
+</div>
+
+<!-- Optional Challenge -->
+<div class="card challenge-card">
+  <h2>Dodatni izazov</h2>
+  <p>Ako je ostatak deljenja polinoma \(x^{10} + cx^2 + d\) polinomom \(x^2 - 4\) jednak \(3x + 5\), koliko iznosi \(c \cdot d\)?</p>
+  <details>
+    <summary>💡 Nagoveštaj</summary>
+    <p style="color:#94a3b8; margin-top:8px;">Primenite isti pristup: \(x^2 - 4 = (x-2)(x+2)\), pa uvrsti \(x = 2\) i \(x = -2\) u oba polinoma. Dobićete sistem od dve jednačine sa nepoznatim \(c\) i \(d\).</p>
+  </details>
+</div>
+
+</div>
+
+<script>
+(() => {
+  // Canvas visualization
+  const canvas = document.getElementById('polyCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Coordinate system
+  const originX = W / 2;
+  const originY = H / 2;
+  const scaleX = 120;
+  const scaleY = 40;
+
+  function toCanvas(x, y) {
+    return { x: originX + x * scaleX, y: originY - y * scaleY };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let gx = -3; gx <= 3; gx++) {
+      const p = toCanvas(gx, 0);
+      ctx.beginPath();
+      ctx.moveTo(p.x, 0);
+      ctx.lineTo(p.x, H);
+      ctx.stroke();
+    }
+    for (let gy = -5; gy <= 5; gy++) {
+      const p = toCanvas(0, gy);
+      ctx.beginPath();
+      ctx.moveTo(0, p.y);
+      ctx.lineTo(W, p.y);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, originY);
+    ctx.lineTo(W, originY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(originX, 0);
+    ctx.lineTo(originX, H);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    for (let gx = -2; gx <= 2; gx++) {
+      if (gx === 0) continue;
+      const p = toCanvas(gx, 0);
+      ctx.fillText(gx.toString(), p.x, originY + 18);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = -4; gy <= 4; gy += 2) {
+      if (gy === 0) continue;
+      const p = toCanvas(0, gy);
+      ctx.fillText(gy.toString(), originX - 8, p.y + 4);
+    }
+
+    // P(x) = x^8 + 3x^3 - 2x - 1 (clipped to visible range)
+    // We plot a scaled version to fit: use small range around [-1.5, 1.5]
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let first = true;
+    for (let px = -2.2; px <= 2.2; px += 0.01) {
+      let py = Math.pow(px, 8) + 3 * Math.pow(px, 3) - 2 * px - 1;
+      // Clamp for visibility
+      if (py > 8) py = 8;
+      if (py < -8) py = -8;
+      const cp = toCanvas(px, py);
+      if (cp.x < 0 || cp.x > W) { first = true; continue; }
+      if (first) { ctx.moveTo(cp.x, cp.y); first = false; }
+      else ctx.lineTo(cp.x, cp.y);
+    }
+    ctx.stroke();
+
+    // R(x) = x (remainder)
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    const rStart = toCanvas(-2.5, -2.5);
+    const rEnd = toCanvas(2.5, 2.5);
+    ctx.moveTo(rStart.x, rStart.y);
+    ctx.lineTo(rEnd.x, rEnd.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Mark intersection points (1,1) and (-1,-1)
+    const pts = [
+      { x: 1, y: 1, label: '(1, 1)' },
+      { x: -1, y: -1, label: '(-1, -1)' }
+    ];
+
+    pts.forEach(function(pt) {
+      const cp = toCanvas(pt.x, pt.y);
+
+      // Glow
+      const grad = ctx.createRadialGradient(cp.x, cp.y, 0, cp.x, cp.y, 18);
+      grad.addColorStop(0, 'rgba(244,114,182,0.4)');
+      grad.addColorStop(1, 'rgba(244,114,182,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cp.x, cp.y, 18, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = '#f472b6';
+      ctx.beginPath();
+      ctx.arc(cp.x, cp.y, 6, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#f472b6';
+      ctx.font = 'bold 13px "Segoe UI", sans-serif';
+      ctx.textAlign = pt.x > 0 ? 'left' : 'right';
+      ctx.fillText(pt.label, cp.x + (pt.x > 0 ? 12 : -12), cp.y - 12);
+    });
+
+    // Legend
+    ctx.font = '13px "Segoe UI", sans-serif';
+    const legendX = 20;
+    let legendY = 25;
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(legendX, legendY - 8, 20, 3);
+    ctx.fillStyle = '#60a5fa';
+    ctx.textAlign = 'left';
+    ctx.fillText('P(x) = x\u2078 + 3x\u00B3 \u2212 2x \u2212 1', legendX + 28, legendY);
+
+    legendY += 22;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(legendX, legendY - 5);
+    ctx.lineTo(legendX + 20, legendY - 5);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('R(x) = x (ostatak)', legendX + 28, legendY);
+
+    legendY += 22;
+    ctx.fillStyle = '#f472b6';
+    ctx.beginPath();
+    ctx.arc(legendX + 10, legendY - 5, 5, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillText('Tačke poklapanja', legendX + 28, legendY);
+  }
+
+  draw();
+
+  // Step click interaction
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Ostatak deljenja polinoma — zbir kubova koeficijenata",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["deljenje polinoma", "ostatak pri deljenju", "sistem linearnih jednačina", "zbir kubova", "polinomi"]
+}
+BRAINSPARK_META-->

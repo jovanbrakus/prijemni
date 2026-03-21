@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepenovanje kompleksnog broja — cikličnost stepena od i</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Naći vrednost izraza ((1-i)/(1+i))^2003, gde je i^2 = -1.
+
+Ponuđeni odgovori: (A) 1, (B) -1, (C) i, (D) -i, (E) -2i
+
+Rešenje:
+
+Korak 1: Pojednostavimo razlomak (1-i)/(1+i).
+Pomnožimo brojilac i imenilac konjugovanim kompleksnim brojem imenioca (1-i):
+  (1-i)/(1+i) * (1-i)/(1-i) = (1-i)^2 / ((1+i)(1-i))
+
+Korak 2: Izračunajmo imenilac.
+  (1+i)(1-i) = 1 - i^2 = 1 - (-1) = 2
+
+Korak 3: Izračunajmo brojilac.
+  (1-i)^2 = 1 - 2i + i^2 = 1 - 2i + (-1) = -2i
+
+Korak 4: Dakle:
+  (1-i)/(1+i) = -2i / 2 = -i
+
+Korak 5: Sada treba da nađemo (-i)^2003.
+  Koristimo cikličnost stepena od i:
+  i^1 = i
+  i^2 = -1
+  i^3 = -i
+  i^4 = 1
+  Ciklus se ponavlja sa periodom 4.
+
+  (-i)^2003 = (-1)^2003 * i^2003
+  (-1)^2003 = -1 (neparan stepen)
+
+  Za i^2003: 2003 = 4 * 500 + 3, dakle i^2003 = i^3 = -i
+
+  (-i)^2003 = (-1) * (-i) = i
+
+Alternativno: -i = i^3 (jer i^3 = i^2 * i = -1 * i = -i)
+  (-i)^2003 = (i^3)^2003 = i^(3*2003) = i^6009
+  6009 = 4 * 1502 + 1, dakle i^6009 = i^1 = i
+
+Verifikacija:
+  - (1-i)/(1+i) = -i ✓ (modul je 1, argument je -pi/2)
+  - (-i)^2003 = i ✓ (obe metode daju isti rezultat)
+
+Odgovor: i, što je opcija (C). ✓
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement p {
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 1rem;
+}
+
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+
+.answer-option .label {
+  font-weight: 700;
+  color: #a78bfa;
+  flex-shrink: 0;
+}
+
+.answer-option .value {
+  flex: 1;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] > summary {
+  margin-bottom: 10px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 8px;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.03);
+}
+
+.step-badge {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.step-content p, .step-content div {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+
+.key-insight {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.key-insight .card-title {
+  color: #60a5fa;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid #34d399;
+}
+
+.final-answer .answer-value {
+  font-size: 1.5rem;
+  color: #4ade80;
+  margin: 16px 0;
+  font-weight: 700;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.answer-options .opt {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.answer-options .opt.correct {
+  border-color: #34d399;
+  color: #4ade80;
+  background: rgba(52, 211, 153, 0.1);
+  font-weight: 700;
+}
+
+.pitfall {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.highlight {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.condition-box {
+  display: inline-block;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 8px;
+  padding: 6px 14px;
+  margin: 8px 0;
+}
+
+.cycle-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.cycle-table th, .cycle-table td {
+  padding: 8px 12px;
+  text-align: center;
+  border: 1px solid #334155;
+}
+
+.cycle-table th {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.cycle-table td {
+  background: #0f172a;
+}
+
+.cycle-table .active-cell {
+  background: rgba(52, 211, 153, 0.15);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { grid-template-columns: 1fr; }
+  .answer-options { flex-direction: column; align-items: center; }
+  .step { flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Stepenovanje kompleksnog razlomka</h1>
+  <p class="subtitle">Kompleksni brojevi — cikličnost stepena imaginarne jedinice, konjugovani kompleksni brojevi</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title">Zadatak</div>
+    <p>Vrednost izraza \( \left(\dfrac{1-i}{1+i}\right)^{2003} \), gde je \( i^2 = -1 \), je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A"><div class="label">(A)</div><div class="value">\( 1 \)</div></div>
+      <div class="given-item answer-option" data-option="B"><div class="label">(B)</div><div class="value">\( -1 \)</div></div>
+      <div class="given-item answer-option" data-option="C"><div class="label">(C)</div><div class="value">\( i \)</div></div>
+      <div class="given-item answer-option" data-option="D"><div class="label">(D)</div><div class="value">\( -i \)</div></div>
+      <div class="given-item answer-option" data-option="E"><div class="label">(E)</div><div class="value">\( -2i \)</div></div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title">Plan rešavanja</div>
+    <p class="plan-text">Prvo ćemo pojednostaviti razlomak \( \frac{1-i}{1+i} \) množenjem brojioca i imenioca konjugovanim kompleksnim brojem. Zatim ćemo iskoristiti cikličnost stepena imaginarne jedinice \( i \) (period 4) da odredimo vrednost izraza na visokom stepenu.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title">Teorijska osnova</div>
+    <details>
+      <summary>Ključne formule i svojstva</summary>
+      <ul style="margin-top: 10px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 8px;"><strong>Konjugovani kompleksni broj:</strong> Konjugat od \( a + bi \) je \( \overline{a+bi} = a - bi \). Važi: \( z \cdot \bar{z} = |z|^2 \).</li>
+        <li style="margin-bottom: 8px;"><strong>Množenje razlomka konjugatom:</strong> \( \dfrac{z_1}{z_2} = \dfrac{z_1 \cdot \bar{z_2}}{z_2 \cdot \bar{z_2}} = \dfrac{z_1 \cdot \bar{z_2}}{|z_2|^2} \)</li>
+        <li style="margin-bottom: 8px;"><strong>Cikličnost stepena od \( i \):</strong>
+          \( i^1 = i \), \( i^2 = -1 \), \( i^3 = -i \), \( i^4 = 1 \), \( i^5 = i \), ... Period je <span class="highlight">4</span>.</li>
+        <li style="margin-bottom: 8px;"><strong>Ostatak pri deljenju:</strong> Za \( i^n \) nalazimo \( r = n \bmod 4 \), pa je \( i^n = i^r \).</li>
+        <li style="margin-bottom: 8px;"><strong>Razlika kvadrata:</strong> \( (a+b)(a-b) = a^2 - b^2 \)</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Canvas Visualization -->
+  <div class="card">
+    <div class="card-title">Vizuelni prikaz — stepeni od \( i \) na kompleksnoj ravni</div>
+    <div class="canvas-wrapper">
+      <canvas id="complexCanvas" width="600" height="600"></canvas>
+    </div>
+    <p style="color: #94a3b8; text-align: center; margin-top: 10px; font-size: 0.9rem;">Ciklično kretanje stepena od \( i \) na jediničnoj kružnici u kompleksnoj ravni. Kliknite na tačke za detalje.</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title">Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Pojednostavljenje razlomka — množenje konjugatom</div>
+        <p>Da bismo se oslobodili imaginarne jedinice u imeniocu, množimo i brojilac i imenilac <span class="highlight">konjugatom imenioca</span>, tj. sa \( (1-i) \):</p>
+        <div class="math-block">
+          \[ \frac{1-i}{1+i} = \frac{(1-i)(1-i)}{(1+i)(1-i)} = \frac{(1-i)^2}{(1+i)(1-i)} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Izračunavanje imenioca</div>
+        <p>Koristimo formulu za razliku kvadrata \( (a+b)(a-b) = a^2 - b^2 \):</p>
+        <div class="math-block">
+          \[ (1+i)(1-i) = 1^2 - i^2 = 1 - (-1) = 2 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Izračunavanje brojioca</div>
+        <p>Razvijamo kvadrat binoma \( (1-i)^2 \):</p>
+        <div class="math-block">
+          \[ (1-i)^2 = 1^2 - 2 \cdot 1 \cdot i + i^2 = 1 - 2i + (-1) = -2i \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko iznosi \( \frac{1-i}{1+i} \)?</summary>
+      <p style="margin-top: 8px;">Brojioc je \( -2i \), imenilac je \( 2 \). Dakle:</p>
+      <p style="padding-left: 16px; color: #4ade80;">\( \dfrac{1-i}{1+i} = \dfrac{-2i}{2} = -i \)</p>
+    </details>
+
+    <!-- Step 4 -->
+    <div class="step" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Razlomak je jednak \( -i \)</div>
+        <p>Spajanjem rezultata iz koraka 2 i 3 dobijamo:</p>
+        <div class="math-block">
+          \[ \frac{1-i}{1+i} = \frac{-2i}{2} = -i \]
+        </div>
+        <p>Problem se svodi na nalaženje vrednosti \( (-i)^{2003} \).</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Razdvajanje na faktore</div>
+        <p>Razdvajamo \( (-i)^{2003} \) koristeći svojstvo stepena proizvoda:</p>
+        <div class="math-block">
+          \[ (-i)^{2003} = (-1)^{2003} \cdot i^{2003} \]
+        </div>
+        <p>Pošto je \( 2003 \) neparan broj:</p>
+        <div class="math-block">
+          \[ (-1)^{2003} = -1 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <div class="step-title">Primena cikličnosti stepena od \( i \)</div>
+        <p>Stepeni od \( i \) se ponavljaju sa periodom \( 4 \):</p>
+        <table class="cycle-table">
+          <tr>
+            <th>Ostatak \( n \bmod 4 \)</th>
+            <th>0</th>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+          </tr>
+          <tr>
+            <td style="color: #60a5fa; font-weight: 600;">\( i^n \)</td>
+            <td>\( 1 \)</td>
+            <td>\( i \)</td>
+            <td>\( -1 \)</td>
+            <td class="active-cell">\( -i \)</td>
+          </tr>
+        </table>
+        <p>Delimo \( 2003 \) sa \( 4 \):</p>
+        <div class="math-block">
+          \[ 2003 = 4 \cdot 500 + 3 \]
+        </div>
+        <p>Ostatak je \( 3 \), pa:</p>
+        <div class="math-block">
+          \[ i^{2003} = i^3 = -i \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri sebe: Koliko je \( i^{2004} \)?</summary>
+      <p style="margin-top: 8px;">\( 2004 = 4 \cdot 501 + 0 \), ostatak je \( 0 \), dakle \( i^{2004} = i^0 = 1 \). To je logično jer je \( 2004 \) deljivo sa \( 4 \).</p>
+    </details>
+
+    <!-- Step 7 -->
+    <div class="step" id="step7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <div class="step-title">Konačno izračunavanje</div>
+        <p>Spajamo rezultate iz koraka 5 i 6:</p>
+        <div class="math-block">
+          \[ (-i)^{2003} = (-1)^{2003} \cdot i^{2003} = (-1) \cdot (-i) = i \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Alternativni pristup: \( -i = i^3 \)</summary>
+      <p style="margin-top: 8px;">Primetimo da je \( -i = i^3 \) (jer \( i^3 = i^2 \cdot i = -1 \cdot i = -i \)). Tada:</p>
+      <p style="padding-left: 16px; color: #cbd5e1;">\( (-i)^{2003} = (i^3)^{2003} = i^{6009} \)</p>
+      <p style="padding-left: 16px; color: #cbd5e1;">\( 6009 = 4 \cdot 1502 + 1 \), ostatak \( 1 \)</p>
+      <p style="padding-left: 16px; color: #4ade80;">\( i^{6009} = i^1 = i \) — isti rezultat!</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="key-insight">
+    <div class="card-title">Ključni uvid</div>
+    <p>Razlomak \( \frac{1-i}{1+i} \) se pojednostavljuje na \( -i \), a zatim koristimo fundamentalno svojstvo imaginarne jedinice: <span class="highlight">stepeni od \( i \) se ciklično ponavljaju sa periodom 4</span>. Za bilo koji stepen \( n \), dovoljno je naći ostatak pri deljenju sa 4.</p>
+    <div class="math-block" style="text-align: center; font-size: 1.1rem;">
+      \[ \left(\frac{1-i}{1+i}\right)^{2003} = (-i)^{2003} = (-1)^{2003} \cdot i^{2003} = (-1) \cdot (-i) = \boxed{i} \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <div class="card-title" style="justify-content: center;">Konačan odgovor</div>
+    <div class="answer-value">\[ \left(\frac{1-i}{1+i}\right)^{2003} = i \]</div>
+    <div class="answer-options">
+      <span class="opt" data-option="A">(A) \( 1 \)</span>
+      <span class="opt" data-option="B">(B) \( -1 \)</span>
+      <span class="opt correct" data-option="C">(C) \( i \)</span>
+      <span class="opt" data-option="D">(D) \( -i \)</span>
+      <span class="opt" data-option="E">(E) \( -2i \)</span>
+    </div>
+    <div class="verification-note">
+      <strong>Verifikacija:</strong> Proverimo za male stepene: \( (-i)^1 = -i \), \( (-i)^2 = i^2 = -1 \), \( (-i)^3 = (-i)^2 \cdot (-i) = -1 \cdot (-i) = i \), \( (-i)^4 = 1 \). Period je 4. Pošto je \( 2003 = 4 \cdot 500 + 3 \), važi \( (-i)^{2003} = (-i)^3 = i \). Odgovor (E) \( -2i \) je mamac — modul \( \frac{1-i}{1+i} \) je tačno 1, pa rezultat ne može imati modul različit od 1.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title">Česte greške</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#9888;</span>
+      <p><strong>Zaboraviti pojednostavljenje razlomka:</strong> Pokušaj direktnog stepenovanja \( \left(\frac{1-i}{1+i}\right)^{2003} \) bez prethodnog pojednostavljenja vodi u nepotrebnu komplikaciju. Uvek prvo pojednostavite razlomak množenjem konjugatom.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">&#9888;</span>
+      <p><strong>Greška u znaku pri \( (-i)^{2003} \):</strong> Česta greška je zaboraviti da \( (-1)^{2003} = -1 \) (neparan stepen), pa se dobije \( -(-i) = i \), a ne \( -i \). Pažljivo pratite znakove!</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <div class="card-title">Dodatni izazov</div>
+    <p>Kolika je vrednost izraza \( \left(\dfrac{1+i}{1-i}\right)^{2003} + \left(\dfrac{1-i}{1+i}\right)^{2003} \)?</p>
+    <details>
+      <summary>Nagovještaj</summary>
+      <p style="margin-top: 8px;">Primetite da je \( \frac{1+i}{1-i} \) recipročan od \( \frac{1-i}{1+i} \). Ako je \( \frac{1-i}{1+i} = -i \), onda je \( \frac{1+i}{1-i} = \frac{1}{-i} = i \). Dakle, traženi zbir je \( i^{2003} + (-i)^{2003} = -i + i = 0 \).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  var canvas = document.getElementById('complexCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+  var cx = W / 2;
+  var cy = H / 2;
+  var R = Math.min(W, H) * 0.32;
+
+  var selectedPoint = -1;
+
+  var points = [
+    { angle: 0, label: 'i\u2070 = 1', value: '1', color: '#60a5fa', re: 1, im: 0 },
+    { angle: Math.PI / 2, label: 'i\u00B9 = i', value: 'i', color: '#4ade80', re: 0, im: 1 },
+    { angle: Math.PI, label: 'i\u00B2 = \u22121', value: '\u22121', color: '#f472b6', re: -1, im: 0 },
+    { angle: 3 * Math.PI / 2, label: 'i\u00B3 = \u2212i', value: '\u2212i', color: '#a78bfa', re: 0, im: -1 }
+  ];
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (var i = -3; i <= 3; i++) {
+      var gx = cx + i * R / 1.5;
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
+      var gy = cy + i * R / 1.5;
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Re', W - 30, cy + 8);
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText('Im', cx + 10, 20);
+
+    // Unit circle
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrows showing the cycle
+    for (var idx = 0; idx < 4; idx++) {
+      var nextIdx = (idx + 1) % 4;
+      var a1 = points[idx].angle;
+      var a2 = points[nextIdx].angle;
+      if (a2 < a1) a2 += Math.PI * 2;
+      var midAngle = (a1 + a2) / 2;
+      var arrowR = R + 30;
+
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, arrowR, -a1 - 0.1, -a2 + 0.1, true);
+      ctx.stroke();
+
+      // Arrowhead
+      var tipAngle = -midAngle;
+      var tipX = cx + arrowR * Math.cos(tipAngle);
+      var tipY = cy + arrowR * Math.sin(tipAngle);
+      var perpAngle = tipAngle + Math.PI / 2;
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+      ctx.beginPath();
+      ctx.moveTo(tipX + 6 * Math.cos(perpAngle), tipY + 6 * Math.sin(perpAngle));
+      ctx.lineTo(tipX + 8 * Math.cos(tipAngle + 0.3), tipY + 8 * Math.sin(tipAngle + 0.3));
+      ctx.lineTo(tipX + 8 * Math.cos(tipAngle - 0.3), tipY + 8 * Math.sin(tipAngle - 0.3));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Label: multiply by i
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('\u00D7i', cx + R + 50, cy - R / 2 - 20);
+
+    // Draw points
+    for (var j = 0; j < points.length; j++) {
+      var pt = points[j];
+      var px = cx + R * Math.cos(-pt.angle);
+      var py = cy + R * Math.sin(-pt.angle);
+
+      // Glow
+      if (j === selectedPoint) {
+        var glow = ctx.createRadialGradient(px, py, 0, px, py, 25);
+        glow.addColorStop(0, pt.color + '66');
+        glow.addColorStop(1, 'transparent');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(px, py, 25, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Point
+      ctx.beginPath();
+      ctx.arc(px, py, j === selectedPoint ? 12 : 9, 0, Math.PI * 2);
+      ctx.fillStyle = pt.color;
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = pt.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+
+      var labelOffX = 0;
+      var labelOffY = 0;
+      if (j === 0) { labelOffX = 20; labelOffY = 20; }
+      else if (j === 1) { labelOffX = 0; labelOffY = -22; }
+      else if (j === 2) { labelOffX = -20; labelOffY = 20; }
+      else { labelOffX = 0; labelOffY = 22; }
+
+      ctx.fillText(pt.label, px + labelOffX, py + labelOffY);
+    }
+
+    // Highlight the result path: -i -> (-i)^2003 = i
+    // Draw line from origin to -i, then show result at i
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx, cy + R);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Result annotation
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('(-i)\u00B2\u2070\u2070\u00B3 = i', cx + 15, cy - R - 10);
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Cikli\u010Dnost stepena od i (period 4)', cx, 30);
+
+    // Info box if selected
+    if (selectedPoint >= 0) {
+      var sp = points[selectedPoint];
+      var boxW = 200;
+      var boxH = 50;
+      var boxX = cx - boxW / 2;
+      var boxY = H - 80;
+
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.95)';
+      ctx.strokeStyle = sp.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(boxX, boxY, boxW, boxH, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = sp.color;
+      ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(sp.label, cx, boxY + 20);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('Re: ' + sp.re + ', Im: ' + sp.im, cx, boxY + 38);
+    }
+  }
+
+  function getMousePos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    var clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function handleClick(e) {
+    e.preventDefault();
+    var pos = getMousePos(e);
+    selectedPoint = -1;
+    for (var k = 0; k < points.length; k++) {
+      var pt = points[k];
+      var px = cx + R * Math.cos(-pt.angle);
+      var py = cy + R * Math.sin(-pt.angle);
+      var dx = pos.x - px;
+      var dy = pos.y - py;
+      if (dx * dx + dy * dy < 400) {
+        selectedPoint = k;
+        break;
+      }
+    }
+    draw();
+  }
+
+  canvas.addEventListener('click', handleClick);
+  canvas.addEventListener('touchstart', handleClick);
+
+  draw();
+
+  // Step click highlighting
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje kompleksnog razlomka — cikličnost stepena od i",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "imaginarna jedinica", "stepenovanje", "cikličnost stepena", "konjugovani kompleksni broj"]
+}
+BRAINSPARK_META-->

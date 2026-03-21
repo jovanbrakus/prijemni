@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Količnik geometrijskog niza</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: A geometric sequence a_1, a_2, ..., a_100 has the property that the sum of all
+terms is 5 times the sum of terms with even indices. Find the common ratio q.
+
+Let the first term be a_1 and common ratio q.
+
+Sum of ALL terms (100 terms):
+S_all = a_1 + a_1*q + a_1*q^2 + ... + a_1*q^99
+S_all = a_1 * (1 - q^100) / (1 - q)   [assuming q ≠ 1]
+
+Sum of terms with EVEN indices (a_2, a_4, ..., a_100 — these are 50 terms):
+a_2 = a_1*q, a_4 = a_1*q^3, a_6 = a_1*q^5, ..., a_100 = a_1*q^99
+This is a geometric series with first term a_1*q and common ratio q^2, with 50 terms.
+S_even = a_1*q * (1 - (q^2)^50) / (1 - q^2)
+S_even = a_1*q * (1 - q^100) / (1 - q^2)
+
+Condition: S_all = 5 * S_even
+
+a_1 * (1 - q^100) / (1 - q) = 5 * a_1 * q * (1 - q^100) / (1 - q^2)
+
+Since a_1 ≠ 0 and (1 - q^100) ≠ 0 (assuming q ≠ 1), we can divide both sides:
+1 / (1 - q) = 5q / (1 - q^2)
+
+Note that 1 - q^2 = (1 - q)(1 + q), so:
+1 / (1 - q) = 5q / ((1 - q)(1 + q))
+
+Multiply both sides by (1 - q):
+1 = 5q / (1 + q)
+
+1 + q = 5q
+1 = 4q
+q = 1/4
+
+ANSWER: D) 1/4
+
+VERIFICATION: With q = 1/4:
+S_all = a_1 * (1 - (1/4)^100) / (1 - 1/4) = a_1 * (1 - (1/4)^100) / (3/4)
+S_even = a_1 * (1/4) * (1 - (1/4)^100) / (1 - 1/16) = a_1 * (1/4) * (1 - (1/4)^100) / (15/16)
+
+S_all / S_even = [1/(3/4)] / [(1/4)/(15/16)]
+= (4/3) / (4/15) = (4/3) * (15/4) = 15/3 = 5 ✓
+
+So S_all = 5 * S_even. Confirmed!
+</script>
+
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  border: 2px solid #a78bfa;
+  font-size: 1.08rem;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+}
+
+.given-item .value {
+  font-size: 1rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin: 15px 0;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  font-size: 0.95rem;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkpoint summary::-webkit-details-marker { display: none; }
+
+.checkpoint summary::before {
+  content: '\25B6';
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+
+.checkpoint[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.checkpoint .checkpoint-content {
+  padding: 0 1rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.final-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.final-option {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.final-option.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.verification {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.highlight-pink {
+  color: #f472b6;
+  font-weight: 600;
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 700px) {
+  body { padding: 0.5rem; }
+  .card, .problem-statement, details .detail-content, .final-answer,
+  .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: repeat(2, 1fr); }
+  .final-options { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Količnik geometrijskog niza</h1>
+  <p class="subtitle">Zbir članova geometrijskog niza i odnos sa parnim indeksima</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Niz brojeva \(a_1, a_2, \ldots, a_{100}\) je geometrijski. Zbir svih članova niza je pet puta veći od zbira svih članova tog niza sa parnim indeksima. Količnik tog niza je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{1}{32}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{1}{16}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{1}{8}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{1}{4}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{1}{2}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</div>
+    <ol class="plan-list">
+      <li>Zapišemo zbir svih 100 članova i zbir članova sa parnim indeksima koristeći formulu za zbir geometrijskog niza.</li>
+      <li>Postavimo jednačinu na osnovu uslova \(S_{\text{svi}} = 5 \cdot S_{\text{parni}}\) i rešimo je po količniku \(q\).</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>Podsetnik iz teorije</summary>
+    <div class="detail-content">
+      <p><strong>Geometrijski niz:</strong> Niz u kome je svaki član jednak prethodnom pomnoženom istim brojem \(q\) (količnikom):</p>
+      \[a_n = a_1 \cdot q^{n-1}\]
+
+      <p style="margin-top:0.75rem"><strong>Zbir prvih \(n\) članova geometrijskog niza</strong> (za \(q \neq 1\)):</p>
+      \[S_n = a_1 \cdot \frac{1 - q^n}{1 - q}\]
+
+      <p style="margin-top:0.75rem"><strong>Podniz sa parnim indeksima:</strong> Članovi \(a_2, a_4, a_6, \ldots\) čine novi geometrijski niz sa prvim članom \(a_1 q\) i količnikom \(q^2\).</p>
+
+      <p style="margin-top:0.75rem"><strong>Razlika kvadrata:</strong></p>
+      \[1 - q^2 = (1 - q)(1 + q)\]
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Vizuelni prikaz - Struktura niza</div>
+    <p class="muted" style="margin-bottom:0.75rem;">Dijagram prikazuje članove geometrijskog niza, gde su članovi sa parnim indeksima (plavi) izdvojeni kao podniz.</p>
+    <div class="canvas-wrap">
+      <canvas id="sequence-canvas" width="700" height="350"></canvas>
+      <p class="canvas-hint">Članovi niza sa neparnim i parnim indeksima</p>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Zbir svih članova niza</div>
+      <p>Neka je \(a_1\) prvi član, a \(q\) količnik geometrijskog niza sa 100 članova.</p>
+      <p>Zbir svih 100 članova je:</p>
+      <div class="math-block">
+        \[S_{\text{svi}} = a_1 \cdot \frac{1 - q^{100}}{1 - q}\]
+      </div>
+      <p class="muted">Koristimo standardnu formulu za zbir geometrijskog niza (važi za \(q \neq 1\)).</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Zbir članova sa parnim indeksima</div>
+      <p>Članovi sa parnim indeksima su \(a_2, a_4, a_6, \ldots, a_{100}\). Ukupno ih je <span class="highlight-blue">50</span>.</p>
+      <p>Zapišimo ih:</p>
+      <div class="math-block">
+        \[a_2 = a_1 q, \quad a_4 = a_1 q^3, \quad a_6 = a_1 q^5, \quad \ldots, \quad a_{100} = a_1 q^{99}\]
+      </div>
+      <p>Ovo je geometrijski niz sa prvim članom \(a_1 q\) i količnikom \(q^2\), koji ima 50 članova.</p>
+      <div class="math-block">
+        \[S_{\text{parni}} = a_1 q \cdot \frac{1 - (q^2)^{50}}{1 - q^2} = a_1 q \cdot \frac{1 - q^{100}}{1 - q^2}\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 1 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Zašto je količnik podniza \(q^2\)?</summary>
+      <div class="checkpoint-content">
+        <p>Svaki sledeći član sa parnim indeksom se dobija množenjem prethodnog sa \(q^2\). Na primer: \(\frac{a_4}{a_2} = \frac{a_1 q^3}{a_1 q} = q^2\). Preskačemo jedan član, pa množimo sa \(q\) dva puta.</p>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Postavljamo jednačinu</div>
+      <p>Prema uslovu zadatka:</p>
+      <div class="math-block">
+        \[S_{\text{svi}} = 5 \cdot S_{\text{parni}}\]
+      </div>
+      <p>Uvrštavamo izraze:</p>
+      <div class="math-block">
+        \[a_1 \cdot \frac{1 - q^{100}}{1 - q} = 5 \cdot a_1 q \cdot \frac{1 - q^{100}}{1 - q^2}\]
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Skraćujemo zajedničke faktore</div>
+      <p>Pošto je \(a_1 \neq 0\) i \(1 - q^{100} \neq 0\) (jer \(q \neq 1\)), delimo obe strane sa \(a_1(1 - q^{100})\):</p>
+      <div class="math-block">
+        \[\frac{1}{1 - q} = \frac{5q}{1 - q^2}\]
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-title">Korak 5: Koristimo razliku kvadrata</div>
+      <p>Znamo da je \(1 - q^2 = (1 - q)(1 + q)\). Zamenjujemo:</p>
+      <div class="math-block">
+        \[\frac{1}{1 - q} = \frac{5q}{(1 - q)(1 + q)}\]
+      </div>
+      <p>Množimo obe strane sa \((1 - q)\):</p>
+      <div class="math-block">
+        \[1 = \frac{5q}{1 + q}\]
+      </div>
+    </div>
+
+    <!-- Checkpoint 2 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Šta se skratilo u prethodnom koraku?</summary>
+      <div class="checkpoint-content">
+        <p>Skratili smo faktor \((1 - q)\) sa obe strane. To smemo jer je \(q \neq 1\) (inače bi niz bio konstanta i formula za zbir ne bi važila u ovom obliku).</p>
+      </div>
+    </details>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-title">Korak 6: Rešavamo jednačinu po \(q\)</div>
+      <p>Množimo obe strane sa \((1 + q)\):</p>
+      <div class="math-block">
+        \[1 + q = 5q\]
+      </div>
+      <p>Prebacujemo \(q\) na desnu stranu:</p>
+      <div class="math-block">
+        \[1 = 5q - q = 4q\]
+      </div>
+      <p>Delimo sa 4:</p>
+      <div class="math-block">
+        \[\color{#4ade80}{q = \frac{1}{4}}\]
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-title">Korak 7: Verifikacija</div>
+      <p>Za \(q = \frac{1}{4}\) proverimo da li važi \(S_{\text{svi}} = 5 \cdot S_{\text{parni}}\):</p>
+      <div class="math-block">
+        \[S_{\text{svi}} = a_1 \cdot \frac{1 - \left(\frac{1}{4}\right)^{100}}{1 - \frac{1}{4}} = a_1 \cdot \frac{1 - \left(\frac{1}{4}\right)^{100}}{\frac{3}{4}} = \frac{4a_1}{3} \cdot \left(1 - \left(\tfrac{1}{4}\right)^{100}\right)\]
+      </div>
+      <div class="math-block">
+        \[S_{\text{parni}} = a_1 \cdot \frac{1}{4} \cdot \frac{1 - \left(\frac{1}{4}\right)^{100}}{1 - \frac{1}{16}} = \frac{a_1}{4} \cdot \frac{1 - \left(\frac{1}{4}\right)^{100}}{\frac{15}{16}} = \frac{4a_1}{15} \cdot \left(1 - \left(\tfrac{1}{4}\right)^{100}\right)\]
+      </div>
+      <p>Odnos:</p>
+      <div class="math-block">
+        \[\frac{S_{\text{svi}}}{S_{\text{parni}}} = \frac{\frac{4}{3}}{\frac{4}{15}} = \frac{4}{3} \cdot \frac{15}{4} = \frac{15}{3} = 5 \;\checkmark\]
+      </div>
+      <p>Rezultat je potvrđen!</p>
+    </div>
+
+    <!-- Checkpoint 3 -->
+    <details class="checkpoint">
+      <summary>Proveri sebe: Da li bi \(q = \frac{1}{2}\) dalo odnos 5?</summary>
+      <div class="checkpoint-content">
+        <p>Za \(q = \frac{1}{2}\): \(\frac{1}{1+q} = \frac{1}{1+\frac{1}{2}} = \frac{1}{\frac{3}{2}} = \frac{2}{3}\), pa bi odnos bio \(\frac{1}{\frac{q}{1+q}} = \frac{1+q}{q} = \frac{\frac{3}{2}}{\frac{1}{2}} = 3\), a ne 5. Dakle, \(q = \frac{1}{2}\) ne zadovoljava uslov.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Ključni uvid</div>
+    <p>Kada podelimo zbir celog niza sa zbirom podniza parnih članova, svi faktori koji zavise od broja članova (\(a_1\) i \(1 - q^{100}\)) se <strong>skrate</strong>. Jednačina se svodi na jednostavan algebarski izraz koji zavisi <strong>samo od količnika \(q\)</strong>. Ključna transformacija je prepoznavanje da je \(1 - q^2 = (1-q)(1+q)\), što omogućava skraćivanje i svođenje na linearnu jednačinu.</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konačan odgovor</div>
+    <div class="value">(D) \(\;\dfrac{1}{4}\)</div>
+    <div class="final-options">
+      <div class="final-option">(A) \(\frac{1}{32}\)</div>
+      <div class="final-option">(B) \(\frac{1}{16}\)</div>
+      <div class="final-option">(C) \(\frac{1}{8}\)</div>
+      <div class="final-option correct">(D) \(\frac{1}{4}\)</div>
+      <div class="final-option">(E) \(\frac{1}{2}\)</div>
+    </div>
+    <p class="verification">Verifikacija: Za \(q = \frac{1}{4}\), odnos \(\frac{S_{\text{svi}}}{S_{\text{parni}}} = \frac{4/3}{4/15} = 5\), što potvrđuje tačnost odgovora.</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall">
+      <strong>Pogrešno identifikovanje podniza:</strong> Članovi sa parnim indeksima (\(a_2, a_4, \ldots\)) čine geometrijski niz sa količnikom \(q^2\), a ne \(q\). Greška u količniku podniza vodi do pogrešnog rezultata.
+    </div>
+    <div class="pitfall">
+      <strong>Zaboravljanje da se \(1 - q^2\) može rastaviti:</strong> Bez primene formule \(1 - q^2 = (1-q)(1+q)\), jednačina izgleda komplikovanije nego što jeste. Ova faktorizacija je ključ za elegantno skraćivanje.
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Geometrijski niz ima 100 članova. Zbir svih članova je tri puta veći od zbira članova sa neparnim indeksima. Odredite količnik niza.</p>
+    <details style="background: transparent; border: 1px solid #34d399; margin: 15px 0;">
+      <summary style="color: #34d399;">Prikaži nagoveštaj</summary>
+      <div class="detail-content">
+        <p>Članovi sa neparnim indeksima (\(a_1, a_3, a_5, \ldots\)) čine geometrijski niz sa prvim članom \(a_1\) i količnikom \(q^2\). Jednačina postaje \(\frac{1}{1-q} = \frac{3}{1-q^2}\), odakle sledi \(1+q = 3\), tj. \(q = 2\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('sequence-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const startX = 40;
+    const endX = W - 40;
+    const barY = 100;
+    const barHeight = 30;
+    const totalTerms = 10;
+    const gap = 6;
+    const barWidth = (endX - startX - gap * (totalTerms - 1)) / totalTerms;
+
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Struktura geometrijskog niza (prvih 10 članova)', W / 2, 30);
+
+    // Draw bars for first 10 terms with decreasing height (q = 1/4)
+    var q = 0.25;
+    var maxBarH = 160;
+    var baselineY = 260;
+
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+
+    for (var i = 0; i < totalTerms; i++) {
+      var x = startX + i * (barWidth + gap);
+      var h = maxBarH * Math.pow(q, i);
+      if (h < 3) h = 3;
+      var isEven = (i + 1) % 2 === 0;
+
+      // Bar
+      if (isEven) {
+        ctx.fillStyle = 'rgba(96, 165, 250, 0.6)';
+        ctx.strokeStyle = '#60a5fa';
+      } else {
+        ctx.fillStyle = 'rgba(167, 139, 250, 0.4)';
+        ctx.strokeStyle = '#a78bfa';
+      }
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x, baselineY - h, barWidth, h, [4, 4, 0, 0]);
+      ctx.fill();
+      ctx.stroke();
+
+      // Index label below
+      ctx.fillStyle = isEven ? '#60a5fa' : '#a78bfa';
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('a' + (i + 1), x + barWidth / 2, baselineY + 18);
+    }
+
+    // Dots for continuation
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('. . .', endX + 10, baselineY - 5);
+
+    // Baseline
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(startX - 10, baselineY);
+    ctx.lineTo(endX + 30, baselineY);
+    ctx.stroke();
+
+    // Legend
+    var legendY = 300;
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+
+    // Odd (purple)
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.5)';
+    ctx.fillRect(startX + 60, legendY, 18, 14);
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(startX + 60, legendY, 18, 14);
+    ctx.fillStyle = '#a78bfa';
+    ctx.textAlign = 'left';
+    ctx.fillText('Neparni indeksi (a\u2081, a\u2083, a\u2085, ...)', startX + 85, legendY + 8);
+
+    // Even (blue)
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.6)';
+    ctx.fillRect(startX + 60, legendY + 25, 18, 14);
+    ctx.strokeStyle = '#60a5fa';
+    ctx.strokeRect(startX + 60, legendY + 25, 18, 14);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Parni indeksi (a\u2082, a\u2084, a\u2086, ...) \u2014 podniz sa količnikom q\u00B2', startX + 85, legendY + 33);
+
+    // Formula annotation
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('q = 1/4  \u2192  svaki sledeći član je 4 puta manji', W / 2, 58);
+
+    // Arrow showing q relationship
+    var x1 = startX + barWidth / 2;
+    var x2 = startX + barWidth + gap + barWidth / 2;
+    var arrowY = 75;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x1, arrowY);
+    ctx.lineTo(x2, arrowY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Arrowhead
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.moveTo(x2, arrowY);
+    ctx.lineTo(x2 - 6, arrowY - 4);
+    ctx.lineTo(x2 - 6, arrowY + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u00D7q', (x1 + x2) / 2, arrowY - 8);
+  }
+
+  draw();
+})();
+</script>
+
+<script>
+(() => {
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Količnik geometrijskog niza iz odnosa zbira svih i parnih članova","subject":"math","unit":"algebra","topic_tags":["geometrijski niz","količnik niza","zbir geometrijskog niza","podniz","algebarska jednačina"]}
+BRAINSPARK_META-->

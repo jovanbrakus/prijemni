@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iracionalna nejednačina sa korenom</title>
+
+<script type="text/info" id="logic-scratchpad">
+Problem: Naći skup svih rešenja nejednačine sqrt(5 + x) <= 1 - x.
+
+Korak 1: Domen
+Izraz pod korenom mora biti >= 0:
+5 + x >= 0  =>  x >= -5
+Dakle domen je [-5, +∞).
+
+Korak 2: Uslovi za rešavanje
+Da bi nejednačina sqrt(5+x) <= 1-x imala smisla:
+- Leva strana sqrt(5+x) >= 0 (uvek kad je definisana)
+- Desna strana 1-x mora biti >= 0 (inače je leva >= 0 > desna, pa nejednačina
+  ne važi osim ako obe strane nisu jednake 0)
+
+Zapravo, hajde sistematičnije:
+
+Slučaj A: Ako je 1 - x < 0, tj. x > 1:
+  Tada je desna strana negativna, a leva strana >= 0, pa sqrt(5+x) >= 0 > 1-x.
+  Nejednačina NE važi (jer tražimo <=).
+  Dakle za x > 1 nema rešenja.
+
+Slučaj B: Ako je 1 - x >= 0, tj. x <= 1:
+  Obe strane su nenegativne, pa možemo kvadrirati:
+  5 + x <= (1 - x)^2
+  5 + x <= 1 - 2x + x^2
+  0 <= x^2 - 3x - 4
+  x^2 - 3x - 4 >= 0
+  (x - 4)(x + 1) >= 0
+
+  Rešenje: x <= -1 ili x >= 4
+
+  Kombinujemo sa x <= 1 (uslov iz slučaja B):
+  (x <= -1) ili (x >= 4 i x <= 1) — drugi deo je prazan skup
+  Dakle: x <= -1
+
+Kombinujemo sa domenom x >= -5:
+Rešenje: -5 <= x <= -1, tj. [-5, -1]
+
+Verifikacija:
+- x = -5: sqrt(0) <= 1-(-5) => 0 <= 6 ✓
+- x = -1: sqrt(4) <= 1-(-1) => 2 <= 2 ✓
+- x = 0: sqrt(5) <= 1 => 2,236 <= 1 ✗ (tačno, 0 nije u rešenju)
+- x = -3: sqrt(2) <= 4 => 1,414 <= 4 ✓
+
+Odgovor: C) [-5, -1]
+</script>
+
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+}
+
+.problem-statement p {
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 1rem;
+}
+
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+
+.answer-option .label {
+  font-weight: 700;
+  color: #a78bfa;
+  flex-shrink: 0;
+}
+
+.answer-option .value {
+  flex: 1;
+}
+
+.plan-text {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #c4b5fd;
+}
+
+details[open] > summary {
+  margin-bottom: 10px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 8px;
+  border-left: 3px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+  background: rgba(74, 222, 128, 0.03);
+}
+
+.step-badge {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.step-content p, .step-content div {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+
+.key-insight {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.key-insight .card-title {
+  color: #60a5fa;
+}
+
+.final-answer {
+  text-align: center;
+  border: 2px solid #34d399;
+}
+
+.final-answer .answer-value {
+  font-size: 1.5rem;
+  color: #4ade80;
+  margin: 16px 0;
+  font-weight: 700;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.answer-options .opt {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.answer-options .opt.correct {
+  border-color: #34d399;
+  color: #4ade80;
+  background: rgba(52, 211, 153, 0.1);
+  font-weight: 700;
+}
+
+.pitfall {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #e09468;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #334155;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 700px;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.challenge-card {
+  border-left: 4px solid #f472b6;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.4rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { grid-template-columns: 1fr 1fr; }
+  .answer-options { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Iracionalna nejednačina sa korenom</h1>
+  <p class="subtitle">Rešavanje nejednačine sa kvadratnim korenom — analiza domena i kvadriranje</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title">Tekst zadatka</h2>
+    <p>Skup svih rešenja nejednačine:</p>
+    <div class="math-block">
+      \[ \sqrt{5 + x} \leq 1 - x \]
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\((-\infty, -1] \cup [4, +\infty)\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\([-5, -1] \cup [4, +\infty)\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\([-5, -1]\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\([-1, 1]\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\([4, +\infty)\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2 class="card-title">Plan rešavanja</h2>
+    <p class="plan-text">
+      Prvo ćemo odrediti domen nejednačine, zatim razmotriti uslov da desna strana bude nenegativna (jer je leva strana koren, dakle uvek \(\geq 0\)). Nakon toga kvadriramo obe strane i rešavamo kvadratnu nejednačinu. Konačno, presecamo sva ograničenja da bismo dobili skup rešenja.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <ul style="margin-top: 10px; padding-left: 20px; color: #cbd5e1;">
+        <li style="margin-bottom: 10px;"><strong>Domen korena:</strong> \(\sqrt{f(x)}\) je definisano samo kada je \(f(x) \geq 0\).</li>
+        <li style="margin-bottom: 10px;"><strong>Kvadriranje nejednačine:</strong> Ako su obe strane nenegativne, tada je \(a \leq b \Leftrightarrow a^2 \leq b^2\) za \(a, b \geq 0\).</li>
+        <li style="margin-bottom: 10px;"><strong>Kvadratna nejednačina:</strong> Za \((x - x_1)(x - x_2) \geq 0\) gde je \(x_1 < x_2\), rešenje je \(x \leq x_1\) ili \(x \geq x_2\).</li>
+        <li style="margin-bottom: 10px;"><strong>Važno:</strong> Kod iracionalnih nejednačina \(\sqrt{f(x)} \leq g(x)\), moramo zahtevati i \(g(x) \geq 0\) pre kvadriranja.</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card canvas-card">
+    <h2 class="card-title">Grafički prikaz</h2>
+    <canvas id="graphCanvas" width="700" height="450"></canvas>
+    <p class="drag-hint">Grafici funkcija \(y = \sqrt{5 + x}\) (plava) i \(y = 1 - x\) (zelena). Označena oblast rešenja.</p>
+  </div>
+
+  <!-- Step-by-step Solution -->
+  <div class="card">
+    <h2 class="card-title">Rešenje korak po korak</h2>
+
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3 class="step-title">Odredimo domen</h3>
+        <p>Izraz pod korenom mora biti nenegativan:</p>
+        <div class="math-block">
+          \[ 5 + x \geq 0 \quad \Rightarrow \quad x \geq -5 \]
+        </div>
+        <p>Domen nejednačine je \([-5, +\infty)\).</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3 class="step-title">Analiziramo znak desne strane</h3>
+        <p>Leva strana \(\sqrt{5+x}\) je uvek \(\geq 0\). Da bi nejednačina \(\sqrt{5+x} \leq 1-x\) mogla da važi, desna strana mora biti nenegativna:</p>
+        <div class="math-block">
+          \[ 1 - x \geq 0 \quad \Rightarrow \quad x \leq 1 \]
+        </div>
+        <p>Ako je \(x > 1\), tada je \(1 - x < 0\), a \(\sqrt{5+x} \geq 0\), pa nejednačina ne važi. Dakle, rešenja mogu postojati samo za \(x \leq 1\).</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Za \(x = 2\), da li važi nejednačina?</summary>
+      <p style="color: #cbd5e1; margin-top: 8px;">Ne! \(\sqrt{7} \approx 2{,}65 > -1 = 1 - 2\). Leva strana je pozitivna, desna negativna, pa nejednačina ne važi.</p>
+    </details>
+
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3 class="step-title">Kvadriramo obe strane</h3>
+        <p>Pošto su obe strane nenegativne (za \(x \leq 1\) i \(x \geq -5\)), smemo da kvadriramo:</p>
+        <div class="math-block">
+          \[ \left(\sqrt{5 + x}\right)^2 \leq (1 - x)^2 \]
+        </div>
+        <div class="math-block">
+          \[ 5 + x \leq 1 - 2x + x^2 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3 class="step-title">Svedemo na standardni oblik</h3>
+        <p>Prebacimo sve na desnu stranu:</p>
+        <div class="math-block">
+          \[ 0 \leq x^2 - 2x + 1 - 5 - x \]
+        </div>
+        <div class="math-block">
+          \[ 0 \leq x^2 - 3x - 4 \]
+        </div>
+        <p>Odnosno:</p>
+        <div class="math-block">
+          \[ x^2 - 3x - 4 \geq 0 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3 class="step-title">Faktorizujemo kvadratni trinom</h3>
+        <p>Tražimo nule trinoma \(x^2 - 3x - 4 = 0\):</p>
+        <div class="math-block">
+          \[ x = \frac{3 \pm \sqrt{9 + 16}}{2} = \frac{3 \pm \sqrt{25}}{2} = \frac{3 \pm 5}{2} \]
+        </div>
+        <div class="math-block">
+          \[ x_1 = \frac{3 - 5}{2} = -1 \qquad x_2 = \frac{3 + 5}{2} = 4 \]
+        </div>
+        <p>Faktorizacija: \((x + 1)(x - 4) \geq 0\).</p>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Da li je \((-1)^2 - 3 \cdot (-1) - 4 = 0\)?</summary>
+      <p style="color: #cbd5e1; margin-top: 8px;">\(1 + 3 - 4 = 0\). Tačno! A za \(x = 4\): \(16 - 12 - 4 = 0\). Takođe tačno.</p>
+    </details>
+
+    <div class="step">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3 class="step-title">Rešimo kvadratnu nejednačinu</h3>
+        <p>Nejednačina \((x + 1)(x - 4) \geq 0\) važi kada su oba činioca istog znaka:</p>
+        <div class="math-block">
+          \[ x \leq -1 \quad \text{ili} \quad x \geq 4 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3 class="step-title">Presek svih uslova</h3>
+        <p>Moramo da zadovoljimo sva tri uslova istovremeno:</p>
+        <div class="math-block">
+          \[ \begin{cases} x \geq -5 & \text{(domen)} \\ x \leq 1 & \text{(desna strana} \geq 0\text{)} \\ x \leq -1 \;\text{ili}\; x \geq 4 & \text{(kvadratna nejednačina)} \end{cases} \]
+        </div>
+        <p>Presek \(x \geq -5\), \(x \leq 1\), i (\(x \leq -1\) ili \(x \geq 4\)):</p>
+        <p>Za granu \(x \leq -1\): presek sa \(x \geq -5\) i \(x \leq 1\) daje \(-5 \leq x \leq -1\).</p>
+        <p>Za granu \(x \geq 4\): presek sa \(x \leq 1\) je prazan skup (\(x \geq 4\) i \(x \leq 1\) ne mogu istovremeno).</p>
+        <div class="math-block">
+          \[ x \in [-5,\, -1] \]
+        </div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Proveri se: Da li \(x = -3\) pripada rešenju?</summary>
+      <p style="color: #cbd5e1; margin-top: 8px;">\(\sqrt{5 + (-3)} = \sqrt{2} \approx 1{,}41\) i \(1 - (-3) = 4\). Važi \(1{,}41 \leq 4\). Da, pripada!</p>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="key-insight">
+    <h2 class="card-title">Ključni uvid</h2>
+    <p style="color: #cbd5e1; margin-bottom: 12px;">
+      Ključ ovog zadatka je prepoznati da kvadriranje daje rešenja \(x \leq -1\) ili \(x \geq 4\), ali uslov \(1 - x \geq 0\) eliminiše granu \(x \geq 4\). Bez ovog uslova, dobili bismo pogrešan odgovor B.
+    </p>
+    <div class="math-block" style="text-align: center; font-size: 1.2rem;">
+      \[ \sqrt{5+x} \leq 1-x \;\;\Longrightarrow\;\; x \in [-5,\, -1] \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer">
+    <h2 class="card-title" style="justify-content: center;">Konačan odgovor</h2>
+    <div class="answer-value">
+      \( [-5,\, -1] \)
+    </div>
+    <div class="answer-options">
+      <span class="opt">(A) \((-\infty, -1] \cup [4, +\infty)\)</span>
+      <span class="opt">(B) \([-5, -1] \cup [4, +\infty)\)</span>
+      <span class="opt correct">(C) \([-5, -1]\)</span>
+      <span class="opt">(D) \([-1, 1]\)</span>
+      <span class="opt">(E) \([4, +\infty)\)</span>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Za granične tačke: \(x = -5 \Rightarrow \sqrt{0} = 0 \leq 6 = 1-(-5)\) ✓ i \(x = -1 \Rightarrow \sqrt{4} = 2 \leq 2 = 1-(-1)\) ✓. Za \(x = 0\) (van rešenja): \(\sqrt{5} \approx 2{,}24 > 1\), nejednačina ne važi ✓.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2 class="card-title">Česte greške</h2>
+    <div class="pitfall">
+      <span class="pitfall-icon">⚠</span>
+      <p style="color: #cbd5e1;"><strong>Zaboraviti uslov \(1 - x \geq 0\):</strong> Ako se samo kvadrira bez provere znaka desne strane, dobija se \(x \leq -1\) ili \(x \geq 4\), što uz domen daje odgovor B umesto tačnog C.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">⚠</span>
+      <p style="color: #cbd5e1;"><strong>Kvadriranje bez uslova:</strong> Kvadriranje je dozvoljeno samo kada su obe strane nenegativne. Ako je jedna strana negativna, nejednačina se ne može jednostavno kvadrirati.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2 class="card-title" style="color: #f472b6;">Dodatni izazov</h2>
+    <p style="color: #cbd5e1;">Reši nejednačinu \(\sqrt{3 - x} \geq x - 1\). Kako se menja analiza uslova u odnosu na prethodni zadatak?</p>
+    <details>
+      <summary>Nagovještaj</summary>
+      <p style="color: #cbd5e1; margin-top: 8px;">Ovde je smer nejednačine obrnut: koren je \(\geq\) linearna funkcija. Razmisli: kada je desna strana negativna, da li nejednačina automatski važi ili ne važi? To menja strukturu rešenja.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Coordinate system: x from -7 to 6, y from -3 to 8
+  const xMin = -7, xMax = 6;
+  const yMin = -3, yMax = 8;
+
+  const scaleX = W / (xMax - xMin);
+  const scaleY = H / (yMax - yMin);
+
+  function toCanvasX(x) { return (x - xMin) * scaleX; }
+  function toCanvasY(y) { return H - (y - yMin) * scaleY; }
+
+  function drawGrid() {
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+
+    for (let x = Math.ceil(xMin); x <= xMax; x++) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(x), 0);
+      ctx.lineTo(toCanvasX(x), H);
+      ctx.stroke();
+    }
+    for (let y = Math.ceil(yMin); y <= yMax; y++) {
+      ctx.beginPath();
+      ctx.moveTo(0, toCanvasY(y));
+      ctx.lineTo(W, toCanvasY(y));
+      ctx.stroke();
+    }
+  }
+
+  function drawAxes() {
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+
+    // x-axis
+    ctx.beginPath();
+    ctx.moveTo(0, toCanvasY(0));
+    ctx.lineTo(W, toCanvasY(0));
+    ctx.stroke();
+
+    // y-axis
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), 0);
+    ctx.lineTo(toCanvasX(0), H);
+    ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let x = Math.ceil(xMin); x <= xMax; x++) {
+      if (x === 0) continue;
+      ctx.fillText(x.toString(), toCanvasX(x), toCanvasY(0) + 16);
+    }
+    ctx.textAlign = 'right';
+    for (let y = Math.ceil(yMin); y <= yMax; y++) {
+      if (y === 0) continue;
+      ctx.fillText(y.toString(), toCanvasX(0) - 8, toCanvasY(y) + 4);
+    }
+    ctx.fillText('0', toCanvasX(0) - 8, toCanvasY(0) + 16);
+  }
+
+  function drawSolutionRegion() {
+    // Shade x from -5 to -1 on x-axis
+    ctx.fillStyle = 'rgba(52, 211, 153, 0.12)';
+    ctx.fillRect(toCanvasX(-5), 0, toCanvasX(-1) - toCanvasX(-5), H);
+
+    // Vertical lines at boundaries
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(-5), 0);
+    ctx.lineTo(toCanvasX(-5), H);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(-1), 0);
+    ctx.lineTo(toCanvasX(-1), H);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawSqrtCurve() {
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    let started = false;
+    for (let px = 0; px <= W; px++) {
+      const x = xMin + px / scaleX;
+      if (x < -5) continue;
+      const y = Math.sqrt(5 + x);
+      const cy = toCanvasY(y);
+      if (!started) {
+        ctx.moveTo(toCanvasX(x), cy);
+        started = true;
+      } else {
+        ctx.lineTo(toCanvasX(x), cy);
+      }
+    }
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('y = \u221A(5+x)', toCanvasX(3.5), toCanvasY(Math.sqrt(8.5)) - 8);
+  }
+
+  function drawLineCurve() {
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(xMin), toCanvasY(1 - xMin));
+    ctx.lineTo(toCanvasX(xMax), toCanvasY(1 - xMax));
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('y = 1 \u2212 x', toCanvasX(-6.5), toCanvasY(7.5) - 8);
+  }
+
+  function drawIntersectionPoints() {
+    // Intersection at x = -1: sqrt(4) = 2, 1-(-1) = 2
+    const pts = [
+      { x: -1, y: 2, label: '(\u22121, 2)' },
+      { x: -5, y: 0, label: '(\u22125, 0)' },
+      { x: 4, y: 3, label: '(4, 3)', note: true }
+    ];
+
+    pts.forEach(function(pt) {
+      const cx = toCanvasX(pt.x);
+      const cy = toCanvasY(pt.y);
+
+      // Glow
+      ctx.beginPath();
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 15);
+      grad.addColorStop(0, 'rgba(244, 114, 182, 0.4)');
+      grad.addColorStop(1, 'rgba(244, 114, 182, 0)');
+      ctx.fillStyle = grad;
+      ctx.arc(cx, cy, 15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Point
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#f472b6';
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = pt.note ? '#94a3b8' : '#f472b6';
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(pt.label, cx, cy - 14);
+    });
+
+    // Mark the (4,3) point with an X to show it's excluded
+    const cx4 = toCanvasX(4);
+    const cy4 = toCanvasY(3);
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx4 - 8, cy4 - 8);
+    ctx.lineTo(cx4 + 8, cy4 + 8);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx4 + 8, cy4 - 8);
+    ctx.lineTo(cx4 - 8, cy4 + 8);
+    ctx.stroke();
+
+    // Annotation for excluded point
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('ne zadovoljava x \u2264 1', cx4 + 14, cy4 + 4);
+  }
+
+  function drawSolutionLabel() {
+    const cx = (toCanvasX(-5) + toCanvasX(-1)) / 2;
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Rešenje: [\u22125, \u22121]', cx, toCanvasY(yMin) - 12);
+  }
+
+  // Draw everything
+  ctx.fillStyle = '#0c1222';
+  ctx.fillRect(0, 0, W, H);
+  drawGrid();
+  drawSolutionRegion();
+  drawAxes();
+  drawSqrtCurve();
+  drawLineCurve();
+  drawIntersectionPoints();
+  drawSolutionLabel();
+
+  // Step click handlers
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Iracionalna nejednačina sa kvadratnim korenom",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["iracionalne nejednačine", "kvadratni koren", "kvadratna nejednačina", "domen funkcije"]
+}
+BRAINSPARK_META-->

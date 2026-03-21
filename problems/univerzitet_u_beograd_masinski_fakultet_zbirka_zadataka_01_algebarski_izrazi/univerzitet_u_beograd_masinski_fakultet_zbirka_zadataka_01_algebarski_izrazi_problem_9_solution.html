@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pojednostavljivanje izraza sa četvrtim korenima</title>
+<script type="text/info" id="logic-scratchpad">
+Problem: Find the value of 1 / (⁴√2 + ⁴√4 + ⁴√8 + 2)
+
+Let t = ⁴√2 = 2^(1/4).
+
+Then:
+  ⁴√2 = t         = t^1
+  ⁴√4 = (2^2)^(1/4) = 2^(1/2) = t^2
+  ⁴√8 = (2^3)^(1/4) = 2^(3/4) = t^3
+  2   = 2^1        = t^4
+
+Denominator = t + t^2 + t^3 + t^4
+
+This is a geometric series with first term t, ratio t, 4 terms:
+Sum = t * (t^4 - 1) / (t - 1)
+
+Since t = 2^(1/4), t^4 = 2, so t^4 - 1 = 1.
+
+Sum = t * 1 / (t - 1) = t / (t - 1)
+
+The expression = 1 / [t / (t - 1)] = (t - 1) / t = 1 - 1/t = 1 - 1/⁴√2
+
+Check against options:
+(A) ⁴√2           — no
+(B) ⁴√2 - 1       — no
+(C) 1 - ⁴√2       — no (negative since ⁴√2 > 1)
+(D) 1/⁴√2 - 1     — no (this is negative: ≈ 0.84 - 1 = -0.16)
+(E) 1 - 1/⁴√2     — YES! This matches: 1 - 1/t
+
+Numerical check:
+t = 2^(1/4) ≈ 1.18921
+Denominator = 1.18921 + 1.41421 + 1.68179 + 2 = 6.28521
+Expression = 1/6.28521 ≈ 0.15910
+1 - 1/t = 1 - 1/1.18921 = 1 - 0.84090 = 0.15910 ✓
+
+Correct answer: (E) 1 - 1/⁴√2
+</script>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 28px;
+}
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card h2 {
+  color: #60a5fa;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+}
+.card h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+.plan-card {
+  border-left: 3px solid #a78bfa;
+}
+.plan-card p {
+  color: #cbd5e1;
+}
+details {
+  margin: 15px 0;
+}
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+}
+details summary:hover {
+  color: #93bbfc;
+}
+.theory-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #334155;
+  color: #cbd5e1;
+}
+.theory-content li:last-child {
+  border-bottom: none;
+}
+.math-block {
+  background: rgba(56,189,248,0.08);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+.step-container:hover, .step-container.active {
+  background: rgba(56,189,248,0.04);
+  border-left: 3px solid #4ade80;
+}
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  margin-top: 2px;
+}
+.step-content {
+  flex: 1;
+}
+.step-content h3 {
+  margin-bottom: 8px;
+}
+.step-content p {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+.checkpoint {
+  background: rgba(167,139,250,0.08);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+.checkpoint summary {
+  color: #a78bfa;
+}
+.insight-card {
+  background: linear-gradient(135deg, rgba(96,165,250,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(167,139,250,0.3);
+  text-align: center;
+  padding: 28px;
+}
+.insight-card .insight-formula {
+  font-size: 1.3rem;
+  margin: 16px 0;
+}
+.final-answer-card {
+  border: 2px solid #4ade80;
+  text-align: center;
+  padding: 28px;
+}
+.final-answer-card .answer-value {
+  font-size: 1.6rem;
+  color: #4ade80;
+  margin: 16px 0;
+  font-weight: 700;
+}
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+.answer-options .opt {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+.answer-options .opt.correct {
+  background: rgba(74,222,128,0.12);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+.verification {
+  margin-top: 14px;
+  color: #94a3b8;
+  font-size: 0.92rem;
+}
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+.pitfall-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #334155;
+  color: #e09468;
+}
+.pitfall-list li:last-child { border-bottom: none; }
+.pitfall-list li::before {
+  content: "\26A0\FE0F ";
+}
+.canvas-card {
+  text-align: center;
+}
+.canvas-card canvas {
+  border-radius: 10px;
+  max-width: 100%;
+  touch-action: none;
+}
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+.challenge-card {
+  border-left: 3px solid #f472b6;
+}
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 8px 12px; }
+  .step-container { flex-direction: column; gap: 8px; }
+  .answer-options { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title & Subtitle -->
+  <h1>Pojednostavljivanje izraza sa četvrtim korenima</h1>
+  <p class="subtitle">Algebarski izrazi — geometrijski niz i racionalizacija</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Postavka zadatka</h2>
+    <p>Vrednost izraza</p>
+    <div class="math-block">
+      \[\frac{1}{\sqrt[4]{2}+\sqrt[4]{4}+\sqrt[4]{8}+2}\]
+    </div>
+    <p>je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\sqrt[4]{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\sqrt[4]{2}-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(1-\sqrt[4]{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{1}{\sqrt[4]{2}}-1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(1-\dfrac{1}{\sqrt[4]{2}}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2>Plan rešavanja</h2>
+    <p>Uvešćemo smenu \(t = \sqrt[4]{2}\) da bismo imenilac prepoznali kao zbir uzastopnih stepena broja \(t\). Zatim ćemo primeniti formulu za zbir geometrijskog niza da bismo imenilac kompaktno zapisali i pojednostavili ceo izraz.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Svojstva korenova:</strong> \(\sqrt[4]{2^k} = 2^{k/4} = \left(\sqrt[4]{2}\right)^k\). Svaki koren četvrtog stepena od stepena dvojke je stepen od \(\sqrt[4]{2}\).</li>
+          <li><strong>Zbir geometrijskog niza:</strong> Za niz sa prvim članom \(a_1\), količnikom \(q\) i \(n\) članova: \[S_n = a_1 \cdot \frac{q^n - 1}{q - 1}\]</li>
+          <li><strong>Specijalno — zbir stepena:</strong> \(t + t^2 + t^3 + t^4 = t \cdot \frac{t^4 - 1}{t - 1}\), jer je to geometrijski niz sa \(a_1 = t\), \(q = t\), \(n = 4\).</li>
+          <li><strong>Recipročna vrednost razlomka:</strong> \(\dfrac{1}{\frac{a}{b}} = \dfrac{b}{a}\)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid / Interactive Canvas -->
+  <div class="card canvas-card">
+    <h2>Vizuelni prikaz</h2>
+    <canvas id="diagramCanvas" width="700" height="360"></canvas>
+    <p class="canvas-hint">Koristite dugme ispod za prikaz po koracima</p>
+    <div style="text-align:center; margin-top:12px;">
+      <button id="toggleBtn" style="background:linear-gradient(135deg,#60a5fa,#a78bfa); color:#fff; border:none; padding:10px 24px; border-radius:8px; cursor:pointer; font-size:1rem; font-weight:600;">Sledeći korak</button>
+    </div>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2>Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Uvođenje smene</h3>
+        <p>Označimo \(t = \sqrt[4]{2} = 2^{1/4}\). Ovo nam omogućava da sve članove imenioca zapišemo kao stepene istog broja.</p>
+        <div class="math-block">
+          \[\begin{align}
+          \sqrt[4]{2} &= t \\
+          \sqrt[4]{4} &= \sqrt[4]{2^2} = t^2 \\
+          \sqrt[4]{8} &= \sqrt[4]{2^3} = t^3 \\
+          2 &= 2^1 = t^4
+          \end{align}\]
+        </div>
+        <p class="note">Ključno zapažanje: \(\sqrt[4]{2^k} = \left(2^{1/4}\right)^k = t^k\).</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Zapisivanje imenioca pomoću \(t\)</h3>
+        <p>Imenilac postaje zbir četiri uzastopna stepena broja \(t\):</p>
+        <div class="math-block">
+          \[t + t^2 + t^3 + t^4\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko iznosi \(t^4\) ako je \(t = \sqrt[4]{2}\)?</summary>
+      <p style="color:#4ade80; margin-top:8px;">Odgovor: \(t^4 = \left(\sqrt[4]{2}\right)^4 = 2\).</p>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Primena formule za zbir geometrijskog niza</h3>
+        <p>Izraz \(t + t^2 + t^3 + t^4\) je geometrijski niz sa prvim članom \(a_1 = t\), količnikom \(q = t\) i \(n = 4\) člana. Primenjujemo formulu za zbir:</p>
+        <div class="math-block">
+          \[t + t^2 + t^3 + t^4 = t \cdot \frac{t^4 - 1}{t - 1}\]
+        </div>
+        <p>Pošto je \(t^4 = 2\), to je \(t^4 - 1 = 1\), pa dobijamo:</p>
+        <div class="math-block">
+          \[t \cdot \frac{1}{t - 1} = \frac{t}{t - 1}\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Izračunavanje vrednosti celog izraza</h3>
+        <p>Sada uvrštavamo u polazni izraz:</p>
+        <div class="math-block">
+          \[\frac{1}{\sqrt[4]{2}+\sqrt[4]{4}+\sqrt[4]{8}+2} = \frac{1}{\dfrac{t}{t-1}}\]
+        </div>
+        <p>Recipročna vrednost razlomka:</p>
+        <div class="math-block">
+          \[\frac{1}{\dfrac{t}{t-1}} = \frac{t-1}{t}\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri sebe: Koliko je \(\frac{t-1}{t}\) u razvijenom obliku?</summary>
+      <p style="color:#4ade80; margin-top:8px;">Odgovor: \(\dfrac{t-1}{t} = \dfrac{t}{t} - \dfrac{1}{t} = 1 - \dfrac{1}{t}\).</p>
+    </details>
+
+    <div class="step-container" id="step5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Završno pojednostavljivanje</h3>
+        <p>Razlomak \(\frac{t-1}{t}\) raspisujemo:</p>
+        <div class="math-block">
+          \[\frac{t-1}{t} = 1 - \frac{1}{t} = 1 - \frac{1}{\sqrt[4]{2}}\]
+        </div>
+        <p>Vraćamo smenu \(t = \sqrt[4]{2}\) i dobijamo konačan rezultat.</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Numerička provera: Koliko iznosi izraz približno?</summary>
+      <p style="color:#4ade80; margin-top:8px;">\(t \approx 1{,}189\). Imenilac \(\approx 1{,}189 + 1{,}414 + 1{,}682 + 2 = 6{,}285\). Izraz \(\approx 1/6{,}285 \approx 0{,}159\). Takođe, \(1 - 1/1{,}189 \approx 1 - 0{,}841 = 0{,}159\). Poklapa se!</p>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="card insight-card">
+    <h2>Ključni uvid</h2>
+    <p>Svi članovi imenioca su uzastopni stepeni broja \(\sqrt[4]{2}\), pa je imenilac geometrijski niz čiji se zbir elegantno sažima:</p>
+    <div class="insight-formula">
+      \[t + t^2 + t^3 + t^4 = \frac{t(t^4-1)}{t-1} = \frac{t}{t-1}\]
+    </div>
+    <p style="color:#a78bfa;">jer je \(t^4 = 2\), pa \(t^4 - 1 = 1\).</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="answer-value">
+      \[\frac{1}{\sqrt[4]{2}+\sqrt[4]{4}+\sqrt[4]{8}+2} = 1 - \frac{1}{\sqrt[4]{2}}\]
+    </div>
+    <div class="answer-options">
+      <span class="opt">(A) \(\sqrt[4]{2}\)</span>
+      <span class="opt">(B) \(\sqrt[4]{2}-1\)</span>
+      <span class="opt">(C) \(1-\sqrt[4]{2}\)</span>
+      <span class="opt">(D) \(\dfrac{1}{\sqrt[4]{2}}-1\)</span>
+      <span class="opt correct">(E) \(1-\dfrac{1}{\sqrt[4]{2}}\)</span>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Numerički, \(\sqrt[4]{2} \approx 1{,}189\), pa je imenilac \(\approx 6{,}285\), a \(1/6{,}285 \approx 0{,}159\). Sa druge strane, \(1 - 1/\sqrt[4]{2} \approx 1 - 0{,}841 = 0{,}159\). Vrednosti se poklapaju. Takođe, rezultat je pozitivan (jer je \(\sqrt[4]{2} > 1\), pa je \(1/\sqrt[4]{2} < 1\)), što odgovara činjenici da je polazni izraz pozitivan.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2>Najčešće greške</h2>
+    <ul class="pitfall-list">
+      <li>Mešanje odgovora (D) i (E): opcija (D) je \(\frac{1}{\sqrt[4]{2}} - 1\), koja je negativna (jer je \(1/\sqrt[4]{2} < 1\)), dok je (E) pozitivna. Pošto je polazni izraz očigledno pozitivan, (D) ne može biti tačno.</li>
+      <li>Pokušaj racionalizacije bez smene — direktno množenje brojioca i imenioca konjugovanim izrazom vodi u komplikovane račune. Smena \(t = \sqrt[4]{2}\) znatno pojednostavljuje problem.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2>Dodatni izazov</h2>
+    <p>Pojednostavite izraz:</p>
+    <div class="math-block">
+      \[\frac{1}{\sqrt[3]{2}+\sqrt[3]{4}+2}\]
+    </div>
+    <details>
+      <summary>Prikaži nagoveštaj</summary>
+      <p style="color:#f472b6; margin-top:8px;">Uvedite smenu \(u = \sqrt[3]{2}\). Tada je imenilac \(u + u^2 + u^3\), što je geometrijski niz sa tri člana. Primenite istu formulu: \(u \cdot \frac{u^3 - 1}{u - 1} = \frac{u}{u - 1}\), jer \(u^3 = 2\), pa \(u^3 - 1 = 1\).</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagramCanvas');
+  const ctx = canvas.getContext('2d');
+  let currentStep = 0;
+  const maxSteps = 4;
+
+  function clear() {
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function drawTitle(text) {
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#60a5fa';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, canvas.width / 2, 30);
+  }
+
+  function drawBox(x, y, w, h, borderColor, bgColor) {
+    ctx.fillStyle = bgColor;
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 8);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function drawArrow(fromX, fromY, toX, toY, color) {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.stroke();
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - 10 * Math.cos(angle - 0.3), toY - 10 * Math.sin(angle - 0.3));
+    ctx.lineTo(toX - 10 * Math.cos(angle + 0.3), toY - 10 * Math.sin(angle + 0.3));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawStep0() {
+    clear();
+    drawTitle('Polazni izraz');
+
+    drawBox(150, 60, 400, 60, '#334155', '#1e293b');
+    ctx.font = '18px Courier New, monospace';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'center';
+    ctx.fillText('1 / (\u2074\u221a2 + \u2074\u221a4 + \u2074\u221a8 + 2)', canvas.width / 2, 97);
+
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Kliknite "Slede\u0107i korak" za smenu t = \u2074\u221a2', canvas.width / 2, 160);
+  }
+
+  function drawStep1() {
+    clear();
+    drawTitle('Korak 1: Smena t = \u2074\u221a2');
+
+    const items = [
+      { orig: '\u2074\u221a2', repl: 't', power: 't\u00B9' },
+      { orig: '\u2074\u221a4', repl: 't\u00B2', power: 't\u00B2' },
+      { orig: '\u2074\u221a8', repl: 't\u00B3', power: 't\u00B3' },
+      { orig: '2', repl: 't\u2074', power: 't\u2074' }
+    ];
+
+    const startX = 60;
+    const gap = 160;
+    items.forEach((item, i) => {
+      const x = startX + i * gap;
+      drawBox(x, 60, 140, 50, '#334155', '#1e293b');
+      ctx.font = '16px Courier New, monospace';
+      ctx.fillStyle = '#60a5fa';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.orig, x + 70, 90);
+
+      drawArrow(x + 70, 115, x + 70, 150, '#a78bfa');
+
+      drawBox(x, 155, 140, 50, '#a78bfa', 'rgba(167,139,250,0.1)');
+      ctx.fillStyle = '#a78bfa';
+      ctx.fillText(item.repl, x + 70, 185);
+    });
+
+    drawBox(150, 240, 400, 50, '#4ade80', 'rgba(74,222,128,0.08)');
+    ctx.font = '16px Courier New, monospace';
+    ctx.fillStyle = '#4ade80';
+    ctx.textAlign = 'center';
+    ctx.fillText('Imenilac = t + t\u00B2 + t\u00B3 + t\u2074', canvas.width / 2, 270);
+  }
+
+  function drawStep2() {
+    clear();
+    drawTitle('Korak 2: Geometrijski niz');
+
+    drawBox(100, 55, 500, 50, '#334155', '#1e293b');
+    ctx.font = '16px Courier New, monospace';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'center';
+    ctx.fillText('t + t\u00B2 + t\u00B3 + t\u2074 = t \u00B7 (t\u2074 - 1)/(t - 1)', canvas.width / 2, 85);
+
+    drawArrow(canvas.width / 2, 110, canvas.width / 2, 140, '#a78bfa');
+
+    drawBox(200, 145, 300, 45, '#f472b6', 'rgba(244,114,182,0.08)');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('t\u2074 = 2, dakle t\u2074 - 1 = 1', canvas.width / 2, 173);
+
+    drawArrow(canvas.width / 2, 195, canvas.width / 2, 225, '#a78bfa');
+
+    drawBox(200, 230, 300, 50, '#4ade80', 'rgba(74,222,128,0.08)');
+    ctx.font = '18px Courier New, monospace';
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('= t / (t - 1)', canvas.width / 2, 260);
+  }
+
+  function drawStep3() {
+    clear();
+    drawTitle('Korak 3: Kona\u010Dan rezultat');
+
+    drawBox(100, 55, 500, 50, '#334155', '#1e293b');
+    ctx.font = '16px Courier New, monospace';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'center';
+    ctx.fillText('1 / (t/(t-1)) = (t-1)/t', canvas.width / 2, 85);
+
+    drawArrow(canvas.width / 2, 110, canvas.width / 2, 145, '#a78bfa');
+
+    drawBox(175, 150, 350, 50, '#334155', '#1e293b');
+    ctx.font = '16px Courier New, monospace';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('(t - 1)/t = 1 - 1/t', canvas.width / 2, 180);
+
+    drawArrow(canvas.width / 2, 205, canvas.width / 2, 240, '#4ade80');
+
+    drawBox(125, 245, 450, 60, '#4ade80', 'rgba(74,222,128,0.12)');
+    ctx.font = 'bold 20px Courier New, monospace';
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('= 1 - 1/\u2074\u221a2', canvas.width / 2, 275);
+
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('Odgovor: (E)', canvas.width / 2, 340);
+  }
+
+  const drawFuncs = [drawStep0, drawStep1, drawStep2, drawStep3];
+
+  function render() {
+    drawFuncs[currentStep]();
+  }
+
+  const btn = document.getElementById('toggleBtn');
+  btn.addEventListener('click', function() {
+    currentStep = (currentStep + 1) % drawFuncs.length;
+    render();
+    if (currentStep === 0) {
+      btn.textContent = 'Slede\u0107i korak';
+    } else if (currentStep === drawFuncs.length - 1) {
+      btn.textContent = 'Po\u010Deti ponovo';
+    } else {
+      btn.textContent = 'Slede\u0107i korak';
+    }
+  });
+
+  render();
+
+  // Step click interactivity
+  document.querySelectorAll('.step-container').forEach(function(el) {
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(function(s) { s.classList.remove('active'); });
+      el.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Pojednostavljivanje izraza sa četvrtim korenima",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["četvrti koren", "geometrijski niz", "algebarski izrazi", "racionalizacija", "smena"]
+}
+BRAINSPARK_META-->

@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maksimum racionalne funkcije na uniji segmenata</title>
+
+<script type="text/info" id="logic-scratchpad">
+PROBLEM: Maksimum funkcije f(x) = 1/(x^2 - 2x - 8) na skupu [-1,2] ∪ [6,8].
+
+STEP 1: Define g(x) = x^2 - 2x - 8. Then f(x) = 1/g(x).
+Factor: g(x) = (x-4)(x+2). Zeros at x=4 and x=-2.
+Complete the square: g(x) = (x-1)^2 - 9. Vertex at (1, -9).
+
+STEP 2: Analyze g(x) on [-1, 2]:
+g(-1) = (-1)^2 - 2(-1) - 8 = 1 + 2 - 8 = -5
+g(1) = 1 - 2 - 8 = -9 (vertex, minimum of g)
+g(2) = 4 - 4 - 8 = -8
+So on [-1,2], g(x) ranges from -9 (at x=1) to -5 (at x=-1).
+All values of g are negative on [-1,2].
+Therefore f(x) = 1/g(x) is negative on [-1,2].
+f(-1) = 1/(-5) = -1/5
+f(1) = 1/(-9) = -1/9
+f(2) = 1/(-8) = -1/8
+
+On [-1,2], g is always negative, and since f = 1/g, f is also always negative.
+The maximum of f on [-1,2] is the value closest to zero, which occurs where |g| is largest.
+Since g has minimum at g(1) = -9 (most negative), f(1) = -1/9 is closest to 0.
+So max of f on [-1,2] is -1/9.
+
+STEP 3: Analyze g(x) on [6, 8]:
+g(6) = 36 - 12 - 8 = 16
+g(7) = 49 - 14 - 8 = 27
+g(8) = 64 - 16 - 8 = 40
+g is increasing on [6,8] (since vertex is at x=1, and 6 > 1, g is increasing).
+So g ranges from 16 to 40 on [6,8]. All positive.
+f(6) = 1/16
+f(7) = 1/27
+f(8) = 1/40
+
+Since g is increasing on [6,8], f = 1/g is decreasing.
+Maximum of f on [6,8] is f(6) = 1/16.
+
+STEP 4: Compare candidates:
+On [-1,2]: max is f(1) = -1/9 ≈ -0.111
+On [6,8]: max is f(6) = 1/16 = 0.0625
+
+Since 1/16 > -1/9 (positive > negative), the overall maximum is 1/16.
+
+ANSWER: (B) 1/16
+
+Verification: f(6) = 1/(36-12-8) = 1/16. Correct.
+No zeros of g(x) in [-1,2] ∪ [6,8] (zeros are at x=-2 and x=4), so f is continuous on both intervals.
+</script>
+
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 1rem;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.05rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  font-size: 1.3rem;
+}
+
+.problem-statement {
+  background: #1e293b;
+  border: 2px solid #a78bfa;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.problem-statement .card-title {
+  color: #a78bfa;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.given-item {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.given-item .label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.2rem;
+}
+
+.given-item .value {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.plan-list {
+  list-style: none;
+  counter-reset: plan;
+}
+
+.plan-list li {
+  counter-increment: plan;
+  padding: 0.4rem 0 0.4rem 2.2rem;
+  position: relative;
+}
+
+.plan-list li::before {
+  content: counter(plan);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+details {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  margin-bottom: 1.5rem;
+}
+
+details summary {
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+details summary::-webkit-details-marker { display: none; }
+
+details summary::before {
+  content: '\25B6';
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+details .detail-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.step {
+  border-left: 3px solid #334155;
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.step:hover, .step.active {
+  border-left-color: #4ade80;
+}
+
+.step::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+}
+
+.checkpoint {
+  background: rgba(163, 130, 250, 0.1);
+  border: 1px solid #a78bfa;
+  border-radius: 10px;
+  margin: 15px 0;
+  font-size: 0.95rem;
+  color: #a78bfa;
+}
+
+.checkpoint summary {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 700;
+  color: #a78bfa;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.checkpoint summary::-webkit-details-marker { display: none; }
+
+.checkpoint .checkpoint-answer {
+  padding: 0 1rem 0.75rem;
+  color: #e2e8f0;
+}
+
+.canvas-wrap {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+canvas {
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.final-answer {
+  background: rgba(74, 222, 128, 0.08);
+  border: 2px solid #4ade80;
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-answer .label {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.final-answer .value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.answer-options .opt {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0.4rem 0.85rem;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.answer-options .opt.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(167,139,250,0.1));
+  border: 1px solid #60a5fa;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-box .card-title {
+  color: #60a5fa;
+}
+
+.pitfall {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid #f472b6;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pitfall strong {
+  color: #f472b6;
+}
+
+.challenge-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px dashed #34d399;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-box .card-title {
+  color: #34d399;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.highlight {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+mjx-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 700px) {
+  body { padding: 0.5rem; }
+  .card, .problem-statement, details .detail-content, .final-answer,
+  .insight-box, .challenge-box { padding: 1rem; }
+  .given-grid { grid-template-columns: repeat(3, 1fr); }
+  .answer-options { gap: 0.3rem; }
+  .answer-options .opt { padding: 0.3rem 0.6rem; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TITLE -->
+  <h1>Maksimum racionalne funkcije na uniji segmenata</h1>
+  <p class="subtitle">Analiza funkcije oblika \(\frac{1}{g(x)}\) gde je \(g\) kvadratna funkcija</p>
+
+  <!-- PROBLEM STATEMENT -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">&#128220;</span> Zadatak</div>
+    <p>Maksimum funkcije \(f(x) = \dfrac{1}{x^2 - 2x - 8}\) na skupu \([-1,\, 2] \cup [6,\, 8]\) je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{1}{40}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{1}{16}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(-\dfrac{1}{5}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(-\dfrac{1}{8}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-\dfrac{1}{9}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128204;</span> Plan rešavanja</div>
+    <ol class="plan-list">
+      <li>Analizirati imenilac \(g(x) = x^2 - 2x - 8\) (nule, teme parabole)</li>
+      <li>Odrediti znak i ponašanje \(g(x)\) na svakom od segmenata \([-1,2]\) i \([6,8]\)</li>
+      <li>Na osnovu monotonosti \(g(x)\) odrediti ekstremne vrednosti \(f(x) = \frac{1}{g(x)}\) i izabrati maksimum</li>
+    </ol>
+  </div>
+
+  <!-- THEORY REFRESHER -->
+  <details>
+    <summary>Ključne formule i teoreme</summary>
+    <div class="detail-content">
+      <p><strong>Dopunjavanje do potpunog kvadrata:</strong></p>
+      \[ax^2 + bx + c = a\!\left(x + \frac{b}{2a}\right)^2 - \frac{b^2 - 4ac}{4a}\]
+      <p style="margin-top:0.75rem"><strong>Rastavljanje na činioce:</strong></p>
+      \[x^2 - 2x - 8 = (x - 4)(x + 2)\]
+      <p style="margin-top:0.75rem"><strong>Veza \(f = 1/g\) i monotonost:</strong> Ako je \(g\) rastuća i pozitivna, onda je \(f = 1/g\) opadajuća. Ako je \(g\) negativna, onda je \(f\) negativna, a maksimum od \(f\) se postiže tamo gde je \(|g|\) najveće (tj. \(g\) najnegativnije).</p>
+      <p style="margin-top:0.75rem"><strong>Neprekidnost:</strong> Funkcija \(f(x) = 1/g(x)\) je neprekidna na svakom intervalu gde \(g(x) \neq 0\).</p>
+    </div>
+  </details>
+
+  <!-- VISUAL AID -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Grafički prikaz</div>
+    <p class="muted" style="margin-bottom:0.75rem;">Graf funkcije \(f(x) = \frac{1}{x^2 - 2x - 8}\) na domenskim segmentima. Pomerajte miša preko grafa da vidite vrednosti.</p>
+    <div class="canvas-wrap">
+      <canvas id="graph" width="700" height="420"></canvas>
+      <p class="drag-hint">Pomerite miša preko grafa da vidite vrednosti \(f(x)\)</p>
+    </div>
+  </div>
+
+  <!-- STEP-BY-STEP SOLUTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9999;&#65039;</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-title">Korak 1: Analiza imenioca</div>
+      <p>Označimo imenilac sa \(g(x)\):</p>
+      <div class="math-block">
+        \[g(x) = x^2 - 2x - 8\]
+      </div>
+      <p>Rastavimo na činioce. Tražimo dva broja čiji je proizvod \(-8\), a zbir \(-2\). To su \(-4\) i \(2\):</p>
+      <div class="math-block">
+        \[g(x) = (x - 4)(x + 2)\]
+      </div>
+      <p>Nule imenioca su \(x = 4\) i \(x = -2\). Obe nule su <strong>van</strong> datog skupa \([-1,2] \cup [6,8]\), pa je \(f(x)\) dobro definisana i neprekidna na celom skupu.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-title">Korak 2: Dopunjavanje do potpunog kvadrata</div>
+      <p>Da bismo bolje razumeli ponašanje \(g(x)\), dopunjujemo do potpunog kvadrata:</p>
+      <div class="math-block">
+        \[g(x) = x^2 - 2x - 8 = (x - 1)^2 - 9\]
+      </div>
+      <p>Teme parabole je u tački \((1,\, -9)\). Parabola je otvorena nagore, pa \(g\) opada za \(x < 1\) i raste za \(x > 1\).</p>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Kolika je vrednost \(g(1)\)?</summary>
+      <div class="checkpoint-answer">
+        <p>\(g(1) = (1-1)^2 - 9 = 0 - 9 = -9\). To je minimalna vrednost \(g\) na celom \(\mathbb{R}\).</p>
+      </div>
+    </details>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-title">Korak 3: Vrednosti \(g(x)\) na segmentu \([-1,\, 2]\)</div>
+      <p>Teme parabole (\(x = 1\)) je unutar segmenta \([-1, 2]\). Izračunajmo granične i ekstremne vrednosti:</p>
+      <div class="math-block">
+        \[\begin{align}
+        g(-1) &= (-1-1)^2 - 9 = 4 - 9 = -5 \\
+        g(1) &= (1-1)^2 - 9 = -9 \quad \text{(minimum)} \\
+        g(2) &= (2-1)^2 - 9 = 1 - 9 = -8
+        \end{align}\]
+      </div>
+      <p>Na segmentu \([-1, 2]\) važi \(-9 \le g(x) \le -5\). Svi su vrednosti <strong>negativni</strong>, pa je i \(f(x) = 1/g(x)\) negativna na celom segmentu.</p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-title">Korak 4: Vrednosti \(f(x)\) na segmentu \([-1,\, 2]\)</div>
+      <p>Pošto je \(g(x)\) negativno, \(f(x)\) je negativno. Najveća vrednost \(f\) na \([-1,2]\) se postiže tamo gde je \(|g(x)|\) najveće, tj. gde je \(g\) najnegativnije:</p>
+      <div class="math-block">
+        \[\begin{align}
+        f(-1) &= \frac{1}{-5} = -\frac{1}{5} = -0{,}2 \\[6pt]
+        f(1) &= \frac{1}{-9} = -\frac{1}{9} \approx -0{,}111 \\[6pt]
+        f(2) &= \frac{1}{-8} = -\frac{1}{8} = -0{,}125
+        \end{align}\]
+      </div>
+      <p>Poredimo: \(-\frac{1}{9} > -\frac{1}{8} > -\frac{1}{5}\), pa je maksimum na \([-1,2]\):</p>
+      <div class="math-block">
+        \[f(1) = -\frac{1}{9}\]
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Zašto je \(-\frac{1}{9}\) veće od \(-\frac{1}{5}\)?</summary>
+      <div class="checkpoint-answer">
+        <p>Na brojevnoj pravi, \(-\frac{1}{9} \approx -0{,}111\) je bliže nuli od \(-\frac{1}{5} = -0{,}2\). Kod negativnih brojeva, onaj koji je bliži nuli je veći. Dakle \(-\frac{1}{9} > -\frac{1}{5}\).</p>
+      </div>
+    </details>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-title">Korak 5: Vrednosti \(g(x)\) na segmentu \([6,\, 8]\)</div>
+      <p>Na segmentu \([6, 8]\) smo desno od temena (\(x = 1\)), pa \(g\) raste:</p>
+      <div class="math-block">
+        \[\begin{align}
+        g(6) &= (6-1)^2 - 9 = 25 - 9 = 16 \\
+        g(8) &= (8-1)^2 - 9 = 49 - 9 = 40
+        \end{align}\]
+      </div>
+      <p>Na segmentu \([6, 8]\) važi \(16 \le g(x) \le 40\). Sve vrednosti su <strong>pozitivne</strong>, pa je i \(f(x)\) pozitivna.</p>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-title">Korak 6: Vrednosti \(f(x)\) na segmentu \([6,\, 8]\)</div>
+      <p>Pošto \(g\) raste na \([6, 8]\), a \(f = 1/g\), to \(f\) opada. Maksimum se postiže u levom kraju:</p>
+      <div class="math-block">
+        \[\begin{align}
+        f(6) &= \frac{1}{16} = 0{,}0625 \\[6pt]
+        f(8) &= \frac{1}{40} = 0{,}025
+        \end{align}\]
+      </div>
+      <p>Maksimum na \([6,8]\) je:</p>
+      <div class="math-block">
+        \[f(6) = \frac{1}{16}\]
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="step">
+      <div class="step-title">Korak 7: Poređenje i konačan zaključak</div>
+      <p>Uporedimo kandidate za maksimum sa oba segmenta:</p>
+      <div class="math-block">
+        \[\underbrace{f(1) = -\frac{1}{9}}_{\text{maksimum na } [-1,2]} \quad \text{i} \quad \underbrace{f(6) = \frac{1}{16}}_{\text{maksimum na } [6,8]}\]
+      </div>
+      <p>Pošto je \(\frac{1}{16} > 0 > -\frac{1}{9}\), ukupni maksimum je:</p>
+      <div class="math-block">
+        \[\boxed{f(6) = \frac{1}{16}}\]
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>Proveri se: Brza verifikacija vrednosti \(f(6)\)</summary>
+      <div class="checkpoint-answer">
+        <p>\(f(6) = \frac{1}{6^2 - 2 \cdot 6 - 8} = \frac{1}{36 - 12 - 8} = \frac{1}{16}\). Tačno!</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">&#128161;</span> Ključni uvid</div>
+    <p>Funkcija \(f(x) = \frac{1}{g(x)}\) je negativna tamo gde je \(g\) negativno, i pozitivna tamo gde je \(g\) pozitivno. Zato je od dva segmenta, onaj na kome je \(g > 0\) (segment \([6,8]\)) odmah jači kandidat za maksimum. Na pozitivnom delu, \(f\) je maksimalna tamo gde je \(g\) minimalno &mdash; a to je levi kraj segmenta \([6,8]\), tj. tačka \(x = 6\).</p>
+  </div>
+
+  <!-- FINAL ANSWER -->
+  <div class="final-answer">
+    <div class="label">Konačan odgovor</div>
+    <div class="value">\(\displaystyle f(6) = \frac{1}{16}\)</div>
+    <div class="answer-options">
+      <span class="opt">(A) \(\frac{1}{40}\)</span>
+      <span class="opt correct">(B) \(\frac{1}{16}\)</span>
+      <span class="opt">(C) \(-\frac{1}{5}\)</span>
+      <span class="opt">(D) \(-\frac{1}{8}\)</span>
+      <span class="opt">(E) \(-\frac{1}{9}\)</span>
+    </div>
+    <p class="verification">Verifikacija: \(g(6) = 36 - 12 - 8 = 16\), pa \(f(6) = 1/16\). Nule imenioca (\(x = -2\) i \(x = 4\)) su van skupa, pa nema diskontinuiteta. Na \([-1,2]\) funkcija je negativna, dok je na \([6,8]\) pozitivna &mdash; pozitivna vrednost je nužno veća.</p>
+  </div>
+
+  <!-- COMMON PITFALLS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9888;&#65039;</span> Česte greške</div>
+    <div class="pitfall">
+      <strong>Pogrešan segment:</strong> Neki učenici traže maksimum samo na \([-1,2]\) i dobiju \(-\frac{1}{9}\) (odgovor E), zaboravljajući da provere segment \([6,8]\) gde je funkcija pozitivna i samim tim veća.
+    </div>
+    <div class="pitfall">
+      <strong>Mešanje maksimuma \(g\) i maksimuma \(f\):</strong> Maksimum \(g\) na \([6,8]\) je u tački \(x = 8\) gde \(g(8) = 40\), ali maksimum \(f = 1/g\) je u tački \(x = 6\) gde je \(g\) najmanje (a samim tim \(1/g\) najveće). Ne zaboravi da preokret monotonosti!
+    </div>
+  </div>
+
+  <!-- OPTIONAL CHALLENGE -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">&#127942;</span> Dodatni izazov</div>
+    <p>Za koju vrednost parametra \(a > 0\) funkcija \(f(x) = \frac{1}{x^2 - 2x - 8}\) dostiže maksimum \(\frac{1}{7}\) na segmentu \([a,\, a+2]\)?</p>
+    <details>
+      <summary style="color:#34d399;font-size:0.95rem;">Savet</summary>
+      <div class="detail-content">
+        <p>Potrebno je da \(g(a) = 7\), jer je \(g\) rastuća za \(a > 1\) i minimum se postiže u levom kraju. Rešite \(a^2 - 2a - 8 = 7\), tj. \(a^2 - 2a - 15 = 0\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('graph');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const padL = 65, padR = 25, padT = 25, padB = 45;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  const xMin = -3, xMax = 10;
+  const yMin = -0.35, yMax = 0.15;
+
+  function toCanvasX(x) { return padL + ((x - xMin) / (xMax - xMin)) * plotW; }
+  function toCanvasY(y) { return padT + ((yMax - y) / (yMax - yMin)) * plotH; }
+  function fromCanvasX(cx) { return xMin + ((cx - padL) / plotW) * (xMax - xMin); }
+
+  function g(x) { return x * x - 2 * x - 8; }
+  function f(x) {
+    var denom = g(x);
+    if (Math.abs(denom) < 0.001) return NaN;
+    return 1 / denom;
+  }
+
+  let hoverX = null;
+
+  function draw() {
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let gx = Math.ceil(xMin); gx <= xMax; gx++) {
+      let cx = toCanvasX(gx);
+      ctx.beginPath(); ctx.moveTo(cx, padT); ctx.lineTo(cx, H - padB); ctx.stroke();
+    }
+    for (let gy = -0.3; gy <= 0.15; gy += 0.05) {
+      let cy = toCanvasY(gy);
+      ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(W - padR, cy); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB);
+    ctx.stroke();
+
+    // y=0 line
+    let y0 = toCanvasY(0);
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, y0); ctx.lineTo(W - padR, y0); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let gx = Math.ceil(xMin); gx <= xMax; gx++) {
+      ctx.fillText(gx.toString(), toCanvasX(gx), H - padB + 18);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = -0.3; gy <= 0.15; gy += 0.1) {
+      let label = gy.toFixed(1).replace('.', ',');
+      ctx.fillText(label, padL - 8, toCanvasY(gy) + 4);
+    }
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x', W / 2, H - 4);
+
+    ctx.save();
+    ctx.translate(14, H / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('f(x)', 0, 0);
+    ctx.restore();
+
+    // Shade active intervals
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.07)';
+    let x1L = toCanvasX(-1), x1R = toCanvasX(2);
+    ctx.fillRect(x1L, padT, x1R - x1L, plotH);
+    let x2L = toCanvasX(6), x2R = toCanvasX(8);
+    ctx.fillRect(x2L, padT, x2R - x2L, plotH);
+
+    // Labels for intervals
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('[-1, 2]', (x1L + x1R) / 2, H - padB + 35);
+    ctx.fillText('[6, 8]', (x2L + x2R) / 2, H - padB + 35);
+
+    // Asymptotes at x = -2 and x = 4
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    let ax1 = toCanvasX(-2);
+    ctx.beginPath(); ctx.moveTo(ax1, padT); ctx.lineTo(ax1, H - padB); ctx.stroke();
+    let ax2 = toCanvasX(4);
+    ctx.beginPath(); ctx.moveTo(ax2, padT); ctx.lineTo(ax2, H - padB); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x = -2', ax1, padT - 6);
+    ctx.fillText('x = 4', ax2, padT - 6);
+
+    // Plot f(x) on the two intervals
+    function plotInterval(a, b, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      let started = false;
+      let step = (b - a) / 500;
+      for (let x = a; x <= b; x += step) {
+        let y = f(x);
+        if (isNaN(y) || !isFinite(y) || y < yMin - 0.5 || y > yMax + 0.5) {
+          started = false;
+          continue;
+        }
+        let cx = toCanvasX(x);
+        let cy = toCanvasY(y);
+        cy = Math.max(padT - 5, Math.min(H - padB + 5, cy));
+        if (!started) { ctx.moveTo(cx, cy); started = true; }
+        else { ctx.lineTo(cx, cy); }
+      }
+      ctx.stroke();
+    }
+
+    // Plot on wider range (dimmed) for context
+    ctx.globalAlpha = 0.25;
+    plotInterval(-1.95, -1, '#60a5fa');
+    plotInterval(2, 3.8, '#60a5fa');
+    plotInterval(4.2, 6, '#60a5fa');
+    plotInterval(8, 10, '#60a5fa');
+    ctx.globalAlpha = 1.0;
+
+    // Plot on active intervals (bright)
+    plotInterval(-1, 2, '#60a5fa');
+    plotInterval(6, 8, '#4ade80');
+
+    // Mark key points
+    let keyPoints = [
+      { x: -1, label: 'f(-1) = -1/5', color: '#e2e8f0' },
+      { x: 1, label: 'f(1) = -1/9', color: '#a78bfa' },
+      { x: 2, label: 'f(2) = -1/8', color: '#e2e8f0' },
+      { x: 6, label: 'f(6) = 1/16', color: '#4ade80' },
+      { x: 8, label: 'f(8) = 1/40', color: '#e2e8f0' }
+    ];
+
+    keyPoints.forEach(function(pt) {
+      let y = f(pt.x);
+      let cx = toCanvasX(pt.x);
+      let cy = toCanvasY(y);
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = pt.color;
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = pt.color;
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      let labelY = cy - 12;
+      if (pt.x === 1) labelY = cy + 18;
+      if (pt.x === 2) labelY = cy + 18;
+      ctx.fillText(pt.label, cx, labelY);
+    });
+
+    // Highlight the maximum point
+    let maxCx = toCanvasX(6);
+    let maxCy = toCanvasY(f(6));
+    ctx.beginPath();
+    ctx.arc(maxCx, maxCy, 10, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('MAKSIMUM', maxCx + 14, maxCy + 4);
+
+    // Hover tooltip
+    if (hoverX !== null) {
+      let mx = fromCanvasX(hoverX);
+      let inRange = (mx >= -1 && mx <= 2) || (mx >= 6 && mx <= 8);
+      if (inRange) {
+        let my = f(mx);
+        if (!isNaN(my) && isFinite(my)) {
+          let cx = toCanvasX(mx);
+          let cy = toCanvasY(my);
+
+          // Crosshair
+          ctx.strokeStyle = 'rgba(226, 232, 240, 0.3)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath(); ctx.moveTo(cx, padT); ctx.lineTo(cx, H - padB); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(padL, cy); ctx.lineTo(W - padR, cy); ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+          ctx.fillStyle = '#e2e8f0';
+          ctx.fill();
+
+          let txt = 'x = ' + mx.toFixed(2).replace('.', ',') + '  f(x) = ' + my.toFixed(4).replace('.', ',');
+          ctx.fillStyle = '#e2e8f0';
+          ctx.font = '12px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          let tx = cx + 10;
+          let ty = cy - 10;
+          if (tx + 200 > W) { ctx.textAlign = 'right'; tx = cx - 10; }
+          if (ty < padT + 15) ty = cy + 20;
+
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+          let metrics = ctx.measureText(txt);
+          let bx = ctx.textAlign === 'left' ? tx - 4 : tx - metrics.width - 4;
+          ctx.fillRect(bx, ty - 12, metrics.width + 8, 18);
+          ctx.fillStyle = '#e2e8f0';
+          ctx.fillText(txt, tx, ty);
+        }
+      }
+    }
+  }
+
+  draw();
+
+  canvas.addEventListener('mousemove', function(e) {
+    let rect = canvas.getBoundingClientRect();
+    let scaleX = W / rect.width;
+    hoverX = (e.clientX - rect.left) * scaleX;
+    draw();
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    hoverX = null;
+    draw();
+  });
+
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    let rect = canvas.getBoundingClientRect();
+    let scaleX = W / rect.width;
+    let touch = e.touches[0];
+    hoverX = (touch.clientX - rect.left) * scaleX;
+    draw();
+  });
+
+  canvas.addEventListener('touchend', function() {
+    hoverX = null;
+    draw();
+  });
+
+  // Click on steps
+  document.querySelectorAll('.step').forEach(function(el) {
+    el.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      el.classList.toggle('active');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
+<!--BRAINSPARK_META
+{"title":"Maksimum racionalne funkcije na uniji segmenata","subject":"math","unit":"algebra","topic_tags":["racionalna funkcija","kvadratna funkcija","maksimum funkcije","analiza na segmentu"]}
+BRAINSPARK_META-->

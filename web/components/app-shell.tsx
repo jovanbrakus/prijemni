@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { ProblemViewer } from "./problem-viewer";
 import { cn } from "@/lib/utils";
-import type { FacultyEntry, Report, CategoryOption } from "@/lib/types";
+import type { FacultyEntry, Report, CategoryOption, LessonEntry } from "@/lib/types";
 
 interface ProblemLocation {
   facultySlug: string;
@@ -15,7 +15,7 @@ interface ProblemLocation {
   problem: import("@/lib/types").ProblemEntry;
 }
 
-function AppShellInner({ faculties: initialFaculties, categoryOptions }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[] }) {
+function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[]; lessons: LessonEntry[] }) {
   const [faculties, setFaculties] = useState(initialFaculties);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -23,6 +23,7 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
   const [reports, setReports] = useState<Report[]>([]);
 
   const selectedId = searchParams.get("id");
+  const selectedLessonId = searchParams.get("lesson");
 
   // Build flat lookup: id → { facultySlug, year, problem }
   const problemIndex = useMemo(() => {
@@ -77,7 +78,12 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
     fetchReports();
   }, [fetchReports]);
 
-  const solutionUrl = selectedEntry?.solutionUrl ?? null;
+  const selectedLesson = useMemo(
+    () => lessons.find((l) => l.id === selectedLessonId) ?? null,
+    [lessons, selectedLessonId]
+  );
+
+  const solutionUrl = selectedLesson?.url ?? selectedEntry?.solutionUrl ?? null;
   const selectedDocument = selectedEntry?.document ?? null;
 
   const handleCategoryChange = useCallback(
@@ -114,6 +120,14 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
   const handleSelectProblem = useCallback(
     (id: string) => {
       router.push(`/?id=${id}`, { scroll: false });
+      setMobileOpen(false);
+    },
+    [router]
+  );
+
+  const handleSelectLesson = useCallback(
+    (lessonId: string) => {
+      router.push(`/?lesson=${lessonId}`, { scroll: false });
       setMobileOpen(false);
     },
     [router]
@@ -169,7 +183,9 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
           <Sidebar
             faculties={faculties}
             reports={reports}
+            lessons={lessons}
             selectedProblemId={selectedId}
+            selectedLessonId={selectedLessonId}
             expandedFaculty={expandedFaculty}
             expandedYear={expandedYear}
             filterReported={filterReported}
@@ -177,6 +193,7 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
             onExpandFaculty={handleExpandFaculty}
             onExpandYear={setExpandedYear}
             onSelectProblem={handleSelectProblem}
+            onSelectLesson={handleSelectLesson}
           />
         </aside>
 
@@ -184,14 +201,14 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
         <main className="min-h-0 flex-1">
           <ProblemViewer
             solutionUrl={solutionUrl}
-            problemId={selectedEntry?.id ?? null}
-            document={selectedDocument}
-            order={selectedEntry?.order ?? null}
-            category={selectedEntry?.category ?? null}
-            categorySr={selectedEntry?.categorySr ?? null}
-            categoryGroupSr={selectedEntry?.categoryGroupSr ?? null}
+            problemId={selectedLesson ? null : (selectedEntry?.id ?? null)}
+            document={selectedLesson ? null : selectedDocument}
+            order={selectedLesson ? null : (selectedEntry?.order ?? null)}
+            category={selectedLesson ? null : (selectedEntry?.category ?? null)}
+            categorySr={selectedLesson ? null : (selectedEntry?.categorySr ?? null)}
+            categoryGroupSr={selectedLesson ? null : (selectedEntry?.categoryGroupSr ?? null)}
             categoryOptions={categoryOptions}
-            report={currentReport}
+            report={selectedLesson ? null : currentReport}
             onReportChange={fetchReports}
             onCategoryChange={handleCategoryChange}
           />
@@ -201,10 +218,10 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions }: { facul
   );
 }
 
-export function AppShell({ faculties, categoryOptions }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[] }) {
+export function AppShell({ faculties, categoryOptions, lessons }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[]; lessons: LessonEntry[] }) {
   return (
     <Suspense>
-      <AppShellInner faculties={faculties} categoryOptions={categoryOptions} />
+      <AppShellInner faculties={faculties} categoryOptions={categoryOptions} lessons={lessons} />
     </Suspense>
   );
 }

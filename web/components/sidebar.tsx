@@ -1,16 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { ChevronRight, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import type { FacultyEntry, Report } from "@/lib/types";
+import type { FacultyEntry, Report, LessonEntry } from "@/lib/types";
 
 interface SidebarProps {
   faculties: FacultyEntry[];
   reports: Report[];
+  lessons: LessonEntry[];
   selectedProblemId: string | null;
+  selectedLessonId: string | null;
   expandedFaculty: string | null;
   expandedYear: string | null;
   filterReported: boolean;
@@ -18,12 +21,15 @@ interface SidebarProps {
   onExpandFaculty: (slug: string | null) => void;
   onExpandYear: (year: string | null) => void;
   onSelectProblem: (id: string) => void;
+  onSelectLesson: (lessonId: string) => void;
 }
 
 export function Sidebar({
   faculties,
   reports,
+  lessons,
   selectedProblemId,
+  selectedLessonId,
   expandedFaculty,
   expandedYear,
   filterReported,
@@ -31,7 +37,9 @@ export function Sidebar({
   onExpandFaculty,
   onExpandYear,
   onSelectProblem,
+  onSelectLesson,
 }: SidebarProps) {
+  const [lessonsExpanded, setLessonsExpanded] = useState(!!selectedLessonId);
   // Build a set for O(1) report lookups
   const reportSet = new Set(reports.map((r) => r.problemId));
 
@@ -253,6 +261,58 @@ export function Sidebar({
             </div>
           );
         })}
+
+        {/* Lekcije section */}
+        {lessons.length > 0 && !filterReported && (
+          <>
+            <div className="my-2 border-t border-white/10" />
+
+            <div className="mb-1">
+              <button
+                onClick={() => setLessonsExpanded(!lessonsExpanded)}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                  "hover:bg-accent hover:text-accent-foreground",
+                  lessonsExpanded ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
+                <ChevronRight
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-transform",
+                    lessonsExpanded && "rotate-90"
+                  )}
+                />
+                <span className="truncate">Lekcije</span>
+                <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
+                  {lessons.length}
+                </Badge>
+              </button>
+
+              {lessonsExpanded && (
+                <div className="ml-3 mt-1">
+                  {lessons.map((lesson) => {
+                    const isActive = selectedLessonId === lesson.id;
+                    return (
+                      <button
+                        key={lesson.id}
+                        onClick={() => onSelectLesson(lesson.id)}
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-md px-3 py-1 text-left text-xs transition-colors",
+                          "hover:bg-accent hover:text-accent-foreground",
+                          isActive
+                            ? "border-l-2 border-primary bg-primary/10 text-foreground"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        <span className="truncate">{lesson.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </ScrollArea>
   );

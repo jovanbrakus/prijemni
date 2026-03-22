@@ -9,6 +9,7 @@ import type {
   YearEntry,
   ProblemEntry,
   CategoryOption,
+  LessonEntry,
 } from "./types";
 import { FACULTY_NAMES } from "./faculty-names";
 
@@ -138,5 +139,43 @@ export function loadData(): { faculties: FacultyEntry[]; categoryOptions: Catego
   faculties.sort((a, b) => a.displayName.localeCompare(b.displayName));
 
   const categoryOptions = loadCategoryOptions();
-  return { faculties, categoryOptions };
+  const lessons = loadLessons();
+  return { faculties, categoryOptions, lessons };
+}
+
+export function loadLessons(): LessonEntry[] {
+  const knowledgeDir = path.resolve(process.cwd(), "..", "knowledge");
+  if (!fs.existsSync(knowledgeDir)) return [];
+
+  const lessons: LessonEntry[] = [];
+  const dirs = fs.readdirSync(knowledgeDir, { withFileTypes: true });
+
+  for (const dir of dirs) {
+    if (!dir.isDirectory()) continue;
+    // e.g. lesson1_codex, lesson1.5_codex
+    const dirMatch = dir.name.match(/^lesson([\d.]+)_codex$/);
+    if (!dirMatch) continue;
+
+    const lessonNum = parseFloat(dirMatch[1]);
+    const files = fs.readdirSync(path.join(knowledgeDir, dir.name));
+    const htmlFile = files.find((f) => f.endsWith(".html"));
+    if (!htmlFile) continue;
+
+    // Extract title from filename: lesson1_iskazi_i_iskazne_formule.html
+    // Remove lessonN_ prefix and .html suffix, then format
+    const slug = htmlFile.replace(/\.html$/, "").replace(/^lesson[\d.]+_/, "");
+    const title = slug
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    lessons.push({
+      id: `lesson${dirMatch[1]}`,
+      number: lessonNum,
+      title: `${Math.floor(lessonNum)}. ${title}`,
+      url: `/api/lesson/${dir.name}/${htmlFile}`,
+    });
+  }
+
+  lessons.sort((a, b) => a.number - b.number);
+  return lessons;
 }

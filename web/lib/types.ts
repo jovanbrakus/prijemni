@@ -65,3 +65,14 @@ export interface FacultyEntry {
   displayName: string;
   years: YearEntry[];
 }
+
+export interface LessonEntry {
+  /** e.g. "lesson1" */
+  id: string;
+  /** Lesson number for sorting (supports 1.5 etc.) */
+  number: number;
+  /** Display title extracted from filename slug */
+  title: string;
+  /** URL to serve the HTML */
+  url: string;
+}

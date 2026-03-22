@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tročlani podskupovi skupa</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Given S = {t, e, x, n, i, k, a} (7 elements).
+  How many 3-element subsets of S exist?
+
+  This is a combinations problem (order does NOT matter, no repetition).
+
+  C(7, 3) = 7! / (3! * (7-3)!) = 7! / (3! * 4!)
+
+  Calculation:
+  7! = 5040
+  3! = 6
+  4! = 24
+
+  C(7, 3) = 5040 / (6 * 24) = 5040 / 144 = 35
+
+  Alternative calculation:
+  C(7, 3) = (7 * 6 * 5) / (3 * 2 * 1) = 210 / 6 = 35
+
+  Answer: (A) 35
+
+  Verification:
+  - C(7, 3) = C(7, 4) = 35 (symmetry property). Check: C(7,4) = (7*6*5*4)/(4*3*2*1) = 840/24 = 35. ✓
+  - 35 is a well-known value in Pascal's triangle (row 7, position 3).
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-text {
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.highlight-box {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: default;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  padding: 8px 0;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 10px 0;
+}
+
+details summary:hover {
+  color: #93c5fd;
+}
+
+.theory-content {
+  padding: 16px;
+  background: rgba(96, 165, 250, 0.05);
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.checkpoint {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  padding: 10px 0 4px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.insight-formula {
+  font-size: 1.4rem;
+  color: #4ade80;
+  font-family: 'Courier New', monospace;
+  padding: 12px;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.08));
+  border: 2px solid rgba(52, 211, 153, 0.4);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-card h2 {
+  color: #34d399;
+  margin-bottom: 16px;
+  font-size: 1.4rem;
+}
+
+.final-answer-value {
+  font-size: 2rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.opt {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1.05rem;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(51, 65, 85, 0.3);
+  border-radius: 8px;
+}
+
+.pitfall-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  color: #e09468;
+}
+
+.pitfall-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.challenge-text {
+  color: #a78bfa;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  border-radius: 12px;
+  touch-action: none;
+}
+
+.canvas-hint {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .container { padding: 10px; }
+  .given-grid { gap: 8px; }
+  .given-item { padding: 8px 14px; }
+  .answer-options { gap: 8px; }
+  .opt { padding: 8px 14px; font-size: 0.95rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Tročlani podskupovi skupa</h1>
+  <p class="subtitle">Kombinatorika - kombinacije bez ponavljanja</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title"><span class="icon">📋</span> Tekst zadatka</h2>
+    <div class="problem-text">
+      <p>Dat je skup \( S = \{t, e, x, n, i, k, a\} \). Koliko tročlanih podskupova skupa \( S \) postoji?</p>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(35\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(210\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(343\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(2187\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(5040\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">🧭</span> Plan rešavanja</h2>
+    <p class="plan-text">Podskup je neuređena kolekcija elemenata bez ponavljanja. Potrebno je primeniti formulu za kombinacije \( \binom{n}{k} \) da prebrojimo sve načine biranja 3 elementa od 7.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i pojmovi</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Kombinacije (bez ponavljanja):</strong> Broj načina da se iz \( n \) elemenata izabere \( k \) elemenata, pri čemu redosled nije bitan: \[ \binom{n}{k} = C_k^n = \frac{n!}{k! \cdot (n-k)!} \]</li>
+          <li><strong>Svojstvo simetrije:</strong> \( \binom{n}{k} = \binom{n}{n-k} \), npr. \( \binom{7}{3} = \binom{7}{4} \).</li>
+          <li><strong>Razlika podskup vs. reč:</strong> Podskup \( \{e, x, n\} \) je isto što i \( \{n, e, x\} \) (redosled nebitni), dok su reči "exn" i "nex" različite (redosled bitan).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">🎨</span> Vizuelni prikaz</h2>
+    <canvas id="diagram" width="800" height="440"></canvas>
+    <p class="canvas-hint">Primeri tročlanih podskupova skupa S = {t, e, x, n, i, k, a}</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">📝</span> Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Odredimo parametre</h3>
+        <p>Skup \( S \) ima 7 elemenata, a tražimo tročlane podskupove.</p>
+        <div class="math-block">
+          \[ n = 7, \quad k = 3 \]
+        </div>
+        <p>Podskup je neuređen i bez ponavljanja, pa koristimo kombinacije.</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Postavimo formulu</h3>
+        <p>Formula za kombinacije bez ponavljanja:</p>
+        <div class="math-block">
+          \[ \binom{7}{3} = \frac{7!}{3! \cdot (7-3)!} = \frac{7!}{3! \cdot 4!} \]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🤔 Proveri se: Koliko iznosi \( 7! \)?</summary>
+      <div class="answer">\( 7! = 7 \cdot 6 \cdot 5 \cdot 4 \cdot 3 \cdot 2 \cdot 1 = 5040 \)</div>
+    </details>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Skratimo izračunavanje</h3>
+        <p>Ne moramo računati cele faktorijele. Skratimo \( 4! \) u brojiocu i imeniocu:</p>
+        <div class="math-block">
+          \[ \binom{7}{3} = \frac{7!}{3! \cdot 4!} = \frac{7 \cdot 6 \cdot 5 \cdot \cancel{4!}}{3! \cdot \cancel{4!}} = \frac{7 \cdot 6 \cdot 5}{3!} \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izračunamo brojilac i imenilac</h3>
+        <p>Brojilac:</p>
+        <div class="math-block">
+          \[ 7 \cdot 6 \cdot 5 = 210 \]
+        </div>
+        <p>Imenilac:</p>
+        <div class="math-block">
+          \[ 3! = 3 \cdot 2 \cdot 1 = 6 \]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Podelimo i dobijemo rezultat</h3>
+        <div class="math-block">
+          \[ \binom{7}{3} = \frac{210}{6} = 35 \]
+        </div>
+        <p>Postoji <strong>35</strong> tročlanih podskupova skupa \( S \).</p>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🤔 Proveri se: Zašto delimo sa \( 3! = 6 \)?</summary>
+      <div class="answer">Delimo sa \( 3! \) jer svaki podskup od 3 elementa može biti zapisan na \( 3! = 6 \) različitih načina (permutacije), ali kao podskup to je ista kolekcija. Na primer, \( \{t, e, x\} \) se može poređati kao: tex, txe, etx, ext, xte, xet - ali sve to je jedan isti podskup.</div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>💡 Ključni uvid</h2>
+    <p style="color: #94a3b8; margin-bottom: 12px;">Kombinacije su varijacije podeljene brojem permutacija izabranih elemenata:</p>
+    <div class="insight-formula">
+      \[ \binom{n}{k} = \frac{V_k^n}{k!} \implies \frac{210}{6} = 35 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\( 35 \)</div>
+    <div class="answer-options">
+      <span class="opt correct">(A) \(35\)</span>
+      <span class="opt">(B) \(210\)</span>
+      <span class="opt">(C) \(343\)</span>
+      <span class="opt">(D) \(2187\)</span>
+      <span class="opt">(E) \(5040\)</span>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Proverimo svojstvo simetrije: \( \binom{7}{3} = \binom{7}{4} = \frac{7 \cdot 6 \cdot 5 \cdot 4}{4!} = \frac{840}{24} = 35 \). Takođe, obratimo pažnju na ostale ponuđene odgovore: \( 210 = V_3^7 \) (varijacije bez ponavljanja - redosled bitan), \( 343 = 7^3 \) (varijacije sa ponavljanjem), \( 5040 = 7! \) (permutacije svih 7 elemenata). Odgovor 35 je jedini koji odgovara kombinacijama.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">⚠️</span> Česte greške</h2>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">•</span>
+      <span>Zaboraviti da podelimo sa \( k! \): izračunavanje \( 7 \cdot 6 \cdot 5 = 210 \) daje broj varijacija (uređenih nizova), ne podskupova. Podskupovi su neuređeni, pa moramo podeliti sa \( 3! = 6 \).</span>
+    </div>
+    <div class="pitfall-item">
+      <span class="pitfall-icon">•</span>
+      <span>Mešanje kombinacija i varijacija sa ponavljanjem: \( 7^3 = 343 \) bi bio odgovor da tražimo reči sa ponavljanjem, a ne podskupove. Podskupovi nikada ne sadrže ponovljene elemente.</span>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">🏆</span> Dodatni izazov</h2>
+    <p class="challenge-text">Koliko podskupova skupa \( S \) postoji ukupno (svih veličina, uključujući prazan skup)?</p>
+    <details>
+      <summary>Hint</summary>
+      <div style="padding: 10px 0; color: #94a3b8;">
+        Svaki element može biti "u podskupu" ili "van podskupa" - to su 2 mogućnosti za svaki od 7 elemenata. Primenite princip množenja: \( 2^7 \).
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, w, h);
+
+    const letters = ['t', 'e', 'x', 'n', 'i', 'k', 'a'];
+
+    // Title
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Primeri tročlanih podskupova od ukupno 35', w / 2, 30);
+
+    // Draw the main set S as a circle of letters
+    const centerX = w / 2;
+    const centerY = 140;
+    const radius = 90;
+
+    // Draw set boundary
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, radius + 40, radius + 20, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Set label
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'italic 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('S = {t, e, x, n, i, k, a}', centerX - radius - 30, centerY - radius - 10);
+
+    // Draw letters in a circle
+    const letterPositions = [];
+    for (let i = 0; i < letters.length; i++) {
+      const angle = (i / letters.length) * Math.PI * 2 - Math.PI / 2;
+      const lx = centerX + radius * Math.cos(angle);
+      const ly = centerY + radius * Math.sin(angle);
+      letterPositions.push({ x: lx, y: ly });
+
+      // Letter circle
+      ctx.beginPath();
+      ctx.arc(lx, ly, 20, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(96, 165, 250, 0.15)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(96, 165, 250, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Letter
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 16px Courier New, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(letters[i], lx, ly);
+    }
+
+    // Show example subsets
+    const examples = [
+      { indices: [0, 1, 2], label: '{t, e, x}', color: '#60a5fa' },
+      { indices: [1, 3, 5], label: '{e, n, k}', color: '#a78bfa' },
+      { indices: [2, 4, 6], label: '{x, i, a}', color: '#f472b6' },
+      { indices: [0, 3, 6], label: '{t, n, a}', color: '#34d399' },
+      { indices: [1, 4, 5], label: '{e, i, k}', color: '#60a5fa' },
+      { indices: [0, 5, 6], label: '{t, k, a}', color: '#a78bfa' },
+    ];
+
+    const startY = 270;
+    const colW = w / 3;
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Primeri (6 od 35 mogućih podskupova):', w / 2, startY);
+
+    for (let i = 0; i < examples.length; i++) {
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const ex = examples[i];
+      const bx = colW * col + colW / 2;
+      const by = startY + 30 + row * 70;
+
+      // Subset box
+      const boxW = 180;
+      const boxH = 50;
+      ctx.fillStyle = 'rgba(51, 65, 85, 0.5)';
+      ctx.strokeStyle = ex.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(bx - boxW / 2, by - boxH / 2, boxW, boxH, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      // Subset text
+      ctx.fillStyle = ex.color;
+      ctx.font = 'bold 16px Courier New, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(ex.label, bx, by);
+    }
+
+    // Total count
+    const bottomY = startY + 30 + 2 * 70 - 10;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('C(7, 3) = 35 podskupova ukupno', w / 2, bottomY);
+  }
+
+  draw();
+
+  // Step click interaction
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Tročlani podskupovi skupa",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinacije", "podskupovi", "binomni koeficijent", "kombinatorika"]
+}
+BRAINSPARK_META-->

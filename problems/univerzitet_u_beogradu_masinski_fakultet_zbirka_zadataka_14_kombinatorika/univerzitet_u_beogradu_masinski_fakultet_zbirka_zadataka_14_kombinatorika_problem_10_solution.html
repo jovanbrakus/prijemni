@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Šestocifreni brojevi sa naizmeničnim parnim i neparnim ciframa</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: How many 6-digit natural numbers have even and odd digits alternating?
+
+  A 6-digit number: d1 d2 d3 d4 d5 d6, where d1 != 0.
+
+  Alternating means: either the pattern is ONONON or NONONO
+  (O = odd, N = even, or E = even, O = odd).
+
+  Let me define:
+  - Even digits: {0, 2, 4, 6, 8} — 5 choices
+  - Odd digits: {1, 3, 5, 7, 9} — 5 choices
+
+  Case 1: Pattern is O E O E O E (odd-even-odd-even-odd-even)
+    Positions: d1=odd, d2=even, d3=odd, d4=even, d5=odd, d6=even
+    d1 is odd, so d1 ∈ {1,3,5,7,9} — 5 choices (no restriction since odd digits are never 0)
+    d2 is even: d2 ∈ {0,2,4,6,8} — 5 choices
+    d3 is odd: 5 choices
+    d4 is even: 5 choices
+    d5 is odd: 5 choices
+    d6 is even: 5 choices
+    Count = 5^6
+
+  Case 2: Pattern is E O E O E O (even-odd-even-odd-even-odd)
+    Positions: d1=even, d2=odd, d3=even, d4=odd, d5=even, d6=odd
+    d1 is even but d1 ≠ 0, so d1 ∈ {2,4,6,8} — 4 choices
+    d2 is odd: 5 choices
+    d3 is even: 5 choices
+    d4 is odd: 5 choices
+    d5 is even: 5 choices
+    d6 is odd: 5 choices
+    Count = 4 × 5^5
+
+  Total = 5^6 + 4 × 5^5
+
+  Let's verify numerically:
+  5^6 = 15625
+  5^5 = 3125
+  4 × 5^5 = 12500
+  Total = 15625 + 12500 = 28125
+
+  Can also write: 5^6 + 4·5^5 = 5^5(5 + 4) = 5^5 · 9 = 3125 · 9 = 28125
+
+  Answer: (A) 5^6 + 4·5^5 ✓
+
+  Let's check the other options:
+  (B) 5^6 + 5^5 = 15625 + 3125 = 18750 ≠ 28125
+  (C) 2·5^6 = 31250 ≠ 28125
+  (D) 2(5·4·3)^2 = 2·60^2 = 7200 ≠ 28125
+  (E) (5·4·3)^2 = 3600 ≠ 28125
+
+  Correct answer is (A).
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.given-item.answer-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.given-item.answer-option .label {
+  font-weight: 700;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.given-item.answer-option .value {
+  color: #e2e8f0;
+  font-size: 1.05rem;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 10px 0;
+}
+
+details summary:hover {
+  color: #a78bfa;
+}
+
+.theory-content {
+  padding: 16px;
+  background: rgba(96, 165, 250, 0.05);
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  color: #e2e8f0;
+}
+
+.theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.step-content h3 {
+  color: #60a5fa;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+  color: #e2e8f0;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 15px 0;
+}
+
+.checkpoint summary {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.checkpoint-answer {
+  padding: 10px;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.case-card {
+  background: rgba(51, 65, 85, 0.3);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 12px 0;
+}
+
+.case-title {
+  color: #a78bfa;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.pattern-box {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.pattern-cell {
+  width: 60px;
+  height: 50px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid;
+}
+
+.pattern-cell.odd {
+  background: rgba(244, 114, 182, 0.15);
+  border-color: #f472b6;
+  color: #f472b6;
+}
+
+.pattern-cell.even {
+  background: rgba(96, 165, 250, 0.15);
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
+
+.pattern-cell .count {
+  font-size: 0.75rem;
+  margin-top: 2px;
+  color: #94a3b8;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+  font-size: 1.3rem;
+}
+
+.insight-formula {
+  font-family: 'Courier New', monospace;
+  font-size: 1.3rem;
+  color: #4ade80;
+  margin: 12px 0;
+}
+
+.final-answer-card {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(74, 222, 128, 0.1));
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+  margin-bottom: 16px;
+  font-size: 1.4rem;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.answer-options .opt {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.answer-options .opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.verification {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(51, 65, 85, 0.3);
+  border-radius: 8px;
+}
+
+.pitfall {
+  color: #e09468;
+  font-size: 0.95rem;
+}
+
+.pitfall-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pitfall-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+}
+
+.pitfall-list li:last-child {
+  border-bottom: none;
+}
+
+canvas {
+  touch-action: none;
+  width: 100%;
+  border-radius: 12px;
+}
+
+.canvas-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+  .step {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .final-answer-value {
+    font-size: 1.3rem;
+  }
+  .pattern-cell {
+    width: 48px;
+    height: 42px;
+    font-size: 0.75rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Naizmenične parne i neparne cifre</h1>
+  <p class="subtitle">Kombinatorika - prebrojavanje šestocifrenih brojeva sa naizmeničnim cifarama</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title"><span class="icon">📋</span> Tekst zadatka</h2>
+    <p>Koliko ima šestocifrenih prirodnih brojeva u čijem zapisu su parne i neparne cifre naizmenično?</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A"><div class="label">(A)</div><div class="value">\(5^6 + 4 \cdot 5^5\)</div></div>
+      <div class="given-item answer-option" data-option="B"><div class="label">(B)</div><div class="value">\(5^6 + 5^5\)</div></div>
+      <div class="given-item answer-option" data-option="C"><div class="label">(C)</div><div class="value">\(2 \cdot 5^6\)</div></div>
+      <div class="given-item answer-option" data-option="D"><div class="label">(D)</div><div class="value">\(2(5 \cdot 4 \cdot 3)^2\)</div></div>
+      <div class="given-item answer-option" data-option="E"><div class="label">(E)</div><div class="value">\((5 \cdot 4 \cdot 3)^2\)</div></div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">🗺️</span> Plan rešavanja</h2>
+    <p class="plan-text">Razmotrićemo dva slučaja prema obliku naizmeničnog rasporeda: (1) neparna-parna-neparna-parna-neparna-parna i (2) parna-neparna-parna-neparna-parna-neparna. Za svaki slučaj prebrojimo kombinacije, vodeći računa da prva cifra ne sme biti nula.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Parne cifre:</strong> \(\{0, 2, 4, 6, 8\}\) — ukupno 5 cifara.</li>
+          <li><strong>Neparne cifre:</strong> \(\{1, 3, 5, 7, 9\}\) — ukupno 5 cifara.</li>
+          <li><strong>Pravilo proizvoda:</strong> Ako se nezavisni izbori prave na \(n_1, n_2, \ldots, n_k\) načina, ukupan broj kombinacija je \(n_1 \cdot n_2 \cdots n_k\).</li>
+          <li><strong>Pravilo zbira:</strong> Ako se zadatak može podeliti na međusobno isključive slučajeve, ukupan rezultat je zbir rezultata svakog slučaja.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">🎨</span> Vizuelni prikaz</h2>
+    <canvas id="diagram" width="700" height="420"></canvas>
+    <p class="canvas-hint">Dijagram prikazuje oba moguća obrasca naizmeničnog rasporeda cifara</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">📝</span> Rešenje korak po korak</h2>
+
+    <div class="step" data-step="1">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <h3>Klasifikacija cifara</h3>
+        <p>Podelimo cifre u dve grupe:</p>
+        <p><strong>Parne cifre:</strong> \(0, 2, 4, 6, 8\) — ima ih \(5\).</p>
+        <p><strong>Neparne cifre:</strong> \(1, 3, 5, 7, 9\) — ima ih \(5\).</p>
+        <div class="note">Cifra \(0\) je parna, ali ne sme stajati na prvom mestu šestocifrenog broja.</div>
+      </div>
+    </div>
+
+    <div class="step" data-step="2">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <h3>Dva moguća obrasca</h3>
+        <p>Naizmeničnost znači da se parne (P) i neparne (N) cifre smenjuju. Za šest pozicija postoje tačno dva obrasca:</p>
+        <div class="case-card">
+          <div class="case-title">Obrazac 1: N P N P N P</div>
+          <div class="pattern-box">
+            <div class="pattern-cell odd">N<span class="count">d₁</span></div>
+            <div class="pattern-cell even">P<span class="count">d₂</span></div>
+            <div class="pattern-cell odd">N<span class="count">d₃</span></div>
+            <div class="pattern-cell even">P<span class="count">d₄</span></div>
+            <div class="pattern-cell odd">N<span class="count">d₅</span></div>
+            <div class="pattern-cell even">P<span class="count">d₆</span></div>
+          </div>
+        </div>
+        <div class="case-card">
+          <div class="case-title">Obrazac 2: P N P N P N</div>
+          <div class="pattern-box">
+            <div class="pattern-cell even">P<span class="count">d₁</span></div>
+            <div class="pattern-cell odd">N<span class="count">d₂</span></div>
+            <div class="pattern-cell even">P<span class="count">d₃</span></div>
+            <div class="pattern-cell odd">N<span class="count">d₄</span></div>
+            <div class="pattern-cell even">P<span class="count">d₅</span></div>
+            <div class="pattern-cell odd">N<span class="count">d₆</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🧠 Proveri sebe: Zašto su tačno dva obrasca?</summary>
+      <div class="checkpoint-answer">
+        Jer naizmenični raspored počinje ili neparnom ili parnom cifrom. Pošto imamo 6 pozicija (paran broj), oba obrasca imaju po 3 parne i 3 neparne cifre.
+      </div>
+    </details>
+
+    <div class="step" data-step="3">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <h3>Slučaj 1: N P N P N P</h3>
+        <p>Na neparnim pozicijama (\(d_1, d_3, d_5\)) stoje neparne cifre, a na parnim (\(d_2, d_4, d_6\)) parne.</p>
+        <p>Cifra \(d_1\) je neparna, pa je automatski različita od \(0\) — nema dodatnog ograničenja!</p>
+        <div class="math-block">
+          \[\underbrace{5}_{d_1} \times \underbrace{5}_{d_2} \times \underbrace{5}_{d_3} \times \underbrace{5}_{d_4} \times \underbrace{5}_{d_5} \times \underbrace{5}_{d_6} = 5^6\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" data-step="4">
+      <div class="step-number">4</div>
+      <div class="step-content">
+        <h3>Slučaj 2: P N P N P N</h3>
+        <p>Na neparnim pozicijama (\(d_1, d_3, d_5\)) stoje parne cifre, a na parnim (\(d_2, d_4, d_6\)) neparne.</p>
+        <p>Ovde je \(d_1\) parna cifra, ali <strong>ne sme biti \(0\)</strong>! Dakle, \(d_1 \in \{2, 4, 6, 8\}\) — samo \(4\) mogućnosti.</p>
+        <p>Ostale pozicije nemaju dodatna ograničenja:</p>
+        <div class="math-block">
+          \[\underbrace{4}_{d_1 \neq 0} \times \underbrace{5}_{d_2} \times \underbrace{5}_{d_3} \times \underbrace{5}_{d_4} \times \underbrace{5}_{d_5} \times \underbrace{5}_{d_6} = 4 \cdot 5^5\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🧠 Proveri sebe: Koliko je \(5^6\) i \(4 \cdot 5^5\)?</summary>
+      <div class="checkpoint-answer">
+        \(5^6 = 15\,625\) i \(4 \cdot 5^5 = 4 \cdot 3\,125 = 12\,500\).
+      </div>
+    </details>
+
+    <div class="step" data-step="5">
+      <div class="step-number">5</div>
+      <div class="step-content">
+        <h3>Zbir oba slučaja</h3>
+        <p>Dva obrasca su međusobno isključiva (broj ne može istovremeno početi i parnom i neparnom cifrom), pa primenjujemo pravilo zbira:</p>
+        <div class="math-block">
+          \[\text{Ukupno} = 5^6 + 4 \cdot 5^5\]
+        </div>
+        <p>Numerički:</p>
+        <div class="math-block">
+          \[= 15\,625 + 12\,500 = 28\,125\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step" data-step="6">
+      <div class="step-number">6</div>
+      <div class="step-content">
+        <h3>Alternativni zapis</h3>
+        <p>Rezultat možemo i faktorizovati:</p>
+        <div class="math-block">
+          \[5^6 + 4 \cdot 5^5 = 5^5(5 + 4) = 5^5 \cdot 9 = 3\,125 \cdot 9 = 28\,125\]
+        </div>
+        <div class="note">Ovo potvrđuje da je izraz \(5^6 + 4 \cdot 5^5\) tačan, jer se lepo faktorizuje.</div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>🧠 Proveri sebe: Zašto odgovor nije \(2 \cdot 5^6\)?</summary>
+      <div class="checkpoint-answer">
+        Jer bi \(2 \cdot 5^6 = 31\,250\) značilo da oba obrasca daju po \(5^6\) kombinacija. Međutim, obrazac 2 (koji počinje parnom cifrom) daje manje kombinacija jer je \(d_1 \neq 0\), pa je tamo \(4 \cdot 5^5\) umesto \(5^6\).
+      </div>
+    </details>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>💡 Ključni uvid</h2>
+    <p>Razlika između dva slučaja potiče samo od prvog mesta: neparna cifra nema ograničenje (5 opcija), ali parna cifra na prvom mestu gubi jednu opciju jer \(0\) ne važi kao vodeća cifra (ostaju 4 opcije).</p>
+    <div class="insight-formula">\[5^6 + 4 \cdot 5^5 = 5^5 \cdot 9 = 28\,125\]</div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">\(5^6 + 4 \cdot 5^5 = 28\,125\)</div>
+    <div class="answer-options">
+      <span class="opt correct">(A) \(5^6 + 4 \cdot 5^5\)</span>
+      <span class="opt">(B) \(5^6 + 5^5\)</span>
+      <span class="opt">(C) \(2 \cdot 5^6\)</span>
+      <span class="opt">(D) \(2(5 \cdot 4 \cdot 3)^2\)</span>
+      <span class="opt">(E) \((5 \cdot 4 \cdot 3)^2\)</span>
+    </div>
+    <div class="verification">
+      <strong>Verifikacija:</strong> Ukupno šestocifrenih brojeva je \(9 \times 10^5 = 900\,000\). Naš rezultat je \(28\,125\), što je oko \(3{,}1\%\) — razumno za specifičan obrazac naizmeničnosti. Opcije (D) i (E) daju svega \(7\,200\) i \(3\,600\), što je premalo, a opcija (C) daje \(31\,250\), što bi značilo da oba obrasca imaju isti broj, ignorirajući ograničenje za vodeću cifru.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">⚠️</span> Česte greške</h2>
+    <ul class="pitfall-list">
+      <li class="pitfall"><strong>Ignorisanje ograničenja za vodeću cifru:</strong> U obrascu P-N-P-N-P-N, prva pozicija je parna cifra — ali \(0\) ne sme stajati na prvom mestu. To smanjuje broj opcija sa 5 na 4, pa dva obrasca ne daju isti rezultat.</li>
+      <li class="pitfall"><strong>Mešanje „naizmenično" sa „različite cifre":</strong> Zadatak ne traži da sve cifre budu različite! Cifre se mogu ponavljati — bitno je samo da se parnost smenjuje.</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">🏆</span> Dodatni izazov</h2>
+    <p>Koliko ima <strong>sedmocifrenih</strong> prirodnih brojeva u čijem zapisu su parne i neparne cifre naizmenično?</p>
+    <details>
+      <summary>Hint</summary>
+      <div class="checkpoint-answer">
+        Sada imamo 7 pozicija. Obrazac 1 (N P N P N P N) daje \(5^7\). Obrazac 2 (P N P N P N P) daje \(4 \cdot 5^6\). Ukupno: \(5^7 + 4 \cdot 5^6 = 5^6(5+4) = 5^6 \cdot 9 = 140\,625\).
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, W, H);
+
+    const cellW = 70;
+    const cellH = 50;
+    const gap = 14;
+    const totalRowW = 6 * cellW + 5 * gap;
+    const startX = (W - totalRowW) / 2;
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Dva obrasca naizmeničnog rasporeda', W / 2, 28);
+
+    // --- Case 1: N P N P N P ---
+    const y1 = 55;
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Slučaj 1:  N  P  N  P  N  P', startX, y1);
+
+    const pattern1 = ['N', 'P', 'N', 'P', 'N', 'P'];
+    const counts1 = ['5', '5', '5', '5', '5', '5'];
+    const labels1 = ['d₁', 'd₂', 'd₃', 'd₄', 'd₅', 'd₆'];
+
+    for (let i = 0; i < 6; i++) {
+      const x = startX + i * (cellW + gap);
+      const y = y1 + 12;
+      const isOdd = pattern1[i] === 'N';
+      const borderColor = isOdd ? '#f472b6' : '#60a5fa';
+      const bgColor = isOdd ? 'rgba(244,114,182,0.12)' : 'rgba(96,165,250,0.12)';
+
+      ctx.fillStyle = bgColor;
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, cellW, cellH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = borderColor;
+      ctx.font = 'bold 18px Courier New, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(pattern1[i], x + cellW / 2, y + 22);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(labels1[i], x + cellW / 2, y + 40);
+
+      // count below
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 15px Courier New, monospace';
+      ctx.fillText(counts1[i], x + cellW / 2, y + cellH + 18);
+    }
+
+    // Formula for case 1
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('= 5 × 5 × 5 × 5 × 5 × 5 = 5⁶ = 15 625', W / 2, y1 + cellH + 50);
+
+    // --- Case 2: P N P N P N ---
+    const y2 = y1 + cellH + 82;
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Slučaj 2:  P  N  P  N  P  N', startX, y2);
+
+    const pattern2 = ['P', 'N', 'P', 'N', 'P', 'N'];
+    const counts2 = ['4', '5', '5', '5', '5', '5'];
+
+    for (let i = 0; i < 6; i++) {
+      const x = startX + i * (cellW + gap);
+      const y = y2 + 12;
+      const isOdd = pattern2[i] === 'N';
+      const borderColor = isOdd ? '#f472b6' : '#60a5fa';
+      const bgColor = isOdd ? 'rgba(244,114,182,0.12)' : 'rgba(96,165,250,0.12)';
+
+      ctx.fillStyle = bgColor;
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, cellW, cellH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = borderColor;
+      ctx.font = 'bold 18px Courier New, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(pattern2[i], x + cellW / 2, y + 22);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(labels1[i], x + cellW / 2, y + 40);
+
+      // count below - highlight d1 restriction
+      if (i === 0) {
+        ctx.fillStyle = '#f472b6';
+        ctx.font = 'bold 15px Courier New, monospace';
+        ctx.fillText(counts2[i], x + cellW / 2, y + cellH + 18);
+        ctx.fillStyle = '#f472b6';
+        ctx.font = '10px Segoe UI, system-ui, sans-serif';
+        ctx.fillText('(≠0!)', x + cellW / 2, y + cellH + 32);
+      } else {
+        ctx.fillStyle = '#4ade80';
+        ctx.font = 'bold 15px Courier New, monospace';
+        ctx.fillText(counts2[i], x + cellW / 2, y + cellH + 18);
+      }
+    }
+
+    // Formula for case 2
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('= 4 × 5 × 5 × 5 × 5 × 5 = 4 · 5⁵ = 12 500', W / 2, y2 + cellH + 50);
+
+    // Total
+    const totalY = y2 + cellH + 82;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px Courier New, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ukupno = 5⁶ + 4·5⁵ = 15 625 + 12 500 = 28 125', W / 2, totalY);
+
+    // Legend
+    const legY = totalY + 35;
+    ctx.fillStyle = '#f472b6';
+    ctx.fillRect(startX + 100, legY - 10, 14, 14);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('N = neparna cifra {1,3,5,7,9}', startX + 120, legY + 2);
+
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(startX + 340, legY - 10, 14, 14);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('P = parna cifra {0,2,4,6,8}', startX + 360, legY + 2);
+  }
+
+  draw();
+
+  // Step click interaction
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      steps.forEach(s => s.classList.remove('active'));
+      step.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Šestocifreni brojevi sa naizmeničnim parnim i neparnim ciframa",
+  "subject": "math",
+  "unit": "combinatorics",
+  "topic_tags": ["kombinatorika", "prebrojavanje", "šestocifreni brojevi", "parne i neparne cifre", "naizmenični raspored", "pravilo proizvoda"]
+}
+BRAINSPARK_META-->

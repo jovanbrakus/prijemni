@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verovatnoca pri bacanju kockice dva puta</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Kolika je verovatnoca da pri bacanju kockice za igru dva puta
+  uzastopno padne strana sa 6 tacaka?
+
+  Analysis:
+  - Bacamo kockicu dva puta uzastopno.
+  - Trazimo P(oba puta padne 6).
+  - Dogadjaji su nezavisni — rezultat prvog bacanja ne utice na drugo.
+
+  Step 1: Verovatnoca da padne 6 pri jednom bacanju
+    Kockica ima 6 strana: {1, 2, 3, 4, 5, 6}
+    P(6) = 1/6
+
+  Step 2: Verovatnoca da oba puta padne 6
+    Posto su bacanja nezavisna:
+    P(6 i 6) = P(6) * P(6) = 1/6 * 1/6 = 1/36
+
+  Alternative approach: Enumerate outcomes
+    Ukupan broj ishoda pri dva bacanja: 6 * 6 = 36
+    Povoljni ishodi: (6, 6) — samo 1
+    P = 1/36
+
+  Answer options:
+  (A) 1/2  (B) 1/3  (C) 1/6  (D) 1/12  (E) 1/36
+
+  Correct answer: (E) 1/36
+
+  Verification:
+  - 1/36 ≈ 0,0278 ≈ 2,78% — zaista je mala verovatnoca, sto odgovara intuiciji
+  - Proverimo totalnim prebrojavanjem: 36 mogucih parova, samo (6,6) je povoljan
+  - Odgovor (C) 1/6 bi bio za jedno bacanje, a mi bacamo DVA puta
+
+  Common pitfalls:
+  - Brkanje 1/6 (jedno bacanje) sa 1/36 (dva bacanja)
+  - Sabiranje umesto mnozenja verovatnoca (1/6 + 1/6 = 1/3 je pogresno)
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: 12px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.step:hover, .step.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left-color: #4ade80;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.opt {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgba(51, 65, 85, 0.4);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .card {
+    padding: 18px;
+  }
+  .given-grid {
+    flex-direction: column;
+  }
+  .step {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .step-badge {
+    align-self: flex-start;
+  }
+  .final-answer-box .answer-value {
+    font-size: 1.5rem;
+  }
+  .answer-options {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Verovatnoca pri bacanju kockice dva puta</h1>
+  <p class="subtitle">Verovatnoca — nezavisni dogadjaji i pravilo mnozenja</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <div class="card-title"><span class="icon">📋</span> Tekst zadatka</div>
+    <p>Kolika je verovatnoca da pri bacanju kockice za igru <span style="color: #60a5fa; font-weight: 600;">dva puta uzastopno</span> padne strana sa <span style="color: #a78bfa; font-weight: 600;">6 tacaka</span>?</p>
+
+    <div class="given-grid" style="margin-top: 14px; margin-bottom: 18px;">
+      <div class="given-item">
+        <div class="label">Broj bacanja</div>
+        <div class="value">2</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Trazeni ishod</div>
+        <div class="value">6 i 6</div>
+      </div>
+      <div class="given-item">
+        <div class="label">Strana kockice</div>
+        <div class="value">6 strana</div>
+      </div>
+    </div>
+
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{1}{2}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{1}{3}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(\dfrac{1}{6}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{1}{12}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{1}{36}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan resavanja</div>
+    <p class="plan-text">
+      Dva bacanja kockice su nezavisni dogadjaji, pa cemo primeniti pravilo mnozenja verovatnoca: verovatnoca preseka nezavisnih dogadjaja jednaka je proizvodu njihovih pojedinacnih verovatnoca.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Nezavisni dogadjaji i pravilo mnozenja (klikni da otvoris)</summary>
+      <div class="detail-content">
+        <p>Dva dogadjaja \( A \) i \( B \) su <strong>nezavisni</strong> ako nastupanje jednog ne utice na verovatnocu drugog. Za nezavisne dogadjaje vazi:</p>
+        <div class="step-math">
+          \[ P(A \cap B) = P(A) \cdot P(B) \]
+        </div>
+        <p style="margin-top: 12px;">Za fer kockicu sa 6 strana:</p>
+        <ul style="margin-left: 20px; margin-top: 8px;">
+          <li>Svaka strana ima jednaku verovatnocu: \( P = \dfrac{1}{6} \)</li>
+          <li>Uzastopna bacanja su uvek nezavisna — kockica „ne pamti" prethodni rezultat</li>
+          <li>Za \( n \) uzastopnih bacanja gde trazimo isti ishod: \( P = \left(\dfrac{1}{6}\right)^n \)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Vizuelni prikaz</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="700" height="440"></canvas>
+    </div>
+    <p class="canvas-caption">Tabela mogucih ishoda pri dva bacanja kockice (6 × 6 = 36 ishoda)</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Resenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Verovatnoca da padne 6 pri jednom bacanju</div>
+        <p>Kockica za igru ima 6 jednakih strana: \( \{1, 2, 3, 4, 5, 6\} \). Posto je kockica fer, svaka strana ima istu verovatnocu:</p>
+        <div class="step-math">
+          \[ P(6) = \frac{1}{6} \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Prepoznajmo nezavisnost dogadjaja</div>
+        <p>Prvo i drugo bacanje kockice su <strong>nezavisni dogadjaji</strong> — rezultat prvog bacanja ni na koji nacin ne utice na rezultat drugog bacanja.</p>
+        <p>Oznacimo:</p>
+        <ul style="margin-left: 20px; margin-top: 4px;">
+          <li>\( A \) = „pri prvom bacanju padne 6"</li>
+          <li>\( B \) = „pri drugom bacanju padne 6"</li>
+        </ul>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zasto su ova dva dogadjaja nezavisna?</summary>
+            <div class="detail-content">
+              Kockica nema „pamcenje" — rezultat prvog bacanja ne menja fizicke osobine kockice niti utice na ishod drugog bacanja. Svako bacanje je zaseban eksperiment sa istim uslovima.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Primenimo pravilo mnozenja</div>
+        <p>Za nezavisne dogadjaje, verovatnoca da se oba dogadjaja realizuju istovremeno jednaka je proizvodu njihovih verovatnoca:</p>
+        <div class="step-math">
+          \[ P(A \cap B) = P(A) \cdot P(B) = \frac{1}{6} \cdot \frac{1}{6} = \frac{1}{36} \]
+        </div>
+        <p>Dakle, verovatnoca da oba puta padne 6 iznosi \( \dfrac{1}{36} \).</p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Alternativna provera: prebrojavanje svih ishoda</div>
+        <p>Mozemo isti rezultat dobiti i direktnim prebrojavanjem:</p>
+        <div class="step-math">
+          \[ \text{Ukupno ishoda} = 6 \times 6 = 36 \]
+        </div>
+        <p>Svi moguci parovi su: \( (1{,}1), (1{,}2), \ldots, (6{,}5), (6{,}6) \). Od tih 36 parova, samo jedan je povoljan: \( (6{,}6) \).</p>
+        <div class="step-math">
+          \[ P = \frac{1}{36} \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Koliko ima ishoda gde bar jednom padne 6?</summary>
+            <div class="detail-content">
+              <p>Ishodi gde bar jednom padne 6: sve kombinacije oblika \( (6, x) \) ili \( (x, 6) \). To je \( 6 + 6 - 1 = 11 \) ishoda (oduzimamo 1 jer se \( (6{,}6) \) broji dva puta). Dakle \( P(\text{bar jedno 6}) = \dfrac{11}{36} \).</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Kljucni uvid</div>
+    <p>Kada trazimo verovatnocu da se vise nezavisnih dogadjaja desi <strong>istovremeno</strong> (ili uzastopno), verovatnoce se <strong>mnoze</strong>, a ne sabiraju. Ovo je cesta zamka na ispitima! Mnozenje verovatnoca uvek daje manji broj, sto ima smisla — teze je pogoditi vise stvari odjednom nego samo jednu.</p>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konacan odgovor</div>
+    <div class="answer-value">\( P = \dfrac{1}{36} \)</div>
+    <div class="answer-options">
+      <span class="opt">(A) \(\dfrac{1}{2}\)</span>
+      <span class="opt">(B) \(\dfrac{1}{3}\)</span>
+      <span class="opt">(C) \(\dfrac{1}{6}\)</span>
+      <span class="opt">(D) \(\dfrac{1}{12}\)</span>
+      <span class="opt correct">(E) \(\dfrac{1}{36}\)</span>
+    </div>
+    <div class="verification-note">
+      <strong>Provera:</strong> \( \dfrac{1}{36} \approx 0{,}028 \approx 2{,}8\% \). To znaci da u proseku na svakih 36 pokusaja ocekujemo da ce se jednom desiti da oba puta padne 6. Takodje, \( \dfrac{1}{36} = \dfrac{1}{6} \times \dfrac{1}{6} \), sto potvrdjuje pravilo mnozenja za nezavisne dogadjaje.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Ceste greske</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Odgovor 1/6 (opcija C):</strong> Ovo je verovatnoca da padne 6 pri <em>jednom</em> bacanju. Ali zadatak trazi da padne 6 pri <em>oba</em> bacanja, pa moramo pomnoziti!</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Sabiranje umesto mnozenja:</strong> Neki ucenici racunaju \( \dfrac{1}{6} + \dfrac{1}{6} = \dfrac{1}{3} \) (opcija B). Sabiranje se koristi za verovatnocu <em>unije</em> medjusobno iskljucivih dogadjaja, a ne za presek nezavisnih dogadjaja.</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Kolika je verovatnoca da pri bacanju kockice tri puta uzastopno svaki put padne 6?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="detail-content">
+        <p>Primeni isti princip: tri nezavisna bacanja, pa je verovatnoca \( P = \dfrac{1}{6} \times \dfrac{1}{6} \times \dfrac{1}{6} = \left(\dfrac{1}{6}\right)^3 \). Koliko to iznosi?</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const gridSize = 6;
+    const cellSize = 48;
+    const startX = (W - gridSize * cellSize - 80) / 2 + 80;
+    const startY = 80;
+
+    // Title labels
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Drugo bacanje', startX + gridSize * cellSize / 2, 25);
+
+    ctx.save();
+    ctx.translate(startX - 50, startY + gridSize * cellSize / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Prvo bacanje', 0, 0);
+    ctx.restore();
+
+    // Column headers
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    for (let j = 0; j < gridSize; j++) {
+      ctx.fillText(String(j + 1), startX + j * cellSize + cellSize / 2, startY - 12);
+    }
+
+    // Row headers
+    ctx.textAlign = 'right';
+    for (let i = 0; i < gridSize; i++) {
+      ctx.fillText(String(i + 1), startX - 12, startY + i * cellSize + cellSize / 2 + 5);
+    }
+
+    ctx.textAlign = 'center';
+
+    // Draw grid
+    for (let i = 0; i < gridSize; i++) {
+      for (let j = 0; j < gridSize; j++) {
+        const x = startX + j * cellSize;
+        const y = startY + i * cellSize;
+
+        // Highlight the (6,6) cell
+        if (i === 5 && j === 5) {
+          ctx.fillStyle = 'rgba(52, 211, 153, 0.25)';
+          ctx.strokeStyle = '#34d399';
+          ctx.lineWidth = 2.5;
+        } else {
+          ctx.fillStyle = 'rgba(30, 41, 59, 0.5)';
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 1;
+        }
+
+        ctx.fillRect(x, y, cellSize, cellSize);
+        ctx.strokeRect(x, y, cellSize, cellSize);
+
+        // Cell text
+        if (i === 5 && j === 5) {
+          ctx.fillStyle = '#4ade80';
+          ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+        } else {
+          ctx.fillStyle = '#64748b';
+          ctx.font = '12px Segoe UI, system-ui, sans-serif';
+        }
+        ctx.fillText(`(${i + 1},${j + 1})`, x + cellSize / 2, y + cellSize / 2 + 4);
+      }
+    }
+
+    // Arrow pointing to (6,6) cell
+    const targetX = startX + 5 * cellSize + cellSize / 2;
+    const targetY = startY + 6 * cellSize + 8;
+
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(targetX, targetY + 12);
+    ctx.lineTo(targetX, targetY + 40);
+    ctx.stroke();
+
+    // Arrowhead
+    ctx.beginPath();
+    ctx.moveTo(targetX, targetY + 12);
+    ctx.lineTo(targetX - 5, targetY + 20);
+    ctx.lineTo(targetX + 5, targetY + 20);
+    ctx.closePath();
+    ctx.fillStyle = '#34d399';
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Povoljan ishod: samo (6, 6)', targetX, targetY + 58);
+
+    // Stats
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Ukupno ishoda: 36', startX + 100, startY + gridSize * cellSize + 80);
+    ctx.fillText('Povoljnih ishoda: 1', startX + gridSize * cellSize - 100, startY + gridSize * cellSize + 80);
+
+    // Result
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('P = 1 / 36', startX + gridSize * cellSize / 2, startY + gridSize * cellSize + 108);
+  }
+
+  draw();
+
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+
+<script>
+(() => {
+  document.querySelectorAll('.step').forEach(step => {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Verovatnoca da dva puta padne sest na kockici",
+  "subject": "math",
+  "unit": "probability",
+  "topic_tags": ["verovatnoca", "nezavisni dogadjaji", "pravilo mnozenja", "kockica", "bacanje kockice"]
+}
+BRAINSPARK_META-->

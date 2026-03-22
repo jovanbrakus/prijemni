@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stepenovanje kompleksnih brojeva — koreni jedinice</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Compute ((-1 + i*sqrt(3))/2)^9 + ((-1 - i*sqrt(3))/2)^9
+
+  Step 1: Recognize the numbers
+    z1 = (-1 + i*sqrt(3))/2
+    z2 = (-1 - i*sqrt(3))/2
+    These are the two primitive cube roots of unity: ω and ω̄ (conjugate).
+
+  Step 2: Convert to polar form
+    |z1| = sqrt((-1/2)^2 + (sqrt(3)/2)^2) = sqrt(1/4 + 3/4) = sqrt(1) = 1
+    arg(z1) = arctan(sqrt(3)/2 / (-1/2)) → in second quadrant → 2π/3
+    So z1 = cos(2π/3) + i*sin(2π/3) = e^(i*2π/3)
+
+    Similarly z2 = cos(2π/3) - i*sin(2π/3) = e^(-i*2π/3) = conjugate of z1
+
+  Step 3: These are cube roots of unity
+    ω = e^(i*2π/3), so ω^3 = e^(i*2π) = 1
+    ω̄ = e^(-i*2π/3), so ω̄^3 = e^(-i*2π) = 1
+
+  Step 4: Compute 9th power
+    ω^9 = (ω^3)^3 = 1^3 = 1
+    ω̄^9 = (ω̄^3)^3 = 1^3 = 1
+
+  Step 5: Sum
+    ω^9 + ω̄^9 = 1 + 1 = 2
+
+  Answer: (B) 2
+
+  Verification: We can also verify using De Moivre:
+    z1^9 = cos(9 * 2π/3) + i*sin(9 * 2π/3) = cos(6π) + i*sin(6π) = 1 + 0i = 1
+    z2^9 = cos(-9 * 2π/3) + i*sin(-9 * 2π/3) = cos(-6π) + i*sin(-6π) = 1 + 0i = 1
+    Sum = 1 + 1 = 2 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.12);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.answer-option {
+  cursor: default;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.opt {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  cursor: default;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  font-style: italic;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .step { flex-direction: column; gap: 8px; }
+  .step-badge { align-self: flex-start; }
+  .final-answer-box .answer-value { font-size: 1.5rem; }
+  .options-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Stepenovanje kompleksnih brojeva</h1>
+  <p class="subtitle">Kompleksni brojevi — koreni jedinice i De Moavrov obrazac</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Vrednost izraza \(\left(\dfrac{-1+i\sqrt{3}}{2}\right)^{9}+\left(\dfrac{-1-i\sqrt{3}}{2}\right)^{9}\) je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(8\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(1\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Prepoznaćemo date kompleksne brojeve kao kubne korene jedinice, zapisati ih u trigonometrijskom obliku, a zatim primeniti De Moavrov obrazac za stepenovanje. Ključno zapažanje: treći stepen svakog od ovih brojeva je jednak 1.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Ključne formule i teoreme (klikni da otvoriš)</summary>
+      <div class="detail-content">
+        <p><strong>Trigonometrijski oblik kompleksnog broja:</strong></p>
+        <div class="step-math">
+          \[ z = r(\cos\varphi + i\sin\varphi) \]
+        </div>
+        <p style="margin-top: 12px;"><strong>De Moavrov obrazac:</strong> Za stepenovanje kompleksnog broja u trigonometrijskom obliku:</p>
+        <div class="step-math">
+          \[ z^n = r^n(\cos(n\varphi) + i\sin(n\varphi)) \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Kubni koreni jedinice:</strong> Jednačina \(z^3 = 1\) ima tri rešenja:</p>
+        <div class="step-math">
+          \[ z_0 = 1, \quad z_1 = \frac{-1+i\sqrt{3}}{2} = e^{i\frac{2\pi}{3}}, \quad z_2 = \frac{-1-i\sqrt{3}}{2} = e^{-i\frac{2\pi}{3}} \]
+        </div>
+        <p style="margin-top: 8px;">Svi kubni koreni jedinice zadovoljavaju \(\omega^3 = 1\).</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Vizuelni prikaz — Koreni jedinice na jediničnom krugu</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="600" height="500"></canvas>
+    </div>
+    <p class="canvas-caption">Tri kubna korena jedinice na jediničnom krugu u kompleksnoj ravni</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Prepoznajemo brojeve</div>
+        <p>Označimo date kompleksne brojeve:</p>
+        <div class="step-math">
+          \[ \omega = \frac{-1 + i\sqrt{3}}{2}, \qquad \bar{\omega} = \frac{-1 - i\sqrt{3}}{2} \]
+        </div>
+        <p>Ovi brojevi su konjugovano kompleksni par. Proverimo njihov modul:</p>
+        <div class="step-math">
+          \[ |\omega| = \sqrt{\left(-\frac{1}{2}\right)^2 + \left(\frac{\sqrt{3}}{2}\right)^2} = \sqrt{\frac{1}{4} + \frac{3}{4}} = \sqrt{1} = 1 \]
+        </div>
+        <p>Oba broja leže na jediničnom krugu.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Zapisujemo u trigonometrijskom obliku</div>
+        <p>Realni deo je \(-\frac{1}{2}\), a imaginarni \(\frac{\sqrt{3}}{2}\). Argument se nalazi u drugom kvadrantu:</p>
+        <div class="step-math">
+          \[ \omega = \cos\frac{2\pi}{3} + i\sin\frac{2\pi}{3} \]
+        </div>
+        <p>A konjugovani:</p>
+        <div class="step-math">
+          \[ \bar{\omega} = \cos\frac{2\pi}{3} - i\sin\frac{2\pi}{3} = \cos\left(-\frac{2\pi}{3}\right) + i\sin\left(-\frac{2\pi}{3}\right) \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zašto je argument jednak \(\frac{2\pi}{3}\)?</summary>
+            <div class="detail-content">
+              Zato što je \(\cos\frac{2\pi}{3} = -\frac{1}{2}\) i \(\sin\frac{2\pi}{3} = \frac{\sqrt{3}}{2}\), što su tačno realni i imaginarni deo broja \(\omega\). Ugao \(\frac{2\pi}{3} = 120°\) se nalazi u drugom kvadrantu, gde je kosinus negativan a sinus pozitivan.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Prepoznajemo kubne korene jedinice</div>
+        <p>Ovo su primitivni kubni koreni jedinice! Oni zadovoljavaju jednačinu \(z^3 = 1\). Proverimo:</p>
+        <div class="step-math">
+          \[ \omega^3 = \cos\left(3 \cdot \frac{2\pi}{3}\right) + i\sin\left(3 \cdot \frac{2\pi}{3}\right) = \cos(2\pi) + i\sin(2\pi) = 1 \]
+        </div>
+        <p>Isto važi i za \(\bar{\omega}\):</p>
+        <div class="step-math">
+          \[ \bar{\omega}^3 = \cos(-2\pi) + i\sin(-2\pi) = 1 \]
+        </div>
+        <p>Dakle, <strong>treći stepen svakog od ovih brojeva je jednak 1</strong>.</p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Računamo deveti stepen</div>
+        <p>Pošto je \(\omega^3 = 1\), za deveti stepen koristimo pravilo stepena:</p>
+        <div class="step-math">
+          \[ \omega^9 = (\omega^3)^3 = 1^3 = 1 \]
+        </div>
+        <p>Analogno:</p>
+        <div class="step-math">
+          \[ \bar{\omega}^9 = (\bar{\omega}^3)^3 = 1^3 = 1 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Da li je 9 deljivo sa 3?</summary>
+            <div class="detail-content">
+              Da! \(9 = 3 \times 3\), pa je \(\omega^9 = (\omega^3)^3\). Kad god je eksponent deljiv sa 3, kubni koren jedinice stepenovanjem daje 1. Na primer, \(\omega^6 = (\omega^3)^2 = 1\), \(\omega^{12} = (\omega^3)^4 = 1\), itd.
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Sabiramo rezultate</div>
+        <p>Konačno:</p>
+        <div class="step-math">
+          \[ \omega^9 + \bar{\omega}^9 = 1 + 1 = 2 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Verifikacija De Moavrovim obrascem</summary>
+            <div class="detail-content">
+              <p>Primenimo De Moavrov obrazac direktno:</p>
+              <p>\(\omega^9 = \cos\left(9 \cdot \frac{2\pi}{3}\right) + i\sin\left(9 \cdot \frac{2\pi}{3}\right) = \cos(6\pi) + i\sin(6\pi) = 1 + 0i = 1\)</p>
+              <p style="margin-top: 6px;">\(\bar{\omega}^9 = \cos(-6\pi) + i\sin(-6\pi) = 1 + 0i = 1\)</p>
+              <p style="margin-top: 6px;">Zbir: \(1 + 1 = 2\) ✓</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Ključni uvid</div>
+    <p>Brojevi \(\frac{-1 \pm i\sqrt{3}}{2}\) su <strong>kubni koreni jedinice</strong>. Njihov treći stepen je uvek 1. Zato je bilo koji stepen koji je deljiv sa 3 (kao što je 9) takođe jednak 1. Ovo svojstvo drastično pojednostavljuje račun — umesto da stepenujemo komplikovan kompleksni izraz, koristimo algebarsko svojstvo cikličnosti!</p>
+    <div class="step-math" style="margin-top: 14px;">
+      \[ \omega^3 = 1 \implies \omega^9 = (\omega^3)^3 = 1 \implies \omega^9 + \bar{\omega}^9 = 2 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konačan odgovor</div>
+    <div class="answer-value">\(\omega^9 + \bar{\omega}^9 = 2\)</div>
+    <div class="options-row">
+      <span class="opt">(A) \(4\)</span>
+      <span class="opt correct">(B) \(2\)</span>
+      <span class="opt">(C) \(0\)</span>
+      <span class="opt">(D) \(8\)</span>
+      <span class="opt">(E) \(1\)</span>
+    </div>
+    <div class="verification-note">
+      Verifikacija: Pošto je \(9 = 3 \times 3\), oba kubna korena jedinice stepenovanja na 9 daju 1, pa je zbir jednak 2.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Česte greške</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Direktno stepenovanje:</strong> Pokušaj da se izraz \(\left(\frac{-1+i\sqrt{3}}{2}\right)^9\) računa direktnim množenjem je veoma komplikovan i podložan greškama. Uvek prvo prepoznaj specijalne oblike!</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Mešanje sa drugim korenima:</strong> Neki studenti pomešaju kubne korene jedinice sa drugim specijalnim vrednostima. Zapamti: \(\frac{-1 \pm i\sqrt{3}}{2}\) su uvek kubni koreni jedinice (ugao \(120°\) i \(240°\)).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Kolika je vrednost izraza \(\left(\frac{-1+i\sqrt{3}}{2}\right)^{10}+\left(\frac{-1-i\sqrt{3}}{2}\right)^{10}\)?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="detail-content">
+        <p>Razmisli ovako: \(\omega^{10} = \omega^{9} \cdot \omega = 1 \cdot \omega = \omega\). Dakle treba izračunati \(\omega + \bar{\omega}\). A zbir konjugovanih kompleksnih brojeva je uvek jednak dvostrukom realnom delu: \(\omega + \bar{\omega} = 2 \cdot \text{Re}(\omega) = 2 \cdot \left(-\frac{1}{2}\right) = -1\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const cx = W / 2;
+    const cy = H / 2 + 10;
+    const R = 180;
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = -3; i <= 3; i++) {
+      const x = cx + i * (R / 2);
+      ctx.beginPath();
+      ctx.moveTo(x, cy - R - 40);
+      ctx.lineTo(x, cy + R + 40);
+      ctx.stroke();
+      const y = cy + i * (R / 2);
+      ctx.beginPath();
+      ctx.moveTo(cx - R - 40, y);
+      ctx.lineTo(cx + R + 40, y);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx - R - 50, cy);
+    ctx.lineTo(cx + R + 50, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - R - 50);
+    ctx.lineTo(cx, cy + R + 50);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', cx + R + 40, cy - 10);
+    ctx.fillText('Im', cx + 18, cy - R - 35);
+
+    // Unit circle
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Three cube roots of unity
+    const roots = [
+      { angle: 0, label: 'z\u2080 = 1', color: '#34d399', labelDx: 20, labelDy: -15 },
+      { angle: 2 * Math.PI / 3, label: '\u03C9 = (-1+i\u221A3)/2', color: '#60a5fa', labelDx: -10, labelDy: -20 },
+      { angle: -2 * Math.PI / 3, label: '\u03C9\u0305 = (-1-i\u221A3)/2', color: '#a78bfa', labelDx: -10, labelDy: 25 }
+    ];
+
+    // Draw triangle connecting the roots
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < roots.length; i++) {
+      const x = cx + R * Math.cos(roots[i].angle);
+      const y = cy - R * Math.sin(roots[i].angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    // Fill triangle
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.05)';
+    ctx.beginPath();
+    for (let i = 0; i < roots.length; i++) {
+      const x = cx + R * Math.cos(roots[i].angle);
+      const y = cy - R * Math.sin(roots[i].angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw angle arcs
+    // 120° arc from positive x-axis
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 45, 0, -2 * Math.PI / 3, true);
+    ctx.stroke();
+    ctx.fillStyle = '#60a5fa';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('120°', cx + 30, cy - 35);
+
+    // -120° arc
+    ctx.strokeStyle = 'rgba(167, 139, 250, 0.5)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 55, 0, 2 * Math.PI / 3, false);
+    ctx.stroke();
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('240°', cx + 35, cy + 50);
+
+    // Draw radius lines
+    for (const root of roots) {
+      const x = cx + R * Math.cos(root.angle);
+      const y = cy - R * Math.sin(root.angle);
+
+      ctx.strokeStyle = root.color;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Draw root points and labels
+    for (const root of roots) {
+      const x = cx + R * Math.cos(root.angle);
+      const y = cy - R * Math.sin(root.angle);
+
+      // Glow
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, 20);
+      grad.addColorStop(0, root.color + '60');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, 20, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = root.color;
+      ctx.beginPath();
+      ctx.arc(x, y, 7, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, 7, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = root.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(root.label, x + root.labelDx, y + root.labelDy);
+    }
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Kubni koreni jedinice: z\u00B3 = 1', cx, 30);
+
+    // Key property text
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u03C9\u00B3 = 1  \u21D2  \u03C9\u2079 = (\u03C9\u00B3)\u00B3 = 1', cx, H - 20);
+  }
+
+  draw();
+
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Stepenovanje kubnih korena jedinice",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "koreni jedinice", "De Moavrov obrazac", "trigonometrijski oblik", "stepenovanje"]
+}
+BRAINSPARK_META-->

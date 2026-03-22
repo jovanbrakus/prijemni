@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zbir stepena konjugovanih kompleksnih brojeva</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+  Problem: Compute ((1 + i*sqrt(7))/2)^4 + ((1 - i*sqrt(7))/2)^4
+
+  Step 1: Recognize conjugate pair
+    z = (1 + i*sqrt(7))/2
+    z̄ = (1 - i*sqrt(7))/2
+    These are conjugate complex numbers.
+    For conjugates: z^n + z̄^n is always real.
+
+  Step 2: Find modulus and key product
+    z * z̄ = |z|^2 = ((1)^2 + (sqrt(7))^2)/4 = (1 + 7)/4 = 8/4 = 2
+    z + z̄ = 2*Re(z) = 2*(1/2) = 1
+
+    So z and z̄ are roots of: t^2 - (z+z̄)t + z*z̄ = 0
+    t^2 - t + 2 = 0
+
+  Step 3: Strategy — use recurrence relation
+    Let S_n = z^n + z̄^n
+    Since z and z̄ are roots of t^2 - t + 2 = 0, we have:
+    S_n = (z+z̄) * S_{n-1} - z*z̄ * S_{n-2}
+    S_n = 1 * S_{n-1} - 2 * S_{n-2}
+    S_n = S_{n-1} - 2*S_{n-2}
+
+  Step 4: Compute base cases
+    S_0 = z^0 + z̄^0 = 1 + 1 = 2
+    S_1 = z + z̄ = 1
+
+  Step 5: Apply recurrence
+    S_2 = S_1 - 2*S_0 = 1 - 2*2 = 1 - 4 = -3
+    S_3 = S_2 - 2*S_1 = -3 - 2*1 = -3 - 2 = -5
+    S_4 = S_3 - 2*S_2 = -5 - 2*(-3) = -5 + 6 = 1
+
+  Answer: S_4 = 1 → (C) 1
+
+  Verification using direct computation:
+    z^2 = ((1+i√7)/2)^2 = (1 + 2i√7 - 7)/4 = (-6 + 2i√7)/4 = (-3 + i√7)/2
+    z̄^2 = (-3 - i√7)/2
+    z^2 + z̄^2 = -3 ✓ (matches S_2)
+
+    z^4 = (z^2)^2 = ((-3+i√7)/2)^2 = (9 - 6i√7 - 7)/4 = (2 - 6i√7)/4 = (1 - 3i√7)/2
+    z̄^4 = (1 + 3i√7)/2
+    z^4 + z̄^4 = (1 - 3i√7)/2 + (1 + 3i√7)/2 = 2/2 = 1 ✓
+
+  Alternative check using polar form:
+    |z| = sqrt(2), arg(z) = arctan(√7/1) = arctan(√7)
+    z = √2 * (cos(arctan(√7)) + i*sin(arctan(√7)))
+    z^4 = (√2)^4 * (cos(4*arctan(√7)) + i*sin(4*arctan(√7)))
+         = 4 * (cos(4*arctan(√7)) + i*sin(4*arctan(√7)))
+    z^4 + z̄^4 = 2 * 4 * cos(4*arctan(√7)) = 8*cos(4*arctan(√7))
+    cos(arctan(√7)) = 1/(2√2), sin(arctan(√7)) = √7/(2√2)
+    Using double angle: cos(2θ) = 2cos²θ - 1 = 2*(1/8) - 1 = -3/4
+    cos(4θ) = 2cos²(2θ) - 1 = 2*(9/16) - 1 = 9/8 - 1 = 1/8
+    z^4 + z̄^4 = 8 * (1/8) = 1 ✓
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.given-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.given-item {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.12);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.given-item .label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.given-item .value {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.answer-option {
+  cursor: default;
+}
+
+.plan-text {
+  color: #a78bfa;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+details {
+  margin: 15px 0;
+}
+
+details summary {
+  cursor: pointer;
+  color: #60a5fa;
+  font-weight: 600;
+  padding: 8px 0;
+  user-select: none;
+}
+
+details summary:hover {
+  color: #93bbfc;
+}
+
+details .detail-content {
+  padding: 12px 16px;
+  background: rgba(30, 41, 59, 0.7);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #f472b6;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.step-math {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(167, 139, 250, 0.12));
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.insight-box .card-title {
+  color: #a78bfa;
+}
+
+.final-answer-box {
+  background: rgba(52, 211, 153, 0.08);
+  border: 2px solid #34d399;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.final-answer-box .answer-label {
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.final-answer-box .answer-value {
+  color: #4ade80;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.opt {
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  cursor: default;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.verification-note {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-top: 14px;
+  font-style: italic;
+}
+
+.pitfall {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pitfall-icon {
+  color: #f472b6;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.challenge-box {
+  background: rgba(244, 114, 182, 0.08);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.challenge-box .card-title {
+  color: #f472b6;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.canvas-wrapper {
+  text-align: center;
+}
+
+.canvas-caption {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.checkpoint details summary {
+  color: #34d399;
+  font-size: 0.95rem;
+}
+
+.checkpoint details .detail-content {
+  border-left-color: #34d399;
+}
+
+.recurrence-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+}
+
+.recurrence-table th, .recurrence-table td {
+  border: 1px solid #334155;
+  padding: 10px 16px;
+  text-align: center;
+}
+
+.recurrence-table th {
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.recurrence-table td {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.recurrence-table .highlight-cell {
+  background: rgba(52, 211, 153, 0.15);
+  color: #4ade80;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.6rem; }
+  .card { padding: 18px; }
+  .given-grid { gap: 8px; }
+  .given-item { min-width: 60px; padding: 10px 12px; }
+  .step { flex-direction: column; gap: 8px; }
+  .step-badge { align-self: flex-start; }
+  .final-answer-box .answer-value { font-size: 1.5rem; }
+  .options-row { flex-direction: column; align-items: center; }
+  .recurrence-table th, .recurrence-table td { padding: 6px 8px; font-size: 0.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Title -->
+  <h1>Zbir stepena konjugovanih kompleksnih brojeva</h1>
+  <p class="subtitle">Kompleksni brojevi — rekurentna relacija i Njutnove formule za sume stepena</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2>Tekst zadatka</h2>
+    <p>Vrednost izraza \(\left(\dfrac{1+i\sqrt{7}}{2}\right)^{4}+\left(\dfrac{1-i\sqrt{7}}{2}\right)^{4}\) je:</p>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(4\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(2\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(1\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(0\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(-3\sqrt{7}i\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎯</span> Plan rešavanja</div>
+    <p class="plan-text">
+      Uočićemo da su dati brojevi konjugovani kompleksni par, pa ćemo iskoristiti činjenicu da su koreni jedne kvadratne jednačine. Pomoću rekurentne relacije (Njutnove formule) izračunaćemo zbir četvrtih stepena bez direktnog stepenovanja.
+    </p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Podsetnik iz teorije</div>
+    <details>
+      <summary>Ključne formule i teoreme (klikni da otvoriš)</summary>
+      <div class="detail-content">
+        <p><strong>Vijetove formule:</strong> Ako su \(z\) i \(\bar{z}\) koreni jednačine \(t^2 - pt + q = 0\), tada:</p>
+        <div class="step-math">
+          \[ z + \bar{z} = p, \qquad z \cdot \bar{z} = q \]
+        </div>
+        <p style="margin-top: 12px;"><strong>Njutnova rekurentna relacija:</strong> Za sumu \(S_n = z^n + \bar{z}^n\):</p>
+        <div class="step-math">
+          \[ S_n = p \cdot S_{n-1} - q \cdot S_{n-2} \]
+        </div>
+        <p style="margin-top: 8px;">sa baznim slučajevima \(S_0 = 2\) i \(S_1 = p\).</p>
+        <p style="margin-top: 12px;"><strong>Svojstvo konjugovanih brojeva:</strong> Za konjugovane kompleksne brojeve \(z\) i \(\bar{z}\):</p>
+        <div class="step-math">
+          \[ z + \bar{z} = 2\,\text{Re}(z), \qquad z \cdot \bar{z} = |z|^2 \]
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Vizuelni prikaz — Stepeni na spirali</div>
+    <div class="canvas-wrapper">
+      <canvas id="diagram" width="600" height="500"></canvas>
+    </div>
+    <p class="canvas-caption">Konjugovani kompleksni brojevi \(z\) i \(\bar{z}\) u kompleksnoj ravni i njihovi stepeni</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔢</span> Rešenje korak po korak</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <div class="step-title">Označavamo konjugovani par</div>
+        <p>Neka je:</p>
+        <div class="step-math">
+          \[ z = \frac{1 + i\sqrt{7}}{2}, \qquad \bar{z} = \frac{1 - i\sqrt{7}}{2} \]
+        </div>
+        <p>Ovi brojevi su konjugovano kompleksni par. Tražimo \(S_4 = z^4 + \bar{z}^4\).</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <div class="step-title">Nalazimo zbir i proizvod</div>
+        <p>Izračunajmo zbir konjugata:</p>
+        <div class="step-math">
+          \[ z + \bar{z} = \frac{1 + i\sqrt{7}}{2} + \frac{1 - i\sqrt{7}}{2} = \frac{2}{2} = 1 \]
+        </div>
+        <p>I proizvod konjugata (koji je jednak kvadratu modula):</p>
+        <div class="step-math">
+          \[ z \cdot \bar{z} = \frac{(1 + i\sqrt{7})(1 - i\sqrt{7})}{4} = \frac{1^2 + (\sqrt{7})^2}{4} = \frac{1 + 7}{4} = 2 \]
+        </div>
+        <p>Dakle, \(z\) i \(\bar{z}\) su koreni kvadratne jednačine \(t^2 - t + 2 = 0\).</p>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Zašto je \((1+i\sqrt{7})(1-i\sqrt{7}) = 1 + 7\)?</summary>
+            <div class="detail-content">
+              Ovo je formula za razliku kvadrata: \((a+b)(a-b) = a^2 - b^2\). Ovde \(a = 1\) i \(b = i\sqrt{7}\), pa je \(a^2 - b^2 = 1 - (i\sqrt{7})^2 = 1 - i^2 \cdot 7 = 1 - (-1) \cdot 7 = 1 + 7 = 8\).
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <div class="step-title">Postavljamo rekurentnu relaciju</div>
+        <p>Pošto su \(z\) i \(\bar{z}\) koreni jednačine \(t^2 - t + 2 = 0\), za sumu \(S_n = z^n + \bar{z}^n\) važi:</p>
+        <div class="step-math">
+          \[ S_n = 1 \cdot S_{n-1} - 2 \cdot S_{n-2} = S_{n-1} - 2\,S_{n-2} \]
+        </div>
+        <p>Bazni slučajevi:</p>
+        <div class="step-math">
+          \[ S_0 = z^0 + \bar{z}^0 = 1 + 1 = 2 \]
+          \[ S_1 = z + \bar{z} = 1 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <div class="step-title">Računamo \(S_2\)</div>
+        <p>Primenjujemo rekurentnu relaciju:</p>
+        <div class="step-math">
+          \[ S_2 = S_1 - 2 \cdot S_0 = 1 - 2 \cdot 2 = 1 - 4 = -3 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Da li se \(S_2 = -3\) može proveriti direktno?</summary>
+            <div class="detail-content">
+              <p>Da! Izračunajmo \(z^2\) direktno:</p>
+              <p>\(z^2 = \left(\frac{1+i\sqrt{7}}{2}\right)^2 = \frac{1 + 2i\sqrt{7} - 7}{4} = \frac{-6 + 2i\sqrt{7}}{4} = \frac{-3 + i\sqrt{7}}{2}\)</p>
+              <p style="margin-top: 6px;">\(\bar{z}^2 = \frac{-3 - i\sqrt{7}}{2}\)</p>
+              <p style="margin-top: 6px;">\(S_2 = z^2 + \bar{z}^2 = \frac{-3 + i\sqrt{7}}{2} + \frac{-3 - i\sqrt{7}}{2} = \frac{-6}{2} = -3\) ✓</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <div class="step-title">Računamo \(S_3\)</div>
+        <div class="step-math">
+          \[ S_3 = S_2 - 2 \cdot S_1 = -3 - 2 \cdot 1 = -3 - 2 = -5 \]
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="step">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <div class="step-title">Računamo \(S_4\)</div>
+        <p>Konačno, primenjujemo relaciju još jednom:</p>
+        <div class="step-math">
+          \[ S_4 = S_3 - 2 \cdot S_2 = -5 - 2 \cdot (-3) = -5 + 6 = 1 \]
+        </div>
+
+        <div class="checkpoint">
+          <details>
+            <summary>Proveri sebe: Verifikacija direktnim računom</summary>
+            <div class="detail-content">
+              <p>Izračunajmo \(z^4 = (z^2)^2\):</p>
+              <p>\(z^2 = \frac{-3 + i\sqrt{7}}{2}\), pa:</p>
+              <p>\(z^4 = \left(\frac{-3 + i\sqrt{7}}{2}\right)^2 = \frac{9 - 6i\sqrt{7} - 7}{4} = \frac{2 - 6i\sqrt{7}}{4} = \frac{1 - 3i\sqrt{7}}{2}\)</p>
+              <p style="margin-top: 6px;">\(\bar{z}^4 = \frac{1 + 3i\sqrt{7}}{2}\)</p>
+              <p style="margin-top: 6px;">\(S_4 = \frac{1 - 3i\sqrt{7}}{2} + \frac{1 + 3i\sqrt{7}}{2} = \frac{2}{2} = 1\) ✓</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary table -->
+    <p style="margin-top: 10px; margin-bottom: 8px; color: #94a3b8;">Pregled svih izračunatih vrednosti:</p>
+    <table class="recurrence-table">
+      <thead>
+        <tr>
+          <th>\(n\)</th>
+          <th>0</th>
+          <th>1</th>
+          <th>2</th>
+          <th>3</th>
+          <th>4</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color: #60a5fa; font-weight: 600;">\(S_n\)</td>
+          <td>2</td>
+          <td>1</td>
+          <td>\(-3\)</td>
+          <td>\(-5\)</td>
+          <td class="highlight-cell">1</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <div class="card-title"><span class="icon">💡</span> Ključni uvid</div>
+    <p>Kada treba izračunati \(z^n + \bar{z}^n\) za konjugovane kompleksne brojeve, ne moramo da stepenujemo direktno! Dovoljno je naći zbir \(p = z + \bar{z}\) i proizvod \(q = z \cdot \bar{z}\), a zatim koristiti rekurentnu relaciju \(S_n = p \cdot S_{n-1} - q \cdot S_{n-2}\). Ovim se problem svodi na jednostavnu aritmetiku sa celim brojevima.</p>
+    <div class="step-math" style="margin-top: 14px;">
+      \[ p = 1, \quad q = 2 \implies S_4 = 1 \]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="final-answer-box">
+    <div class="answer-label">Konačan odgovor</div>
+    <div class="answer-value">\(z^4 + \bar{z}^4 = 1\)</div>
+    <div class="options-row">
+      <span class="opt">(A) \(4\)</span>
+      <span class="opt">(B) \(2\)</span>
+      <span class="opt correct">(C) \(1\)</span>
+      <span class="opt">(D) \(0\)</span>
+      <span class="opt">(E) \(-3\sqrt{7}i\)</span>
+    </div>
+    <div class="verification-note">
+      Verifikacija: Direktnim računom \(z^4 = \frac{1 - 3i\sqrt{7}}{2}\), \(\bar{z}^4 = \frac{1 + 3i\sqrt{7}}{2}\), zbir je \(\frac{2}{2} = 1\). Takođe, zbir konjugata je uvek realan broj, što eliminiše odgovor (E).
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Česte greške</div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Direktno stepenovanje:</strong> Pokušaj da se \(z^4\) računa uzastopnim množenjem kompleksnih razlomaka je veoma dugačak postupak i podložan greškama. Rekurentna relacija je mnogo efikasnija.</p>
+    </div>
+    <div class="pitfall">
+      <span class="pitfall-icon">✗</span>
+      <p><strong>Pogrešan predznak u rekurenciji:</strong> Česta greška je pisanje \(S_n = S_{n-1} + 2\,S_{n-2}\) umesto \(S_n = S_{n-1} - 2\,S_{n-2}\). Zapamti: formula je \(S_n = p \cdot S_{n-1} - q \cdot S_{n-2}\) sa <em>minusom</em> ispred \(q\).</p>
+    </div>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="challenge-box">
+    <div class="card-title"><span class="icon">🏆</span> Dodatni izazov</div>
+    <p>Nastavi rekurentnu relaciju i izračunaj \(S_5\) i \(S_6\). Da li primećuješ neki obrazac u nizu \(S_n\)?</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="detail-content">
+        <p>\(S_5 = S_4 - 2\,S_3 = 1 - 2 \cdot (-5) = 1 + 10 = 11\)</p>
+        <p style="margin-top: 6px;">\(S_6 = S_5 - 2\,S_4 = 11 - 2 \cdot 1 = 9\)</p>
+        <p style="margin-top: 6px;">Niz glasi: \(2, 1, -3, -5, 1, 11, 9, \ldots\) — nema jednostavan periodičan obrazac, ali rekurentna relacija uvek funkcioniše!</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    const cx = W / 2;
+    const cy = H / 2 + 10;
+    const scale = 90;
+
+    // Grid
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = -4; i <= 4; i++) {
+      const x = cx + i * scale;
+      ctx.beginPath();
+      ctx.moveTo(x, 30);
+      ctx.lineTo(x, H - 30);
+      ctx.stroke();
+      const y = cy + i * scale;
+      if (y > 30 && y < H - 30) {
+        ctx.beginPath();
+        ctx.moveTo(30, y);
+        ctx.lineTo(W - 30, y);
+        ctx.stroke();
+      }
+    }
+
+    // Axes
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(30, cy);
+    ctx.lineTo(W - 30, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, 30);
+    ctx.lineTo(cx, H - 30);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Re', W - 25, cy - 10);
+    ctx.fillText('Im', cx + 18, 40);
+
+    // Scale marks
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = '#64748b';
+    for (let i = -3; i <= 3; i++) {
+      if (i === 0) continue;
+      ctx.fillText(String(i), cx + i * scale, cy + 18);
+    }
+
+    // Circle of radius sqrt(2)
+    const r = Math.sqrt(2) * scale;
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label the circle
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.6)';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('|z| = \u221A2', cx + r * Math.cos(Math.PI / 4) + 25, cy - r * Math.sin(Math.PI / 4));
+
+    // Helper to convert math coords to canvas
+    function toCanvas(x, y) {
+      return { x: cx + x * scale, y: cy - y * scale };
+    }
+
+    // Draw z and z̄
+    const zRe = 0.5;
+    const zIm = Math.sqrt(7) / 2;
+
+    const points = [
+      { re: zRe, im: zIm, label: 'z = (1+i\u221A7)/2', color: '#60a5fa', dy: -18 },
+      { re: zRe, im: -zIm, label: 'z\u0305 = (1\u2212i\u221A7)/2', color: '#a78bfa', dy: 25 }
+    ];
+
+    // Draw dashed lines from origin to points
+    for (const pt of points) {
+      const p = toCanvas(pt.re, pt.im);
+      ctx.strokeStyle = pt.color;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Draw z^2 and z̄^2
+    const z2Re = -1.5;
+    const z2Im = Math.sqrt(7) / 2;
+    const powers = [
+      { re: z2Re, im: z2Im, label: 'z\u00B2', color: '#34d399', dy: -15 },
+      { re: z2Re, im: -z2Im, label: 'z\u0305\u00B2', color: '#34d399', dy: 22 }
+    ];
+
+    // z^4 and z̄^4
+    const z4Re = 0.5;
+    const z4Im = 3 * Math.sqrt(7) / 2;
+    // But |z^4| = 4, so these points are far out. Let's scale them for the diagram.
+    // Actually z^4 = (1 - 3i√7)/2, z̄^4 = (1 + 3i√7)/2
+    // |z^4| = sqrt(1/4 + 63/4) = sqrt(16) = 4, which is large.
+    // Let's mark them with adjusted scale.
+
+    // Draw z^2 points with dashed from origin
+    for (const pt of powers) {
+      const p = toCanvas(pt.re, pt.im);
+      ctx.strokeStyle = pt.color;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Point
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 14);
+      grad.addColorStop(0, pt.color + '60');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 14, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(pt.label, p.x + 25, p.y + pt.dy);
+    }
+
+    // Draw z and z̄ points
+    for (const pt of points) {
+      const p = toCanvas(pt.re, pt.im);
+
+      // Glow
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 18);
+      grad.addColorStop(0, pt.color + '60');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 18, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = pt.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(pt.label, p.x + 10, p.y + pt.dy);
+    }
+
+    // Draw dotted line between z and z̄ (axis of symmetry)
+    const pz = toCanvas(zRe, zIm);
+    const pzb = toCanvas(zRe, -zIm);
+    ctx.strokeStyle = 'rgba(244, 114, 182, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath();
+    ctx.moveTo(pz.x, pz.y);
+    ctx.lineTo(pzb.x, pzb.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Konjugovani kompleksni brojevi i njihovi stepeni', cx, 25);
+
+    // Key info
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('z + z\u0305 = 1,  z \u00B7 z\u0305 = 2,  z\u2074 + z\u0305\u2074 = 1', cx, H - 15);
+
+    // Annotation: |z| = √2
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    const midP = toCanvas(zRe / 2, zIm / 2);
+    ctx.fillText('|z| = \u221A2', midP.x - 35, midP.y - 5);
+  }
+
+  draw();
+
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(draw, 100);
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Zbir četvrtih stepena konjugovanih kompleksnih brojeva",
+  "subject": "math",
+  "unit": "algebra",
+  "topic_tags": ["kompleksni brojevi", "konjugovani brojevi", "rekurentna relacija", "Njutnove formule", "stepenovanje"]
+}
+BRAINSPARK_META-->

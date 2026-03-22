@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tangens zbira inverznih trigonometrijskih funkcija</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+<script type="text/info" id="logic-scratchpad">
+Problem: Compute tg(arcsin(2/3) + arccos(2/7))
+
+Let a = arcsin(2/3), b = arccos(2/7).
+
+Step 1: Find tg(a) from sin(a) = 2/3
+  cos(a) = sqrt(1 - sin^2(a)) = sqrt(1 - 4/9) = sqrt(5/9) = sqrt(5)/3
+  (cos(a) > 0 because a = arcsin(2/3) is in [-pi/2, pi/2], so cosine is positive)
+  tg(a) = sin(a)/cos(a) = (2/3) / (sqrt(5)/3) = 2/sqrt(5)
+
+Step 2: Find tg(b) from cos(b) = 2/7
+  sin(b) = sqrt(1 - cos^2(b)) = sqrt(1 - 4/49) = sqrt(45/49) = 3*sqrt(5)/7
+  (sin(b) > 0 because b = arccos(2/7) is in [0, pi], so sine is positive)
+  tg(b) = sin(b)/cos(b) = (3*sqrt(5)/7) / (2/7) = 3*sqrt(5)/2
+
+Step 3: Apply addition formula tg(a+b) = (tg(a) + tg(b)) / (1 - tg(a)*tg(b))
+
+  Numerator: tg(a) + tg(b) = 2/sqrt(5) + 3*sqrt(5)/2
+    = (2*2 + 3*sqrt(5)*sqrt(5)) / (2*sqrt(5))
+    = (4 + 15) / (2*sqrt(5))
+    = 19 / (2*sqrt(5))
+
+  Product: tg(a) * tg(b) = (2/sqrt(5)) * (3*sqrt(5)/2) = 6*sqrt(5)/(2*sqrt(5)) = 3
+
+  Denominator: 1 - tg(a)*tg(b) = 1 - 3 = -2
+
+  tg(a+b) = [19/(2*sqrt(5))] / (-2) = -19 / (4*sqrt(5))
+
+Step 4: Rationalize
+  -19/(4*sqrt(5)) = -19*sqrt(5)/(4*5) = -19*sqrt(5)/20
+
+Answer: (C) -19*sqrt(5)/20
+
+Verification: The answer is negative, which makes sense because tg(a)*tg(b) = 3 > 1,
+meaning a+b > pi/2 (in the second quadrant where tangent is negative).
+
+Numerical check:
+  a = arcsin(2/3) ≈ 0.7297 rad ≈ 41.81°
+  b = arccos(2/7) ≈ 1.2810 rad ≈ 73.40°
+  a + b ≈ 2.0107 rad ≈ 115.21° (in Q2, tg < 0)
+  tg(115.21°) ≈ -2.128
+  -19*sqrt(5)/20 ≈ -19*2.2361/20 ≈ -42.486/20 ≈ -2.124  ✓ (close enough with rounding)
+</script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 1.4rem;
+}
+
+.problem-statement {
+  border-left: 4px solid #a78bfa;
+  font-size: 1.1rem;
+}
+
+.problem-statement .problem-text {
+  margin-bottom: 20px;
+}
+
+.given-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.given-item {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.answer-option {
+  cursor: default;
+  transition: transform 0.15s;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.value {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.plan-card {
+  border-left: 4px solid #60a5fa;
+}
+
+.theory-card details {
+  margin: 15px 0;
+}
+
+.theory-card summary {
+  cursor: pointer;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #a78bfa;
+  padding: 8px 0;
+}
+
+.theory-card summary:hover {
+  color: #c4b5fd;
+}
+
+.theory-card .theory-content {
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(167, 139, 250, 0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(167, 139, 250, 0.12);
+}
+
+.theory-card .theory-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.theory-card .theory-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.theory-card .theory-content li:last-child {
+  border-bottom: none;
+}
+
+.step-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.step-container:hover, .step-container.active {
+  background: rgba(96, 165, 250, 0.05);
+  border-left: 3px solid #4ade80;
+}
+
+.step-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.step-content h3 {
+  font-size: 1.1rem;
+  color: #60a5fa;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  margin-bottom: 8px;
+}
+
+.math-block {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+  overflow-x: auto;
+}
+
+.note {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.checkpoint {
+  margin: 15px 0;
+  background: rgba(52, 211, 153, 0.06);
+  border: 1px solid rgba(52, 211, 153, 0.15);
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  color: #34d399;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.checkpoint .answer {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(52, 211, 153, 0.08);
+  border-radius: 8px;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(167, 139, 250, 0.1));
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.insight-box h2 {
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.insight-formula {
+  font-size: 1.4rem;
+  color: #4ade80;
+  margin: 16px 0;
+}
+
+.final-answer-card {
+  border: 2px solid #4ade80;
+  text-align: center;
+}
+
+.final-answer-card h2 {
+  color: #4ade80;
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+}
+
+.final-answer-value {
+  font-size: 1.8rem;
+  color: #4ade80;
+  font-weight: 700;
+  margin: 16px 0;
+}
+
+.answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.opt {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1.05rem;
+}
+
+.opt.correct {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #4ade80;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.verification {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgba(52, 211, 153, 0.06);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.pitfalls-card {
+  border-left: 4px solid #f472b6;
+}
+
+.pitfalls-card h2 {
+  color: #f472b6;
+}
+
+.pitfalls-card ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.pitfalls-card li {
+  margin-bottom: 8px;
+}
+
+.challenge-card details {
+  margin: 15px 0;
+}
+
+.challenge-card summary {
+  cursor: pointer;
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+.canvas-card {
+  text-align: center;
+}
+
+.canvas-card canvas {
+  border-radius: 12px;
+  max-width: 100%;
+  touch-action: none;
+}
+
+.drag-hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  h1 { font-size: 1.5rem; }
+  .container { padding: 10px; }
+  .card { padding: 16px; }
+  .given-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  .answer-options { flex-direction: column; align-items: center; }
+  .step-container { flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Tangens zbira inverznih trigonometrijskih funkcija</h1>
+  <p class="subtitle">Kompozicija trigonometrijskih i inverznih trigonometrijskih funkcija sa formulom za tangens zbira</p>
+
+  <!-- Problem Statement -->
+  <div class="card problem-statement">
+    <h2 class="card-title"><span class="icon">📋</span> Tekst zadatka</h2>
+    <div class="problem-text">
+      <p>Čemu je jednako \(\operatorname{tg}\!\left(\arcsin\dfrac{2}{3}+\arccos\dfrac{2}{7}\right)\)?</p>
+    </div>
+    <div class="given-grid">
+      <div class="given-item answer-option" data-option="A">
+        <div class="label">(A)</div>
+        <div class="value">\(\dfrac{8\sqrt{5}}{11}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="B">
+        <div class="label">(B)</div>
+        <div class="value">\(\dfrac{19\sqrt{5}}{40}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="C">
+        <div class="label">(C)</div>
+        <div class="value">\(-\dfrac{19\sqrt{5}}{20}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="D">
+        <div class="label">(D)</div>
+        <div class="value">\(\dfrac{20}{21}\)</div>
+      </div>
+      <div class="given-item answer-option" data-option="E">
+        <div class="label">(E)</div>
+        <div class="value">\(\dfrac{20}{17}\)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card plan-card">
+    <h2 class="card-title"><span class="icon">🧭</span> Plan rešavanja</h2>
+    <p>Uvešćemo pomoćne uglove \(\alpha = \arcsin\frac{2}{3}\) i \(\beta = \arccos\frac{2}{7}\). Iz poznatih vrednosti sinusa i kosinusa izračunaćemo tangense oba ugla, a zatim primeniti formulu za tangens zbira uglova.</p>
+  </div>
+
+  <!-- Theory Refresher -->
+  <div class="card theory-card">
+    <details>
+      <summary>📐 Ključne formule i teoreme</summary>
+      <div class="theory-content">
+        <ul>
+          <li><strong>Pitagorina trigonometrijska identičnost:</strong> \(\sin^2\alpha + \cos^2\alpha = 1\), odakle \(\cos\alpha = \sqrt{1-\sin^2\alpha}\) za \(\alpha \in \left[-\frac{\pi}{2}, \frac{\pi}{2}\right]\)</li>
+          <li><strong>Tangens preko sinusa i kosinusa:</strong> \(\operatorname{tg}\alpha = \dfrac{\sin\alpha}{\cos\alpha}\)</li>
+          <li><strong>Formula za tangens zbira:</strong> \(\operatorname{tg}(\alpha+\beta) = \dfrac{\operatorname{tg}\alpha + \operatorname{tg}\beta}{1 - \operatorname{tg}\alpha \cdot \operatorname{tg}\beta}\)</li>
+          <li><strong>Opseg arkus funkcija:</strong> \(\arcsin x \in \left[-\frac{\pi}{2}, \frac{\pi}{2}\right]\), \(\arccos x \in [0, \pi]\) — ovo određuje znak kosinusa i sinusa</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <!-- Visual Aid -->
+  <div class="card canvas-card">
+    <h2 class="card-title"><span class="icon">📊</span> Vizuelni prikaz — pravougli trouglovi</h2>
+    <canvas id="triangleCanvas" width="700" height="340"></canvas>
+    <p class="drag-hint">Dva pravougla trougla: levi za \(\alpha = \arcsin\frac{2}{3}\), desni za \(\beta = \arccos\frac{2}{7}\)</p>
+  </div>
+
+  <!-- Step-by-Step Solution -->
+  <div class="card">
+    <h2 class="card-title"><span class="icon">📝</span> Rešenje korak po korak</h2>
+
+    <div class="step-container" id="step1">
+      <div class="step-badge">1</div>
+      <div class="step-content">
+        <h3>Uvedimo oznake</h3>
+        <p>Neka je:</p>
+        <div class="math-block">
+          \[\alpha = \arcsin\frac{2}{3}, \quad \beta = \arccos\frac{2}{7}\]
+        </div>
+        <p>Tada tražimo vrednost \(\operatorname{tg}(\alpha + \beta)\).</p>
+      </div>
+    </div>
+
+    <div class="step-container" id="step2">
+      <div class="step-badge">2</div>
+      <div class="step-content">
+        <h3>Odredimo \(\operatorname{tg}\alpha\)</h3>
+        <p>Iz definicije: \(\sin\alpha = \dfrac{2}{3}\).</p>
+        <p>Kosinus nalazimo iz osnovnog identiteta:</p>
+        <div class="math-block">
+          \[\cos\alpha = \sqrt{1 - \sin^2\alpha} = \sqrt{1 - \frac{4}{9}} = \sqrt{\frac{5}{9}} = \frac{\sqrt{5}}{3}\]
+        </div>
+        <p class="note">Kosinus je pozitivan jer \(\alpha = \arcsin\frac{2}{3} \in \left[-\frac{\pi}{2}, \frac{\pi}{2}\right]\).</p>
+        <p>Sada je:</p>
+        <div class="math-block">
+          \[\operatorname{tg}\alpha = \frac{\sin\alpha}{\cos\alpha} = \frac{\frac{2}{3}}{\frac{\sqrt{5}}{3}} = \frac{2}{\sqrt{5}}\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step3">
+      <div class="step-badge">3</div>
+      <div class="step-content">
+        <h3>Odredimo \(\operatorname{tg}\beta\)</h3>
+        <p>Iz definicije: \(\cos\beta = \dfrac{2}{7}\).</p>
+        <p>Sinus nalazimo analogno:</p>
+        <div class="math-block">
+          \[\sin\beta = \sqrt{1 - \cos^2\beta} = \sqrt{1 - \frac{4}{49}} = \sqrt{\frac{45}{49}} = \frac{3\sqrt{5}}{7}\]
+        </div>
+        <p class="note">Sinus je pozitivan jer \(\beta = \arccos\frac{2}{7} \in [0, \pi]\).</p>
+        <p>Dakle:</p>
+        <div class="math-block">
+          \[\operatorname{tg}\beta = \frac{\sin\beta}{\cos\beta} = \frac{\frac{3\sqrt{5}}{7}}{\frac{2}{7}} = \frac{3\sqrt{5}}{2}\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>✅ Proveri se: Koliki je proizvod \(\operatorname{tg}\alpha \cdot \operatorname{tg}\beta\)?</summary>
+      <div class="answer">
+        <p>\(\operatorname{tg}\alpha \cdot \operatorname{tg}\beta = \dfrac{2}{\sqrt{5}} \cdot \dfrac{3\sqrt{5}}{2} = \dfrac{6\sqrt{5}}{2\sqrt{5}} = 3\)</p>
+        <p>Pošto je proizvod veći od 1, ugao \(\alpha+\beta\) prelazi \(\frac{\pi}{2}\), pa očekujemo negativan tangens.</p>
+      </div>
+    </details>
+
+    <div class="step-container" id="step4">
+      <div class="step-badge">4</div>
+      <div class="step-content">
+        <h3>Izračunamo zbir tangensa</h3>
+        <p>Saberemo \(\operatorname{tg}\alpha\) i \(\operatorname{tg}\beta\) svodećenjem na zajednički imenilac \(2\sqrt{5}\):</p>
+        <div class="math-block">
+          \[\operatorname{tg}\alpha + \operatorname{tg}\beta = \frac{2}{\sqrt{5}} + \frac{3\sqrt{5}}{2}\]
+        </div>
+        <div class="math-block">
+          \[= \frac{2 \cdot 2}{2\sqrt{5}} + \frac{3\sqrt{5} \cdot \sqrt{5}}{2\sqrt{5}} = \frac{4}{2\sqrt{5}} + \frac{15}{2\sqrt{5}} = \frac{19}{2\sqrt{5}}\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step5">
+      <div class="step-badge">5</div>
+      <div class="step-content">
+        <h3>Izračunamo imenilac formule za tangens zbira</h3>
+        <p>Koristimo rezultat iz kontrolne tačke:</p>
+        <div class="math-block">
+          \[1 - \operatorname{tg}\alpha \cdot \operatorname{tg}\beta = 1 - 3 = -2\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step6">
+      <div class="step-badge">6</div>
+      <div class="step-content">
+        <h3>Primenimo formulu za tangens zbira</h3>
+        <p>Uvrštavamo u formulu:</p>
+        <div class="math-block">
+          \[\operatorname{tg}(\alpha+\beta) = \frac{\operatorname{tg}\alpha + \operatorname{tg}\beta}{1 - \operatorname{tg}\alpha \cdot \operatorname{tg}\beta} = \frac{\frac{19}{2\sqrt{5}}}{-2}\]
+        </div>
+        <div class="math-block">
+          \[= \frac{19}{2\sqrt{5}} \cdot \frac{1}{-2} = -\frac{19}{4\sqrt{5}}\]
+        </div>
+      </div>
+    </div>
+
+    <div class="step-container" id="step7">
+      <div class="step-badge">7</div>
+      <div class="step-content">
+        <h3>Racionalizujemo imenilac</h3>
+        <p>Proširujemo razlomak sa \(\sqrt{5}\):</p>
+        <div class="math-block">
+          \[-\frac{19}{4\sqrt{5}} = -\frac{19}{4\sqrt{5}} \cdot \frac{\sqrt{5}}{\sqrt{5}} = -\frac{19\sqrt{5}}{4 \cdot 5} = -\frac{19\sqrt{5}}{20}\]
+        </div>
+      </div>
+    </div>
+
+    <details class="checkpoint">
+      <summary>✅ Proveri se: Numerička verifikacija</summary>
+      <div class="answer">
+        <p>\(\alpha \approx 41{,}81°\), \(\beta \approx 73{,}40°\), pa je \(\alpha+\beta \approx 115{,}21°\).</p>
+        <p>\(\operatorname{tg}(115{,}21°) \approx -2{,}128\)</p>
+        <p>\(-\dfrac{19\sqrt{5}}{20} \approx -\dfrac{19 \cdot 2{,}236}{20} \approx -\dfrac{42{,}49}{20} \approx -2{,}124\) — poklapa se!</p>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- Key Insight -->
+  <div class="insight-box">
+    <h2>💡 Ključni uvid</h2>
+    <p>Proizvod tangensa je \(\operatorname{tg}\alpha \cdot \operatorname{tg}\beta = 3 > 1\), što znači da je zbir uglova u drugom kvadrantu, gde je tangens negativan. Zato je rezultat negativan — jedina negativna opcija je (C)!</p>
+    <div class="insight-formula">
+      \[\operatorname{tg}\!\left(\arcsin\frac{2}{3}+\arccos\frac{2}{7}\right) = -\frac{19\sqrt{5}}{20}\]
+    </div>
+  </div>
+
+  <!-- Final Answer -->
+  <div class="card final-answer-card">
+    <h2>Konačan odgovor</h2>
+    <div class="final-answer-value">
+      \(\operatorname{tg}\!\left(\arcsin\dfrac{2}{3}+\arccos\dfrac{2}{7}\right) = -\dfrac{19\sqrt{5}}{20}\)
+    </div>
+    <div class="answer-options">
+      <span class="opt">(A) \(\dfrac{8\sqrt{5}}{11}\)</span>
+      <span class="opt">(B) \(\dfrac{19\sqrt{5}}{40}\)</span>
+      <span class="opt correct">(C) \(-\dfrac{19\sqrt{5}}{20}\)</span>
+      <span class="opt">(D) \(\dfrac{20}{21}\)</span>
+      <span class="opt">(E) \(\dfrac{20}{17}\)</span>
+    </div>
+    <div class="verification">
+      <strong>Provera:</strong> Numerički, \(\alpha + \beta \approx 115°\), a \(\operatorname{tg}(115°) \approx -2{,}13\). Odgovor (C) daje \(-\frac{19\sqrt{5}}{20} \approx -2{,}12\), što se poklapa. Takođe, jedina negativna opcija je (C), a iz analize znakova smo utvrdili da rezultat mora biti negativan.
+    </div>
+  </div>
+
+  <!-- Common Pitfalls -->
+  <div class="card pitfalls-card">
+    <h2 class="card-title"><span class="icon">⚠️</span> Česte greške</h2>
+    <ul>
+      <li><strong>Pogrešan znak kosinusa ili sinusa:</strong> Opseg arkus funkcija diktira znakove. \(\arcsin\) vraća ugao u \(\left[-\frac{\pi}{2}, \frac{\pi}{2}\right]\) (kosinus pozitivan), a \(\arccos\) u \([0, \pi]\) (sinus pozitivan). Ako se uzme negativan koren, dobija se pogrešan odgovor.</li>
+      <li><strong>Zaboravljena racionalizacija:</strong> Bez racionalizacije imenioca dobija se \(-\frac{19}{4\sqrt{5}}\), što ne odgovara nijednom ponuđenom odgovoru. Neophodno je proširiti sa \(\sqrt{5}\).</li>
+    </ul>
+  </div>
+
+  <!-- Optional Challenge -->
+  <div class="card challenge-card">
+    <h2 class="card-title"><span class="icon">🏆</span> Dodatni izazov</h2>
+    <p>Izračunaj vrednost \(\sin\!\left(\arcsin\dfrac{2}{3}+\arccos\dfrac{2}{7}\right)\). Koristi sličan pristup sa formulom za sinus zbira.</p>
+    <details>
+      <summary>Pogledaj nagoveštaj</summary>
+      <div class="answer">
+        <p>Primeni formulu \(\sin(\alpha+\beta) = \sin\alpha\cos\beta + \cos\alpha\sin\beta\). Već znamo sve potrebne vrednosti: \(\sin\alpha = \frac{2}{3}\), \(\cos\alpha = \frac{\sqrt{5}}{3}\), \(\sin\beta = \frac{3\sqrt{5}}{7}\), \(\cos\beta = \frac{2}{7}\).</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  // Draw right triangles for alpha and beta
+  const canvas = document.getElementById('triangleCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Background
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, w, h);
+
+    // --- Left triangle: alpha = arcsin(2/3) ---
+    // sin(a) = 2/3, cos(a) = sqrt(5)/3
+    // Sides: opposite=2, hypotenuse=3, adjacent=sqrt(5)
+    const lx = 80, ly = 260;
+    const lScale = 60;
+    const adjL = Math.sqrt(5) * lScale; // adjacent side
+    const oppL = 2 * lScale;            // opposite side
+
+    // Triangle vertices: right angle at bottom-left
+    const lA = { x: lx, y: ly };                       // right angle
+    const lB = { x: lx + adjL, y: ly };                // adjacent end
+    const lC = { x: lx, y: ly - oppL };                // opposite end
+
+    // Draw triangle
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(lA.x, lA.y);
+    ctx.lineTo(lB.x, lB.y);
+    ctx.lineTo(lC.x, lC.y);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Fill lightly
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.06)';
+    ctx.fill();
+
+    // Right angle marker
+    const raSize = 14;
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(lA.x + raSize, lA.y);
+    ctx.lineTo(lA.x + raSize, lA.y - raSize);
+    ctx.lineTo(lA.x, lA.y - raSize);
+    ctx.stroke();
+
+    // Angle arc for alpha
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const angleAlpha = Math.atan2(-(lC.y - lB.y), lC.x - lB.x);
+    const angleBase = Math.atan2(-(lA.y - lB.y), lA.x - lB.x);
+    ctx.arc(lB.x, lB.y, 25, -angleAlpha, -angleBase, false);
+    ctx.stroke();
+
+    // Labels
+    ctx.font = 'bold 16px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+
+    // Alpha label
+    ctx.fillStyle = '#f472b6';
+    ctx.fillText('α', lB.x - 35, lB.y - 8);
+
+    // Side labels
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('3', (lB.x + lC.x) / 2 + 14, (lB.y + lC.y) / 2);   // hypotenuse
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('2', lC.x - 14, (lA.y + lC.y) / 2);                  // opposite
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('√5', (lA.x + lB.x) / 2, lA.y + 22);                // adjacent
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, sans-serif';
+    ctx.fillText('α = arcsin(2/3)', lx + adjL / 2, 40);
+    ctx.fillText('tg α = 2/√5', lx + adjL / 2, 60);
+
+    // --- Right triangle: beta = arccos(2/7) ---
+    const rx = 400, ry = 260;
+    const rScale = 35;
+    const adjR = 2 * rScale;                // adjacent = 2
+    const oppR = 3 * Math.sqrt(5) * rScale / 3; // opposite = 3√5 ≈ 6.71, scale it
+    const oppRScaled = 3 * Math.sqrt(5) * rScale;
+    // Let's use consistent scaling: hypotenuse = 7, adjacent = 2, opposite = 3√5
+    // Scale so hypotenuse is about 210px
+    const rScaleH = 30;
+    const hypR = 7 * rScaleH;
+    const adjR2 = 2 * rScaleH;
+    const oppR2 = 3 * Math.sqrt(5) * rScaleH; // ≈ 201px
+
+    const rA = { x: rx, y: ry };                        // right angle
+    const rB = { x: rx + adjR2, y: ry };                // adjacent end
+    const rC = { x: rx, y: ry - oppR2 };                // opposite end
+
+    // Draw triangle
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(rA.x, rA.y);
+    ctx.lineTo(rB.x, rB.y);
+    ctx.lineTo(rC.x, rC.y);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.06)';
+    ctx.fill();
+
+    // Right angle marker
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(rA.x + raSize, rA.y);
+    ctx.lineTo(rA.x + raSize, rA.y - raSize);
+    ctx.lineTo(rA.x, rA.y - raSize);
+    ctx.stroke();
+
+    // Angle arc for beta
+    ctx.strokeStyle = '#f472b6';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const angleBeta = Math.atan2(-(rC.y - rB.y), rC.x - rB.x);
+    const angleBase2 = Math.atan2(-(rA.y - rB.y), rA.x - rB.x);
+    ctx.arc(rB.x, rB.y, 25, -angleBeta, -angleBase2, false);
+    ctx.stroke();
+
+    // Beta label
+    ctx.fillStyle = '#f472b6';
+    ctx.font = 'bold 16px Segoe UI, sans-serif';
+    ctx.fillText('β', rB.x - 35, rB.y - 15);
+
+    // Side labels
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('7', (rB.x + rC.x) / 2 + 18, (rB.y + rC.y) / 2);   // hypotenuse
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('3√5', rC.x - 22, (rA.y + rC.y) / 2);               // opposite
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('2', (rA.x + rB.x) / 2, rA.y + 22);                 // adjacent
+
+    // Title
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px Segoe UI, sans-serif';
+    ctx.fillText('β = arccos(2/7)', rx + adjR2 / 2 + 20, 40);
+    ctx.fillText('tg β = 3√5/2', rx + adjR2 / 2 + 20, 60);
+  }
+
+  draw();
+
+  // Step click interactivity
+  document.querySelectorAll('.step-container').forEach(step => {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step-container').forEach(s => s.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
+<!--BRAINSPARK_META
+{
+  "title": "Tangens zbira inverznih trigonometrijskih funkcija",
+  "subject": "math",
+  "unit": "trigonometry",
+  "topic_tags": ["arkus funkcije", "tangens zbira", "inverzne trigonometrijske funkcije", "racionalizacija"]
+}
+BRAINSPARK_META-->

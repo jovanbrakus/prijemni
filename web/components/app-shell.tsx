@@ -133,6 +133,33 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons }
     [router]
   );
 
+  // Keyboard navigation: up/down arrows to switch lessons
+  useEffect(() => {
+    if (!selectedLessonId || lessons.length === 0) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      // Don't intercept if user is typing in an input
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+      e.preventDefault();
+      const currentIndex = lessons.findIndex((l) => l.id === selectedLessonId);
+      if (currentIndex === -1) return;
+
+      const nextIndex = e.key === "ArrowDown"
+        ? Math.min(currentIndex + 1, lessons.length - 1)
+        : Math.max(currentIndex - 1, 0);
+
+      if (nextIndex !== currentIndex) {
+        router.push(`/?lesson=${lessons[nextIndex].id}`, { scroll: false });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedLessonId, lessons, router]);
+
   const handleExpandFaculty = useCallback((slug: string | null) => {
     setExpandedFaculty(slug);
     setExpandedYear(null);

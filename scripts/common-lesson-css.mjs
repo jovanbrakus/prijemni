@@ -1,5 +1,5 @@
 // Canonical typography classes for knowledge lessons.
-// Source of truth: lesson 3 (binarne relacije).
+// Source of truth: lesson 1 (iskazi i iskazne formule).
 // Used by normalize-lesson-css.mjs to stamp into every lesson file.
 
 export const TYPOGRAPHY_CSS = `/* === Typography System === */

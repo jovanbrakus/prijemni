@@ -27,7 +27,7 @@ Each abbreviation maps to a `categories.json` ID:
 | `bi` | binomial_formula |
 | `delj`, `etb`, `tb` | real_numbers |
 | `eks` | exponential_equations |
-| `gvf` | limits |
+| `gvf` | derivatives |
 | `if`, `pi`, `izv` | derivatives |
 | `irac` | irrational_equations |
 | `kb` | complex_numbers |
@@ -44,7 +44,7 @@ Each abbreviation maps to a `categories.json` ID:
 | `ste` | stereometry |
 | `tri` | trigonometric_expressions |
 | `trj` | trigonometric_equations |
-| `ver` | probability |
+| `ver` | combinatorics |
 | `vf` | polynomials |
 
 Combined abbreviations like `eks/log` → take the first part.
@@ -90,7 +90,7 @@ KEYWORD_RULES = [
     # Very specific first
     (r'kompleksn|imaginar|konjugovan.*bro|i\^2\s*=\s*-1', 'complex_numbers'),
     (r'binomn|njutn|paskal.*trougao|binom.*formul', 'binomial_formula'),
-    (r'verovatnoc|verovatno[sš]|slučajn', 'probability'),
+    (r'verovatnoc|verovatno[sš]|slučajn', 'combinatorics'),
     (r'kombinat|varijacij|permutacij|teorij.*igara', 'combinatorics'),
 
     # Geometry — 3D
@@ -114,7 +114,7 @@ KEYWORD_RULES = [
 
     # Analysis
     (r'izvod|derivat|tangent.*funkcij|monoton.*funkcij|ekstrem|minimum.*funkcij|maksimum.*funkcij|stacionar', 'derivatives'),
-    (r'graničn.*vrednost|limes|limit|granična', 'limits'),
+    (r'graničn.*vrednost|limes|limit|granična', 'derivatives'),
     (r'aritmet.*niz|geometr.*niz|geometrij.*niz|niz.*razlik|niz.*količnik|beskonačn.*red|zbir.*niz|opšti.*član.*niz|n-ti.*član', 'sequences'),
     (r'aritmetičk.*progresij|geometrijsk.*progresij|progresij.*član|član.*progresij|zbir.*članov.*progresij', 'sequences'),
 

@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { ProblemViewer } from "./problem-viewer";
 import { cn } from "@/lib/utils";
-import type { FacultyEntry, Report, CategoryOption, LessonEntry } from "@/lib/types";
+import type { FacultyEntry, Report, CategoryOption } from "@/lib/types";
 
 interface ProblemLocation {
   facultySlug: string;
@@ -15,7 +15,7 @@ interface ProblemLocation {
   problem: import("@/lib/types").ProblemEntry;
 }
 
-function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons, facultiesV2 }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[]; lessons: LessonEntry[]; facultiesV2: FacultyEntry[] }) {
+function AppShellInner({ faculties: initialFaculties, categoryOptions, facultiesV2 }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[]; facultiesV2: FacultyEntry[] }) {
   const [faculties, setFaculties] = useState(initialFaculties);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -23,7 +23,6 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons, 
   const [reports, setReports] = useState<Report[]>([]);
 
   const selectedId = searchParams.get("id");
-  const selectedLessonId = searchParams.get("lesson");
 
   // Build flat lookup: id → { facultySlug, year, problem }
   const problemIndex = useMemo(() => {
@@ -91,13 +90,63 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons, 
     fetchReports();
   }, [fetchReports]);
 
-  const selectedLesson = useMemo(
-    () => lessons.find((l) => l.id === selectedLessonId) ?? null,
-    [lessons, selectedLessonId]
-  );
-
-  const solutionUrl = selectedLesson?.url ?? selectedEntry?.solutionUrl ?? null;
+  const solutionUrl = selectedEntry?.solutionUrl ?? null;
   const selectedDocument = selectedEntry?.document ?? null;
+  const [v2Theme, setV2Theme] = useState<"dark" | "light">("dark");
+
+  // Build flat ordered problem lists for keyboard navigation
+  const flatProblems = useMemo(() => {
+    const buildList = (facs: FacultyEntry[]) => {
+      const list: string[] = [];
+      const sorted = [...facs].sort((a, b) => a.displayName.localeCompare(b.displayName));
+      for (const faculty of sorted) {
+        const years = [...faculty.years].sort((a, b) => b.year - a.year || (a.extra || "").localeCompare(b.extra || ""));
+        for (const year of years) {
+          const problems = [...year.problems].sort((a, b) => a.order - b.order);
+          for (const p of problems) {
+            list.push(p.id);
+          }
+        }
+      }
+      return list;
+    };
+    return { v1: buildList(faculties), v2: buildList(facultiesV2) };
+  }, [faculties, facultiesV2]);
+
+  // Keyboard navigation: up/down = prev/next problem, space = toggle theme
+  useEffect(() => {
+    if (!selectedId) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+      if (e.key === " ") {
+        e.preventDefault();
+        setV2Theme((t) => (t === "dark" ? "light" : "dark"));
+        return;
+      }
+
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      e.preventDefault();
+
+      const isV2 = selectedId.startsWith("v2_");
+      const list = isV2 ? flatProblems.v2 : flatProblems.v1;
+      const idx = list.indexOf(selectedId);
+      if (idx === -1) return;
+
+      const nextIdx = e.key === "ArrowDown"
+        ? Math.min(idx + 1, list.length - 1)
+        : Math.max(idx - 1, 0);
+
+      if (nextIdx !== idx) {
+        router.push(`/?id=${list[nextIdx]}`, { scroll: false });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedId, flatProblems, router]);
 
   const handleCategoryChange = useCallback(
     (newCategoryId: string | null) => {
@@ -137,41 +186,6 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons, 
     },
     [router]
   );
-
-  const handleSelectLesson = useCallback(
-    (lessonId: string) => {
-      router.push(`/?lesson=${lessonId}`, { scroll: false });
-      setMobileOpen(false);
-    },
-    [router]
-  );
-
-  // Keyboard navigation: up/down arrows to switch lessons
-  useEffect(() => {
-    if (!selectedLessonId || lessons.length === 0) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
-      // Don't intercept if user is typing in an input
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-
-      e.preventDefault();
-      const currentIndex = lessons.findIndex((l) => l.id === selectedLessonId);
-      if (currentIndex === -1) return;
-
-      const nextIndex = e.key === "ArrowDown"
-        ? Math.min(currentIndex + 1, lessons.length - 1)
-        : Math.max(currentIndex - 1, 0);
-
-      if (nextIndex !== currentIndex) {
-        router.push(`/?lesson=${lessons[nextIndex].id}`, { scroll: false });
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedLessonId, lessons, router]);
 
   const handleExpandFaculty = useCallback((slug: string | null) => {
     setExpandedFaculty(slug);
@@ -224,9 +238,7 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons, 
             faculties={faculties}
             facultiesV2={facultiesV2}
             reports={reports}
-            lessons={lessons}
             selectedProblemId={selectedId}
-            selectedLessonId={selectedLessonId}
             expandedFaculty={expandedFaculty}
             expandedYear={expandedYear}
             filterReported={filterReported}
@@ -234,7 +246,6 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons, 
             onExpandFaculty={handleExpandFaculty}
             onExpandYear={setExpandedYear}
             onSelectProblem={handleSelectProblem}
-            onSelectLesson={handleSelectLesson}
           />
         </aside>
 
@@ -242,16 +253,18 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons, 
         <main className="min-h-0 flex-1">
           <ProblemViewer
             solutionUrl={solutionUrl}
-            problemId={selectedLesson ? null : (selectedEntry?.id ?? null)}
-            document={selectedLesson ? null : selectedDocument}
-            order={selectedLesson ? null : (selectedEntry?.order ?? null)}
-            category={selectedLesson ? null : (selectedEntry?.category ?? null)}
-            categorySr={selectedLesson ? null : (selectedEntry?.categorySr ?? null)}
-            categoryGroupSr={selectedLesson ? null : (selectedEntry?.categoryGroupSr ?? null)}
+            problemId={selectedEntry?.id ?? null}
+            document={selectedDocument}
+            order={selectedEntry?.order ?? null}
+            category={selectedEntry?.category ?? null}
+            categorySr={selectedEntry?.categorySr ?? null}
+            categoryGroupSr={selectedEntry?.categoryGroupSr ?? null}
             categoryOptions={categoryOptions}
-            report={selectedLesson ? null : currentReport}
+            report={currentReport}
             onReportChange={fetchReports}
             onCategoryChange={handleCategoryChange}
+            v2Theme={v2Theme}
+            onToggleTheme={() => setV2Theme((t) => (t === "dark" ? "light" : "dark"))}
           />
         </main>
       </div>
@@ -259,10 +272,10 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons, 
   );
 }
 
-export function AppShell({ faculties, categoryOptions, lessons, facultiesV2 }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[]; lessons: LessonEntry[]; facultiesV2: FacultyEntry[] }) {
+export function AppShell({ faculties, categoryOptions, facultiesV2 }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[]; facultiesV2: FacultyEntry[] }) {
   return (
     <Suspense>
-      <AppShellInner faculties={faculties} categoryOptions={categoryOptions} lessons={lessons} facultiesV2={facultiesV2} />
+      <AppShellInner faculties={faculties} categoryOptions={categoryOptions} facultiesV2={facultiesV2} />
     </Suspense>
   );
 }

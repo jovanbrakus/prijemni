@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Flag, Eye, EyeOff, Check, Loader2, AlertCircle, Tag, ChevronDown, Sun, Moon } from "lucide-react";
 import { EmptyState } from "./empty-state";
 import type { Report, CategoryOption } from "@/lib/types";
@@ -17,6 +17,8 @@ interface ProblemViewerProps {
   report: Report | null;
   onReportChange: () => void;
   onCategoryChange: (categoryId: string | null) => void;
+  v2Theme: "dark" | "light";
+  onToggleTheme: () => void;
 }
 
 export function ProblemViewer({
@@ -31,6 +33,8 @@ export function ProblemViewer({
   report,
   onReportChange,
   onCategoryChange,
+  v2Theme,
+  onToggleTheme,
 }: ProblemViewerProps) {
   const [showForm, setShowForm] = useState(false);
   const [showDescription, setShowDescription] = useState(true);
@@ -40,20 +44,18 @@ export function ProblemViewer({
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [savingCategory, setSavingCategory] = useState(false);
   const [pendingCategory, setPendingCategory] = useState<string | null | undefined>(undefined);
-  const [v2Theme, setV2Theme] = useState<"dark" | "light">("dark");
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const isV2 = solutionUrl?.includes("/solution_v2/") ?? false;
 
-  const toggleV2Theme = useCallback(() => {
-    const next = v2Theme === "dark" ? "light" : "dark";
-    setV2Theme(next);
-    // Send theme change to iframe via postMessage
+  // Send theme change to iframe when v2Theme changes
+  useEffect(() => {
+    if (!isV2) return;
     iframeRef.current?.contentWindow?.postMessage(
-      { type: "matoteka-theme", theme: next },
+      { type: "matoteka-theme", theme: v2Theme },
       "*"
     );
-  }, [v2Theme]);
+  }, [v2Theme, isV2]);
 
   if (!solutionUrl) {
     return <EmptyState />;
@@ -263,7 +265,7 @@ export function ProblemViewer({
           <div className="ml-auto flex items-center gap-2">
             {isV2 && (
               <button
-                onClick={toggleV2Theme}
+                onClick={onToggleTheme}
                 className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 title={v2Theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
               >

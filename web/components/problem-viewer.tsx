@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Flag, Eye, EyeOff, Check, Loader2, AlertCircle, Tag, ChevronDown } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { Flag, Eye, EyeOff, Check, Loader2, AlertCircle, Tag, ChevronDown, Sun, Moon } from "lucide-react";
 import { EmptyState } from "./empty-state";
 import type { Report, CategoryOption } from "@/lib/types";
 
@@ -40,6 +40,20 @@ export function ProblemViewer({
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [savingCategory, setSavingCategory] = useState(false);
   const [pendingCategory, setPendingCategory] = useState<string | null | undefined>(undefined);
+  const [v2Theme, setV2Theme] = useState<"dark" | "light">("dark");
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const isV2 = solutionUrl?.includes("/solution_v2/") ?? false;
+
+  const toggleV2Theme = useCallback(() => {
+    const next = v2Theme === "dark" ? "light" : "dark";
+    setV2Theme(next);
+    // Send theme change to iframe via postMessage
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: "matoteka-theme", theme: next },
+      "*"
+    );
+  }, [v2Theme]);
 
   if (!solutionUrl) {
     return <EmptyState />;
@@ -245,8 +259,24 @@ export function ProblemViewer({
             </span>
           )}
 
-          {/* Report buttons — right side */}
+          {/* Theme toggle + Report buttons — right side */}
           <div className="ml-auto flex items-center gap-2">
+            {isV2 && (
+              <button
+                onClick={toggleV2Theme}
+                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                title={v2Theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              >
+                {v2Theme === "dark" ? (
+                  <Sun className="h-3.5 w-3.5" />
+                ) : (
+                  <Moon className="h-3.5 w-3.5" />
+                )}
+                {v2Theme === "dark" ? "Light" : "Dark"}
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
             {!report && (
               <button
                 onClick={() => {
@@ -336,8 +366,9 @@ export function ProblemViewer({
 
       {/* Solution iframe */}
       <iframe
-        key={solutionUrl}
-        src={solutionUrl}
+        ref={iframeRef}
+        key={isV2 ? `${solutionUrl}?theme=${v2Theme}` : solutionUrl}
+        src={isV2 ? `${solutionUrl}?theme=${v2Theme}` : solutionUrl}
         className="min-h-0 flex-1 border-0"
         title="Rešenje zadatka"
         sandbox="allow-scripts allow-same-origin"

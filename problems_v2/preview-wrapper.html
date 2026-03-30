@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="sr" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solution v2 Preview</title>
+
+<!-- MathJax -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]']]
+  },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>
+
+<!-- Solution CSS -->
+<link rel="stylesheet" href="solution-v2.css">
+
+<!-- Preview chrome styles -->
+<style>
+  .preview-toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+  .preview-toolbar .title {
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+  .preview-toolbar button {
+    padding: 4px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .preview-toolbar button:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .preview-toolbar button.active {
+    background: #ec5b13;
+    border-color: #ec5b13;
+    color: #fff;
+  }
+  .preview-toolbar .file-name {
+    font-family: monospace;
+    font-size: 12px;
+    color: #64748b;
+    margin-left: auto;
+  }
+  .preview-toolbar .status {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .preview-toolbar .status.ok { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
+  .preview-toolbar .status.error { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+
+  body {
+    padding-top: 48px; /* space for toolbar */
+  }
+
+  .solution-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: #64748b;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .empty-state h2 {
+    color: #94a3b8;
+    margin-bottom: 12px;
+  }
+  .empty-state code {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  .drop-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 40px;
+    margin: 20px auto;
+    max-width: 500px;
+    transition: border-color 0.2s;
+  }
+  .drop-zone.over {
+    border-color: #ec5b13;
+  }
+</style>
+</head>
+<body>
+
+<div class="preview-toolbar">
+  <span class="title">Solution v2 Preview</span>
+  <button id="btn-dark" class="active" onclick="setTheme('dark')">Dark</button>
+  <button id="btn-light" onclick="setTheme('light')">Light</button>
+  <span id="file-name" class="file-name"></span>
+  <span id="status" class="status" style="display:none"></span>
+</div>
+
+<div class="solution-container" id="content">
+  <div class="empty-state">
+    <h2>No fragment loaded</h2>
+    <p>Load a v2 fragment file:</p>
+    <br>
+    <p>1. Drag & drop an HTML file here</p>
+    <p>2. Or use <code>?file=path/to/fragment.html</code> in the URL</p>
+    <p>3. Or use the preview script: <code>npx tsx scripts/preview-solution.ts fragment.html</code></p>
+    <div class="drop-zone" id="drop-zone">
+      <p>Drop .html file here</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var currentTheme = 'dark';
+
+  window.setTheme = function(theme) {
+    currentTheme = theme;
+    document.documentElement.className = theme;
+    document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
+    document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+    // Notify canvas scripts
+    window.postMessage({ type: 'matoteka-theme', theme: theme }, '*');
+  };
+
+  function showStatus(ok, msg) {
+    var el = document.getElementById('status');
+    el.style.display = '';
+    el.className = 'status ' + (ok ? 'ok' : 'error');
+    el.textContent = msg;
+  }
+
+  function loadFragment(html, fileName) {
+    // Validate format marker
+    if (!html.trimStart().startsWith('<!--MATOTEKA_FORMAT v2-->')) {
+      showStatus(false, 'Not a v2 fragment');
+    } else {
+      showStatus(true, 'v2 OK');
+    }
+
+    document.getElementById('file-name').textContent = fileName || '';
+    document.getElementById('content').innerHTML = html;
+
+    // Re-run MathJax
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise().catch(function(e) { console.warn('MathJax error:', e); });
+    }
+
+    // Execute script blocks in the fragment
+    var scripts = document.getElementById('content').querySelectorAll('script:not([type])');
+    scripts.forEach(function(s) {
+      var newScript = document.createElement('script');
+      newScript.textContent = s.textContent;
+      s.parentNode.replaceChild(newScript, s);
+    });
+  }
+
+  // Load from URL param
+  var params = new URLSearchParams(window.location.search);
+  var filePath = params.get('file');
+  if (filePath) {
+    fetch(filePath)
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function(html) { loadFragment(html, filePath); })
+      .catch(function(e) { showStatus(false, 'Load failed: ' + e.message); });
+  }
+
+  // Drag and drop
+  var dropZone = document.getElementById('drop-zone');
+  if (dropZone) {
+    document.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      if (dropZone) dropZone.classList.add('over');
+    });
+    document.addEventListener('dragleave', function(e) {
+      if (dropZone) dropZone.classList.remove('over');
+    });
+    document.addEventListener('drop', function(e) {
+      e.preventDefault();
+      if (dropZone) dropZone.classList.remove('over');
+      var file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.html')) {
+        var reader = new FileReader();
+        reader.onload = function() { loadFragment(reader.result, file.name); };
+        reader.readAsText(file);
+      }
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

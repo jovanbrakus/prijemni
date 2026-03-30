@@ -10,6 +10,7 @@ import type { FacultyEntry, Report, LessonEntry } from "@/lib/types";
 
 interface SidebarProps {
   faculties: FacultyEntry[];
+  facultiesV2: FacultyEntry[];
   reports: Report[];
   lessons: LessonEntry[];
   selectedProblemId: string | null;
@@ -26,6 +27,7 @@ interface SidebarProps {
 
 export function Sidebar({
   faculties,
+  facultiesV2,
   reports,
   lessons,
   selectedProblemId,
@@ -40,6 +42,9 @@ export function Sidebar({
   onSelectLesson,
 }: SidebarProps) {
   const [lessonsExpanded, setLessonsExpanded] = useState(!!selectedLessonId);
+  const [v2Expanded, setV2Expanded] = useState(!!selectedProblemId?.startsWith("v2_"));
+  const [expandedFacultyV2, setExpandedFacultyV2] = useState<string | null>(null);
+  const [expandedYearV2, setExpandedYearV2] = useState<string | null>(null);
   // Build a set for O(1) report lookups
   const reportSet = new Set(reports.map((r) => r.problemId));
 
@@ -306,6 +311,136 @@ export function Sidebar({
                       >
                         <span className="truncate">{lesson.title}</span>
                       </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Problems v2 section */}
+        {facultiesV2.length > 0 && !filterReported && (
+          <>
+            <div className="my-2 border-t border-white/10" />
+
+            <div className="mb-1">
+              <button
+                onClick={() => setV2Expanded(!v2Expanded)}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                  "hover:bg-accent hover:text-accent-foreground",
+                  v2Expanded ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
+                <ChevronRight
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-transform",
+                    v2Expanded && "rotate-90"
+                  )}
+                />
+                <span className="truncate">Rešenja v2</span>
+                <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
+                  {facultiesV2.reduce((sum, f) => sum + f.years.reduce((s, y) => s + y.problems.length, 0), 0)}
+                </Badge>
+              </button>
+
+              {v2Expanded && (
+                <div className="ml-1 mt-1">
+                  {facultiesV2.map((faculty) => {
+                    const isExpanded = expandedFacultyV2 === faculty.slug;
+                    const totalProblems = faculty.years.reduce(
+                      (sum, y) => sum + y.problems.length, 0
+                    );
+
+                    return (
+                      <div key={`v2_${faculty.slug}`} className="mb-0.5">
+                        <button
+                          onClick={() => {
+                            setExpandedFacultyV2(isExpanded ? null : faculty.slug);
+                            setExpandedYearV2(null);
+                          }}
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-medium transition-colors",
+                            "hover:bg-accent hover:text-accent-foreground",
+                            isExpanded ? "text-foreground" : "text-muted-foreground"
+                          )}
+                        >
+                          <ChevronRight
+                            className={cn(
+                              "h-3 w-3 shrink-0 transition-transform",
+                              isExpanded && "rotate-90"
+                            )}
+                          />
+                          <span className="truncate">{faculty.displayName}</span>
+                          <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
+                            {totalProblems}
+                          </Badge>
+                        </button>
+
+                        {isExpanded && (
+                          <div className="ml-3 mt-0.5">
+                            {faculty.years.map((yearEntry) => {
+                              const yearKey = `${yearEntry.year}:${yearEntry.extra || ""}`;
+                              const isYearExpanded = expandedYearV2 === yearKey;
+
+                              return (
+                                <div key={yearKey} className="mb-0.5">
+                                  <button
+                                    onClick={() => setExpandedYearV2(isYearExpanded ? null : yearKey)}
+                                    className={cn(
+                                      "flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-xs transition-colors",
+                                      "hover:bg-accent hover:text-accent-foreground",
+                                      isYearExpanded ? "text-foreground" : "text-muted-foreground"
+                                    )}
+                                  >
+                                    <ChevronRight
+                                      className={cn(
+                                        "h-3 w-3 shrink-0 transition-transform",
+                                        isYearExpanded && "rotate-90"
+                                      )}
+                                    />
+                                    <span>{yearEntry.label}</span>
+                                    <span className="ml-auto text-xs text-muted-foreground">
+                                      {yearEntry.problems.length}
+                                    </span>
+                                  </button>
+
+                                  {isYearExpanded && (
+                                    <div className="ml-4 mt-0.5">
+                                      {yearEntry.problems.map((problem) => {
+                                        const isActive = selectedProblemId === problem.id;
+                                        return (
+                                          <button
+                                            key={problem.id}
+                                            onClick={() => onSelectProblem(problem.id)}
+                                            className={cn(
+                                              "flex w-full items-center gap-2 rounded-md px-3 py-1 text-left text-xs transition-colors",
+                                              "hover:bg-accent hover:text-accent-foreground",
+                                              isActive
+                                                ? "border-l-2 border-emerald-500 bg-emerald-500/10 text-foreground"
+                                                : "text-muted-foreground"
+                                            )}
+                                          >
+                                            <span className="font-medium">
+                                              {problem.order}.
+                                            </span>
+                                            {problem.categorySr && (
+                                              <span className="truncate text-[10px] text-muted-foreground">
+                                                {problem.categorySr}
+                                              </span>
+                                            )}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>

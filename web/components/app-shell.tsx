@@ -15,7 +15,7 @@ interface ProblemLocation {
   problem: import("@/lib/types").ProblemEntry;
 }
 
-function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[]; lessons: LessonEntry[] }) {
+function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons, facultiesV2 }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[]; lessons: LessonEntry[]; facultiesV2: FacultyEntry[] }) {
   const [faculties, setFaculties] = useState(initialFaculties);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -40,8 +40,21 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons }
         }
       }
     }
+    // Also index v2 problems
+    for (const faculty of facultiesV2) {
+      for (const yearEntry of faculty.years) {
+        const yearKey = `${yearEntry.year}:${yearEntry.extra || ""}`;
+        for (const problem of yearEntry.problems) {
+          index.set(problem.id, {
+            facultySlug: faculty.slug,
+            yearKey,
+            problem,
+          });
+        }
+      }
+    }
     return index;
-  }, [faculties]);
+  }, [faculties, facultiesV2]);
 
   const selectedLocation = selectedId ? problemIndex.get(selectedId) ?? null : null;
   const selectedEntry = selectedLocation?.problem ?? null;
@@ -209,6 +222,7 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons }
         >
           <Sidebar
             faculties={faculties}
+            facultiesV2={facultiesV2}
             reports={reports}
             lessons={lessons}
             selectedProblemId={selectedId}
@@ -245,10 +259,10 @@ function AppShellInner({ faculties: initialFaculties, categoryOptions, lessons }
   );
 }
 
-export function AppShell({ faculties, categoryOptions, lessons }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[]; lessons: LessonEntry[] }) {
+export function AppShell({ faculties, categoryOptions, lessons, facultiesV2 }: { faculties: FacultyEntry[]; categoryOptions: CategoryOption[]; lessons: LessonEntry[]; facultiesV2: FacultyEntry[] }) {
   return (
     <Suspense>
-      <AppShellInner faculties={faculties} categoryOptions={categoryOptions} lessons={lessons} />
+      <AppShellInner faculties={faculties} categoryOptions={categoryOptions} lessons={lessons} facultiesV2={facultiesV2} />
     </Suspense>
   );
 }

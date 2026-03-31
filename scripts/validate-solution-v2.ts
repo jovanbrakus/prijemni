@@ -1,31 +1,59 @@
 #!/usr/bin/env npx tsx
 /**
- * Validates a v2 fragment solution HTML file for structural correctness.
+ * Validates v2 fragment solution HTML files for structural correctness.
  *
- * Checks the fragment against the solution-format-v1 specification.
- * Returns exit code 0 on success (no errors), non-zero on failure.
- * Errors and warnings are printed to stdout for generator feedback.
+ * Usage:
+ *   npx tsx scripts/validate-solution-v2.ts <file.html>           # single file
+ *   npx tsx scripts/validate-solution-v2.ts <directory>            # all *_solution.html in dir (recursive)
  *
- * Usage: npx tsx scripts/validate-solution-v2.ts <path-to-html-file>
+ * Returns exit code 0 if all files pass (no errors), non-zero if any fail.
  */
 
 import fs from "fs";
+import path from "path";
 import * as cheerio from "cheerio";
 
-const file = process.argv[2];
-if (!file) {
-  console.error("Usage: npx tsx scripts/validate-solution-v2.ts <path-to-html-file>");
+const target = process.argv[2];
+if (!target) {
+  console.error("Usage: npx tsx scripts/validate-solution-v2.ts <file-or-directory>");
   process.exit(2);
 }
 
-if (!fs.existsSync(file)) {
-  console.error(`File not found: ${file}`);
+if (!fs.existsSync(target)) {
+  console.error(`Not found: ${target}`);
   process.exit(2);
 }
 
-const raw = fs.readFileSync(file, "utf-8");
-const errors: string[] = [];
-const warnings: string[] = [];
+// ── Discover files ──
+function findHtmlFiles(dir: string): string[] {
+  const results: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...findHtmlFiles(full));
+    } else if (entry.name.endsWith("_solution.html")) {
+      results.push(full);
+    }
+  }
+  return results.sort();
+}
+
+const files = fs.statSync(target).isDirectory()
+  ? findHtmlFiles(target)
+  : [target];
+
+if (files.length === 0) {
+  console.error("No *_solution.html files found.");
+  process.exit(2);
+}
+
+const isMulti = files.length > 1;
+
+// ── Validate a single file, return { errors, warnings } ──
+function validateFile(filePath: string): { errors: string[]; warnings: string[] } {
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const errors: string[] = [];
+  const warnings: string[] = [];
 
 // ── 1. Format marker ──
 const trimmed = raw.trimStart();
@@ -352,27 +380,54 @@ fragment.find("script:not([type]):not([src])").each((_, el) => {
   }
 });
 
-// ── Output ──
-if (errors.length === 0 && warnings.length === 0) {
-  console.log("✓ OK: All validation checks passed.");
-  process.exit(0);
+  return { errors, warnings };
 }
 
-if (warnings.length > 0) {
-  console.log(`WARNINGS (${warnings.length}):`);
-  for (const w of warnings) {
-    console.log(`  ⚠ ${w}`);
+// ── Run ──
+let totalPass = 0;
+let totalWarn = 0;
+let totalFail = 0;
+
+for (const filePath of files) {
+  const { errors, warnings } = validateFile(filePath);
+  const label = isMulti ? path.relative(process.cwd(), filePath) : filePath;
+
+  if (errors.length === 0 && warnings.length === 0) {
+    totalPass++;
+    if (isMulti) {
+      console.log(`✓ ${label}`);
+    } else {
+      console.log("✓ OK: All validation checks passed.");
+    }
+  } else if (errors.length === 0) {
+    totalWarn++;
+    if (isMulti) {
+      console.log(`⚠ ${label} (${warnings.length} warning${warnings.length > 1 ? "s" : ""})`);
+      for (const w of warnings) console.log(`    ${w}`);
+    } else {
+      console.log(`WARNINGS (${warnings.length}):`);
+      for (const w of warnings) console.log(`  ⚠ ${w}`);
+      console.log("\n✓ OK: Passed with warnings.");
+    }
+  } else {
+    totalFail++;
+    if (isMulti) {
+      console.log(`✗ ${label} (${errors.length} error${errors.length > 1 ? "s" : ""}, ${warnings.length} warning${warnings.length > 1 ? "s" : ""})`);
+      for (const e of errors) console.log(`    ✗ ${e}`);
+      for (const w of warnings) console.log(`    ⚠ ${w}`);
+    } else {
+      if (warnings.length > 0) {
+        console.log(`WARNINGS (${warnings.length}):`);
+        for (const w of warnings) console.log(`  ⚠ ${w}`);
+      }
+      console.log(`\nERRORS (${errors.length}):`);
+      for (const e of errors) console.log(`  ✗ ${e}`);
+    }
   }
 }
 
-if (errors.length > 0) {
-  console.log(`\nERRORS (${errors.length}):`);
-  for (const e of errors) {
-    console.log(`  ✗ ${e}`);
-  }
-  process.exit(1);
+if (isMulti) {
+  console.log(`\n=== ${files.length} files: ${totalPass} passed, ${totalWarn} warnings, ${totalFail} failed ===`);
 }
 
-// Warnings only — still pass
-console.log("\n✓ OK: Passed with warnings.");
-process.exit(0);
+process.exit(totalFail > 0 ? 1 : 0);

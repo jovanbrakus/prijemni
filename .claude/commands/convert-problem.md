@@ -10,11 +10,11 @@ Follow these steps exactly:
 
 ### Step 1: Read the inputs
 
-Read ALL three of these files in parallel:
+Read the spec and CSS using the Read tool, but read the source file using Bash `cat`:
 
-1. The source solution file: `$ARGUMENTS`
-2. The v2 format specification: `problems_v2/solution-format-v2.md`
-3. The v2 CSS file: `problems_v2/solution-v2.css`
+1. **Read tool**: `problems_v2/solution-format-v2.md` (spec)
+2. **Read tool**: `problems_v2/solution-v2.css` (CSS)
+3. **Bash tool**: `cat $ARGUMENTS` (source file — exceeds Read tool's 10K token limit)
 
 If the source file does not exist, tell the user and stop.
 
@@ -199,6 +199,9 @@ Update the BRAINSPARK_META block:
 - Fix any Cyrillic in title or topic_tags
 
 ### Step 4: Write the output
+
+**IMPORTANT: Write the complete converted file in a single Write call.**
+Do NOT write a partial file and then Edit it. Plan the full conversion mentally before writing. If validation fails, re-read your output with `cat`, fix the issues, and Write the complete corrected file (do not use Edit — it adds a full API round-trip with accumulated context).
 
 Create the output directory and write the file:
 

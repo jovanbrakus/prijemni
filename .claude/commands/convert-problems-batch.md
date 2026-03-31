@@ -23,9 +23,13 @@ Read these 3 files — they apply to ALL conversions:
 
 ### Step 3: Read the original database
 
-Read `database/problems.json` to get the category and difficulty for each problem being converted. You'll need this for updating `database_v2/problems.json` in Step 6.
+Use Bash to extract only the relevant entries (the full file is 1.4MB and will fail the Read tool):
 
-Build a lookup: for each file `problems/$ARGUMENTS/..._problem_N_solution.html`, find the matching entry in `database/problems.json` by `solution_path` to get its `id`, `document`, `order`, `category`, and `difficulty`.
+```bash
+node -e "const p=require('./database/problems.json').filter(x=>x.document.includes('$ARGUMENTS'));console.log(JSON.stringify(p,null,2))"
+```
+
+This gives you just the ~20 entries for this exam directory. You'll need the `id`, `document`, `order`, `category`, and `difficulty` for updating `database_v2/problems.json` in Step 6.
 
 ### Step 4: Convert each file sequentially
 
@@ -33,9 +37,18 @@ For EACH source file, do these sub-steps. Do NOT re-read the spec/CSS/reference 
 
 #### 4a. Read the source file
 
-Read the old-format HTML file.
+Use the Bash tool to read the source file:
+
+```bash
+cat problems/$ARGUMENTS/<filename>
+```
+
+**Do NOT use the Read tool** — source files exceed its 10K token limit and will require multiple chunked reads, wasting API round-trips.
 
 #### 4b. Convert to v2 fragment
+
+**IMPORTANT: Write the complete converted file in a single Write call.**
+Do NOT write a partial file and then Edit it. Plan the full conversion mentally before writing. If validation fails, re-read your output with `cat`, fix the issues, and Write the complete corrected file (do not use Edit — it adds a full API round-trip with accumulated context).
 
 Apply ALL of these transformations:
 
@@ -162,7 +175,13 @@ Run: `cd /Users/jovan/personal/prijemni && npx tsx scripts/validate-solution-v2.
 - If **warnings only**: accept (pass)
 - If **clean pass**: continue to next file
 
-#### 4e. Log the result
+#### 4e. Discard source content
+
+The source file content and conversion work for this problem are now complete.
+For subsequent problems, do NOT reference or re-read this problem's source HTML.
+Only retain: the shared context (spec, CSS, reference) and the running log of pass/fail results.
+
+#### 4f. Log the result
 
 Track: filename, pass/fail, warnings, any notable changes.
 
@@ -242,8 +261,12 @@ Validation warnings: (list any)
 
 ### Performance Notes
 
-This batch command is optimized for token efficiency:
-- The spec (~470 lines), CSS (~500 lines), and reference (~540 lines) are read ONCE
-- Each additional file only costs ~26K tokens (read source + convert + write + validate)
-- A batch of 5 files costs ~165K total vs ~307K individually (46% savings)
-- Recommended: run once per exam directory (typically 15-20 problems)
+**This command runs as a single serial agent — do NOT split into subagents.**
+
+Token efficiency optimizations:
+- Shared context (spec + CSS + reference) loaded ONCE (~1,500 lines)
+- Source files read via `cat` (Bash) to avoid Read tool's 10K token limit and chunked reads
+- Each problem's source discarded after conversion — context stays flat at ~2-3K lines
+- Complete files written in one shot (no Edit round-trips)
+- database/problems.json queried via `node` to extract only relevant entries
+- A full 20-problem exam should cost ~600K-800K tokens total (~30-40K per problem)

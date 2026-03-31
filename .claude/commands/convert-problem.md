@@ -121,7 +121,7 @@ The original canvas often has insufficient height causing overlapping labels, le
 
 #### 3h. Convert canvas scripts to use CSS variables
 
-This is critical. Replace ALL hardcoded colors in canvas `<script>` blocks:
+**MANDATORY: if the source file has a `<canvas>` element and drawing scripts, you MUST convert them. Do NOT skip or remove canvas. Do NOT defer canvas to later.** Replace ALL hardcoded colors in canvas `<script>` blocks:
 
 | Old color(s) | CSS variable |
 |---|---|

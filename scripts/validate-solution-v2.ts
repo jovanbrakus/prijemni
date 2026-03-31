@@ -271,8 +271,13 @@ for (const { wrong, correct } of STRICT_DIACRITICS) {
   }
 }
 
-// ── 14. Canvas scripts reference CSS variables ──
+// ── 14. At least one canvas element ──
 const canvasEls = fragment.find("canvas");
+if (canvasEls.length === 0) {
+  errors.push("No <canvas> element found. Every problem MUST have at least one visual aid diagram.");
+}
+
+// ── 15. Canvas scripts reference CSS variables ──
 if (canvasEls.length > 0) {
   const scripts = fragment.find("script:not([type])");
   let hasColorVar = false;
@@ -290,7 +295,7 @@ if (canvasEls.length > 0) {
   }
 }
 
-// ── 15. BRAINSPARK_META ──
+// ── 16. BRAINSPARK_META ──
 const metaMatch = raw.match(/<!--BRAINSPARK_META\s*([\s\S]*?)\s*BRAINSPARK_META-->/);
 if (!metaMatch) {
   errors.push("Missing metadata block: <!--BRAINSPARK_META {...} BRAINSPARK_META-->");
@@ -312,7 +317,7 @@ if (!metaMatch) {
   }
 }
 
-// ── 16. Script blocks wrapped in IIFE ──
+// ── 17. Script blocks wrapped in IIFE ──
 fragment.find("script:not([type]):not([src])").each((_, el) => {
   const code = $(el).text().trim();
   if (!code) return;
@@ -331,7 +336,7 @@ fragment.find("script:not([type]):not([src])").each((_, el) => {
   }
 });
 
-// ── 17. No MathJax script src ──
+// ── 18. No MathJax script src ──
 fragment.find('script[src]').each((_, el) => {
   const src = $(el).attr("src") || "";
   if (/mathjax/i.test(src)) {
@@ -339,7 +344,7 @@ fragment.find('script[src]').each((_, el) => {
   }
 });
 
-// ── 18. No MathJax config object ──
+// ── 19. No MathJax config object ──
 fragment.find("script:not([type]):not([src])").each((_, el) => {
   const code = $(el).text();
   if (/MathJax\s*=\s*\{/.test(code)) {

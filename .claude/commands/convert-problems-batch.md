@@ -6,49 +6,69 @@ Convert all solution HTML files from a single exam directory to v2 fragment form
 
 ## Instructions
 
-### Step 1: Read shared context (ONCE for entire batch)
-
-Read these 3 files — they apply to ALL conversions:
-
-1. **Spec**: `problems_v2/solution-format-v2.md`
-2. **CSS** (with usage comments): `problems_v2/solution-v2.css`
-3. **Reference conversion**: `problems_v2/univerzitet_u_beogradu_elektrotehnicki_fakultet_2003/univerzitet_u_beogradu_elektrotehnicki_fakultet_2003_problem_8_solution.html`
-
-### Step 2: Resolve the file list
+### Step 1: Resolve the file list and database entries
 
 1. Verify `problems/$ARGUMENTS/` exists. If not, tell the user and stop.
 2. List all `*_solution.html` files in `problems/$ARGUMENTS/`
 3. Check which already exist in `problems_v2/$ARGUMENTS/` — skip those.
 4. Report: "Found N files to convert, M already converted (skipped)."
-
-### Step 3: Read the original database
-
-Use Bash to extract only the relevant entries (the full file is 1.4MB and will fail the Read tool):
-
+5. Extract database entries for this exam:
 ```bash
 node -e "const p=require('./database/problems.json').filter(x=>x.document.includes('$ARGUMENTS'));console.log(JSON.stringify(p,null,2))"
 ```
+6. Create the output directory:
+```bash
+mkdir -p problems_v2/$ARGUMENTS/
+```
 
-This gives you just the ~20 entries for this exam directory. You'll need the `id`, `document`, `order`, `category`, and `difficulty` for updating `database_v2/problems.json` in Step 6.
+### Step 2: Delegate to agents
 
-### Step 4: Convert each file sequentially
+Split the files to convert into groups of 5 and spawn one agent per group. Use `model: "opus"` to prevent model downgrades.
 
-For EACH source file, do these sub-steps. Do NOT re-read the spec/CSS/reference — use the context from Step 1.
+**IMPORTANT: Always use `model: "opus"` when spawning agents.** Do NOT allow agents to run on Sonnet — Sonnet produces lower quality conversions and skips canvas.
 
-#### 4a. Read the source file
+For a typical 20-problem exam, spawn 4 agents:
+- Agent 1: problems 1-5
+- Agent 2: problems 6-10
+- Agent 3: problems 11-15
+- Agent 4: problems 16-20
 
-Use the Bash tool to read the source file:
+Each agent prompt must include:
+1. The full list of source file paths it should convert
+2. The output directory path
+3. The database entries (id, document, order, category, difficulty) for its problems
+4. ALL the conversion rules from the "Conversion Rules" section below
 
+Instruct each agent to:
+1. Read the shared context (spec, CSS, reference) — see "Shared Context Files" below
+2. For each source file: read with `cat`, convert, write, validate
+3. Report results when done
+
+**Spawn all agents in parallel** (single message with multiple Agent tool calls).
+**Wait for all agents to complete** before proceeding to Step 3.
+
+### Shared Context Files (each agent reads these)
+
+1. **Spec**: `problems_v2/solution-format-v2.md`
+2. **CSS**: `problems_v2/solution-v2.css`
+3. **Reference**: `problems_v2/univerzitet_u_beogradu_elektrotehnicki_fakultet_2003/univerzitet_u_beogradu_elektrotehnicki_fakultet_2003_problem_8_solution.html`
+
+### Conversion Rules (include in each agent prompt)
+
+For EACH source file:
+
+#### Read the source file
+
+Use the Bash tool:
 ```bash
 cat problems/$ARGUMENTS/<filename>
 ```
+**Do NOT use the Read tool** — source files exceed its 10K token limit.
 
-**Do NOT use the Read tool** — source files exceed its 10K token limit and will require multiple chunked reads, wasting API round-trips.
-
-#### 4b. Convert to v2 fragment
+#### Convert to v2 fragment
 
 **IMPORTANT: Write the complete converted file in a single Write call.**
-Do NOT write a partial file and then Edit it. Plan the full conversion mentally before writing. If validation fails, re-read your output with `cat`, fix the issues, and Write the complete corrected file (do not use Edit — it adds a full API round-trip with accumulated context).
+Do NOT write a partial file and then Edit it. If validation fails, re-read your output with `cat`, fix the issues, and Write the complete corrected file.
 
 Apply ALL of these transformations:
 
@@ -65,7 +85,6 @@ Apply ALL of these transformations:
 
 **Cards:**
 - Every section gets `data-card="TYPE"` and `data-title="TITLE"` attributes
-- Card type mapping from old classes:
 
 | Old class/pattern | `data-card` | `data-title` |
 |---|---|---|
@@ -112,7 +131,7 @@ Apply ALL of these transformations:
 </div>
 ```
 
-**Canvas scripts** — replace ALL hardcoded colors with CSS variable reads:
+**Canvas scripts** — **MANDATORY: if the source file has a `<canvas>` element and drawing scripts, you MUST convert them. Do NOT skip or remove canvas. Do NOT defer canvas to later. NEVER say canvas is optional.** Replace ALL hardcoded colors with CSS variable reads:
 ```javascript
 (function() {
   var root = document.documentElement;
@@ -130,11 +149,7 @@ Apply ALL of these transformations:
 })();
 ```
 
-**Canvas height**: The original canvas often has insufficient height causing overlapping labels, legends, or axis text. When converting, **review the canvas dimensions and increase height if needed** to ensure no elements overlap. Common fixes:
-- If legend overlaps the diagram, increase canvas height by 60-80px
-- If axis labels are clipped at bottom, increase height by 30-40px
-- If multiple diagrams are stacked vertically, ensure enough height for all with spacing
-- Typical safe minimum: 400px for simple graphs, 500px for labeled diagrams with legends
+**Canvas height**: Review canvas dimensions and increase height if needed to prevent overlapping labels/legends. Typical minimums: 400px for simple graphs, 500px for labeled diagrams with legends.
 
 Color mapping:
 ```
@@ -160,14 +175,7 @@ Color mapping:
 **Metadata:**
 - Update BRAINSPARK_META: add `"format": "v2"`
 
-#### 4c. Write the output
-
-```bash
-mkdir -p problems_v2/$ARGUMENTS/
-```
-Write to: `problems_v2/$ARGUMENTS/{same_filename}`
-
-#### 4d. Validate
+#### Validate
 
 Run: `cd /Users/jovan/personal/prijemni && npx tsx scripts/validate-solution-v2.ts <output-path>`
 
@@ -175,31 +183,26 @@ Run: `cd /Users/jovan/personal/prijemni && npx tsx scripts/validate-solution-v2.
 - If **warnings only**: accept (pass)
 - If **clean pass**: continue to next file
 
-#### 4e. Discard source content
+### Step 3: Run batch validation
 
-The source file content and conversion work for this problem are now complete.
-For subsequent problems, do NOT reference or re-read this problem's source HTML.
-Only retain: the shared context (spec, CSS, reference) and the running log of pass/fail results.
-
-#### 4f. Log the result
-
-Track: filename, pass/fail, warnings, any notable changes.
-
-### Step 5: Run batch validation
-
-After all files are written, run the validator on ALL files in the output directory to confirm:
+After ALL agents complete, run the validator on ALL files in the output directory:
 
 ```bash
 cd /Users/jovan/personal/prijemni && for f in problems_v2/$ARGUMENTS/*_solution.html; do npx tsx scripts/validate-solution-v2.ts "$f" 2>/dev/null || echo "FAIL: $f"; done
 ```
 
-If any fail, fix them before proceeding.
+Also verify canvas was not skipped:
+```bash
+cd /Users/jovan/personal/prijemni && for f in problems_v2/$ARGUMENTS/*_solution.html; do v1="problems/$ARGUMENTS/$(basename $f)"; if grep -q '<canvas' "$v1" 2>/dev/null && ! grep -q '<canvas' "$f"; then echo "MISSING CANVAS: $f"; fi; done
+```
 
-### Step 6: Update database_v2/problems.json
+If any fail validation or are missing canvas, fix them before proceeding.
+
+### Step 4: Update database_v2/problems.json
 
 Read the current `database_v2/problems.json`. For each successfully converted file:
 
-1. Look up the original problem entry from `database/problems.json` (matched by `solution_path` in Step 3)
+1. Look up the original problem entry from the database entries extracted in Step 1
 2. Create a new entry with the same fields but updated `solution_path`:
    ```json
    {
@@ -211,11 +214,11 @@ Read the current `database_v2/problems.json`. For each successfully converted fi
      "difficulty": <same difficulty>
    }
    ```
-3. Append to the existing `database_v2/problems.json` array (do not overwrite existing entries from previous batches)
+3. Append to the existing array (do not overwrite existing entries from previous batches)
 4. Sort the final array by `document` then `order`
 5. Write back to `database_v2/problems.json`
 
-### Step 7: Commit
+### Step 5: Commit
 
 Stage and commit all changes:
 
@@ -223,21 +226,14 @@ Stage and commit all changes:
 git add problems_v2/$ARGUMENTS/ database_v2/problems.json
 ```
 
-Commit message format:
+Commit message format (use HEREDOC):
 ```
 Convert {FACULTY_SHORT} {YEAR} to v2 format ({COUNT} problems)
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```
 
-Where:
-- `FACULTY_SHORT` is a readable faculty name (e.g. "ETF Belgrade" for `elektrotehnicki_fakultet`)
-- `YEAR` is extracted from the directory name
-- `COUNT` is the number of successfully converted problems
-
-Use a HEREDOC for the commit message.
-
-### Step 8: Summary report
+### Step 6: Summary report
 
 ```
 === Batch Conversion Summary ===
@@ -250,23 +246,13 @@ Skipped:    M (already converted)
 Database:   database_v2/problems.json updated (N new entries, T total)
 Commit:     <commit hash>
 
-Notable changes:
-- N files had Cyrillic text converted
-- N files had shaved Latin diacritics fixed
-- N files had canvas scripts converted
-- N files had no canvas
-
 Validation warnings: (list any)
 ```
 
 ### Performance Notes
 
-**This command runs as a single serial agent — do NOT split into subagents.**
-
-Token efficiency optimizations:
-- Shared context (spec + CSS + reference) loaded ONCE (~1,500 lines)
-- Source files read via `cat` (Bash) to avoid Read tool's 10K token limit and chunked reads
-- Each problem's source discarded after conversion — context stays flat at ~2-3K lines
-- Complete files written in one shot (no Edit round-trips)
-- database/problems.json queried via `node` to extract only relevant entries
-- A full 20-problem exam should cost ~600K-800K tokens total (~30-40K per problem)
+**Delegation**: 4 agents with 5 problems each. Each agent keeps context under 150K tokens.
+**Model pinning**: Always use `model: "opus"` — Sonnet skips canvas and produces lower quality.
+**Source file reads**: `cat` via Bash (not Read tool) to avoid 10K token limit.
+**Write discipline**: Complete files in one Write call, no Edit round-trips.
+**Canvas is MANDATORY**: Every source canvas must be converted. Post-conversion check verifies this.

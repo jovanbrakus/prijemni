@@ -72,6 +72,14 @@ Answer: (D) 2π/3
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="450"></canvas>
+  </div>
+  <p class="canvas-caption">Graf funkcije f(x) = sqrt(3)sin(x) + cos(x) sa rešenjima jednačine</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -169,6 +177,298 @@ Answer: (D) 2π/3
     </div>
   </details>
 </div>
+
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+// Collapsible sections
+  window.toggleCollapsible = function(btn) {
+    btn.classList.toggle('open');
+    var body = btn.nextElementSibling;
+    body.classList.toggle('open');
+  };
+
+  // Checkpoint reveals
+  window.toggleCheckpoint = function(btn) {
+    var answer = btn.nextElementSibling;
+    if (answer.style.display === 'block') {
+      answer.style.display = 'none';
+      btn.textContent = 'Prikaži odgovor';
+    } else {
+      answer.style.display = 'block';
+      btn.textContent = 'Sakrij odgovor';
+    }
+  };
+
+  // Canvas drawing
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+
+  function resizeCanvas() {
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawGraph();
+  }
+
+  function drawGraph() {
+    var W = canvas.width / dpr;
+    var H = canvas.height / dpr;
+
+    // Clear
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Padding
+    var padL = 55, padR = 25, padT = 30, padB = 50;
+    var gW = W - padL - padR;
+    var gH = H - padT - padB;
+
+    // Ranges: x in [0, 2pi], y in [-2.5, 2.5]
+    var xMin = 0, xMax = 2 * Math.PI;
+    var yMin = -2.5, yMax = 2.5;
+
+    function toCanvasX(x) { return padL + (x - xMin) / (xMax - xMin) * gW; }
+    function toCanvasY(y) { return padT + (yMax - y) / (yMax - yMin) * gH; }
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    // Horizontal grid
+    for (var y = -2; y <= 2; y += 0.5) {
+      ctx.beginPath();
+      ctx.moveTo(padL, toCanvasY(y));
+      ctx.lineTo(W - padR, toCanvasY(y));
+      ctx.stroke();
+    }
+    // Vertical grid at multiples of pi/6
+    for (var i = 0; i <= 12; i++) {
+      var xv = i * Math.PI / 6;
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(xv), padT);
+      ctx.lineTo(toCanvasX(xv), H - padB);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1.5;
+    // X-axis (y = 0)
+    ctx.beginPath();
+    ctx.moveTo(padL, toCanvasY(0));
+    ctx.lineTo(W - padR, toCanvasY(0));
+    ctx.stroke();
+    // Y-axis (x = 0)
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), padT);
+    ctx.lineTo(toCanvasX(0), H - padB);
+    ctx.stroke();
+
+    // X-axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    var piLabels = [
+      [Math.PI / 6, 'π/6'], [Math.PI / 3, 'π/3'], [Math.PI / 2, 'π/2'],
+      [2 * Math.PI / 3, '2π/3'], [5 * Math.PI / 6, '5π/6'], [Math.PI, 'π'],
+      [7 * Math.PI / 6, '7π/6'], [4 * Math.PI / 3, '4π/3'], [3 * Math.PI / 2, '3π/2'],
+      [5 * Math.PI / 3, '5π/3'], [11 * Math.PI / 6, '11π/6'], [2 * Math.PI, '2π']
+    ];
+    piLabels.forEach(function(item) {
+      ctx.fillText(item[1], toCanvasX(item[0]), toCanvasY(0) + 8);
+    });
+    ctx.fillText('0', toCanvasX(0) - 10, toCanvasY(0) + 8);
+
+    // Y-axis labels
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    var yLabels = [-2, -1, 0, 1, 2];
+    yLabels.forEach(function(y) {
+      if (y !== 0) ctx.fillText(y.toString(), padL - 8, toCanvasY(y));
+    });
+    // Mark sqrt(3)
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.fillText('√3', padL - 8, toCanvasY(Math.sqrt(3)));
+
+    // Draw y = sqrt(3) line
+    ctx.strokeStyle = cv('--sol-canvas-highlight');
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.moveTo(padL, toCanvasY(Math.sqrt(3)));
+    ctx.lineTo(W - padR, toCanvasY(Math.sqrt(3)));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw f(x) = sqrt(3) sin x + cos x
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    var steps = 500;
+    for (var i = 0; i <= steps; i++) {
+      var x = xMin + (xMax - xMin) * i / steps;
+      var y = Math.sqrt(3) * Math.sin(x) + Math.cos(x);
+      var cx = toCanvasX(x);
+      var cy = toCanvasY(y);
+      if (i === 0) ctx.moveTo(cx, cy);
+      else ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+
+    // Draw 2sin(x + pi/6) label
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'italic 13px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('f(x) = √3 sin x + cos x', toCanvasX(3.5), toCanvasY(2 * Math.sin(3.5 + Math.PI/6)) - 14);
+
+    // Label y = sqrt(3)
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = 'italic 13px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('y = √3', W - padR - 5, toCanvasY(Math.sqrt(3)) - 10);
+
+    // Intersection points
+    var solutions = [Math.PI / 6, Math.PI / 2];
+    var solutionLabels = ['π/6', 'π/2'];
+    solutions.forEach(function(x, idx) {
+      var y = Math.sqrt(3);
+      var cx = toCanvasX(x);
+      var cy = toCanvasY(y);
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(cx, cy, 12, 0, 2 * Math.PI);
+      ctx.fillStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.15)') : c; })();
+      ctx.fill();
+
+      // Outer ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, 8, 0, 2 * Math.PI);
+      ctx.fillStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.3)') : c; })();
+      ctx.fill();
+
+      // Point
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = cv('--sol-canvas-accent');
+      ctx.fill();
+
+      // Dashed line down to x-axis
+      ctx.strokeStyle = cv('--sol-canvas-accent');
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx, toCanvasY(0));
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Label
+      ctx.fillStyle = cv('--sol-canvas-accent');
+      ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('x = ' + solutionLabels[idx], cx, cy - 18);
+    });
+  }
+
+  // Tooltip on hover/touch
+  var tooltipActive = false;
+  function handlePointer(e) {
+    var rect = canvas.getBoundingClientRect();
+    var mx, my;
+    if (e.touches) {
+      mx = e.touches[0].clientX - rect.left;
+      my = e.touches[0].clientY - rect.top;
+    } else {
+      mx = e.clientX - rect.left;
+      my = e.clientY - rect.top;
+    }
+
+    var W = rect.width;
+    var H = rect.height;
+    var padL = 55, padR = 25, padT = 30, padB = 50;
+    var gW = W - padL - padR;
+    var gH = H - padT - padB;
+    var xMin = 0, xMax = 2 * Math.PI;
+    var yMin = -2.5, yMax = 2.5;
+
+    if (mx < padL || mx > W - padR || my < padT || my > H - padB) return;
+
+    var x = xMin + (mx - padL) / gW * (xMax - xMin);
+    var y = Math.sqrt(3) * Math.sin(x) + Math.cos(x);
+
+    drawGraph();
+
+    // Draw crosshair
+    var cx = padL + (x - xMin) / (xMax - xMin) * gW;
+    var cy = padT + (yMax - y) / (yMax - yMin) * gH;
+
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-muted'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.3)') : c; })();
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cx, padT);
+    ctx.lineTo(cx, H - padB);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(padL, cy);
+    ctx.lineTo(W - padR, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Point on curve
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fill();
+
+    // Tooltip
+    var xLabel = (x / Math.PI).toFixed(2) + 'π';
+    var yLabel = y.toFixed(3).replace('.', ',');
+    var text = 'x ≈ ' + xLabel + ',  f(x) ≈ ' + yLabel;
+
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    var tw = ctx.measureText(text).width + 16;
+    var tx = cx + 12;
+    var ty = cy - 28;
+    if (tx + tw > W - padR) tx = cx - tw - 12;
+    if (ty < padT) ty = cy + 12;
+
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-grid'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.95)') : c; })();
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(tx, ty, tw, 24, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, tx + 8, ty + 12);
+  }
+
+  canvas.addEventListener('mousemove', handlePointer);
+  canvas.addEventListener('touchmove', function(e) { e.preventDefault(); handlePointer(e); }, { passive: false });
+  canvas.addEventListener('mouseleave', function() { drawGraph(); });
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw() }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

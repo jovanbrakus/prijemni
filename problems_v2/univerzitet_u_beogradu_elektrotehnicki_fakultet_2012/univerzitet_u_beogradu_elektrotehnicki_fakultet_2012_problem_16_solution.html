@@ -62,6 +62,14 @@ Answer: (B) 1
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="420"></canvas>
+  </div>
+  <p class="canvas-caption">Grafik leve strane \(L(x)\) i horizontalna linija \(\sqrt{13}\). Presek pokazuje tačno jedno rešenje.</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -166,6 +174,179 @@ Answer: (B) 1
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+  var alpha = Math.log10(2);
+
+  function L(x) {
+    if (x <= 2) return Infinity;
+    var a = (2*x + 1) / (2*x - 4);
+    var b = (2*x + 9) / (2*x - 4);
+    return Math.sqrt(3) * Math.pow(a, alpha) + Math.sqrt(2) * Math.pow(b, alpha);
+  }
+
+  var padLeft = 75, padRight = 30, padTop = 45, padBottom = 55;
+  var plotW = W - padLeft - padRight;
+  var plotH = H - padTop - padBottom;
+  var xMin = 2.05, xMax = 60;
+  var yMin = 0, yMax = 12;
+
+  function toCanvasX(x) {
+    var t = (x - xMin) / (xMax - xMin);
+    return padLeft + Math.pow(t, 0.5) * plotW;
+  }
+  function toCanvasY(y) {
+    return padTop + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
+  }
+  function fromCanvasX(cx) {
+    var mapped = (cx - padLeft) / plotW;
+    var t = mapped * mapped;
+    return xMin + t * (xMax - xMin);
+  }
+
+  function findRoot() {
+    var lo = 2.01, hi = 200;
+    var target = Math.sqrt(13);
+    for (var i = 0; i < 100; i++) {
+      var mid = (lo + hi) / 2;
+      if (L(mid) > target) lo = mid; else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+  var xRoot = findRoot();
+
+  function draw() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (var y = 0; y <= yMax; y += 2) {
+      var cy = toCanvasY(y);
+      ctx.beginPath(); ctx.moveTo(padLeft, cy); ctx.lineTo(padLeft + plotW, cy); ctx.stroke();
+    }
+    var xTicks = [3, 5, 10, 20, 40, 60];
+    xTicks.forEach(function(x) {
+      var cx = toCanvasX(x);
+      ctx.beginPath(); ctx.moveTo(cx, padTop); ctx.lineTo(cx, padTop + plotH); ctx.stroke();
+    });
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padLeft, padTop); ctx.lineTo(padLeft, padTop + plotH); ctx.lineTo(padLeft + plotW, padTop + plotH);
+    ctx.stroke();
+
+    // Y labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (var y2 = 0; y2 <= yMax; y2 += 2) ctx.fillText(String(y2), padLeft - 8, toCanvasY(y2));
+
+    // X labels
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    xTicks.forEach(function(x) { ctx.fillText(String(x), toCanvasX(x), padTop + plotH + 8); });
+    ctx.fillText('x', padLeft + plotW / 2, padTop + plotH + 32);
+
+    // sqrt(13) line
+    var sqrt13 = Math.sqrt(13);
+    var sqrt13Y = toCanvasY(sqrt13);
+    ctx.strokeStyle = cv('--sol-canvas-highlight');
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath(); ctx.moveTo(padLeft, sqrt13Y); ctx.lineTo(padLeft + plotW, sqrt13Y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('\u221A13 \u2248 3,606', padLeft + plotW - 5, sqrt13Y - 6);
+
+    // Asymptote line
+    var asymptote = Math.sqrt(3) + Math.sqrt(2);
+    var asymY = toCanvasY(asymptote);
+    ctx.strokeStyle = cv('--sol-canvas-muted');
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(padLeft, asymY); ctx.lineTo(padLeft + plotW, asymY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    ctx.fillText('\u221A3+\u221A2 \u2248 3,146 (asimptota)', padLeft + plotW - 5, asymY + 4);
+
+    // L(x) curve
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    var started = false;
+    for (var i = 0; i <= 500; i++) {
+      var cx = padLeft + (i / 500) * plotW;
+      var x = fromCanvasX(cx);
+      if (x <= 2.001) continue;
+      var yv = L(x);
+      if (yv > yMax + 2) { started = false; continue; }
+      var cy = toCanvasY(Math.min(yv, yMax));
+      if (!started) { ctx.moveTo(cx, cy); started = true; } else ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText('L(x)', toCanvasX(4) + 10, toCanvasY(L(4)) - 8);
+
+    // Root point
+    var rootCx = toCanvasX(xRoot);
+    var rootCy = toCanvasY(sqrt13);
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(rootCx, rootCy); ctx.lineTo(rootCx, padTop + plotH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    ctx.beginPath();
+    ctx.arc(rootCx, rootCy, 10, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.globalAlpha = 0.2;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(rootCx, rootCy, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fill();
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('x\u2080 \u2248 ' + xRoot.toFixed(2).replace('.', ','), rootCx, padTop + plotH + 8);
+    ctx.fillText('Tačno 1 rešenje', rootCx, padTop + plotH + 26);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

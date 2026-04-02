@@ -70,6 +70,14 @@ Verification: S = 2/(2/3) = 3 ✓, S₃ = 8/(26/27) = 108/13 ✓, S₂ = 9/2 ✓
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="mainCanvas" width="800" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Interaktivni dijagram prikazuje članove geometrijske progresije, njihove kvadrate i kubove. Koristite klizač da menjate količnik \(r\).</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -174,6 +182,265 @@ Verification: S = 2/(2/3) = 3 ✓, S₃ = 8/(26/27) = 108/13 ✓, S₂ = 9/2 ✓
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+  function cva(name, alpha) {
+    var c = cv(name);
+    if (c.startsWith('#')) {
+      var r = parseInt(c.slice(1,3), 16);
+      var g = parseInt(c.slice(3,5), 16);
+      var b = parseInt(c.slice(5,7), 16);
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
+    return c;
+  }
+
+/* --- Collapsible sections --- */
+  window.toggleCollapsible = function(header) {
+    var content = header.nextElementSibling;
+    while (content && !content.classList.contains('collapsible-content')) {
+      content = content.nextElementSibling;
+    }
+    if (!content) return;
+    content.classList.toggle('open');
+    var arrow = header.querySelector('.arrow-indicator');
+    if (arrow) arrow.classList.toggle('open');
+  };
+
+  /* --- Canvas visualization --- */
+  var canvas = document.getElementById('mainCanvas');
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var W, H;
+  var currentR = 1/3;
+
+  function resize() {
+    var rect = canvas.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.lineTo(x + w - r, y);
+    c.quadraticCurveTo(x + w, y, x + w, y + r);
+    c.lineTo(x + w, y + h - r);
+    c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    c.lineTo(x + r, y + h);
+    c.quadraticCurveTo(x, y + h, x, y + h - r);
+    c.lineTo(x, y + r);
+    c.quadraticCurveTo(x, y, x + r, y);
+    c.closePath();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    var r = currentR;
+    var a = 3 * (1 - r);
+    var numTerms = 10;
+
+    /* Compute terms, squares, cubes */
+    var terms = [], squares = [], cubes = [];
+    for (var i = 0; i < numTerms; i++) {
+      var t = a * Math.pow(r, i);
+      terms.push(t);
+      squares.push(t * t);
+      cubes.push(t * t * t);
+    }
+
+    /* Compute sums */
+    var sumTerms = a / (1 - r);
+    var sumSquares = (a * a) / (1 - r * r);
+    var sumCubes = (a * a * a) / (1 - r * r * r);
+
+    /* Layout */
+    var margin = { top: 60, bottom: 80, left: 60, right: 30 };
+    var chartW = W - margin.left - margin.right;
+    var chartH = H - margin.top - margin.bottom;
+
+    /* Determine max value for y-axis */
+    var maxVal = Math.max(a, a * a, a * a * a, sumTerms, sumSquares, sumCubes) * 1.15;
+    if (maxVal < 1) maxVal = 1;
+
+    /* Scale functions */
+    function xPos(i) {
+      return margin.left + (i + 0.5) / (numTerms + 2) * chartW;
+    }
+    function yPos(val) {
+      return margin.top + chartH - (val / maxVal) * chartH;
+    }
+
+    /* Grid lines */
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    var gridSteps = 5;
+    for (var g = 0; g <= gridSteps; g++) {
+      var gv = (maxVal / gridSteps) * g;
+      var gy = yPos(gv);
+      ctx.beginPath();
+      ctx.moveTo(margin.left, gy);
+      ctx.lineTo(W - margin.right, gy);
+      ctx.stroke();
+
+      ctx.fillStyle = cv('--sol-canvas-muted');
+      ctx.font = '11px system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(gv.toFixed(1).replace('.', ','), margin.left - 8, gy);
+    }
+
+    /* X axis */
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1.5;
+    var baseY = yPos(0);
+    ctx.beginPath();
+    ctx.moveTo(margin.left, baseY);
+    ctx.lineTo(W - margin.right, baseY);
+    ctx.stroke();
+
+    /* Bar width */
+    var barGroupW = chartW / (numTerms + 2);
+    var barW = barGroupW * 0.22;
+    var gap = barGroupW * 0.04;
+
+    /* Draw bars for each term */
+    var colors = [cv('--sol-canvas-primary'), cv('--sol-canvas-secondary'), cv('--sol-canvas-highlight')];
+    var labels = ['a_n', 'a_n^2', 'a_n^3'];
+    var datasets = [terms, squares, cubes];
+
+    for (var i = 0; i < numTerms; i++) {
+      for (var d = 0; d < 3; d++) {
+        var val = datasets[d][i];
+        var bx = xPos(i) - barGroupW * 0.36 + d * (barW + gap);
+        var by = yPos(val);
+        var bh = baseY - by;
+        if (bh < 1) bh = 1;
+
+        ctx.fillStyle = colors[d];
+        ctx.globalAlpha = 0.8;
+        roundRect(ctx, bx, by, barW, bh, 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      /* Term index label */
+      ctx.fillStyle = cv('--sol-canvas-muted');
+      ctx.font = '11px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText('n=' + i, xPos(i), baseY + 6);
+    }
+
+    /* Draw sum lines (horizontal dashed) */
+    var sumData = [
+      { val: sumTerms, color: cv('--sol-canvas-primary'), label: 'S = ' + sumTerms.toFixed(2).replace('.', ',') },
+      { val: sumSquares, color: cv('--sol-canvas-secondary'), label: 'S\u2082 = ' + sumSquares.toFixed(2).replace('.', ',') },
+      { val: sumCubes, color: cv('--sol-canvas-highlight'), label: 'S\u2083 = ' + sumCubes.toFixed(2).replace('.', ',') }
+    ];
+
+    for (var s = 0; s < sumData.length; s++) {
+      var sy = yPos(sumData[s].val);
+      if (sy < margin.top - 10 || sy > baseY + 5) continue;
+
+      ctx.strokeStyle = sumData[s].color;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, sy);
+      ctx.lineTo(W - margin.right, sy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+
+      /* Label */
+      ctx.fillStyle = sumData[s].color;
+      ctx.font = 'bold 12px system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(sumData[s].label, W - margin.right - 5, sy - 4);
+    }
+
+    /* Title */
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = 'bold 15px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Članovi GP i njihovi stepeni (a = ' + a.toFixed(2).replace('.', ',') + ', r = ' + r.toFixed(2).replace('.', ',') + ')', W / 2, 12);
+
+    /* Info box with sums */
+    var infoX = W - margin.right - 200;
+    var infoY = margin.top + 10;
+    ctx.fillStyle = cva('--sol-canvas-grid', 0.92);
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    roundRect(ctx, infoX, infoY, 190, 90, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fillText('Zbir GP:         S = ' + sumTerms.toFixed(3).replace('.', ','), infoX + 10, infoY + 12);
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.fillText('Zbir kvadrata: S\u2082 = ' + sumSquares.toFixed(3).replace('.', ','), infoX + 10, infoY + 34);
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.fillText('Zbir kubova:  S\u2083 = ' + sumCubes.toFixed(3).replace('.', ','), infoX + 10, infoY + 56);
+
+    /* Highlight if r = 1/3 */
+    if (Math.abs(r - 1/3) < 0.015) {
+      ctx.fillStyle = cva('--sol-canvas-accent', 0.1);
+      ctx.strokeStyle = cv('--sol-canvas-accent');
+      ctx.lineWidth = 2;
+      roundRect(ctx, infoX - 4, infoY - 4, 198, 98, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = cv('--sol-canvas-accent');
+      ctx.font = 'bold 11px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('r = 1/3: Rešenje zadatka!', infoX + 95, infoY + 78);
+    }
+  }
+
+  /* --- Slider --- */
+  var slider = document.getElementById('rSlider');
+  slider.addEventListener('input', function() {
+    currentR = parseFloat(this.value);
+    document.getElementById('rSliderVal').textContent = currentR.toFixed(2).replace('.', ',');
+    draw();
+  });
+
+  /* --- Init --- */
+  function init() {
+    resize();
+    draw();
+  }
+
+  window.addEventListener('resize', function() { resize(); draw(); });
+  window.addEventListener('load', init);
+  if (document.readyState === 'complete') init();
+  else document.addEventListener('DOMContentLoaded', init);
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); if (typeof draw === 'function') draw(); if (typeof drawTriangle === 'function') drawTriangle(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

@@ -73,6 +73,14 @@ Solution:
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="750" height="420"></canvas>
+  </div>
+  <p class="canvas-caption">Ostatak pri deljenju polinoma</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -158,6 +166,294 @@ Solution:
     </div>
   </details>
 </div>
+
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+// === Interactive Option Buttons ===
+  function checkAnswer(btn, isCorrect) {
+    var buttons = document.querySelectorAll('#optionsGrid .option-btn');
+    buttons.forEach(function(b) {
+      b.disabled = true;
+      b.style.cursor = 'default';
+    });
+    if (isCorrect) {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('incorrect');
+      buttons.forEach(function(b) {
+        if (b.getAttribute('data-answer') === 'A') {
+          b.classList.add('correct');
+        }
+      });
+    }
+  }
+  window.checkAnswer = checkAnswer;
+
+  // === Collapsible Sections ===
+  function toggleCollapsible(header) {
+    var body = header.nextElementSibling;
+    var arrow = header.querySelector('.toggle-arrow');
+    body.classList.toggle('open');
+    arrow.classList.toggle('open');
+  }
+  window.toggleCollapsible = toggleCollapsible;
+
+  // === Checkpoint Reveal ===
+  function revealCheckpoint(btn) {
+    var answer = btn.nextElementSibling;
+    answer.classList.add('visible');
+    btn.style.display = 'none';
+  }
+  window.revealCheckpoint = revealCheckpoint;
+
+  // === Canvas Visualization ===
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var currentExample = 0;
+
+  var polyFunctions = [
+    { label: 'P(x) = x', fn: function(x) { return x; }, desc: 'Najjednostavniji primer', color: cv('--sol-canvas-primary') },
+    { label: 'P(x) = x\u00B3', fn: function(x) { return x*x*x; }, desc: 'Kubni polinom', color: cv('--sol-canvas-secondary') },
+    { label: 'P(x) = x\u00B2 + x \u2212 1', fn: function(x) { return x*x + x - 1; }, desc: 'Kvadratni polinom', color: cv('--sol-canvas-highlight') }
+  ];
+
+  function remainder(x) { return x; }
+
+  function drawGraph() {
+    var W = canvas.width;
+    var H = canvas.height;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    var xMin = -3, xMax = 3;
+    var yMin = -4, yMax = 4;
+    var padL = 55, padR = 20, padT = 50, padB = 50;
+    var plotW = W - padL - padR;
+    var plotH = H - padT - padB;
+
+    function toCanvasX(x) { return padL + (x - xMin) / (xMax - xMin) * plotW; }
+    function toCanvasY(y) { return padT + (yMax - y) / (yMax - yMin) * plotH; }
+
+    // Title
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    var poly = polyFunctions[currentExample];
+    ctx.fillText(poly.label + '  vs  R(x) = x', W / 2, 28);
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.fillText(poly.desc + ' \u2014 oba prolaze kroz (1, 1) i (\u22121, \u22121)', W / 2, 46);
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (var gx = Math.ceil(xMin); gx <= xMax; gx++) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(gx), padT);
+      ctx.lineTo(toCanvasX(gx), padT + plotH);
+      ctx.stroke();
+    }
+    for (var gy = Math.ceil(yMin); gy <= yMax; gy++) {
+      ctx.beginPath();
+      ctx.moveTo(padL, toCanvasY(gy));
+      ctx.lineTo(padL + plotW, toCanvasY(gy));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1.5;
+    // x-axis
+    ctx.beginPath();
+    ctx.moveTo(padL, toCanvasY(0));
+    ctx.lineTo(padL + plotW, toCanvasY(0));
+    ctx.stroke();
+    // y-axis
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), padT);
+    ctx.lineTo(toCanvasX(0), padT + plotH);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var lx = Math.ceil(xMin); lx <= xMax; lx++) {
+      if (lx === 0) continue;
+      ctx.fillText(lx.toString(), toCanvasX(lx), toCanvasY(0) + 16);
+    }
+    ctx.textAlign = 'right';
+    for (var ly = Math.ceil(yMin); ly <= yMax; ly++) {
+      if (ly === 0) continue;
+      ctx.fillText(ly.toString(), toCanvasX(0) - 8, toCanvasY(ly) + 4);
+    }
+
+    // Draw R(x) = x (remainder)
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath();
+    var first = true;
+    for (var px = 0; px <= plotW; px += 1) {
+      var xv = xMin + px / plotW * (xMax - xMin);
+      var yv = remainder(xv);
+      var cy = toCanvasY(yv);
+      if (cy < padT - 5 || cy > padT + plotH + 5) { first = true; continue; }
+      if (first) { ctx.moveTo(toCanvasX(xv), cy); first = false; }
+      else ctx.lineTo(toCanvasX(xv), cy);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw P(x)
+    ctx.strokeStyle = poly.color;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    first = true;
+    for (var px2 = 0; px2 <= plotW; px2 += 1) {
+      var xv2 = xMin + px2 / plotW * (xMax - xMin);
+      var yv2 = poly.fn(xv2);
+      var cy2 = toCanvasY(yv2);
+      if (cy2 < padT - 50 || cy2 > padT + plotH + 50) { first = true; continue; }
+      if (first) { ctx.moveTo(toCanvasX(xv2), cy2); first = false; }
+      else ctx.lineTo(toCanvasX(xv2), cy2);
+    }
+    ctx.stroke();
+
+    // Highlight points (1,1) and (-1,-1)
+    var points = [
+      { x: 1, y: 1, label: '(1, 1)', align: 'left' },
+      { x: -1, y: -1, label: '(\u22121, \u22121)', align: 'right' }
+    ];
+
+    points.forEach(function(pt) {
+      var cx = toCanvasX(pt.x);
+      var cyp = toCanvasY(pt.y);
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(cx, cyp, 10, 0, Math.PI * 2);
+      ctx.fillStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.2)') : c; })();
+      ctx.fill();
+
+      // Dot
+      ctx.beginPath();
+      ctx.arc(cx, cyp, 5, 0, Math.PI * 2);
+      ctx.fillStyle = cv('--sol-canvas-accent');
+      ctx.fill();
+      ctx.strokeStyle = cv('--sol-canvas-bg');
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = pt.align === 'left' ? 'left' : 'right';
+      var offsetX = pt.align === 'left' ? 12 : -12;
+      ctx.fillText(pt.label, cx + offsetX, cyp - 10);
+    });
+
+    // Legend
+    var legendX = padL + 10;
+    var legendY = padT + plotH - 40;
+
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-bg'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.85)') : c; })();
+    ctx.fillRect(legendX, legendY, 180, 44);
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    ctx.strokeRect(legendX, legendY, 180, 44);
+
+    // P(x) legend
+    ctx.strokeStyle = poly.color;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(legendX + 10, legendY + 14);
+    ctx.lineTo(legendX + 35, legendY + 14);
+    ctx.stroke();
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(poly.label, legendX + 42, legendY + 18);
+
+    // R(x) legend
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath();
+    ctx.moveTo(legendX + 10, legendY + 32);
+    ctx.lineTo(legendX + 35, legendY + 32);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.fillText('R(x) = x (ostatak)', legendX + 42, legendY + 36);
+  }
+
+  function setPolyExample(index, btn) {
+    currentExample = index;
+    var buttons = document.querySelectorAll('.canvas-btn');
+    buttons.forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    drawGraph();
+  }
+  window.setPolyExample = setPolyExample;
+
+  // Initial draw
+  drawGraph();
+  window.addEventListener('resize', function() {
+    drawGraph();
+  });
+
+  // === Wire up collapsible headers ===
+  document.querySelectorAll('.collapsible-header').forEach(function(header) {
+    header.addEventListener('click', function() {
+      toggleCollapsible(header);
+    });
+  });
+
+  // === Wire up checkpoint reveal buttons ===
+  document.querySelectorAll('.checkpoint-reveal').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      revealCheckpoint(btn);
+    });
+  });
+
+  // === Wire up canvas control buttons ===
+  document.querySelectorAll('.canvas-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var index = parseInt(btn.getAttribute('data-poly'), 10);
+      setPolyExample(index, btn);
+    });
+  });
+
+  // === Wire up answer option clicks ===
+  document.querySelectorAll('.answer-option').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var option = el.getAttribute('data-option');
+      checkAnswer(el, option === 'A');
+    });
+  });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw() }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

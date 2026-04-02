@@ -44,6 +44,15 @@ Odgovor: (D)
   </details>
 </div>
 
+
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="750" height="400"></canvas>
+  </div>
+  <p class="canvas-caption">Interaktivni prikaz: pomerite miš preko brojevne ose da vidite vrednosti funkcija u svakoj tački</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -125,6 +134,338 @@ Odgovor: (D)
     <div class="detail-content"><p>Dodali bismo tačku \(x = 12\) (gde je brojilac nula): \((0, 1) \cup [12, +\infty)\).</p></div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Colors
+  const BG = cv('--sol-canvas-bg');
+  const GRID = cv('--sol-canvas-grid');
+  const AXIS_COLOR = cv('--sol-canvas-axis');
+  const TEXT_COLOR = cv('--sol-canvas-text');
+  const MUTED = cv('--sol-canvas-muted');
+  const BLUE = cv('--sol-canvas-primary');
+  const PURPLE = cv('--sol-canvas-secondary');
+  const GREEN = cv('--sol-canvas-accent');
+  const PINK = cv('--sol-canvas-highlight');
+  const RED = cv('--sol-canvas-danger');
+
+  // Coordinate mapping: domain [-.5, 15] -> canvas x
+  const xMin = -0.5;
+  const xMax = 15.5;
+  const marginLeft = 60;
+  const marginRight = 30;
+  const plotW = W - marginLeft - marginRight;
+
+  function toCanvasX(x) {
+    return marginLeft + (x - xMin) / (xMax - xMin) * plotW;
+  }
+
+  function fromCanvasX(cx) {
+    return xMin + (cx - marginLeft) / plotW * (xMax - xMin);
+  }
+
+  // Y layout: row positions
+  const numberLineY = 80;
+  const numRow = 150;
+  const denRow = 220;
+  const fracRow = 300;
+  const solRow = 360;
+
+  let hoverX = null;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = BLUE;
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tablica znakova na brojevnoj osi', W / 2, 30);
+
+    // Number line
+    ctx.strokeStyle = AXIS_COLOR;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(xMin + 0.2), numberLineY);
+    ctx.lineTo(toCanvasX(xMax - 0.2), numberLineY);
+    ctx.stroke();
+
+    // Arrow at right end
+    const arrowX = toCanvasX(xMax - 0.2);
+    ctx.beginPath();
+    ctx.moveTo(arrowX, numberLineY);
+    ctx.lineTo(arrowX - 8, numberLineY - 5);
+    ctx.lineTo(arrowX - 8, numberLineY + 5);
+    ctx.closePath();
+    ctx.fillStyle = AXIS_COLOR;
+    ctx.fill();
+
+    // Tick marks and labels
+    const ticks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+
+    for (const t of ticks) {
+      const cx = toCanvasX(t);
+      ctx.strokeStyle = AXIS_COLOR;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx, numberLineY - 5);
+      ctx.lineTo(cx, numberLineY + 5);
+      ctx.stroke();
+
+      ctx.fillStyle = MUTED;
+      ctx.fillText(String(t), cx, numberLineY + 8);
+    }
+
+    // Critical points with special markers
+    const criticalPoints = [
+      { x: 0, label: '0', color: BLUE, desc: 'granica dom.' },
+      { x: 1, label: '1', color: RED, desc: 'log\u2083x = 0' },
+      { x: 12, label: '12', color: PURPLE, desc: 'brojilac = 0' }
+    ];
+
+    for (const cp of criticalPoints) {
+      const cx = toCanvasX(cp.x);
+      // Hollow circle for excluded points
+      ctx.beginPath();
+      ctx.arc(cx, numberLineY, 7, 0, Math.PI * 2);
+      ctx.strokeStyle = cp.color;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.fillStyle = BG;
+      ctx.fill();
+
+      // Description below
+      ctx.fillStyle = cp.color;
+      ctx.font = '10px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(cp.desc, cx, numberLineY + 24);
+    }
+
+    // Row labels
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+
+    ctx.fillStyle = BLUE;
+    ctx.fillText('Brojilac:', marginLeft - 10, numRow);
+    ctx.fillStyle = PURPLE;
+    ctx.fillText('Imenilac:', marginLeft - 10, denRow);
+    ctx.fillStyle = TEXT_COLOR;
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Razlomak:', marginLeft - 10, fracRow);
+
+    // Draw sign regions
+    const regions = [
+      // (0, 1): num -, den -, frac +
+      { x1: 0, x2: 1, numSign: '-', denSign: '-', fracSign: '+', solution: true },
+      // (1, 12): num -, den +, frac -
+      { x1: 1, x2: 12, numSign: '-', denSign: '+', fracSign: '-', solution: false },
+      // (12, +inf): num +, den +, frac +
+      { x1: 12, x2: 15.3, numSign: '+', denSign: '+', fracSign: '+', solution: true }
+    ];
+
+    for (const r of regions) {
+      const cx1 = toCanvasX(r.x1);
+      const cx2 = toCanvasX(r.x2);
+      const midX = (cx1 + cx2) / 2;
+
+      // Numerator sign
+      ctx.fillStyle = r.numSign === '+' ? GREEN : RED;
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(r.numSign, midX, numRow);
+
+      // Denominator sign
+      ctx.fillStyle = r.denSign === '+' ? GREEN : RED;
+      ctx.fillText(r.denSign, midX, denRow);
+
+      // Fraction sign (with background highlight for positive)
+      if (r.solution) {
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.1)';
+        ctx.fillRect(cx1 + 2, fracRow - 16, cx2 - cx1 - 4, 32);
+        ctx.strokeStyle = 'rgba(74, 222, 128, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(cx1 + 2, fracRow - 16, cx2 - cx1 - 4, 32);
+      }
+      ctx.fillStyle = r.solution ? GREEN : RED;
+      ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(r.fracSign, midX, fracRow);
+    }
+
+    // Solution row
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = GREEN;
+    ctx.fillText('Rešenje:', marginLeft - 10, solRow);
+
+    // Draw solution intervals on a line
+    ctx.strokeStyle = AXIS_COLOR;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(xMin + 0.2), solRow);
+    ctx.lineTo(toCanvasX(xMax - 0.2), solRow);
+    ctx.stroke();
+
+    // Solution interval (0, 1)
+    ctx.strokeStyle = GREEN;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), solRow);
+    ctx.lineTo(toCanvasX(1), solRow);
+    ctx.stroke();
+
+    // Solution interval (12, +inf)
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(12), solRow);
+    ctx.lineTo(toCanvasX(xMax - 0.2), solRow);
+    ctx.stroke();
+
+    // Arrow for infinity
+    const arrX2 = toCanvasX(xMax - 0.2);
+    ctx.beginPath();
+    ctx.moveTo(arrX2, solRow);
+    ctx.lineTo(arrX2 - 8, solRow - 4);
+    ctx.lineTo(arrX2 - 8, solRow + 4);
+    ctx.closePath();
+    ctx.fillStyle = GREEN;
+    ctx.fill();
+
+    // Open circles at endpoints of solution
+    const solEndpoints = [0, 1, 12];
+    for (const p of solEndpoints) {
+      const cx = toCanvasX(p);
+      ctx.beginPath();
+      ctx.arc(cx, solRow, 5, 0, Math.PI * 2);
+      ctx.strokeStyle = GREEN;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = BG;
+      ctx.fill();
+    }
+
+    // Solution label
+    ctx.fillStyle = GREEN;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('S = (0, 1) \u222A (12, +\u221E)', W / 2, solRow + 28);
+
+    // Dashed vertical lines at critical points
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1;
+    for (const cp of criticalPoints) {
+      const cx = toCanvasX(cp.x);
+      ctx.strokeStyle = cp.color;
+      ctx.globalAlpha = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(cx, numberLineY + 40);
+      ctx.lineTo(cx, solRow - 10);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+
+    // Hover vertical line
+    if (hoverX !== null && hoverX >= 0 && hoverX <= xMax) {
+      const cx = toCanvasX(hoverX);
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = 'rgba(226, 232, 240, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx, 50);
+      ctx.lineTo(cx, solRow + 10);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Show x value
+      ctx.fillStyle = TEXT_COLOR;
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('x \u2248 ' + hoverX.toFixed(2).replace('.', ','), cx, 55);
+
+      // Show actual function values if in domain
+      if (hoverX > 0 && Math.abs(hoverX - 1) > 0.02) {
+        const numVal = Math.log(2 * hoverX + 3) / Math.log(3) - 3;
+        const denVal = Math.log(hoverX) / Math.log(3);
+        const fracVal = numVal / denVal;
+
+        ctx.font = '11px Courier New, monospace';
+        ctx.fillStyle = numVal >= 0 ? GREEN : RED;
+        ctx.fillText(numVal.toFixed(2).replace('.', ','), cx, numRow + 20);
+
+        ctx.fillStyle = denVal >= 0 ? GREEN : RED;
+        ctx.fillText(denVal.toFixed(2).replace('.', ','), cx, denRow + 20);
+
+        ctx.fillStyle = fracVal > 0 ? GREEN : RED;
+        ctx.fillText(fracVal.toFixed(2).replace('.', ','), cx, fracRow + 24);
+      }
+    }
+  }
+
+  function handleMove(clientX) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const canvasX = (clientX - rect.left) * scaleX;
+    hoverX = fromCanvasX(canvasX);
+    if (hoverX < -0.3 || hoverX > xMax) hoverX = null;
+    draw();
+  }
+
+  canvas.addEventListener('mousemove', function(e) {
+    handleMove(e.clientX);
+  });
+
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (e.touches.length > 0) {
+      handleMove(e.touches[0].clientX);
+    }
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    hoverX = null;
+    draw();
+  });
+
+  canvas.addEventListener('touchend', function() {
+    hoverX = null;
+    draw();
+  });
+
+  // Step click interactivity
+  const steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      step.classList.toggle('active');
+    });
+  });
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

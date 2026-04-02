@@ -63,6 +63,15 @@ Odgovor: (C) (1-x)/(1+x)
   </details>
 </div>
 
+
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="420"></canvas>
+  </div>
+  <p class="canvas-caption">Dijagram toka: kako ulaz \( x \) prolazi kroz \( g \), pa kroz \( f \) i daje konacni rezultat</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -151,6 +160,295 @@ Odgovor: (C) (1-x)/(1+x)
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Slider state
+  let sliderX = 0.5; // normalized 0..1
+  let isDragging = false;
+
+  // Slider geometry
+  const sliderLeft = 100;
+  const sliderRight = W - 100;
+  const sliderY = H - 45;
+  const sliderW = sliderRight - sliderLeft;
+  const knobR = 10;
+
+  function xFromSlider(t) {
+    // map t in [0,1] to x in [-5, 5], avoiding 0
+    let val = -5 + t * 10;
+    if (Math.abs(val) < 0.05) val = 0.05;
+    return val;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    const x = xFromSlider(sliderX);
+    const gx = 2016 / x;
+    const fgx = (1 - x) / (1 + x);
+
+    // Layout: three boxes connected by arrows
+    // Box 1: x (input)
+    // Box 2: g(x) = 2016/x
+    // Box 3: f(g(x)) = (1-x)/(1+x)
+
+    const boxW = 170;
+    const boxH = 80;
+    const boxY = 80;
+    const gap = 70;
+    const totalW = 3 * boxW + 2 * gap;
+    const startX = (W - totalW) / 2;
+
+    const boxes = [
+      { x: startX, label: 'x', value: x.toFixed(2).replace('.', ','), color: cv('--sol-canvas-primary'), borderColor: cv('--sol-canvas-primary') },
+      { x: startX + boxW + gap, label: 'g(x) = 2016/x', value: isFinite(gx) ? gx.toFixed(2).replace('.', ',') : '\u221E', color: cv('--sol-canvas-secondary'), borderColor: cv('--sol-canvas-secondary') },
+      { x: startX + 2*(boxW + gap), label: 'f(g(x))', value: isFinite(fgx) ? fgx.toFixed(4).replace('.', ',') : 'nedefinisano', color: cv('--sol-canvas-accent'), borderColor: cv('--sol-canvas-accent') }
+    ];
+
+    // Draw title
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tok kompozicije: x \u2192 g(x) \u2192 f(g(x))', W / 2, 30);
+
+    // Draw boxes
+    boxes.forEach((b, i) => {
+      // Box background
+      ctx.fillStyle = 'cv('--sol-canvas-grid')';
+      ctx.strokeStyle = b.borderColor;
+      ctx.lineWidth = 2;
+      const r = 12;
+      ctx.beginPath();
+      ctx.moveTo(b.x + r, boxY);
+      ctx.lineTo(b.x + boxW - r, boxY);
+      ctx.quadraticCurveTo(b.x + boxW, boxY, b.x + boxW, boxY + r);
+      ctx.lineTo(b.x + boxW, boxY + boxH - r);
+      ctx.quadraticCurveTo(b.x + boxW, boxY + boxH, b.x + boxW - r, boxY + boxH);
+      ctx.lineTo(b.x + r, boxY + boxH);
+      ctx.quadraticCurveTo(b.x, boxY + boxH, b.x, boxY + boxH - r);
+      ctx.lineTo(b.x, boxY + r);
+      ctx.quadraticCurveTo(b.x, boxY, b.x + r, boxY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = b.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(b.label, b.x + boxW / 2, boxY + 28);
+
+      // Value
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = 'bold 20px Courier New, monospace';
+      ctx.fillText(b.value, b.x + boxW / 2, boxY + 58);
+    });
+
+    // Draw arrows between boxes
+    for (let i = 0; i < 2; i++) {
+      const fromX = boxes[i].x + boxW;
+      const toX = boxes[i + 1].x;
+      const midY = boxY + boxH / 2;
+
+      // Arrow line
+      ctx.strokeStyle = cv('--sol-canvas-muted');
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(fromX + 6, midY);
+      ctx.lineTo(toX - 14, midY);
+      ctx.stroke();
+
+      // Arrowhead
+      ctx.fillStyle = cv('--sol-canvas-muted');
+      ctx.beginPath();
+      ctx.moveTo(toX - 6, midY);
+      ctx.lineTo(toX - 16, midY - 6);
+      ctx.lineTo(toX - 16, midY + 6);
+      ctx.closePath();
+      ctx.fill();
+
+      // Arrow label
+      ctx.fillStyle = cv('--sol-canvas-muted');
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      const labelText = i === 0 ? 'g' : 'f';
+      ctx.fillText(labelText, (fromX + toX) / 2, midY - 12);
+    }
+
+    // Formula result row
+    const formulaY = boxY + boxH + 50;
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('g(x) = 2016 / x = 2016 / ' + x.toFixed(2).replace('.', ',') + ' = ' + (isFinite(gx) ? gx.toFixed(2).replace('.', ',') : '\u221E'), W / 2, formulaY);
+
+    ctx.fillText('f(g(x)) = (1 \u2212 x) / (1 + x) = (1 \u2212 ' + x.toFixed(2).replace('.', ',') + ') / (1 + ' + x.toFixed(2).replace('.', ',') + ') = ' + (isFinite(fgx) ? fgx.toFixed(4).replace('.', ',') : 'nedefinisano'), W / 2, formulaY + 28);
+
+    // Highlight that 2016 cancels
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Konstanta 2016 se potpuno skrati u konacnom rezultatu!', W / 2, formulaY + 60);
+
+    // Draw slider
+    // Track
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(sliderLeft, sliderY);
+    ctx.lineTo(sliderRight, sliderY);
+    ctx.stroke();
+
+    // Filled portion
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(sliderLeft, sliderY);
+    ctx.lineTo(sliderLeft + sliderX * sliderW, sliderY);
+    ctx.stroke();
+
+    // Knob
+    const knobX = sliderLeft + sliderX * sliderW;
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.beginPath();
+    ctx.arc(knobX, sliderY, knobR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = cv('--sol-canvas-bg');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Slider label
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('x = ' + x.toFixed(2).replace('.', ','), sliderLeft - 80, sliderY + 5);
+    ctx.textAlign = 'right';
+    ctx.fillText('Pomeri klizac da menjas x', sliderRight + 10, sliderY - 18);
+
+    ctx.lineCap = 'butt';
+  }
+
+  function getEventPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    let clientX, clientY;
+    if (e.touches) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function isOnKnob(pos) {
+    const knobX = sliderLeft + sliderX * sliderW;
+    const dx = pos.x - knobX;
+    const dy = pos.y - sliderY;
+    return dx * dx + dy * dy <= (knobR + 8) * (knobR + 8);
+  }
+
+  function isOnTrack(pos) {
+    return pos.x >= sliderLeft - 5 && pos.x <= sliderRight + 5 &&
+           Math.abs(pos.y - sliderY) <= 20;
+  }
+
+  function updateSlider(pos) {
+    let t = (pos.x - sliderLeft) / sliderW;
+    t = Math.max(0, Math.min(1, t));
+    // avoid x = 0 (t = 0.5 maps to x = 0)
+    const x = xFromSlider(t);
+    if (Math.abs(x) < 0.1) {
+      t = x > 0 ? (0.1 + 5) / 10 : (-0.1 + 5) / 10;
+    }
+    sliderX = t;
+    draw();
+  }
+
+  canvas.addEventListener('mousedown', function(e) {
+    const pos = getEventPos(e);
+    if (isOnKnob(pos) || isOnTrack(pos)) {
+      isDragging = true;
+      updateSlider(pos);
+    }
+  });
+
+  canvas.addEventListener('mousemove', function(e) {
+    if (isDragging) {
+      updateSlider(getEventPos(e));
+    }
+    // Cursor
+    const pos = getEventPos(e);
+    canvas.style.cursor = (isOnKnob(pos) || isOnTrack(pos)) ? 'pointer' : 'default';
+  });
+
+  canvas.addEventListener('mouseup', function() {
+    isDragging = false;
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    isDragging = false;
+  });
+
+  // Touch events
+  canvas.addEventListener('touchstart', function(e) {
+    const pos = getEventPos(e);
+    if (isOnKnob(pos) || isOnTrack(pos)) {
+      isDragging = true;
+      updateSlider(pos);
+      e.preventDefault();
+    }
+  });
+
+  canvas.addEventListener('touchmove', function(e) {
+    if (isDragging) {
+      updateSlider(getEventPos(e));
+      e.preventDefault();
+    }
+  });
+
+  canvas.addEventListener('touchend', function() {
+    isDragging = false;
+  });
+
+  draw();
+
+  // Step click highlight
+  const steps = document.querySelectorAll('.step[data-step]');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

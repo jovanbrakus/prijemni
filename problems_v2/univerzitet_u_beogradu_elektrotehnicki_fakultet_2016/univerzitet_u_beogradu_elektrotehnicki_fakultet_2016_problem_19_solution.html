@@ -47,6 +47,15 @@ Odgovor: (B) 1/√2
   </details>
 </div>
 
+
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Aksijalni presek kupe sa upisanom loptom. Pomeri klizac da vidis kako se menja odnos zapremina.</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -125,6 +134,359 @@ Odgovor: (B) 1/√2
     <div class="detail-content"><p>\(\tan(\alpha/2) = \frac{1}{\sqrt{2}} \Rightarrow \alpha/2 \approx 35{,}26° \Rightarrow \alpha \approx 70{,}53°\).</p></div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const slider = document.getElementById('alpha-slider');
+  const alphaDisplay = document.getElementById('alpha-display');
+  const ratioDisplay = document.getElementById('ratio-display');
+
+  function degToRad(d) { return d * Math.PI / 180; }
+
+  function draw(alphaDeg) {
+    const alpha = degToRad(alphaDeg);
+    const t = Math.tan(alpha / 2);
+    const ratio = 2 * t * t * (1 - t * t);
+    const optT = 1 / Math.sqrt(2);
+    const optRatio = 0.5;
+
+    alphaDisplay.textContent = 'α = ' + alphaDeg.toFixed(1).replace('.', ',') + '°';
+    ratioDisplay.textContent = 'V_l / V_k = ' + (ratio > 0 ? ratio.toFixed(4).replace('.', ',') : '—');
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Layout: left side = cone cross-section, right side = graph of f(t)
+    var leftW = W * 0.48;
+    var rightX = W * 0.52;
+    var rightW = W * 0.45;
+
+    // ---- LEFT: Cone cross-section ----
+    var coneMargin = 30;
+    var coneAreaW = leftW - 2 * coneMargin;
+    var coneAreaH = H - 80;
+    var baseCenterX = coneMargin + coneAreaW / 2;
+    var baseCenterY = coneMargin + coneAreaH * 0.88;
+
+    // Slant height in pixels (scale to fit)
+    var lPx = Math.min(coneAreaW * 0.48, coneAreaH * 0.82);
+
+    var hPx = lPx * Math.sin(alpha);
+    var RPx = lPx * Math.cos(alpha);
+
+    var apexX = baseCenterX;
+    var apexY = baseCenterY - hPx;
+
+    var baseLeftX = baseCenterX - RPx;
+    var baseRightX = baseCenterX + RPx;
+
+    // Inscribed sphere
+    var rPx = RPx * hPx / (RPx + lPx);
+    var sphereCenterY = baseCenterY - rPx;
+
+    // Draw base line
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(baseLeftX, baseCenterY);
+    ctx.lineTo(baseRightX, baseCenterY);
+    ctx.stroke();
+
+    // Draw triangle (cone cross-section)
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(baseLeftX, baseCenterY);
+    ctx.lineTo(apexX, apexY);
+    ctx.lineTo(baseRightX, baseCenterY);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Fill triangle lightly
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.06)';
+    ctx.beginPath();
+    ctx.moveTo(baseLeftX, baseCenterY);
+    ctx.lineTo(apexX, apexY);
+    ctx.lineTo(baseRightX, baseCenterY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw inscribed circle (sphere cross-section)
+    if (rPx > 2) {
+      // Glow
+      var grad = ctx.createRadialGradient(baseCenterX, sphereCenterY, rPx * 0.5, baseCenterX, sphereCenterY, rPx * 1.3);
+      grad.addColorStop(0, 'rgba(52, 211, 153, 0.15)');
+      grad.addColorStop(1, 'rgba(52, 211, 153, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(baseCenterX, sphereCenterY, rPx * 1.3, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.strokeStyle = cv('--sol-canvas-accent');
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(baseCenterX, sphereCenterY, rPx, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(52, 211, 153, 0.08)';
+      ctx.beginPath();
+      ctx.arc(baseCenterX, sphereCenterY, rPx, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Radius dashed line
+      ctx.strokeStyle = cv('--sol-canvas-accent');
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(baseCenterX, sphereCenterY);
+      ctx.lineTo(baseCenterX + rPx, sphereCenterY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // r label
+      ctx.fillStyle = cv('--sol-canvas-accent');
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('r', baseCenterX + rPx / 2, sphereCenterY - 8);
+    }
+
+    // Height dashed line
+    ctx.strokeStyle = cv('--sol-canvas-secondary');
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(baseCenterX, baseCenterY);
+    ctx.lineTo(baseCenterX, apexY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // h label
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('h', baseCenterX + 6, (baseCenterY + apexY) / 2);
+
+    // R label
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('R', baseCenterX + RPx / 2, baseCenterY + 20);
+
+    // l label (slant height)
+    var midSlantX = (baseCenterX + baseRightX) / 2 + 8;
+    var midSlantY = (apexY + baseCenterY) / 2 - 8;
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fillText('l', midSlantX, midSlantY);
+
+    // Alpha angle arc
+    if (RPx > 30) {
+      var arcR = Math.min(40, RPx * 0.4);
+      ctx.strokeStyle = cv('--sol-canvas-highlight');
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(baseRightX, baseCenterY, arcR, Math.PI, Math.PI + alpha, false);
+      ctx.stroke();
+
+      var labelAngle = Math.PI + alpha / 2;
+      var labelR = arcR + 14;
+      ctx.fillStyle = cv('--sol-canvas-highlight');
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('α', baseRightX + labelR * Math.cos(labelAngle), baseCenterY + labelR * Math.sin(labelAngle) + 4);
+    }
+
+    // Title for left diagram
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Aksijalni presek kupe', baseCenterX, H - 15);
+
+    // ---- RIGHT: Graph of f(t) = 2t^2(1-t^2) ----
+    var gMarginL = rightX + 40;
+    var gMarginR = W - 25;
+    var gMarginT = 45;
+    var gMarginB = H - 50;
+    var gW2 = gMarginR - gMarginL;
+    var gH2 = gMarginB - gMarginT;
+
+    // t range: 0 to 1
+    function tToGx(tv) { return gMarginL + tv * gW2; }
+    function fToGy(fv) { return gMarginB - (fv / 0.6) * gH2; }
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (var fv = 0; fv <= 0.6; fv += 0.1) {
+      ctx.beginPath();
+      ctx.moveTo(gMarginL, fToGy(fv));
+      ctx.lineTo(gMarginR, fToGy(fv));
+      ctx.stroke();
+    }
+    for (var tv = 0; tv <= 1; tv += 0.2) {
+      ctx.beginPath();
+      ctx.moveTo(tToGx(tv), gMarginT);
+      ctx.lineTo(tToGx(tv), gMarginB);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(gMarginL, gMarginB);
+    ctx.lineTo(gMarginR, gMarginB);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(gMarginL, gMarginT);
+    ctx.lineTo(gMarginL, gMarginB);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var tv2 = 0; tv2 <= 1; tv2 += 0.2) {
+      ctx.fillText(tv2.toFixed(1).replace('.', ','), tToGx(tv2), gMarginB + 16);
+    }
+    ctx.textAlign = 'right';
+    for (var fv2 = 0; fv2 <= 0.55; fv2 += 0.1) {
+      ctx.fillText(fv2.toFixed(1).replace('.', ','), gMarginL - 6, fToGy(fv2) + 4);
+    }
+
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('t = tan(α/2)', (gMarginL + gMarginR) / 2, gMarginB + 34);
+
+    ctx.save();
+    ctx.translate(gMarginL - 34, (gMarginT + gMarginB) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center';
+    ctx.fillText('f(t) = V_l / V_k', 0, 0);
+    ctx.restore();
+
+    // Draw curve f(t) = 2t^2(1-t^2)
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    var steps = 200;
+    for (var i = 0; i <= steps; i++) {
+      var tv3 = i / steps;
+      var fv3 = 2 * tv3 * tv3 * (1 - tv3 * tv3);
+      var gx = tToGx(tv3);
+      var gy = fToGy(Math.max(0, fv3));
+      if (i === 0) ctx.moveTo(gx, gy);
+      else ctx.lineTo(gx, gy);
+    }
+    ctx.stroke();
+
+    // Optimal point
+    var optGx = tToGx(optT);
+    var optGy = fToGy(optRatio);
+
+    // Dashed lines to optimal
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(optGx, gMarginB);
+    ctx.lineTo(optGx, optGy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(gMarginL, optGy);
+    ctx.lineTo(optGx, optGy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Optimal point dot
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.beginPath();
+    ctx.arc(optGx, optGy, 6, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.strokeStyle = cv('--sol-canvas-bg');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Optimal label
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('max: 1/2', optGx + 10, optGy - 4);
+    ctx.fillText('t = 1/√2', optGx + 10, optGy + 14);
+
+    // 0,5 label on y-axis
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('0,5', gMarginL - 6, fToGy(0.5) + 4);
+
+    // Current point based on slider
+    if (t > 0 && t < 1) {
+      var curGx = tToGx(t);
+      var curFv = 2 * t * t * (1 - t * t);
+      var curGy = fToGy(Math.max(0, curFv));
+
+      // Dashed lines
+      ctx.strokeStyle = cv('--sol-canvas-highlight');
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(curGx, gMarginB);
+      ctx.lineTo(curGx, curGy);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(gMarginL, curGy);
+      ctx.lineTo(curGx, curGy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Current point
+      ctx.fillStyle = cv('--sol-canvas-highlight');
+      ctx.beginPath();
+      ctx.arc(curGx, curGy, 5, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = cv('--sol-canvas-bg');
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Graph title
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Grafik funkcije f(t) = 2t²(1 − t²)', (gMarginL + gMarginR) / 2, 25);
+  }
+
+  // Initial draw
+  draw(parseFloat(slider.value));
+
+  // Slider event
+  slider.addEventListener('input', function() {
+    draw(parseFloat(this.value));
+  });
+
+  // Touch support
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+  canvas.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

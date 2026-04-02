@@ -65,6 +65,14 @@ Odgovor: (A)
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Interaktivni dijagram: lopta sa prikazanim poluprečnikom, zapreminom i površinom. Formula \(S = \sqrt[3]{36\pi V^2}\) uvek daje tačnu vrednost.</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -174,6 +182,167 @@ Odgovor: (A)
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  var r = 2.0;
+
+  function drawSphere() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    var cx = 250;
+    var cy = 250;
+    var visualR = 30 + r * 32;
+
+    // Draw sphere (filled circle with gradient)
+    var grad = ctx.createRadialGradient(cx - visualR * 0.3, cy - visualR * 0.3, visualR * 0.1, cx, cy, visualR);
+    grad.addColorStop(0, cv('--sol-canvas-primary') + '59');
+    grad.addColorStop(0.5, cv('--sol-canvas-primary') + '26');
+    grad.addColorStop(1, cv('--sol-canvas-primary') + '08');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, visualR, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Sphere outline
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, visualR, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // Equator ellipse
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, visualR, visualR * 0.35, 0, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Radius line
+    ctx.strokeStyle = cv('--sol-canvas-highlight');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + visualR, cy);
+    ctx.stroke();
+
+    // Radius label
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('r = ' + r.toFixed(1).replace('.', ','), cx + visualR * 0.5, cy - 12);
+
+    // Center dot
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Calculate values
+    var V = (4 / 3) * Math.PI * r * r * r;
+    var S_real = 4 * Math.PI * r * r;
+    var S_formula = Math.cbrt(36 * Math.PI * V * V);
+
+    // Info panel on the right
+    var panelX = 500;
+    var panelY = 60;
+    var panelW = 270;
+    var panelH = 380;
+
+    ctx.fillStyle = cv('--sol-canvas-grid');
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(panelX + 12, panelY);
+    ctx.lineTo(panelX + panelW - 12, panelY);
+    ctx.quadraticCurveTo(panelX + panelW, panelY, panelX + panelW, panelY + 12);
+    ctx.lineTo(panelX + panelW, panelY + panelH - 12);
+    ctx.quadraticCurveTo(panelX + panelW, panelY + panelH, panelX + panelW - 12, panelY + panelH);
+    ctx.lineTo(panelX + 12, panelY + panelH);
+    ctx.quadraticCurveTo(panelX, panelY + panelH, panelX, panelY + panelH - 12);
+    ctx.lineTo(panelX, panelY + 12);
+    ctx.quadraticCurveTo(panelX, panelY, panelX + 12, panelY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Panel header
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Vrednosti:', panelX + 20, panelY + 30);
+
+    // r value
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = '15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('r = ' + r.toFixed(1).replace('.', ','), panelX + 20, panelY + 65);
+
+    // Volume
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Zapremina:', panelX + 20, panelY + 100);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('V = (4/3)\u00B7\u03C0\u00B7r\u00B3', panelX + 20, panelY + 122);
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('V = ' + V.toFixed(2).replace('.', ','), panelX + 20, panelY + 146);
+
+    // Surface (real)
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Povr\u0161ina (direktno):', panelX + 20, panelY + 182);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('S = 4\u00B7\u03C0\u00B7r\u00B2', panelX + 20, panelY + 204);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('S = ' + S_real.toFixed(2).replace('.', ','), panelX + 20, panelY + 228);
+
+    // Surface (formula)
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Povr\u0161ina (iz formule):', panelX + 20, panelY + 264);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('S = \u00B3\u221A(36\u00B7\u03C0\u00B7V\u00B2)', panelX + 20, panelY + 286);
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('S = ' + S_formula.toFixed(2).replace('.', ','), panelX + 20, panelY + 310);
+
+    // Match indicator
+    var match = Math.abs(S_real - S_formula) < 0.01;
+    ctx.fillStyle = match ? cv('--sol-canvas-accent') : cv('--sol-canvas-danger');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText(match ? 'Vrednosti se poklapaju!' : 'Gre\u0161ka u ra\u010Dunanju', panelX + 20, panelY + 352);
+  }
+
+  drawSphere();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); drawSphere(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

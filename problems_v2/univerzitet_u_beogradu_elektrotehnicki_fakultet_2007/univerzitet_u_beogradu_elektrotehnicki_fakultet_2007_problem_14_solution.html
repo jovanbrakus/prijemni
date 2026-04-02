@@ -71,6 +71,14 @@ Answer: (C) 32
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Dijagram</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -184,6 +192,311 @@ Answer: (C) 32
     </div>
   </details>
 </div>
+
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  let hoverZone = -1;
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    canvas.style.height = '500px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width;
+    const H = 500;
+
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Faktorizacija polinoma i uporedjivanje koeficijenata', W / 2, 30);
+
+    // Layout: show the multiplication visually
+    var centerX = W / 2;
+    var topY = 60;
+
+    // Original polynomial
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Polazni polinom:', centerX, topY);
+
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '18px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('x\u2074 + ax\u00B2 + b', centerX, topY + 26);
+
+    // Equals sign
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('=', centerX, topY + 58);
+
+    // Factored form
+    var factY = topY + 82;
+    var f1X = centerX - 120;
+    var f2X = centerX + 120;
+    var boxW = 180;
+    var boxH = 44;
+
+    // Factor 1 box
+    var f1Hover = hoverZone === 0;
+    ctx.fillStyle = f1Hover ? (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.2)') : c; })() : (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.1)') : c; })();
+    ctx.strokeStyle = f1Hover ? cv('--sol-canvas-primary') : (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.3)') : c; })();
+    ctx.lineWidth = f1Hover ? 2 : 1;
+    roundRect(ctx, f1X - boxW / 2, factY - boxH / 2, boxW, boxH, 10);
+    ctx.fill();
+    roundRect(ctx, f1X - boxW / 2, factY - boxH / 2, boxW, boxH, 10);
+    ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x\u00B2 + 4x + 6', f1X, factY + 6);
+
+    // Multiplication sign
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('\u00D7', centerX, factY + 6);
+
+    // Factor 2 box
+    var f2Hover = hoverZone === 1;
+    ctx.fillStyle = f2Hover ? (function(){ var c = cv('--sol-canvas-secondary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.2)') : c; })() : (function(){ var c = cv('--sol-canvas-secondary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.1)') : c; })();
+    ctx.strokeStyle = f2Hover ? cv('--sol-canvas-secondary') : (function(){ var c = cv('--sol-canvas-secondary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.3)') : c; })();
+    ctx.lineWidth = f2Hover ? 2 : 1;
+    roundRect(ctx, f2X - boxW / 2, factY - boxH / 2, boxW, boxH, 10);
+    ctx.fill();
+    roundRect(ctx, f2X - boxW / 2, factY - boxH / 2, boxW, boxH, 10);
+    ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = 'bold 17px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('x\u00B2 \u2212 4x + 6', f2X, factY + 6);
+
+    // Labels
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fillText('Poznati faktor', f1X, factY + boxH / 2 + 18);
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.fillText('Nepoznati faktor (p = \u22124, q = 6)', f2X, factY + boxH / 2 + 18);
+
+    // Arrow down
+    var arrowY = factY + boxH / 2 + 34;
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(centerX, arrowY);
+    ctx.lineTo(centerX, arrowY + 30);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(centerX - 6, arrowY + 24);
+    ctx.lineTo(centerX, arrowY + 30);
+    ctx.lineTo(centerX + 6, arrowY + 24);
+    ctx.stroke();
+
+    // Coefficient matching section
+    var matchY = arrowY + 50;
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Uporedjivanje koeficijenata', centerX, matchY);
+
+    // Draw coefficient equations in a grid
+    var eqData = [
+      { deg: 'x\u00B3', eq: 'p + 4 = 0', result: 'p = \u22124', color: cv('--sol-canvas-primary'), zone: 2 },
+      { deg: 'x\u00B9', eq: '4q + 6p = 0', result: 'q = 6', color: cv('--sol-canvas-secondary'), zone: 3 },
+      { deg: 'x\u00B2', eq: 'q + 4p + 6 = a', result: 'a = \u22124', color: cv('--sol-canvas-highlight'), zone: 4 },
+      { deg: 'x\u2070', eq: '6q = b', result: 'b = 36', color: cv('--sol-canvas-accent'), zone: 5 }
+    ];
+
+    var eqStartY = matchY + 20;
+    var cols = 2;
+    var eqBoxW = Math.min(220, (W - 80) / 2);
+    var eqBoxH = 70;
+    var eqGap = 16;
+
+    for (var i = 0; i < eqData.length; i++) {
+      var col = i % cols;
+      var row = Math.floor(i / cols);
+      var eqX = centerX + (col === 0 ? -eqBoxW - eqGap / 2 : eqGap / 2);
+      var eqY = eqStartY + row * (eqBoxH + eqGap);
+
+      var isHov = hoverZone === eqData[i].zone;
+      ctx.fillStyle = isHov ? (function(){ var c = cv('--sol-canvas-grid'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 1)') : c; })() : (function(){ var c = cv('--sol-canvas-grid'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.85)') : c; })();
+      ctx.strokeStyle = isHov ? eqData[i].color : 'rgba(51,65,85,0.7)';
+      ctx.lineWidth = isHov ? 2 : 1;
+      roundRect(ctx, eqX, eqY, eqBoxW, eqBoxH, 8);
+      ctx.fill();
+      roundRect(ctx, eqX, eqY, eqBoxW, eqBoxH, 8);
+      ctx.stroke();
+
+      // Degree badge
+      ctx.fillStyle = eqData[i].color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Uz ' + eqData[i].deg + ':', eqX + 12, eqY + 20);
+
+      // Equation
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = '14px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(eqData[i].eq, eqX + 12, eqY + 40);
+
+      // Result
+      ctx.fillStyle = eqData[i].color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('\u21D2 ' + eqData[i].result, eqX + eqBoxW - 12, eqY + 60);
+    }
+
+    // Final result
+    var finalY = eqStartY + 2 * (eqBoxH + eqGap) + 20;
+
+    // Arrow
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(centerX, finalY - 10);
+    ctx.lineTo(centerX, finalY + 14);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(centerX - 6, finalY + 8);
+    ctx.lineTo(centerX, finalY + 14);
+    ctx.lineTo(centerX + 6, finalY + 8);
+    ctx.stroke();
+
+    // Result box
+    var resBoxW = Math.min(360, W - 60);
+    var resBoxH = 52;
+    var resBoxX = centerX - resBoxW / 2;
+    var resBoxY = finalY + 20;
+
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.08)') : c; })();
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.5)') : c; })();
+    ctx.lineWidth = 2;
+    roundRect(ctx, resBoxX, resBoxY, resBoxW, resBoxH, 12);
+    ctx.fill();
+    roundRect(ctx, resBoxX, resBoxY, resBoxW, resBoxH, 12);
+    ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('a + b = (\u22124) + 36 = 32', centerX, resBoxY + 33);
+
+    // Factorization summary at bottom
+    var sumY = resBoxY + resBoxH + 22;
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x\u2074 \u2212 4x\u00B2 + 36 = (x\u00B2 + 4x + 6)(x\u00B2 \u2212 4x + 6)', centerX, sumY);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function getHoverZone(mx, my) {
+    var rect = canvas.getBoundingClientRect();
+    var W = rect.width;
+    var centerX = W / 2;
+    var topY = 60;
+    var factY = topY + 82;
+    var boxW = 180;
+    var boxH = 44;
+    var f1X = centerX - 120;
+    var f2X = centerX + 120;
+
+    // Factor 1
+    if (mx > f1X - boxW / 2 && mx < f1X + boxW / 2 && my > factY - boxH / 2 && my < factY + boxH / 2) return 0;
+    // Factor 2
+    if (mx > f2X - boxW / 2 && mx < f2X + boxW / 2 && my > factY - boxH / 2 && my < factY + boxH / 2) return 1;
+
+    // Coefficient boxes
+    var arrowY = factY + boxH / 2 + 34;
+    var matchY = arrowY + 50;
+    var eqStartY = matchY + 20;
+    var eqBoxW = Math.min(220, (W - 80) / 2);
+    var eqBoxH = 70;
+    var eqGap = 16;
+
+    for (var i = 0; i < 4; i++) {
+      var col = i % 2;
+      var row = Math.floor(i / 2);
+      var eqX = centerX + (col === 0 ? -eqBoxW - eqGap / 2 : eqGap / 2);
+      var eqY = eqStartY + row * (eqBoxH + eqGap);
+      if (mx > eqX && mx < eqX + eqBoxW && my > eqY && my < eqY + eqBoxH) return i + 2;
+    }
+
+    return -1;
+  }
+
+  canvas.addEventListener('mousemove', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    var newZone = getHoverZone(mx, my);
+    if (newZone !== hoverZone) {
+      hoverZone = newZone;
+      draw();
+    }
+    canvas.style.cursor = newZone >= 0 ? 'pointer' : 'default';
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    if (hoverZone !== -1) {
+      hoverZone = -1;
+      draw();
+    }
+  });
+
+  // Touch support
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var rect = canvas.getBoundingClientRect();
+    var touch = e.touches[0];
+    var mx = touch.clientX - rect.left;
+    var my = touch.clientY - rect.top;
+    hoverZone = getHoverZone(mx, my);
+    draw();
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    hoverZone = -1;
+    draw();
+  }, { passive: false });
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw() }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

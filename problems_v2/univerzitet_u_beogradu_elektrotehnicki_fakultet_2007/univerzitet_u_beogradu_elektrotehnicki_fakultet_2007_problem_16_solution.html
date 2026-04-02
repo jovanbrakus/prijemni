@@ -72,6 +72,14 @@ Answer: (D) n = 10
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="480"></canvas>
+  </div>
+  <p class="canvas-caption">Dijagram</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -172,6 +180,281 @@ Answer: (D) n = 10
     </div>
   </details>
 </div>
+
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 480 * dpr;
+    canvas.style.height = '480px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width;
+    const H = 480;
+
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // GP: a_n = 3 * 2^(n-1), S_n = 3*(2^n - 1)
+    var terms = [];
+    var sums = [];
+    var cumSum = 0;
+    for (var i = 1; i <= 10; i++) {
+      var an = 3 * Math.pow(2, i - 1);
+      cumSum += an;
+      terms.push(an);
+      sums.push(cumSum);
+    }
+    // terms: [3,6,12,24,48,96,192,384,768,1536]
+    // sums:  [3,9,21,45,93,189,381,765,1533,3069]
+
+    var marginL = 75;
+    var marginR = 40;
+    var marginT = 55;
+    var marginB = 65;
+    var plotW = W - marginL - marginR;
+    var plotH = H - marginT - marginB;
+
+    var maxVal = 3200;
+
+    function toX(n) { return marginL + (n - 0.5) / 10.5 * plotW; }
+    function toY(val) { return marginT + plotH - (val / maxVal) * plotH; }
+
+    // Title
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Clanovi a\u2099 i kumulativni zbir S\u2099 geometrijske progresije', marginL, 28);
+
+    // Grid
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.06)') : c; })();
+    ctx.lineWidth = 1;
+    for (var gn = 1; gn <= 10; gn++) {
+      var gx = toX(gn);
+      ctx.beginPath();
+      ctx.moveTo(gx, marginT);
+      ctx.lineTo(gx, H - marginB);
+      ctx.stroke();
+    }
+    var yTicks = [0, 500, 1000, 1500, 2000, 2500, 3000];
+    for (var ti = 0; ti < yTicks.length; ti++) {
+      var gy = toY(yTicks[ti]);
+      ctx.beginPath();
+      ctx.moveTo(marginL, gy);
+      ctx.lineTo(W - marginR, gy);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(marginL, H - marginB);
+    ctx.lineTo(W - marginR, H - marginB);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(marginL, marginT);
+    ctx.lineTo(marginL, H - marginB);
+    ctx.stroke();
+
+    // Y-axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    for (var yi = 0; yi < yTicks.length; yi++) {
+      ctx.fillText(yTicks[yi].toString(), marginL - 8, toY(yTicks[yi]) + 4);
+    }
+
+    // X-axis labels
+    ctx.textAlign = 'center';
+    for (var xi = 1; xi <= 10; xi++) {
+      ctx.fillText('n=' + xi, toX(xi), H - marginB + 18);
+    }
+
+    // Draw S_n bars (behind)
+    for (var bi = 0; bi < 10; bi++) {
+      var bx = toX(bi + 1);
+      var bw = plotW / 10.5 * 0.35;
+      var by = toY(sums[bi]);
+      var bh = toY(0) - by;
+
+      // Bar gradient
+      var grad = ctx.createLinearGradient(bx - bw, by, bx - bw, by + bh);
+      grad.addColorStop(0, (function(){ var c = cv('--sol-canvas-secondary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.6)') : c; })());
+      grad.addColorStop(1, (function(){ var c = cv('--sol-canvas-secondary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.15)') : c; })());
+      ctx.fillStyle = grad;
+
+      roundRect(ctx, bx - bw - 2, by, bw, bh, 4);
+      ctx.fill();
+
+      // S_n label for key values
+      if (bi === 9) {
+        ctx.fillStyle = cv('--sol-canvas-secondary');
+        ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('S\u2081\u2080 = 3069', bx - bw / 2 - 2, by - 8);
+      }
+    }
+
+    // Draw a_n bars (front)
+    for (var ai = 0; ai < 10; ai++) {
+      var ax = toX(ai + 1);
+      var aw = plotW / 10.5 * 0.35;
+      var ay = toY(terms[ai]);
+      var ah = toY(0) - ay;
+
+      var grad2 = ctx.createLinearGradient(ax + 2, ay, ax + 2, ay + ah);
+      grad2.addColorStop(0, (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.8)') : c; })());
+      grad2.addColorStop(1, (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.2)') : c; })());
+      ctx.fillStyle = grad2;
+
+      roundRect(ctx, ax + 2, ay, aw, ah, 4);
+      ctx.fill();
+
+      // a_n value labels for selected terms
+      if (terms[ai] >= 48 || ai < 4) {
+        ctx.fillStyle = cv('--sol-canvas-primary');
+        ctx.font = '11px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(terms[ai].toString(), ax + 2 + aw / 2, ay - 5);
+      }
+    }
+
+    // Draw exponential curve for a_n (smooth)
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.4)') : c; })();
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    for (var cn = 1; cn <= 10; cn += 0.1) {
+      var cv = 3 * Math.pow(2, cn - 1);
+      var ccx = toX(cn);
+      var ccy = toY(cv);
+      if (cn === 1) ctx.moveTo(ccx, ccy);
+      else ctx.lineTo(ccx, ccy);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw S_n curve (smooth)
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-secondary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.4)') : c; })();
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    for (var sn = 1; sn <= 10; sn += 0.1) {
+      var sv = 3 * (Math.pow(2, sn) - 1);
+      var scx = toX(sn);
+      var scy = toY(sv);
+      if (sn === 1) ctx.moveTo(scx, scy);
+      else ctx.lineTo(scx, scy);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Highlight n=10 marker
+    var hx = toX(10);
+    var hy = toY(3069);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.shadowColor = cv('--sol-canvas-accent');
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Dashed horizontal line at S_n = 3069
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.4)') : c; })();
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    ctx.moveTo(marginL, toY(3069));
+    ctx.lineTo(hx, toY(3069));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label for dashed line
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('S\u2099 = 3069', marginL + 5, toY(3069) - 8);
+
+    // Legend
+    var legX = W - marginR - 220;
+    var legY = marginT + 10;
+
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-grid'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.92)') : c; })();
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.25)') : c; })();
+    ctx.lineWidth = 1;
+    roundRect(ctx, legX, legY, 210, 75, 8);
+    ctx.fill();
+    roundRect(ctx, legX, legY, 210, 75, 8);
+    ctx.stroke();
+
+    // Legend: a_n
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.7)') : c; })();
+    ctx.fillRect(legX + 12, legY + 16, 18, 12);
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('a\u2099 = 3 \u00B7 2\u207F\u207B\u00B9', legX + 38, legY + 27);
+
+    // Legend: S_n
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-secondary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.5)') : c; })();
+    ctx.fillRect(legX + 12, legY + 42, 18, 12);
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.fillText('S\u2099 = 3(2\u207F \u2212 1)', legX + 38, legY + 53);
+
+    // Info box at bottom
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-grid'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.92)') : c; })();
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.35)') : c; })();
+    ctx.lineWidth = 1;
+    var ibX = marginL;
+    var ibY = H - marginB + 30;
+    var ibW = W - marginL - marginR;
+    var ibH = 30;
+    roundRect(ctx, ibX, ibY, ibW, ibH, 8);
+    ctx.fill();
+    roundRect(ctx, ibX, ibY, ibW, ibH, 8);
+    ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('a\u2081 = 3, q = 2  |  S\u2081\u2080 = 3(2\u00B9\u2070 \u2212 1) = 3 \u00B7 1023 = 3069  |  n = 10', W / 2, ibY + 20);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw() }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

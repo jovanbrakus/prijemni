@@ -71,6 +71,14 @@ Answer: (D) [0, 1) ∪ (2, +∞)
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="signChart" width="800" height="480"></canvas>
+  </div>
+  <p class="canvas-caption">Pomerajte kursor (ili dodirnite) brojevnu pravu da biste videli vrednost izraza u bilo kojoj tački.</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -167,6 +175,463 @@ Answer: (D) [0, 1) ∪ (2, +∞)
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+  function cva(name, alpha) {
+    var c = cv(name);
+    if (c.startsWith('#')) {
+      var r = parseInt(c.slice(1,3), 16);
+      var g = parseInt(c.slice(3,5), 16);
+      var b = parseInt(c.slice(5,7), 16);
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
+    return c;
+  }
+
+const canvas = document.getElementById('signChart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  let mouseX = -1;
+  let mouseY = -1;
+
+  // Number line mapping
+  const nlLeft = 80;
+  const nlRight = W - 60;
+  const nlY = 130;
+  const xMin = -2.5;
+  const xMax = 4.5;
+
+  function xToCanvas(x) {
+    return nlLeft + (x - xMin) / (xMax - xMin) * (nlRight - nlLeft);
+  }
+
+  function canvasToX(cx) {
+    return xMin + (cx - nlLeft) / (nlRight - nlLeft) * (xMax - xMin);
+  }
+
+  function f(x) {
+    const denom = (x - 1) * (x - 2);
+    if (Math.abs(denom) < 1e-10) return null;
+    return (6 * x) / denom;
+  }
+
+  function drawAll() {
+    // Background
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tablica znakova za 6x / [(x\u22121)(x\u22122)]', W / 2, 24);
+
+    // ---- Sign table rows ----
+    const tableTop = 42;
+    const rowH = 22;
+    const factors = ['6x', '(x\u22121)', '(x\u22122)', 'Razlomak'];
+    const intervals = [
+      { label: 'x < 0', signs: ['\u2212', '\u2212', '\u2212', '\u2212'] },
+      { label: '0 < x < 1', signs: ['+', '\u2212', '\u2212', '+'] },
+      { label: '1 < x < 2', signs: ['+', '+', '\u2212', '\u2212'] },
+      { label: 'x > 2', signs: ['+', '+', '+', '+'] }
+    ];
+
+    const colStart = 140;
+    const colW = 140;
+    const factorColW = 100;
+
+    // Header row
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = 0; i < intervals.length; i++) {
+      ctx.fillText(intervals[i].label, colStart + factorColW + i * colW + colW / 2, tableTop + 6);
+    }
+
+    // Factor rows
+    for (let r = 0; r < factors.length; r++) {
+      const y = tableTop + (r + 1) * rowH + 6;
+
+      // Factor label
+      ctx.fillStyle = (r === 3) ? cv('--sol-canvas-primary') : cv('--sol-canvas-muted');
+      ctx.font = (r === 3) ? 'bold 13px Segoe UI, system-ui, sans-serif' : '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(factors[r], colStart + factorColW - 10, y);
+
+      // Separator line
+      if (r === 3) {
+        ctx.strokeStyle = cv('--sol-canvas-axis');
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(colStart + factorColW, y - 16);
+        ctx.lineTo(colStart + factorColW + intervals.length * colW, y - 16);
+        ctx.stroke();
+      }
+
+      // Signs
+      for (let c = 0; c < intervals.length; c++) {
+        const sign = intervals[c].signs[r];
+        const cx = colStart + factorColW + c * colW + colW / 2;
+        if (r === 3) {
+          if (sign === '+') {
+            ctx.fillStyle = cv('--sol-canvas-accent');
+            ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+          } else {
+            ctx.fillStyle = cv('--sol-canvas-danger');
+            ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+          }
+        } else {
+          ctx.fillStyle = (sign === '+') ? cv('--sol-canvas-accent') : cv('--sol-canvas-danger');
+          ctx.font = '14px Segoe UI, system-ui, sans-serif';
+        }
+        ctx.textAlign = 'center';
+        ctx.fillText(sign, cx, y);
+      }
+    }
+
+    // ---- Number line ----
+    // Line
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(nlLeft, nlY);
+    ctx.lineTo(nlRight, nlY);
+    ctx.stroke();
+
+    // Arrows
+    ctx.fillStyle = cv('--sol-canvas-axis');
+    ctx.beginPath();
+    ctx.moveTo(nlRight, nlY);
+    ctx.lineTo(nlRight - 10, nlY - 5);
+    ctx.lineTo(nlRight - 10, nlY + 5);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(nlLeft, nlY);
+    ctx.lineTo(nlLeft + 10, nlY - 5);
+    ctx.lineTo(nlLeft + 10, nlY + 5);
+    ctx.fill();
+
+    // Tick marks and labels for integer values
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+      const cx = xToCanvas(i);
+      ctx.strokeStyle = cv('--sol-canvas-axis');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx, nlY - 5);
+      ctx.lineTo(cx, nlY + 5);
+      ctx.stroke();
+
+      if (i === 0 || i === 1 || i === 2) continue; // drawn separately
+      ctx.fillStyle = cv('--sol-canvas-muted');
+      ctx.fillText(i.toString(), cx, nlY + 20);
+    }
+
+    // Critical points
+    const criticalPoints = [
+      { x: 0, label: '0', type: 'closed', color: cv('--sol-canvas-accent') },
+      { x: 1, label: '1', type: 'open', color: cv('--sol-canvas-danger') },
+      { x: 2, label: '2', type: 'open', color: cv('--sol-canvas-danger') }
+    ];
+
+    for (const pt of criticalPoints) {
+      const cx = xToCanvas(pt.x);
+
+      ctx.beginPath();
+      ctx.arc(cx, nlY, 7, 0, Math.PI * 2);
+      if (pt.type === 'closed') {
+        ctx.fillStyle = pt.color;
+        ctx.fill();
+      } else {
+        ctx.fillStyle = cv('--sol-canvas-bg');
+        ctx.fill();
+        ctx.strokeStyle = pt.color;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = pt.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(pt.label, cx, nlY + 24);
+    }
+
+    // Solution intervals (shaded regions on the number line)
+    // [0, 1)
+    ctx.fillStyle = cva('--sol-canvas-accent', 0.15);
+    const x0 = xToCanvas(0);
+    const x1 = xToCanvas(1);
+    const x2 = xToCanvas(2);
+    const xEnd = nlRight - 10;
+    ctx.fillRect(x0, nlY - 12, x1 - x0, 24);
+    // (2, +inf)
+    ctx.fillRect(x2, nlY - 12, xEnd - x2, 24);
+
+    // Solution labels
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('[0, 1)', (x0 + x1) / 2, nlY + 42);
+    ctx.fillText('(2, +\u221E)', (x2 + xEnd) / 2, nlY + 42);
+
+    // Non-solution labels
+    ctx.fillStyle = cv('--sol-canvas-danger');
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    const xStart = nlLeft + 10;
+    ctx.fillText('\u2212', (xStart + x0) / 2, nlY - 18);
+    ctx.fillText('+', (x0 + x1) / 2, nlY - 18);
+    ctx.fillText('\u2212', (x1 + x2) / 2, nlY - 18);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fillText('+', (x2 + xEnd) / 2, nlY - 18);
+    ctx.fillText('+', (x0 + x1) / 2, nlY - 18);
+
+    // ---- Graph of f(x) = 6x/((x-1)(x-2)) ----
+    const graphTop = 200;
+    const graphBottom = H - 40;
+    const graphH = graphBottom - graphTop;
+    const graphMidY = graphTop + graphH / 2;
+    const yScale = graphH / 2 / 12; // map [-12, 12] to graph area
+
+    function yToCanvas(y) {
+      return graphMidY - y * yScale;
+    }
+
+    // Graph title
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Grafik funkcije f(x) = 6x / [(x\u22121)(x\u22122)]', W / 2, graphTop - 8);
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    // Horizontal axis (y=0)
+    ctx.beginPath();
+    ctx.moveTo(nlLeft, yToCanvas(0));
+    ctx.lineTo(nlRight, yToCanvas(0));
+    ctx.stroke();
+
+    // Y=1 line (dashed)
+    ctx.strokeStyle = cva('--sol-canvas-highlight', 0.3);
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(nlLeft, yToCanvas(0));
+    ctx.lineTo(nlRight, yToCanvas(0));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Y axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '10px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    for (let yy = -10; yy <= 10; yy += 5) {
+      if (yy === 0) continue;
+      const cy = yToCanvas(yy);
+      if (cy < graphTop || cy > graphBottom) continue;
+      ctx.fillText(yy.toString(), nlLeft - 8, cy + 4);
+      ctx.strokeStyle = cv('--sol-canvas-grid');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(nlLeft, cy);
+      ctx.lineTo(nlRight, cy);
+      ctx.stroke();
+    }
+    // y=0 label
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.fillText('0', nlLeft - 8, yToCanvas(0) + 4);
+
+    // Vertical asymptotes at x=1 and x=2
+    for (const ax of [1, 2]) {
+      const cx = xToCanvas(ax);
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(cx, graphTop);
+      ctx.lineTo(cx, graphBottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Plot function
+    ctx.lineWidth = 2.5;
+    const segments = [
+      { from: xMin, to: 0.97 },
+      { from: 1.03, to: 1.97 },
+      { from: 2.03, to: xMax }
+    ];
+
+    for (const seg of segments) {
+      ctx.strokeStyle = cv('--sol-canvas-primary');
+      ctx.beginPath();
+      let started = false;
+      const step = 0.01;
+      for (let x = seg.from; x <= seg.to; x += step) {
+        const val = f(x);
+        if (val === null) continue;
+        const clampedVal = Math.max(-12, Math.min(12, val));
+        const cx = xToCanvas(x);
+        const cy = yToCanvas(clampedVal);
+        if (cy < graphTop - 5 || cy > graphBottom + 5) {
+          started = false;
+          continue;
+        }
+        if (!started) {
+          ctx.moveTo(cx, cy);
+          started = true;
+        } else {
+          ctx.lineTo(cx, cy);
+        }
+      }
+      ctx.stroke();
+    }
+
+    // Shade solution regions on graph
+    for (const seg of [{ from: 0, to: 0.97 }, { from: 2.03, to: xMax }]) {
+      ctx.fillStyle = cva('--sol-canvas-accent', 0.08);
+      const left = xToCanvas(seg.from);
+      const right = xToCanvas(seg.to);
+      ctx.fillRect(left, graphTop, right - left, graphBottom - graphTop);
+    }
+
+    // Mark point (0, 0) on graph
+    const zx = xToCanvas(0);
+    const zy = yToCanvas(0);
+    ctx.beginPath();
+    ctx.arc(zx, zy, 5, 0, Math.PI * 2);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fill();
+
+    // ---- Interactive hover ----
+    if (mouseX >= nlLeft && mouseX <= nlRight) {
+      const xVal = canvasToX(mouseX);
+
+      // Vertical line on graph
+      ctx.strokeStyle = 'rgba(226, 232, 240, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(mouseX, graphTop);
+      ctx.lineTo(mouseX, graphBottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Dot on number line
+      ctx.beginPath();
+      ctx.arc(mouseX, nlY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.fill();
+
+      // Value of f(x)
+      const val = f(xVal);
+      let info = 'x = ' + xVal.toFixed(2);
+      if (val === null) {
+        info += '  |  f(x) = nedefinisano';
+      } else {
+        info += '  |  f(x) = ' + val.toFixed(2);
+        if (val >= 0) {
+          info += '  \u2265 0  \u2714';
+        } else {
+          info += '  < 0  \u2718';
+        }
+
+        // Dot on graph
+        const clampedVal = Math.max(-12, Math.min(12, val));
+        const cy = yToCanvas(clampedVal);
+        if (cy >= graphTop && cy <= graphBottom) {
+          ctx.beginPath();
+          ctx.arc(mouseX, cy, 5, 0, Math.PI * 2);
+          ctx.fillStyle = (val >= 0) ? cv('--sol-canvas-accent') : cv('--sol-canvas-danger');
+          ctx.fill();
+          ctx.strokeStyle = cv('--sol-canvas-text');
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+
+      // Info box
+      ctx.fillStyle = cva('--sol-canvas-grid', 0.92);
+      ctx.strokeStyle = cv('--sol-canvas-axis');
+      ctx.lineWidth = 1;
+      const infoW = ctx.measureText(info).width + 24;
+      let infoX = mouseX - infoW / 2;
+      if (infoX < 5) infoX = 5;
+      if (infoX + infoW > W - 5) infoX = W - 5 - infoW;
+      const infoY = graphBottom + 8;
+      ctx.beginPath();
+      ctx.roundRect(infoX, infoY, infoW, 26, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = (val !== null && val >= 0) ? cv('--sol-canvas-accent') : cv('--sol-canvas-danger');
+      if (val === null) ctx.fillStyle = cv('--sol-canvas-highlight');
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(info, infoX + infoW / 2, infoY + 17);
+    }
+
+    // Legend at bottom
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    const legY = H - 12;
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fillRect(20, legY - 8, 10, 10);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.fillText('Pripada rešenju (f(x) \u2265 0)', 34, legY);
+
+    ctx.fillStyle = cv('--sol-canvas-danger');
+    ctx.fillRect(250, legY - 8, 10, 10);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.fillText('Ne pripada rešenju (f(x) < 0)', 264, legY);
+
+    ctx.fillStyle = 'rgba(239,68,68,0.5)';
+    ctx.fillRect(510, legY - 8, 10, 10);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.fillText('Vertikalna asimptota (nedefinisano)', 524, legY);
+  }
+
+  function handlePointer(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    mouseX = (e.clientX - rect.left) * scaleX;
+    mouseY = (e.clientY - rect.top) * scaleY;
+    drawAll();
+  }
+
+  canvas.addEventListener('mousemove', handlePointer);
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (e.touches.length > 0) {
+      handlePointer(e.touches[0]);
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('mouseleave', () => {
+    mouseX = -1;
+    mouseY = -1;
+    drawAll();
+  });
+
+  drawAll();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); if (typeof draw === 'function') draw(); if (typeof drawTriangle === 'function') drawTriangle(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

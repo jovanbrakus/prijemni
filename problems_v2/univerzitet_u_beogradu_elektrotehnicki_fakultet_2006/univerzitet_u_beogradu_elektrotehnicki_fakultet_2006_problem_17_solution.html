@@ -75,6 +75,14 @@ Answer: (C) -4
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="400"></canvas>
+  </div>
+  <p class="canvas-caption">Brojna prava sa rešenjima logaritamske jednačine</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -173,6 +181,204 @@ Answer: (C) -4
     </div>
   </details>
 </div>
+
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+
+  function draw() {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    var W = rect.width;
+    var H = rect.height;
+
+    // Clear
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Number line parameters
+    var margin = 60;
+    var lineY = H * 0.45;
+    var xMin = -4;
+    var xMax = 2;
+
+    function toScreen(val) {
+      return margin + (val - xMin) / (xMax - xMin) * (W - 2 * margin);
+    }
+
+    // Draw number line
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(margin - 20, lineY);
+    ctx.lineTo(W - margin + 20, lineY);
+    ctx.stroke();
+
+    // Arrow heads
+    ctx.fillStyle = cv('--sol-canvas-axis');
+    ctx.beginPath();
+    ctx.moveTo(W - margin + 20, lineY);
+    ctx.lineTo(W - margin + 10, lineY - 5);
+    ctx.lineTo(W - margin + 10, lineY + 5);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(margin - 20, lineY);
+    ctx.lineTo(margin - 10, lineY - 5);
+    ctx.lineTo(margin - 10, lineY + 5);
+    ctx.fill();
+
+    // Tick marks
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    for (var i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+      var sx = toScreen(i);
+      ctx.strokeStyle = cv('--sol-canvas-axis');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(sx, lineY - 6);
+      ctx.lineTo(sx, lineY + 6);
+      ctx.stroke();
+      ctx.fillStyle = cv('--sol-canvas-muted');
+      ctx.fillText(i.toString(), sx, lineY + 22);
+    }
+
+    // Half ticks for -1/2, -3/2
+    var halves = [-0.5, -1.5];
+    halves.forEach(function(v) {
+      var sx = toScreen(v);
+      ctx.strokeStyle = cv('--sol-canvas-axis');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(sx, lineY - 4);
+      ctx.lineTo(sx, lineY + 4);
+      ctx.stroke();
+    });
+
+    // Excluded points (x = -1 and x = 1)
+    var excluded = [-1, 1];
+    excluded.forEach(function(val) {
+      var sx = toScreen(val);
+      ctx.strokeStyle = cv('--sol-canvas-highlight');
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(sx, lineY, 8, 0, 2 * Math.PI);
+      ctx.stroke();
+      // X through circle
+      ctx.beginPath();
+      ctx.moveTo(sx - 5, lineY - 5);
+      ctx.lineTo(sx + 5, lineY + 5);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(sx + 5, lineY - 5);
+      ctx.lineTo(sx - 5, lineY + 5);
+      ctx.stroke();
+    });
+
+    // Label excluded
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.fillText('x \u2260 -1', toScreen(-1), lineY - 16);
+    ctx.fillText('x \u2260 1', toScreen(1), lineY - 16);
+
+    // Solution points
+    var solutions = [
+      { val: 0, label: 'x\u2081 = 0', color: cv('--sol-canvas-accent') },
+      { val: -2, label: 'x\u2082 = -2', color: cv('--sol-canvas-primary') },
+      { val: -0.5, label: 'x\u2083 = -\u00BD', color: cv('--sol-canvas-secondary') },
+      { val: -1.5, label: 'x\u2084 = -\u00B3/\u2082', color: cv('--sol-canvas-accent') }
+    ];
+
+    var labelOffsets = [
+      { dx: 0, dy: -30 },
+      { dx: 0, dy: -30 },
+      { dx: 0, dy: 30 },
+      { dx: 0, dy: 30 }
+    ];
+
+    solutions.forEach(function(sol, idx) {
+      var sx = toScreen(sol.val);
+
+      // Filled dot
+      ctx.fillStyle = sol.color;
+      ctx.beginPath();
+      ctx.arc(sx, lineY, 7, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Inner dot
+      ctx.fillStyle = cv('--sol-canvas-bg');
+      ctx.beginPath();
+      ctx.arc(sx, lineY, 3, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Label
+      ctx.fillStyle = sol.color;
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      var ly = lineY + labelOffsets[idx].dy;
+      ctx.fillText(sol.label, sx + labelOffsets[idx].dx, ly);
+
+      // Connector line
+      ctx.strokeStyle = sol.color;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      if (labelOffsets[idx].dy < 0) {
+        ctx.moveTo(sx, lineY - 8);
+        ctx.lineTo(sx, ly + 5);
+      } else {
+        ctx.moveTo(sx, lineY + 8);
+        ctx.lineTo(sx, ly - 14);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // Title
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = 'bold 15px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Brojna prava: rešenja i isključene tačke', W / 2, 24);
+
+    // Sum annotation
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Zbir: 0 + (-2) + (-\u00BD) + (-\u00B3/\u2082) = -4', W / 2, H - 16);
+
+    // Legend
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fillRect(margin, H - 40, 10, 10);
+    ctx.fillText('u = 0', margin + 14, H - 31);
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.fillRect(margin + 90, H - 40, 10, 10);
+    ctx.fillText('u = -\u00BD', margin + 104, H - 31);
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.fillRect(margin + 190, H - 40, 10, 10);
+    ctx.fillText('van domena', margin + 204, H - 31);
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw() }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

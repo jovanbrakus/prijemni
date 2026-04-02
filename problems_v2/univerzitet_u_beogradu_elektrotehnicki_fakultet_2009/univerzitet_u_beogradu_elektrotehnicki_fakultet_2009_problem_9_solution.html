@@ -73,6 +73,14 @@ Odgovor: (B)
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="triangleCanvas" width="700" height="450"></canvas>
+  </div>
+  <p class="canvas-caption">Proverimo na konkretnom primeru. Za jednakostranični trougao sa \(a = b = c = 2\) važi \(\alpha = \beta = \gamma = 60°\), pa je \(\cos 60° = 0{,}5\).</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -161,6 +169,320 @@ Odgovor: (B)
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+  function cva(name, alpha) {
+    var c = cv(name);
+    if (c.startsWith('#')) {
+      var r = parseInt(c.slice(1,3), 16);
+      var g = parseInt(c.slice(3,5), 16);
+      var b = parseInt(c.slice(5,7), 16);
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
+    return c;
+  }
+
+// === Collapsible toggle ===
+  window.toggleCollapsible = function(btn) {
+    var content = btn.nextElementSibling;
+    var arrow = btn.querySelector('.arrow-icon');
+    content.classList.toggle('open');
+    arrow.classList.toggle('open');
+  };
+
+  // === Checkpoint reveal ===
+  window.revealAnswer = function(btn) {
+    var reveal = btn.nextElementSibling;
+    reveal.classList.toggle('visible');
+    btn.textContent = reveal.classList.contains('visible') ? 'Sakrij odgovor' : 'Prikaži odgovor';
+  };
+
+  // === Canvas drawing ===
+  var canvas = document.getElementById('triangleCanvas');
+  var ctx = canvas.getContext('2d');
+  var currentType = 'default';
+  var dpr = window.devicePixelRatio || 1;
+
+  function setupCanvas() {
+    var rect = canvas.getBoundingClientRect();
+    var w = rect.width || 600;
+    var h = 450;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  var triangles = {
+    'default': {
+      A: {x: 100, y: 370}, B: {x: 500, y: 370}, C: {x: 220, y: 80},
+      a: null, b: null, c: null,
+      labels: {sideA: 'a', sideB: 'b', sideC: 'c'},
+      alphaLabel: '\u03B1', betaLabel: '\u03B2', gammaLabel: '\u03B3'
+    },
+    'right': {
+      A: {x: 120, y: 370}, B: {x: 480, y: 370}, C: {x: 120, y: 80},
+      labels: {sideA: 'a', sideB: 'b', sideC: 'c'},
+      alphaLabel: '\u03B1', betaLabel: '\u03B2', gammaLabel: '90\u00B0'
+    },
+    'equilateral': {
+      A: {x: 110, y: 370}, B: {x: 490, y: 370}, C: {x: 300, y: 40},
+      labels: {sideA: 'a', sideB: 'b', sideC: 'c'},
+      alphaLabel: '60\u00B0', betaLabel: '60\u00B0', gammaLabel: '60\u00B0'
+    }
+  };
+
+  function dist(p1, p2) {
+    return Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+  }
+
+  function midpoint(p1, p2) {
+    return {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2};
+  }
+
+  function drawAngleArc(center, p1, p2, radius, label) {
+    var angle1 = Math.atan2(p1.y - center.y, p1.x - center.x);
+    var angle2 = Math.atan2(p2.y - center.y, p2.x - center.x);
+
+    // Ensure we draw the smaller arc
+    var diff = angle2 - angle1;
+    while (diff > Math.PI) diff -= 2 * Math.PI;
+    while (diff < -Math.PI) diff += 2 * Math.PI;
+
+    var startAngle, endAngle;
+    if (diff > 0) {
+      startAngle = angle1;
+      endAngle = angle2;
+    } else {
+      startAngle = angle2;
+      endAngle = angle1;
+    }
+
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, startAngle, endAngle);
+    ctx.strokeStyle = cv('--sol-canvas-secondary');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    var midAngle = (startAngle + endAngle) / 2;
+    var labelR = radius + 18;
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, center.x + labelR * Math.cos(midAngle), center.y + labelR * Math.sin(midAngle));
+  }
+
+  function drawTriangle() {
+    setupCanvas();
+    var t = triangles[currentType];
+    var A = t.A, B = t.B, C = t.C;
+
+    var w = canvas.width / dpr;
+    var h = canvas.height / dpr;
+
+    // Clear
+    ctx.clearRect(0, 0, w, h);
+
+    // Fill background
+    ctx.fillStyle = cv('--sol-canvas-grid');
+    ctx.fillRect(0, 0, w, h);
+
+    // Draw triangle fill
+    ctx.beginPath();
+    ctx.moveTo(A.x, A.y);
+    ctx.lineTo(B.x, B.y);
+    ctx.lineTo(C.x, C.y);
+    ctx.closePath();
+    ctx.fillStyle = cva('--sol-canvas-primary', 0.06);
+    ctx.fill();
+
+    // Draw triangle edges
+    ctx.beginPath();
+    ctx.moveTo(A.x, A.y);
+    ctx.lineTo(B.x, B.y);
+    ctx.lineTo(C.x, C.y);
+    ctx.closePath();
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Vertices
+    var vertices = [A, B, C];
+    var vertexLabels = ['A', 'B', 'C'];
+    var offsets = [
+      {x: -18, y: 20},
+      {x: 18, y: 20},
+      {x: 0, y: -20}
+    ];
+
+    if (currentType === 'right') {
+      offsets = [{x: -18, y: 20}, {x: 18, y: 20}, {x: -22, y: -10}];
+    }
+
+    vertices.forEach(function(v, i) {
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = cv('--sol-canvas-primary');
+      ctx.fill();
+
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(vertexLabels[i], v.x + offsets[i].x, v.y + offsets[i].y);
+    });
+
+    // Side labels (a = BC, b = AC, c = AB)
+    var midBC = midpoint(B, C);
+    var midAC = midpoint(A, C);
+    var midAB = midpoint(A, B);
+
+    ctx.font = 'bold 20px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // side a (opposite A = BC)
+    var nBC = {x: -(C.y - B.y), y: C.x - B.x};
+    var lenBC = Math.sqrt(nBC.x * nBC.x + nBC.y * nBC.y);
+    nBC.x /= lenBC; nBC.y /= lenBC;
+    ctx.fillText('a', midBC.x + nBC.x * 22, midBC.y + nBC.y * 22);
+
+    // side b (opposite B = AC)
+    var nAC = {x: -(C.y - A.y), y: C.x - A.x};
+    var lenAC = Math.sqrt(nAC.x * nAC.x + nAC.y * nAC.y);
+    nAC.x /= lenAC; nAC.y /= lenAC;
+    ctx.fillText('b', midAC.x - nAC.x * 22, midAC.y - nAC.y * 22);
+
+    // side c (opposite C = AB)
+    ctx.fillText('c', midAB.x, midAB.y + 24);
+
+    // Angle arcs
+    drawAngleArc(A, B, C, 35, t.alphaLabel);
+    drawAngleArc(B, A, C, 35, t.betaLabel);
+    drawAngleArc(C, A, B, 35, t.gammaLabel);
+
+    // Right angle marker for right triangle
+    if (currentType === 'right') {
+      var sq = 18;
+      ctx.beginPath();
+      ctx.moveTo(C.x + sq, C.y);
+      ctx.lineTo(C.x + sq, C.y + sq);
+      ctx.lineTo(C.x, C.y + sq);
+      ctx.strokeStyle = cv('--sol-canvas-secondary');
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Formula display
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('cos\u03B1/a + cos\u03B2/b + cos\u03B3/c = (a\u00B2+b\u00B2+c\u00B2)/(2abc)', w / 2, h - 15);
+
+    // Compute and display numerical value
+    var la = dist(B, C), lb = dist(A, C), lc = dist(A, B);
+    var cosA = (lb*lb + lc*lc - la*la) / (2*lb*lc);
+    var cosB = (la*la + lc*lc - lb*lb) / (2*la*lc);
+    var cosC = (la*la + lb*lb - lc*lc) / (2*la*lb);
+    var lhs = cosA/la + cosB/lb + cosC/lc;
+    var rhs = (la*la + lb*lb + lc*lc) / (2*la*lb*lc);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Leva = Desna = ' + lhs.toFixed(6).replace('.', ','), w - 20, h - 15);
+  }
+
+  window.setTriangleType = function(type) {
+    currentType = type;
+    document.querySelectorAll('.canvas-controls button').forEach(function(b) {
+      b.classList.remove('active');
+    });
+    document.getElementById('btn' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+    drawTriangle();
+  };
+
+  // === Dragging ===
+  var dragging = null;
+
+  function getMousePos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var clientX, clientY;
+    if (e.touches) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  }
+
+  function findVertex(pos) {
+    var t = triangles[currentType];
+    var verts = [t.A, t.B, t.C];
+    for (var i = 0; i < verts.length; i++) {
+      if (dist(pos, verts[i]) < 20) return verts[i];
+    }
+    return null;
+  }
+
+  canvas.addEventListener('mousedown', function(e) {
+    var pos = getMousePos(e);
+    dragging = findVertex(pos);
+  });
+
+  canvas.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    var pos = getMousePos(e);
+    dragging.x = Math.max(20, Math.min(pos.x, (canvas.width / dpr) - 20));
+    dragging.y = Math.max(20, Math.min(pos.y, (canvas.height / dpr) - 20));
+    drawTriangle();
+  });
+
+  canvas.addEventListener('mouseup', function() { dragging = null; });
+  canvas.addEventListener('mouseleave', function() { dragging = null; });
+
+  // Touch events
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var pos = getMousePos(e);
+    dragging = findVertex(pos);
+  }, {passive: false});
+
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (!dragging) return;
+    var pos = getMousePos(e);
+    dragging.x = Math.max(20, Math.min(pos.x, (canvas.width / dpr) - 20));
+    dragging.y = Math.max(20, Math.min(pos.y, (canvas.height / dpr) - 20));
+    drawTriangle();
+  }, {passive: false});
+
+  canvas.addEventListener('touchend', function() { dragging = null; });
+
+  // Initial draw
+  window.addEventListener('load', drawTriangle);
+  window.addEventListener('resize', drawTriangle);
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); if (typeof draw === 'function') draw(); if (typeof drawTriangle === 'function') drawTriangle(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

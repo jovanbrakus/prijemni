@@ -67,6 +67,14 @@ Answer: (B) 4/√3
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="520"></canvas>
+  </div>
+  <p class="canvas-caption">Kriva y = 16/(sqrt(3)*x^3) - 2 sa najbližom tačkom do M(0,-2)</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -154,6 +162,264 @@ Answer: (B) 4/√3
     </div>
   </details>
 </div>
+
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+
+  /* Coordinate system:  math coords -> canvas coords */
+  var xMin = -1.5, xMax = 6.5, yMin = -5, yMax = 8;
+
+  function toCanvasX(mx) { return (mx - xMin) / (xMax - xMin) * W; }
+  function toCanvasY(my) { return H - (my - yMin) / (yMax - yMin) * H; }
+  function toMathX(cx) { return xMin + cx / W * (xMax - xMin); }
+  function toMathY(cy) { return yMin + (H - cy) / H * (yMax - yMin); }
+
+  /* The curve */
+  function curveY(x) {
+    if (x <= 0) return NaN;
+    return 16 / (Math.sqrt(3) * x * x * x) - 2;
+  }
+
+  /* Distance from M(0,-2) to (x, curveY(x)) */
+  function dist(x) {
+    var y = curveY(x);
+    return Math.sqrt(x * x + (y + 2) * (y + 2));
+  }
+
+  /* State */
+  var hoverX = 2; /* default to optimal */
+  var isDragging = false;
+  var optimalX = 2;
+
+  function findNearestCurveX(canvasX, canvasY) {
+    var mx = toMathX(canvasX);
+    if (mx < 0.3) mx = 0.3;
+    if (mx > 6) mx = 6;
+    return mx;
+  }
+
+  function drawGrid() {
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (var gx = Math.ceil(xMin); gx <= xMax; gx++) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(gx), 0);
+      ctx.lineTo(toCanvasX(gx), H);
+      ctx.stroke();
+    }
+    for (var gy = Math.ceil(yMin); gy <= yMax; gy++) {
+      ctx.beginPath();
+      ctx.moveTo(0, toCanvasY(gy));
+      ctx.lineTo(W, toCanvasY(gy));
+      ctx.stroke();
+    }
+  }
+
+  function drawAxes() {
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1.5;
+    /* x-axis */
+    ctx.beginPath();
+    ctx.moveTo(0, toCanvasY(0));
+    ctx.lineTo(W, toCanvasY(0));
+    ctx.stroke();
+    /* y-axis */
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), 0);
+    ctx.lineTo(toCanvasX(0), H);
+    ctx.stroke();
+
+    /* Labels */
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    for (var gx = Math.ceil(xMin); gx <= xMax; gx++) {
+      if (gx === 0) continue;
+      ctx.fillText(gx, toCanvasX(gx), toCanvasY(0) + 16);
+    }
+    ctx.textAlign = 'right';
+    for (var gy = Math.ceil(yMin); gy <= yMax; gy++) {
+      if (gy === 0) continue;
+      ctx.fillText(gy, toCanvasX(0) - 6, toCanvasY(gy) + 4);
+    }
+  }
+
+  function drawCurve() {
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    var started = false;
+    for (var px = 0; px < W; px++) {
+      var mx = toMathX(px);
+      if (mx <= 0.01) continue;
+      var my = curveY(mx);
+      if (isNaN(my) || my > yMax + 2 || my < yMin - 2) {
+        started = false;
+        continue;
+      }
+      var cy = toCanvasY(my);
+      if (!started) {
+        ctx.moveTo(px, cy);
+        started = true;
+      } else {
+        ctx.lineTo(px, cy);
+      }
+    }
+    ctx.stroke();
+  }
+
+  function drawPointM() {
+    var cx = toCanvasX(0), cy = toCanvasY(-2);
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.fill();
+    ctx.strokeStyle = cv('--sol-canvas-bg');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('M(0, −2)', cx + 12, cy + 5);
+  }
+
+  function drawOptimalPoint() {
+    var ox = optimalX, oy = curveY(optimalX);
+    var cx = toCanvasX(ox), cy = toCanvasY(oy);
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fill();
+    ctx.strokeStyle = cv('--sol-canvas-bg');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    /* Dashed green line from M to optimal */
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), toCanvasY(-2));
+    ctx.lineTo(cx, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Label */
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'left';
+    var dOpt = dist(optimalX);
+    ctx.fillText('d_min = 4/\u221A3 \u2248 ' + dOpt.toFixed(2), cx + 10, cy - 10);
+  }
+
+  function drawHoverPoint() {
+    var hx = hoverX;
+    if (hx < 0.2) hx = 0.2;
+    var hy = curveY(hx);
+    if (isNaN(hy)) return;
+
+    var cxP = toCanvasX(hx), cyP = toCanvasY(hy);
+    var cxM = toCanvasX(0), cyM = toCanvasY(-2);
+
+    /* Red distance line */
+    ctx.strokeStyle = cv('--sol-canvas-danger');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cxM, cyM);
+    ctx.lineTo(cxP, cyP);
+    ctx.stroke();
+
+    /* Hover point */
+    ctx.beginPath();
+    ctx.arc(cxP, cyP, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fill();
+    ctx.strokeStyle = cv('--sol-canvas-bg');
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    /* Info box */
+    var d = dist(hx);
+    var info = 'x = ' + hx.toFixed(2) + ',  d = ' + d.toFixed(3);
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-bg'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.85)') : c; })();
+    var textW = ctx.measureText(info).width + 20;
+    var boxX = Math.min(cxP + 12, W - textW - 8);
+    var boxY = cyP - 30;
+    if (boxY < 10) boxY = cyP + 12;
+    ctx.fillRect(boxX, boxY, textW, 24);
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    ctx.strokeRect(boxX, boxY, textW, 24);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(info, boxX + 10, boxY + 16);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    drawGrid();
+    drawAxes();
+    drawCurve();
+    drawOptimalPoint();
+    drawPointM();
+    drawHoverPoint();
+  }
+
+  draw();
+
+  canvas.addEventListener('mousedown', function(e) { isDragging = true; });
+  canvas.addEventListener('mouseup', function(e) { isDragging = false; });
+  canvas.addEventListener('mouseleave', function(e) { isDragging = false; });
+  canvas.addEventListener('mousemove', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    var cx = (e.clientX - rect.left) * scaleX;
+    var cy = (e.clientY - rect.top) * scaleY;
+    hoverX = findNearestCurveX(cx, cy);
+    draw();
+  });
+
+  /* Touch support */
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    var rect = canvas.getBoundingClientRect();
+    var touch = e.touches[0];
+    var scaleX = W / rect.width;
+    var cx = (touch.clientX - rect.left) * scaleX;
+    hoverX = findNearestCurveX(cx, 0);
+    draw();
+  }, { passive: false });
+
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var rect = canvas.getBoundingClientRect();
+    var touch = e.touches[0];
+    var scaleX = W / rect.width;
+    var cx = (touch.clientX - rect.left) * scaleX;
+    hoverX = findNearestCurveX(cx, 0);
+    draw();
+  }, { passive: false });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw() }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

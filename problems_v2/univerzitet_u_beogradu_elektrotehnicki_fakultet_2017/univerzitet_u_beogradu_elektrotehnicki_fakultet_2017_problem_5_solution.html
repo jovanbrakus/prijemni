@@ -68,6 +68,14 @@ Odgovor: (B) 24
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Grafik polinoma \( P(x) = -3(x+1)(x^2+4) \) sa označenim ključnim tačkama. Koreni u kompleksnoj ravni prikazani su u manjem prozoru.</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -174,6 +182,215 @@ Odgovor: (B) 24
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  function P(x) {
+    return -3 * (x + 1) * (x * x + 4);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    var plotLeft = 70, plotRight = W - 180, plotTop = 40, plotBottom = H - 50;
+    var plotW = plotRight - plotLeft;
+    var plotH = plotBottom - plotTop;
+
+    var xMin = -4, xMax = 4;
+    var yMin = -120, yMax = 120;
+
+    function toCanvasX(x) { return plotLeft + (x - xMin) / (xMax - xMin) * plotW; }
+    function toCanvasY(y) { return plotBottom - (y - yMin) / (yMax - yMin) * plotH; }
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (var x = xMin; x <= xMax; x++) {
+      ctx.beginPath(); ctx.moveTo(toCanvasX(x), plotTop); ctx.lineTo(toCanvasX(x), plotBottom); ctx.stroke();
+    }
+    for (var y = -100; y <= 100; y += 20) {
+      ctx.beginPath(); ctx.moveTo(plotLeft, toCanvasY(y)); ctx.lineTo(plotRight, toCanvasY(y)); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(plotLeft, toCanvasY(0)); ctx.lineTo(plotRight, toCanvasY(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(toCanvasX(0), plotTop); ctx.lineTo(toCanvasX(0), plotBottom); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var x = xMin; x <= xMax; x++) {
+      if (x === 0) continue;
+      ctx.fillText(x.toString(), toCanvasX(x), plotBottom + 18);
+    }
+    ctx.textAlign = 'right';
+    for (var y = -100; y <= 100; y += 40) {
+      if (y === 0) continue;
+      ctx.fillText(y.toString(), plotLeft - 8, toCanvasY(y) + 4);
+    }
+
+    // Draw curve P(x)
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    var started = false;
+    for (var px = xMin; px <= xMax; px += 0.02) {
+      var py = P(px);
+      var cx = toCanvasX(px);
+      var cy = toCanvasY(py);
+      if (cy < plotTop - 30 || cy > plotBottom + 30) { started = false; continue; }
+      if (!started) { ctx.moveTo(cx, cy); started = true; }
+      else { ctx.lineTo(cx, cy); }
+    }
+    ctx.stroke();
+
+    // Label the curve
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('P(x) = -3(x+1)(x\u00B2+4)', toCanvasX(1.2), toCanvasY(P(1.8)) - 12);
+
+    // Key points
+    var keyPoints = [
+      { x: -1, y: 0, label: '(-1, 0)', color: cv('--sol-canvas-accent') },
+      { x: 0, y: -12, label: '(0, -12)', color: cv('--sol-canvas-highlight') },
+      { x: -2, y: 24, label: '(-2, 24)', color: cv('--sol-canvas-accent') }
+    ];
+
+    keyPoints.forEach(function(pt) {
+      var cx = toCanvasX(pt.x);
+      var cy = toCanvasY(pt.y);
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = pt.color;
+      ctx.fill();
+      ctx.strokeStyle = cv('--sol-canvas-bg');
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = pt.color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = pt.x < 0 ? 'right' : 'left';
+      var offsetX = pt.x < 0 ? -12 : 12;
+      var offsetY = pt.y > 0 ? -14 : 18;
+      ctx.fillText(pt.label, cx + offsetX, cy + offsetY);
+    });
+
+    // Dashed lines from P(-2)=24
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 1.5;
+    var px2 = toCanvasX(-2);
+    var py2 = toCanvasY(24);
+    ctx.beginPath(); ctx.moveTo(px2, py2); ctx.lineTo(toCanvasX(0), py2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px2, py2); ctx.lineTo(px2, toCanvasY(0)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Complex plane inset
+    var insetX = W - 170, insetY = 30, insetW = 155, insetH = 180;
+
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.rect(insetX, insetY, insetW, insetH);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Kompleksna ravan', insetX + insetW / 2, insetY + 16);
+
+    var icx = insetX + insetW / 2;
+    var icy = insetY + 100;
+    var iScale = 22;
+
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(insetX + 10, icy); ctx.lineTo(insetX + insetW - 10, icy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(icx, insetY + 28); ctx.lineTo(icx, insetY + insetH - 10); ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '10px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Re', insetX + insetW - 12, icy - 4);
+    ctx.textAlign = 'center';
+    ctx.fillText('Im', icx + 12, insetY + 34);
+
+    var roots = [
+      { re: -1, im: 0, label: '-1', color: cv('--sol-canvas-accent') },
+      { re: 0, im: 2, label: '2i', color: cv('--sol-canvas-secondary') },
+      { re: 0, im: -2, label: '-2i', color: cv('--sol-canvas-secondary') }
+    ];
+
+    roots.forEach(function(r) {
+      var rx = icx + r.re * iScale;
+      var ry = icy - r.im * iScale;
+
+      ctx.beginPath();
+      ctx.arc(rx, ry, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = r.color;
+      ctx.fill();
+
+      ctx.fillStyle = r.color;
+      ctx.font = 'bold 11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = r.re < 0 ? 'right' : 'left';
+      var lx = r.re < 0 ? rx - 8 : rx + 8;
+      ctx.fillText(r.label, lx, ry + 4);
+    });
+
+    // Conjugate pair line
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = cv('--sol-canvas-secondary');
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(icx, icy - 2 * iScale);
+    ctx.lineTo(icx, icy + 2 * iScale);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = '9px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('konjugovani par', insetX + insetW / 2, insetY + insetH - 4);
+
+    // Title
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Grafik polinoma P(x) = -3(x+1)(x\u00B2+4)', (plotLeft + plotRight) / 2, 24);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

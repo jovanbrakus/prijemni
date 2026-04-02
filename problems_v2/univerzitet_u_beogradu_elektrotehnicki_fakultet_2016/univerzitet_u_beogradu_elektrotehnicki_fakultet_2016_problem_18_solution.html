@@ -46,6 +46,15 @@ Odgovor: (A) 5
   </details>
 </div>
 
+
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="750" height="420"></canvas>
+  </div>
+  <p class="canvas-caption">Grafik leve i desne strane jednačine -- presecne tacke daju rešenja \(x = 1\) i \(x = 4\). Prevlacite tacke za proveru.</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -123,6 +132,341 @@ Odgovor: (A) 5
     <div class="detail-content"><p>Analizirajte ponašanje funkcije \(F(t) = (2^t-4)(4^{t^2}+1) - 5 \cdot 2^{t^2}(t-2)\) na intervalima \([0,1)\), \((1,2)\) i \((2,+\infty)\).</p></div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const PAD_L = 70;
+  const PAD_R = 30;
+  const PAD_T = 40;
+  const PAD_B = 50;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+
+  const xMin = 0;
+  const xMax = 5.5;
+  const yMin = -50;
+  const yMax = 1400;
+
+  function toCanvasX(x) { return PAD_L + (x - xMin) / (xMax - xMin) * plotW; }
+  function toCanvasY(y) { return PAD_T + (1 - (y - yMin) / (yMax - yMin)) * plotH; }
+
+  function lhs(x) {
+    if (x < 0) return NaN;
+    var sqrtX = Math.sqrt(x);
+    return Math.pow(2, sqrtX) * Math.pow(4, x) + 5 * Math.pow(2, x + 1) + Math.pow(2, sqrtX);
+  }
+
+  function rhs(x) {
+    if (x < 0) return NaN;
+    var sqrtX = Math.sqrt(x);
+    return Math.pow(2, 2 * x + 2) + 5 * sqrtX * Math.pow(2, x) + 4;
+  }
+
+  var dragPoint = null;
+  var solutions = [
+    { x: 1, label: 'x = 1' },
+    { x: 4, label: 'x = 4' }
+  ];
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (var gx = 0; gx <= 5; gx++) {
+      var cx = toCanvasX(gx);
+      ctx.beginPath();
+      ctx.moveTo(cx, PAD_T);
+      ctx.lineTo(cx, H - PAD_B);
+      ctx.stroke();
+    }
+    for (var gy = 0; gy <= 1400; gy += 200) {
+      var cy = toCanvasY(gy);
+      ctx.beginPath();
+      ctx.moveTo(PAD_L, cy);
+      ctx.lineTo(W - PAD_R, cy);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(PAD_L, PAD_T);
+    ctx.lineTo(PAD_L, H - PAD_B);
+    ctx.lineTo(W - PAD_R, H - PAD_B);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var lx = 0; lx <= 5; lx++) {
+      ctx.fillText(String(lx), toCanvasX(lx), H - PAD_B + 20);
+    }
+    ctx.textAlign = 'right';
+    for (var ly = 0; ly <= 1400; ly += 200) {
+      ctx.fillText(String(ly), PAD_L - 8, toCanvasY(ly) + 4);
+    }
+    ctx.textAlign = 'center';
+    ctx.fillText('x', W / 2, H - 8);
+    ctx.save();
+    ctx.translate(16, H / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('y', 0, 0);
+    ctx.restore();
+
+    // Draw LHS curve
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    var first = true;
+    for (var px = 0; px <= plotW; px += 1) {
+      var xv = xMin + px / plotW * (xMax - xMin);
+      var yv = lhs(xv);
+      if (isNaN(yv) || yv > yMax + 200 || yv < yMin - 200) { first = true; continue; }
+      var cx2 = toCanvasX(xv);
+      var cy2 = toCanvasY(yv);
+      if (first) { ctx.moveTo(cx2, cy2); first = false; }
+      else { ctx.lineTo(cx2, cy2); }
+    }
+    ctx.stroke();
+
+    // Draw RHS curve
+    ctx.strokeStyle = cv('--sol-canvas-highlight');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    first = true;
+    for (var px2 = 0; px2 <= plotW; px2 += 1) {
+      var xv2 = xMin + px2 / plotW * (xMax - xMin);
+      var yv2 = rhs(xv2);
+      if (isNaN(yv2) || yv2 > yMax + 200 || yv2 < yMin - 200) { first = true; continue; }
+      var cx3 = toCanvasX(xv2);
+      var cy3 = toCanvasY(yv2);
+      if (first) { ctx.moveTo(cx3, cy3); first = false; }
+      else { ctx.lineTo(cx3, cy3); }
+    }
+    ctx.stroke();
+
+    // Legend
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fillRect(W - 200, PAD_T + 10, 20, 3);
+    ctx.fillText('Leva strana (L)', W - 175, PAD_T + 16);
+
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.fillRect(W - 200, PAD_T + 32, 20, 3);
+    ctx.fillText('Desna strana (D)', W - 175, PAD_T + 38);
+
+    // Solution points
+    solutions.forEach(function(sol) {
+      var sx = toCanvasX(sol.x);
+      var sy = toCanvasY(lhs(sol.x));
+
+      // Glow
+      var grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 20);
+      grad.addColorStop(0, 'rgba(52,211,153,0.5)');
+      grad.addColorStop(1, 'rgba(52,211,153,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 20, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Point
+      ctx.fillStyle = cv('--sol-canvas-accent');
+      ctx.beginPath();
+      ctx.arc(sx, sy, 6, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = cv('--sol-canvas-bg');
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = cv('--sol-canvas-accent');
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      var labelY = sy - 18;
+      if (sol.x === 1) labelY = sy - 18;
+      if (sol.x === 4) labelY = sy - 18;
+      ctx.fillText(sol.label, sx, labelY);
+
+      // Value annotation
+      ctx.fillStyle = cv('--sol-canvas-muted');
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      var valStr = 'L = D = ' + Math.round(lhs(sol.x));
+      ctx.fillText(valStr, sx, labelY - 16);
+    });
+
+    // Dashed vertical lines at solutions
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'rgba(74,222,128,0.3)';
+    ctx.lineWidth = 1;
+    solutions.forEach(function(sol) {
+      var sx2 = toCanvasX(sol.x);
+      ctx.beginPath();
+      ctx.moveTo(sx2, PAD_T);
+      ctx.lineTo(sx2, H - PAD_B);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  }
+
+  draw();
+
+  // Interaction: drag solution points to verify
+  function getMousePos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function getTouchPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    var touch = e.touches[0];
+    return {
+      x: (touch.clientX - rect.left) * scaleX,
+      y: (touch.clientY - rect.top) * scaleY
+    };
+  }
+
+  function findNearPoint(pos) {
+    for (var i = 0; i < solutions.length; i++) {
+      var sx = toCanvasX(solutions[i].x);
+      var sy = toCanvasY(lhs(solutions[i].x));
+      var dx = pos.x - sx;
+      var dy = pos.y - sy;
+      if (dx * dx + dy * dy < 400) return i;
+    }
+    return -1;
+  }
+
+  canvas.addEventListener('mousedown', function(e) {
+    var pos = getMousePos(e);
+    var idx = findNearPoint(pos);
+    if (idx >= 0) dragPoint = idx;
+  });
+
+  canvas.addEventListener('mousemove', function(e) {
+    if (dragPoint === null) return;
+    var pos = getMousePos(e);
+    var xVal = xMin + (pos.x - PAD_L) / plotW * (xMax - xMin);
+    xVal = Math.max(0, Math.min(xMax, xVal));
+    solutions[dragPoint].x = xVal;
+    solutions[dragPoint].label = 'x \u2248 ' + xVal.toFixed(2);
+    draw();
+
+    // Show L and D values at current position
+    var lv = lhs(xVal);
+    var rv = rhs(xVal);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('L(' + xVal.toFixed(2) + ') = ' + lv.toFixed(1), PAD_L + 10, PAD_T + 20);
+    ctx.fillText('D(' + xVal.toFixed(2) + ') = ' + rv.toFixed(1), PAD_L + 10, PAD_T + 38);
+    var diff = Math.abs(lv - rv);
+    ctx.fillStyle = diff < 0.5 ? cv('--sol-canvas-accent') : cv('--sol-canvas-highlight');
+    ctx.fillText('|L \u2212 D| = ' + diff.toFixed(1), PAD_L + 10, PAD_T + 56);
+  });
+
+  canvas.addEventListener('mouseup', function() {
+    if (dragPoint !== null) {
+      // Snap back
+      var origVals = [1, 4];
+      solutions[dragPoint].x = origVals[dragPoint];
+      solutions[dragPoint].label = 'x = ' + origVals[dragPoint];
+      dragPoint = null;
+      draw();
+    }
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    if (dragPoint !== null) {
+      var origVals2 = [1, 4];
+      solutions[dragPoint].x = origVals2[dragPoint];
+      solutions[dragPoint].label = 'x = ' + origVals2[dragPoint];
+      dragPoint = null;
+      draw();
+    }
+  });
+
+  // Touch support
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var pos = getTouchPos(e);
+    var idx = findNearPoint(pos);
+    if (idx >= 0) dragPoint = idx;
+  });
+
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (dragPoint === null) return;
+    var pos = getTouchPos(e);
+    var xVal = xMin + (pos.x - PAD_L) / plotW * (xMax - xMin);
+    xVal = Math.max(0, Math.min(xMax, xVal));
+    solutions[dragPoint].x = xVal;
+    solutions[dragPoint].label = 'x \u2248 ' + xVal.toFixed(2);
+    draw();
+
+    var lv = lhs(xVal);
+    var rv = rhs(xVal);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('L(' + xVal.toFixed(2) + ') = ' + lv.toFixed(1), PAD_L + 10, PAD_T + 20);
+    ctx.fillText('D(' + xVal.toFixed(2) + ') = ' + rv.toFixed(1), PAD_L + 10, PAD_T + 38);
+    var diff = Math.abs(lv - rv);
+    ctx.fillStyle = diff < 0.5 ? cv('--sol-canvas-accent') : cv('--sol-canvas-highlight');
+    ctx.fillText('|L \u2212 D| = ' + diff.toFixed(1), PAD_L + 10, PAD_T + 56);
+  });
+
+  canvas.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    if (dragPoint !== null) {
+      var origVals3 = [1, 4];
+      solutions[dragPoint].x = origVals3[dragPoint];
+      solutions[dragPoint].label = 'x = ' + origVals3[dragPoint];
+      dragPoint = null;
+      draw();
+    }
+  });
+
+  // Step click interaction
+  var steps = document.querySelectorAll('.step-container');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.toggle('active');
+    });
+  });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

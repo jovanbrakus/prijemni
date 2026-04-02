@@ -41,6 +41,15 @@ Odgovor: (A) 13!·8!
   </details>
 </div>
 
+
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="900" height="420"></canvas>
+  </div>
+  <p class="canvas-caption">Gornji red: 20 pojedinacnih knjiga. Donji red: 13 objekata nakon grupisanja francuskih knjiga u blok.</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -121,6 +130,282 @@ Odgovor: (A) 13!·8!
     <div class="detail-content"><p>Dva bloka + 7 španskih = 9 objekata. Odgovor: \(9! \cdot 5! \cdot 8!\).</p></div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+  const toggleBtn = document.getElementById('toggleBtn');
+
+  let animating = false;
+  let animProgress = 0;
+  let animId = null;
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const colors = {
+    english: cv('--sol-canvas-primary'),
+    spanish: cv('--sol-canvas-highlight'),
+    french: cv('--sol-canvas-accent'),
+    block: cv('--sol-canvas-accent'),
+    bg: cv('--sol-canvas-bg'),
+    shelf: cv('--sol-canvas-axis'),
+    text: cv('--sol-canvas-text'),
+    muted: cv('--sol-canvas-muted'),
+    blockBorder: cv('--sol-canvas-accent')
+  };
+
+  function drawBook(x, y, w, h, color, label, alpha) {
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+
+    const r = 4;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    ctx.fill();
+
+    ctx.globalAlpha = alpha * 0.3;
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.beginPath();
+    ctx.roundRect(x + 2, y + 2, w - 4, h - 4, r - 1);
+    ctx.fill();
+
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.font = 'bold 10px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x + w / 2, y + h / 2);
+
+    ctx.globalAlpha = 1;
+  }
+
+  function drawBlockBracket(x, y, w, h, alpha) {
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = colors.blockBorder;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([6, 4]);
+    const r = 8;
+    ctx.beginPath();
+    ctx.roundRect(x - 4, y - 4, w + 8, h + 8, r);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = colors.blockBorder;
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BLOK', x + w / 2, y - 14);
+
+    ctx.globalAlpha = 1;
+  }
+
+  function drawShelf(x, y, w) {
+    ctx.fillStyle = colors.shelf;
+    ctx.fillRect(x - 5, y, w + 10, 4);
+
+    ctx.fillStyle = cv('--sol-canvas-axis');
+    ctx.fillRect(x - 5, y, w + 10, 1.5);
+  }
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  }
+
+  function draw(progress) {
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.fillStyle = colors.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const bookW = 36;
+    const bookH = 60;
+    const gap = 4;
+    const totalW1 = 20 * bookW + 19 * gap;
+    const startX1 = (W - totalW1) / 2;
+    const y1 = 50;
+
+    ctx.fillStyle = colors.text;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Pre grupisanja: 20 knjiga', startX1, y1 - 10);
+
+    drawShelf(startX1, y1 + bookH, totalW1);
+
+    const books = [];
+    for (let i = 0; i < 5; i++) {
+      books.push({ color: colors.english, label: 'E' + (i + 1), type: 'eng' });
+    }
+    for (let i = 0; i < 7; i++) {
+      books.push({ color: colors.spanish, label: 'S' + (i + 1), type: 'spa' });
+    }
+    for (let i = 0; i < 8; i++) {
+      books.push({ color: colors.french, label: 'F' + (i + 1), type: 'fra' });
+    }
+
+    for (let i = 0; i < 20; i++) {
+      const bx = startX1 + i * (bookW + gap);
+      drawBook(bx, y1, bookW, bookH, books[i].color, books[i].label, 1);
+    }
+
+    const t = easeInOut(Math.min(progress, 1));
+
+    const y2 = 230;
+    const blockInternalW = 8 * bookW + 7 * gap;
+
+    const totalW2 = 12 * bookW + 11 * gap + gap + bookW + 20;
+    const startX2 = (W - (12 * (bookW + gap) + gap + blockInternalW + 20)) / 2;
+
+    ctx.globalAlpha = t;
+    ctx.fillStyle = colors.text;
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Posle grupisanja: 13 objekata (5 engleskih + 7 spanskih + 1 blok)', startX2, y2 - 10);
+    ctx.globalAlpha = 1;
+
+    const shelfW2 = 12 * (bookW + gap) + gap + blockInternalW + 20;
+    if (t > 0) {
+      ctx.globalAlpha = t;
+      drawShelf(startX2, y2 + bookH, shelfW2);
+      ctx.globalAlpha = 1;
+    }
+
+    for (let i = 0; i < 12; i++) {
+      const srcX = startX1 + i * (bookW + gap);
+      const dstX = startX2 + i * (bookW + gap);
+      const bx = lerp(srcX, dstX, t);
+      const by = lerp(y1, y2, t);
+
+      drawBook(bx, by, bookW, bookH, books[i].color, books[i].label, 1);
+    }
+
+    const blockX = startX2 + 12 * (bookW + gap) + gap + 10;
+    for (let i = 0; i < 8; i++) {
+      const srcX = startX1 + (12 + i) * (bookW + gap);
+      const dstX = blockX + i * (bookW + gap);
+      const bx = lerp(srcX, dstX, t);
+      const by = lerp(y1, y2, t);
+
+      drawBook(bx, by, bookW, bookH, colors.french, books[12 + i].label, 1);
+    }
+
+    if (t > 0.3) {
+      const bracketAlpha = Math.min((t - 0.3) / 0.3, 1);
+      drawBlockBracket(blockX, y2, blockInternalW, bookH, bracketAlpha);
+    }
+
+    const y3 = 340;
+    if (t > 0.6) {
+      const formulaAlpha = Math.min((t - 0.6) / 0.4, 1);
+      ctx.globalAlpha = formulaAlpha;
+
+      ctx.fillStyle = cv('--sol-canvas-secondary');
+      ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Raspored 13 objekata', W / 2 - 150, y3);
+      ctx.fillText('\u00D7', W / 2, y3);
+      ctx.fillText('Raspored 8 knjiga u bloku', W / 2 + 160, y3);
+
+      ctx.fillStyle = cv('--sol-canvas-primary');
+      ctx.font = 'bold 22px Courier New, monospace';
+      ctx.fillText('13!', W / 2 - 150, y3 + 30);
+      ctx.fillText('\u00D7', W / 2, y3 + 30);
+      ctx.fillStyle = cv('--sol-canvas-accent');
+      ctx.fillText('8!', W / 2 + 160, y3 + 30);
+
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = 'bold 20px Courier New, monospace';
+      ctx.fillText('= 13! \u00B7 8!', W / 2, y3 + 65);
+
+      ctx.globalAlpha = 1;
+    }
+
+    // Legend
+    ctx.globalAlpha = 0.9;
+    const legendX = W - 200;
+    const legendY = y1 + bookH + 30;
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = colors.english;
+    ctx.fillRect(legendX, legendY, 14, 14);
+    ctx.fillStyle = colors.text;
+    ctx.fillText('Engleske (5)', legendX + 20, legendY + 11);
+
+    ctx.fillStyle = colors.spanish;
+    ctx.fillRect(legendX, legendY + 22, 14, 14);
+    ctx.fillStyle = colors.text;
+    ctx.fillText('Spanske (7)', legendX + 20, legendY + 33);
+
+    ctx.fillStyle = colors.french;
+    ctx.fillRect(legendX, legendY + 44, 14, 14);
+    ctx.fillStyle = colors.text;
+    ctx.fillText('Francuske (8)', legendX + 20, legendY + 55);
+
+    ctx.globalAlpha = 1;
+  }
+
+  draw(0);
+
+  function animate() {
+    if (!animating) return;
+    animProgress += 0.008;
+    if (animProgress >= 1) {
+      animProgress = 1;
+      animating = false;
+      toggleBtn.textContent = 'Ponovo prikazi';
+    }
+    draw(animProgress);
+    if (animating) {
+      animId = requestAnimationFrame(animate);
+    }
+  }
+
+  toggleBtn.addEventListener('click', function() {
+    if (animating) {
+      animating = false;
+      if (animId) cancelAnimationFrame(animId);
+      toggleBtn.textContent = 'Prikazi animaciju';
+      draw(0);
+      animProgress = 0;
+    } else {
+      animProgress = 0;
+      animating = true;
+      toggleBtn.textContent = 'Zaustavi';
+      animate();
+    }
+  });
+
+  // Step click highlight
+  const steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) {
+        s.style.borderLeftColor = 'transparent';
+        s.style.background = 'transparent';
+      });
+      step.style.borderLeftColor = cv('--sol-canvas-accent');
+      step.style.background = 'rgba(74, 222, 128, 0.06)';
+    });
+  });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

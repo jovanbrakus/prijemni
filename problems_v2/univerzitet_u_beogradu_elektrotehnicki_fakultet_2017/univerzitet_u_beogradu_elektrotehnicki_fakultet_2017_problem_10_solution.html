@@ -67,6 +67,15 @@ Odgovor: (B) 2/√7
   </details>
 </div>
 
+
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Prevucite tacke A ili C da vidite kako se trougao menja (odnos stranica i ugao B ostaju isti)</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -195,6 +204,366 @@ Odgovor: (B) 2/√7
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+// Step click interactivity
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  // Canvas visualization - interactive triangle
+  var canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  // Triangle parameters: |BC| = 3|AB|, angle B = 60°
+  // Place B at a fixed position, then compute A and C
+  // Let c = |AB|, a = |BC| = 3c, angle B = 60°
+
+  var scale = 70; // pixels per unit length (c=1)
+  var originX = W / 2;
+  var originY = H / 2 + 40;
+
+  // Fixed B position
+  var Bx = -1.0;
+  var By = 0.0;
+
+  // We parameterize by rotation: let the direction from B to A be at angle theta
+  var theta = Math.PI * 0.55; // angle of BA direction from positive x-axis
+
+  // Drag state
+  var dragging = null; // 'A' or 'C' or null
+  var dragOffsetX = 0;
+  var dragOffsetY = 0;
+
+  function toCanvas(x, y) {
+    return { x: originX + x * scale, y: originY - y * scale };
+  }
+
+  function fromCanvas(cx, cy) {
+    return { x: (cx - originX) / scale, y: (originY - cy) / scale };
+  }
+
+  function getTrianglePoints() {
+    var c = 2.0; // |AB| in world units
+    var a = 3 * c; // |BC|
+
+    // A is at distance c from B, direction theta
+    var Ax = Bx + c * Math.cos(theta);
+    var Ay = By + c * Math.sin(theta);
+
+    // C is at distance a from B, direction theta - 60° (angle ABC = 60°)
+    var Cx = Bx + a * Math.cos(theta - Math.PI / 3);
+    var Cy = By + a * Math.sin(theta - Math.PI / 3);
+
+    return { A: {x: Ax, y: Ay}, B: {x: Bx, y: By}, C: {x: Cx, y: Cy}, c: c, a: a };
+  }
+
+  function dist(p1, p2) {
+    return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
+  }
+
+  function drawTriangle() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    var tri = getTrianglePoints();
+    var A = toCanvas(tri.A.x, tri.A.y);
+    var B = toCanvas(tri.B.x, tri.B.y);
+    var C = toCanvas(tri.C.x, tri.C.y);
+
+    // Draw filled triangle with subtle fill
+    ctx.beginPath();
+    ctx.moveTo(A.x, A.y);
+    ctx.lineTo(B.x, B.y);
+    ctx.lineTo(C.x, C.y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(96,165,250,0.05)';
+    ctx.fill();
+
+    // Draw triangle edges
+    // Side a = BC (blue)
+    ctx.beginPath();
+    ctx.moveTo(B.x, B.y);
+    ctx.lineTo(C.x, C.y);
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Side b = AC (purple)
+    ctx.beginPath();
+    ctx.moveTo(A.x, A.y);
+    ctx.lineTo(C.x, C.y);
+    ctx.strokeStyle = cv('--sol-canvas-secondary');
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Side c = AB (pink)
+    ctx.beginPath();
+    ctx.moveTo(A.x, A.y);
+    ctx.lineTo(B.x, B.y);
+    ctx.strokeStyle = cv('--sol-canvas-highlight');
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Draw angle arc at B (60°)
+    var angleRadius = 30;
+    var angleStartB = Math.atan2(-(tri.C.y - tri.B.y), tri.C.x - tri.B.x);
+    var angleEndB = Math.atan2(-(tri.A.y - tri.B.y), tri.A.x - tri.B.x);
+    // Correct arc direction
+    ctx.beginPath();
+    ctx.arc(B.x, B.y, angleRadius, angleStartB, angleEndB, false);
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label 60° at B
+    var angleMidB = (angleStartB + angleEndB) / 2;
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('60\u00B0', B.x + 42 * Math.cos(angleMidB), B.y + 42 * Math.sin(angleMidB));
+
+    // Draw angle arc at A
+    var angleRadiusA = 25;
+    var angleStartA = Math.atan2(-(tri.B.y - tri.A.y), tri.B.x - tri.A.x);
+    var angleEndA = Math.atan2(-(tri.C.y - tri.A.y), tri.C.x - tri.A.x);
+    ctx.beginPath();
+    // Determine correct direction
+    var diffA = angleEndA - angleStartA;
+    while (diffA < -Math.PI) diffA += 2 * Math.PI;
+    while (diffA > Math.PI) diffA -= 2 * Math.PI;
+    if (diffA > 0) {
+      ctx.arc(A.x, A.y, angleRadiusA, angleStartA, angleEndA, false);
+    } else {
+      ctx.arc(A.x, A.y, angleRadiusA, angleStartA, angleEndA, true);
+    }
+    ctx.strokeStyle = 'rgba(244,114,182,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Draw angle arc at C
+    var angleRadiusC = 25;
+    var angleStartC = Math.atan2(-(tri.A.y - tri.C.y), tri.A.x - tri.C.x);
+    var angleEndC = Math.atan2(-(tri.B.y - tri.C.y), tri.B.x - tri.C.x);
+    ctx.beginPath();
+    var diffC = angleEndC - angleStartC;
+    while (diffC < -Math.PI) diffC += 2 * Math.PI;
+    while (diffC > Math.PI) diffC -= 2 * Math.PI;
+    if (diffC > 0) {
+      ctx.arc(C.x, C.y, angleRadiusC, angleStartC, angleEndC, false);
+    } else {
+      ctx.arc(C.x, C.y, angleRadiusC, angleStartC, angleEndC, true);
+    }
+    ctx.strokeStyle = 'rgba(96,165,250,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Side labels
+    // Label side a = BC = 3c (midpoint of BC)
+    var midBC = { x: (B.x + C.x) / 2, y: (B.y + C.y) / 2 };
+    var normBCx = -(C.y - B.y);
+    var normBCy = (C.x - B.x);
+    var normBClen = Math.sqrt(normBCx * normBCx + normBCy * normBCy);
+    normBCx /= normBClen; normBCy /= normBClen;
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('a = 3c', midBC.x + normBCx * 20, midBC.y + normBCy * 20);
+
+    // Label side c = AB (midpoint of AB)
+    var midAB = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 };
+    var normABx = -(B.y - A.y);
+    var normABy = (B.x - A.x);
+    var normABlen = Math.sqrt(normABx * normABx + normABy * normABy);
+    normABx /= normABlen; normABy /= normABlen;
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('c', midAB.x - normABx * 18, midAB.y - normABy * 18);
+
+    // Label side b = AC = c*sqrt(7) (midpoint of AC)
+    var midAC = { x: (A.x + C.x) / 2, y: (A.y + C.y) / 2 };
+    var normACx = -(C.y - A.y);
+    var normACy = (C.x - A.x);
+    var normAClen = Math.sqrt(normACx * normACx + normACy * normACy);
+    normACx /= normAClen; normACy /= normAClen;
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('b = c\u221A7', midAC.x + normACx * 22, midAC.y + normACy * 22);
+
+    // Draw vertices as circles
+    // A
+    ctx.beginPath();
+    ctx.arc(A.x, A.y, 7, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.fill();
+    ctx.strokeStyle = cv('--sol-canvas-bg');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // B
+    ctx.beginPath();
+    ctx.arc(B.x, B.y, 7, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fill();
+    ctx.strokeStyle = cv('--sol-canvas-bg');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // C
+    ctx.beginPath();
+    ctx.arc(C.x, C.y, 7, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fill();
+    ctx.strokeStyle = cv('--sol-canvas-bg');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Vertex labels
+    ctx.font = 'bold 18px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Position labels away from triangle center
+    var centroid = { x: (A.x + B.x + C.x) / 3, y: (A.y + B.y + C.y) / 3 };
+
+    var labelDist = 22;
+
+    var dAx = A.x - centroid.x;
+    var dAy = A.y - centroid.y;
+    var dAlen = Math.sqrt(dAx * dAx + dAy * dAy);
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.fillText('A', A.x + labelDist * dAx / dAlen, A.y + labelDist * dAy / dAlen);
+
+    var dBx = B.x - centroid.x;
+    var dBy = B.y - centroid.y;
+    var dBlen = Math.sqrt(dBx * dBx + dBy * dBy);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fillText('B', B.x + labelDist * dBx / dBlen, B.y + labelDist * dBy / dBlen);
+
+    var dCx = C.x - centroid.x;
+    var dCy = C.y - centroid.y;
+    var dClen = Math.sqrt(dCx * dCx + dCy * dCy);
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fillText('C', C.x + labelDist * dCx / dClen, C.y + labelDist * dCy / dClen);
+
+    // Info box at top
+    var cosA = -1 / (2 * Math.sqrt(7));
+    var cosC = 5 / (2 * Math.sqrt(7));
+    var sum = cosA + cosC;
+
+    ctx.fillStyle = 'cv('--sol-canvas-grid')';
+    ctx.fillRect(10, 10, 320, 100);
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    ctx.strokeRect(10, 10, 320, 100);
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('cos A = -1/(2\u221A7) \u2248 ' + cosA.toFixed(4), 20, 20);
+    ctx.fillText('cos C = 5/(2\u221A7) \u2248 ' + cosC.toFixed(4), 20, 42);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('cos A + cos C = 2/\u221A7 \u2248 ' + sum.toFixed(4), 20, 68);
+
+    // Angle values
+    var angleA = Math.acos(cosA) * 180 / Math.PI;
+    var angleC = Math.acos(cosC) * 180 / Math.PI;
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('A \u2248 ' + angleA.toFixed(1) + '\u00B0, B = 60\u00B0, C \u2248 ' + angleC.toFixed(1) + '\u00B0', 20, 92);
+  }
+
+  // Mouse/touch interaction for dragging
+  function getEventPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var scaleY = H / rect.height;
+    if (e.touches && e.touches.length > 0) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY
+      };
+    }
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function handleDown(e) {
+    var pos = getEventPos(e);
+    var tri = getTrianglePoints();
+    var A = toCanvas(tri.A.x, tri.A.y);
+    var C = toCanvas(tri.C.x, tri.C.y);
+
+    var dA = Math.sqrt((pos.x - A.x) * (pos.x - A.x) + (pos.y - A.y) * (pos.y - A.y));
+    var dC = Math.sqrt((pos.x - C.x) * (pos.x - C.x) + (pos.y - C.y) * (pos.y - C.y));
+
+    if (dA < 25) {
+      dragging = 'A';
+      e.preventDefault();
+    } else if (dC < 25) {
+      dragging = 'C';
+      e.preventDefault();
+    }
+  }
+
+  function handleMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    var pos = getEventPos(e);
+    var world = fromCanvas(pos.x, pos.y);
+
+    // Compute new theta based on dragged position
+    if (dragging === 'A') {
+      // theta is the angle from B to A
+      theta = Math.atan2(world.y - By, world.x - Bx);
+    } else if (dragging === 'C') {
+      // C direction from B is theta - pi/3, so theta = direction + pi/3
+      var dirC = Math.atan2(world.y - By, world.x - Bx);
+      theta = dirC + Math.PI / 3;
+    }
+    drawTriangle();
+  }
+
+  function handleUp() {
+    dragging = null;
+  }
+
+  canvas.addEventListener('mousedown', handleDown);
+  canvas.addEventListener('mousemove', handleMove);
+  canvas.addEventListener('mouseup', handleUp);
+  canvas.addEventListener('mouseleave', handleUp);
+  canvas.addEventListener('touchstart', handleDown);
+  canvas.addEventListener('touchmove', handleMove);
+  canvas.addEventListener('touchend', handleUp);
+
+  // Initial draw
+  drawTriangle();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

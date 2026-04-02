@@ -54,6 +54,15 @@ Odgovor: (E) 8
   </details>
 </div>
 
+
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="750" height="440"></canvas>
+  </div>
+  <p class="canvas-caption">Prevucite misem po grafikonu da vidite koordinate tacaka preseka</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -152,6 +161,327 @@ Odgovor: (E) 8
     <div class="detail-content"><p>Na \([0, 4\pi]\), \(k\) ide od 0 do 18. Isključujemo \(k = 0, 9, 18\) (gde \(\sin\frac{x}{2} = 0\)). Ostaje 16 rešenja.</p></div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const marginLeft = 65;
+  const marginRight = 25;
+  const marginTop = 30;
+  const marginBottom = 55;
+  const plotW = W - marginLeft - marginRight;
+  const plotH = H - marginTop - marginBottom;
+
+  // f(x) = cos(x) + cos(2x) + 2cos^2(3x/2) + cos(4x)
+  function f(x) {
+    return Math.cos(x) + Math.cos(2*x) + 2*Math.pow(Math.cos(1.5*x), 2) + Math.cos(4*x);
+  }
+
+  // Solutions
+  const solutions = [];
+  for (let k = 1; k <= 8; k++) {
+    solutions.push(2 * k * Math.PI / 9);
+  }
+
+  // Coordinate transforms (Y-axis points UP)
+  const xMin = 0;
+  const xMax = 2 * Math.PI;
+  const yMin = -1.5;
+  const yMax = 5.5;
+
+  function toCanvasX(x) {
+    return marginLeft + ((x - xMin) / (xMax - xMin)) * plotW;
+  }
+  function toCanvasY(y) {
+    return marginTop + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
+  }
+  function fromCanvasX(cx) {
+    return xMin + ((cx - marginLeft) / plotW) * (xMax - xMin);
+  }
+
+  let hoverX = null;
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 0.5;
+
+    // Horizontal grid
+    for (let y = -1; y <= 5; y++) {
+      const cy = toCanvasY(y);
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, cy);
+      ctx.lineTo(W - marginRight, cy);
+      ctx.stroke();
+    }
+
+    // Vertical grid at multiples of pi/3
+    for (let k = 0; k <= 6; k++) {
+      const x = k * Math.PI / 3;
+      const cx = toCanvasX(x);
+      ctx.beginPath();
+      ctx.moveTo(cx, marginTop);
+      ctx.lineTo(cx, H - marginBottom);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+
+    // X axis (y=0 line)
+    const y0 = toCanvasY(0);
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, y0);
+    ctx.lineTo(W - marginRight, y0);
+    ctx.stroke();
+
+    // Y axis
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, marginTop);
+    ctx.lineTo(marginLeft, H - marginBottom);
+    ctx.stroke();
+
+    // X axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const xLabels = [
+      [0, '0'],
+      [Math.PI / 3, '\u03C0/3'],
+      [2 * Math.PI / 3, '2\u03C0/3'],
+      [Math.PI, '\u03C0'],
+      [4 * Math.PI / 3, '4\u03C0/3'],
+      [5 * Math.PI / 3, '5\u03C0/3'],
+      [2 * Math.PI, '2\u03C0']
+    ];
+    xLabels.forEach(function(pair) {
+      ctx.fillText(pair[1], toCanvasX(pair[0]), H - marginBottom + 20);
+    });
+
+    // Y axis labels
+    ctx.textAlign = 'right';
+    for (let y = -1; y <= 5; y++) {
+      ctx.fillText(y.toString(), marginLeft - 8, toCanvasY(y) + 4);
+    }
+
+    // Draw y = 0.5 horizontal line
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    ctx.moveTo(marginLeft, toCanvasY(0.5));
+    ctx.lineTo(W - marginRight, toCanvasY(0.5));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label y = 1/2
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('y = 1/2', W - marginRight - 50, toCanvasY(0.5) - 8);
+
+    // Draw f(x) curve
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    const steps = 600;
+    for (let i = 0; i <= steps; i++) {
+      const x = xMin + (i / steps) * (xMax - xMin);
+      const y = f(x);
+      const cx = toCanvasX(x);
+      const cy = toCanvasY(y);
+      if (i === 0) ctx.moveTo(cx, cy);
+      else ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+
+    // Label f(x)
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('f(x)', toCanvasX(0.15), toCanvasY(f(0.15)) - 12);
+
+    // Draw solution points
+    solutions.forEach(function(x, idx) {
+      var cx = toCanvasX(x);
+      var cy = toCanvasY(0.5);
+
+      // Glow
+      var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 16);
+      grad.addColorStop(0, 'rgba(52, 211, 153, 0.35)');
+      grad.addColorStop(1, 'rgba(52, 211, 153, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dot
+      ctx.fillStyle = cv('--sol-canvas-accent');
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Vertical dashed line from x-axis to point
+      ctx.strokeStyle = 'rgba(52, 211, 153, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(cx, y0);
+      ctx.lineTo(cx, cy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // Draw excluded points x=0 and x=2pi
+    [0, 2 * Math.PI].forEach(function(x) {
+      var cx = toCanvasX(x);
+      var cy = toCanvasY(f(x));
+
+      // Small cross mark
+      ctx.strokeStyle = cv('--sol-canvas-highlight');
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - 6, cy - 6);
+      ctx.lineTo(cx + 6, cy + 6);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + 6, cy - 6);
+      ctx.lineTo(cx - 6, cy + 6);
+      ctx.stroke();
+    });
+
+    // Hover tooltip
+    if (hoverX !== null && hoverX >= xMin && hoverX <= xMax) {
+      var hcx = toCanvasX(hoverX);
+      var hy = f(hoverX);
+      var hcy = toCanvasY(hy);
+
+      // Vertical line
+      ctx.strokeStyle = 'rgba(226, 232, 240, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(hcx, marginTop);
+      ctx.lineTo(hcx, H - marginBottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Point on curve
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.beginPath();
+      ctx.arc(hcx, hcy, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tooltip text
+      var tooltipText = 'x = ' + hoverX.toFixed(3) + ', f(x) = ' + hy.toFixed(3);
+      ctx.fillStyle = 'cv('--sol-canvas-grid')';
+      var tw = ctx.measureText(tooltipText).width + 16;
+      var tx = hcx + 12;
+      var ty = hcy - 25;
+      if (tx + tw > W - marginRight) tx = hcx - tw - 12;
+      if (ty < marginTop) ty = hcy + 10;
+      ctx.fillRect(tx, ty, tw, 22);
+      ctx.strokeStyle = cv('--sol-canvas-axis');
+      ctx.lineWidth = 1;
+      ctx.strokeRect(tx, ty, tw, 22);
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(tooltipText, tx + 8, ty + 15);
+    }
+
+    // Legend
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.beginPath();
+    ctx.arc(marginLeft + 20, H - 15, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('f(x) = cos x + cos 2x + 2cos\u00B2(3x/2) + cos 4x', marginLeft + 32, H - 11);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.beginPath();
+    ctx.arc(marginLeft + 20, H - 32, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.fillText('Resenja (tacke preseka sa y = 1/2)', marginLeft + 32, H - 28);
+  }
+
+  draw();
+
+  function handleMove(clientX) {
+    var rect = canvas.getBoundingClientRect();
+    var scaleX = W / rect.width;
+    var canvasX = (clientX - rect.left) * scaleX;
+    if (canvasX >= marginLeft && canvasX <= W - marginRight) {
+      hoverX = fromCanvasX(canvasX);
+    } else {
+      hoverX = null;
+    }
+    draw();
+  }
+
+  canvas.addEventListener('mousemove', function(e) {
+    handleMove(e.clientX);
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    hoverX = null;
+    draw();
+  });
+
+  canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (e.touches.length > 0) {
+      handleMove(e.touches[0].clientX);
+    }
+  });
+
+  canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (e.touches.length > 0) {
+      handleMove(e.touches[0].clientX);
+    }
+  });
+
+  canvas.addEventListener('touchend', function() {
+    hoverX = null;
+    draw();
+  });
+
+  // Step click highlight
+  var allSteps = document.querySelectorAll('.step');
+  allSteps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      allSteps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

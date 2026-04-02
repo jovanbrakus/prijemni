@@ -71,6 +71,14 @@ Odgovor: (A) 1
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="complexPlane" width="800" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Određivanje koeficijenata polinoma korišćenjem kompleksnih korena</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -167,6 +175,302 @@ Odgovor: (A) 1
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+  function cva(name, alpha) {
+    var c = cv(name);
+    if (c.startsWith('#')) {
+      var r = parseInt(c.slice(1,3), 16);
+      var g = parseInt(c.slice(3,5), 16);
+      var b = parseInt(c.slice(5,7), 16);
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
+    return c;
+  }
+
+const canvas = document.getElementById('complexPlane');
+  const ctx = canvas.getContext('2d');
+  let mouseX = -1, mouseY = -1;
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    canvas.style.height = '500px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width;
+    const H = 500;
+
+    // Background
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Center and scale
+    const cx = W / 2;
+    const cy = H / 2;
+    const scale = Math.min(W, H) * 0.3;
+
+    // Grid
+    ctx.strokeStyle = cva('--sol-canvas-primary', 0.06);
+    ctx.lineWidth = 1;
+    for (let i = -3; i <= 3; i++) {
+      // Vertical
+      const gx = cx + i * scale;
+      ctx.beginPath();
+      ctx.moveTo(gx, 30);
+      ctx.lineTo(gx, H - 30);
+      ctx.stroke();
+      // Horizontal
+      const gy = cy - i * scale;
+      ctx.beginPath();
+      ctx.moveTo(30, gy);
+      ctx.lineTo(W - 30, gy);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    // Real axis
+    ctx.beginPath();
+    ctx.moveTo(30, cy);
+    ctx.lineTo(W - 30, cy);
+    ctx.stroke();
+    // Imaginary axis
+    ctx.beginPath();
+    ctx.moveTo(cx, 30);
+    ctx.lineTo(cx, H - 30);
+    ctx.stroke();
+
+    // Arrows
+    ctx.fillStyle = cv('--sol-canvas-axis');
+    // Right arrow (Re)
+    ctx.beginPath();
+    ctx.moveTo(W - 30, cy);
+    ctx.lineTo(W - 40, cy - 5);
+    ctx.lineTo(W - 40, cy + 5);
+    ctx.closePath();
+    ctx.fill();
+    // Up arrow (Im)
+    ctx.beginPath();
+    ctx.moveTo(cx, 30);
+    ctx.lineTo(cx - 5, 40);
+    ctx.lineTo(cx + 5, 40);
+    ctx.closePath();
+    ctx.fill();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Re', W - 55, cy - 12);
+    ctx.textAlign = 'center';
+    ctx.fillText('Im', cx + 18, 42);
+
+    // Tick marks and numbers
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    for (let i = -2; i <= 2; i++) {
+      if (i === 0) continue;
+      // Real axis ticks
+      const tx = cx + i * scale;
+      ctx.strokeStyle = cv('--sol-canvas-muted');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(tx, cy - 4);
+      ctx.lineTo(tx, cy + 4);
+      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.fillText(i.toString(), tx, cy + 20);
+
+      // Imaginary axis ticks
+      const ty = cy - i * scale;
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, ty);
+      ctx.lineTo(cx + 4, ty);
+      ctx.stroke();
+      ctx.textAlign = 'left';
+      ctx.fillText(i + 'i', cx + 10, ty + 4);
+    }
+
+    // Origin label
+    ctx.textAlign = 'right';
+    ctx.fillText('0', cx - 8, cy + 16);
+
+    // Unit circle (dashed)
+    ctx.strokeStyle = cva('--sol-canvas-primary', 0.15);
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.arc(cx, cy, scale, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label unit circle
+    ctx.fillStyle = cva('--sol-canvas-primary', 0.3);
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('|z| = 1', cx + scale * 0.72, cy + scale * 0.72 + 4);
+
+    // Draw the cycle of powers of i
+    const powers = [
+      { re: 1, im: 0, label: 'i\u2070 = 1', color: cv('--sol-canvas-muted'), labelDx: 14, labelDy: 18 },
+      { re: 0, im: 1, label: 'i\u00B9 = i', color: cv('--sol-canvas-highlight'), labelDx: -55, labelDy: -10, main: true },
+      { re: -1, im: 0, label: 'i\u00B2 = \u22121', color: cv('--sol-canvas-muted'), labelDx: -80, labelDy: 18 },
+      { re: 0, im: -1, label: 'i\u00B3 = \u2212i', color: cv('--sol-canvas-primary'), labelDx: -60, labelDy: 22, main: true }
+    ];
+
+    // Draw cycle arrows
+    ctx.strokeStyle = cva('--sol-canvas-muted', 0.2);
+    ctx.lineWidth = 1.5;
+    for (let k = 0; k < 4; k++) {
+      const startAngle = -Math.PI / 2 + k * Math.PI / 2 + 0.15;
+      const endAngle = -Math.PI / 2 + (k + 1) * Math.PI / 2 - 0.15;
+      ctx.beginPath();
+      ctx.arc(cx, cy, scale * 1.12, startAngle, endAngle);
+      ctx.stroke();
+      // Small arrowhead
+      const ax = cx + scale * 1.12 * Math.cos(endAngle);
+      const ay = cy + scale * 1.12 * Math.sin(endAngle);
+      const angle = endAngle + Math.PI / 2;
+      ctx.fillStyle = cva('--sol-canvas-muted', 0.3);
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax + 6 * Math.cos(angle + 0.4), ay + 6 * Math.sin(angle + 0.4));
+      ctx.lineTo(ax + 6 * Math.cos(angle - 0.4), ay + 6 * Math.sin(angle - 0.4));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Draw roots of x^2+1: i and -i
+    powers.forEach((p) => {
+      const px = cx + p.re * scale;
+      const py = cy - p.im * scale;
+
+      if (p.main) {
+        // Highlight main roots
+        // Glow ring
+        ctx.strokeStyle = p.color + '44';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(px, py, 16, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Filled dot
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(px, py, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Outer glow
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 18;
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else {
+        // Secondary points
+        ctx.fillStyle = p.color + '88';
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Label
+      ctx.fillStyle = p.color;
+      ctx.font = (p.main ? 'bold ' : '') + '13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(p.label, px + p.labelDx, py + p.labelDy);
+    });
+
+    // Annotation: "Nule od x^2+1"
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    const rootLabelX = cx - scale * 0.8;
+    const rootLabelYTop = cy - scale - 30;
+    ctx.fillText('Nule od x\u00B2+1:', rootLabelX, rootLabelYTop);
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('x = i  i  x = \u2212i', rootLabelX, rootLabelYTop + 18);
+
+    // i^2009 annotation
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    const annX = cx + scale * 0.4;
+    const annY = 55;
+    ctx.fillText('i\u00B2\u2070\u2070\u2079 = i\u2074\u00B7\u2075\u2070\u00B2\u207A\u00B9 = i', annX, annY);
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('2009 = 4 \u00D7 502 + 1', annX, annY + 18);
+    ctx.fillText('ostatak 1 \u2192 i\u00B2\u2070\u2070\u2079 = i', annX, annY + 36);
+
+    // Solution annotation at bottom
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('P(i) = 0  \u21D2  (1\u2212a) + (1+b)i = 0', cx, H - 60);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('a = 1,  b = \u22121  \u21D2  2a + b = 1', cx, H - 35);
+
+    // Mouse coordinate display
+    if (mouseX >= 0 && mouseX <= W && mouseY >= 0 && mouseY <= H) {
+      const re = ((mouseX - cx) / scale).toFixed(2);
+      const im = ((cy - mouseY) / scale).toFixed(2);
+      ctx.fillStyle = cva('--sol-canvas-grid', 0.85);
+      ctx.fillRect(mouseX + 10, mouseY - 30, 130, 24);
+      ctx.strokeStyle = cv('--sol-canvas-axis');
+      ctx.lineWidth = 1;
+      ctx.strokeRect(mouseX + 10, mouseY - 30, 130, 24);
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = '12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      const reStr = re.replace('.', ',');
+      const imStr = im.replace('.', ',').replace('-', '\u2212');
+      ctx.fillText('z = ' + reStr + ' + ' + imStr + 'i', mouseX + 16, mouseY - 13);
+    }
+  }
+
+  function handleMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches) {
+      mouseX = e.touches[0].clientX - rect.left;
+      mouseY = e.touches[0].clientY - rect.top;
+    } else {
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    }
+    draw();
+  }
+
+  function handleLeave() {
+    mouseX = -1;
+    mouseY = -1;
+    draw();
+  }
+
+  canvas.addEventListener('mousemove', handleMove);
+  canvas.addEventListener('mouseleave', handleLeave);
+  canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e); }, { passive: false });
+  canvas.addEventListener('touchend', handleLeave);
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); if (typeof draw === 'function') draw(); if (typeof drawTriangle === 'function') drawTriangle(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

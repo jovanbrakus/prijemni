@@ -71,6 +71,15 @@ Odgovor: (D) √2
   </details>
 </div>
 
+
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="420"></canvas>
+  </div>
+  <p class="canvas-caption">Pomerajte klizac ispod da vidite tangentu u razlicitim tackama</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -167,6 +176,270 @@ Odgovor: (D) √2
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+  const slider = document.getElementById('x-slider');
+  const xValDisplay = document.getElementById('x-val');
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Coordinate system parameters
+  const xMin = -0.5, xMax = 4.5;
+  const yMin = -1.5, yMax = 3.5;
+  const marginLeft = 50, marginRight = 20, marginTop = 20, marginBottom = 40;
+  const plotW = W - marginLeft - marginRight;
+  const plotH = H - marginTop - marginBottom;
+
+  function toCanvasX(x) { return marginLeft + (x - xMin) / (xMax - xMin) * plotW; }
+  function toCanvasY(y) { return marginTop + (yMax - y) / (yMax - yMin) * plotH; }
+
+  // f(x) = ln((x^2 - 1 + sqrt(x^4 + 1)) / x)
+  function f(x) {
+    if (x <= 0) return NaN;
+    const arg = (x * x - 1 + Math.sqrt(x * x * x * x + 1)) / x;
+    if (arg <= 0) return NaN;
+    return Math.log(arg);
+  }
+
+  // Numerical derivative
+  function fPrime(x) {
+    const h = 1e-7;
+    return (f(x + h) - f(x - h)) / (2 * h);
+  }
+
+  function drawGrid() {
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+
+    // Vertical grid lines
+    for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(x), marginTop);
+      ctx.lineTo(toCanvasX(x), H - marginBottom);
+      ctx.stroke();
+    }
+
+    // Horizontal grid lines
+    for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, toCanvasY(y));
+      ctx.lineTo(W - marginRight, toCanvasY(y));
+      ctx.stroke();
+    }
+  }
+
+  function drawAxes() {
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1.5;
+
+    // X-axis
+    if (yMin <= 0 && yMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(marginLeft, toCanvasY(0));
+      ctx.lineTo(W - marginRight, toCanvasY(0));
+      ctx.stroke();
+    }
+
+    // Y-axis
+    if (xMin <= 0 && xMax >= 0) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(0), marginTop);
+      ctx.lineTo(toCanvasX(0), H - marginBottom);
+      ctx.stroke();
+    }
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+
+    for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+      if (x === 0) continue;
+      ctx.fillText(x.toString(), toCanvasX(x), toCanvasY(0) + 16);
+    }
+
+    ctx.textAlign = 'right';
+    for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+      if (y === 0) continue;
+      ctx.fillText(y.toString(), toCanvasX(0) - 8, toCanvasY(y) + 4);
+    }
+
+    // Origin label
+    ctx.textAlign = 'right';
+    ctx.fillText('0', toCanvasX(0) - 8, toCanvasY(0) + 16);
+  }
+
+  function drawFunction() {
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = cv('--sol-canvas-primary');
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    let started = false;
+    const step = (xMax - xMin) / 500;
+    for (let x = 0.05; x <= xMax; x += step) {
+      const y = f(x);
+      if (isNaN(y) || !isFinite(y)) { started = false; continue; }
+      const cx = toCanvasX(x);
+      const cy = toCanvasY(y);
+      if (cy < marginTop - 50 || cy > H - marginBottom + 50) { started = false; continue; }
+      if (!started) { ctx.moveTo(cx, cy); started = true; }
+      else { ctx.lineTo(cx, cy); }
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  function drawTangent(x0) {
+    const y0 = f(x0);
+    const slope = fPrime(x0);
+    if (isNaN(y0) || isNaN(slope)) return;
+
+    // Draw tangent line
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2;
+    ctx.shadowColor = cv('--sol-canvas-accent');
+    ctx.shadowBlur = 4;
+    ctx.setLineDash([6, 4]);
+
+    const tangentXRange = 2;
+    const x1 = x0 - tangentXRange;
+    const x2 = x0 + tangentXRange;
+    const y1 = y0 + slope * (x1 - x0);
+    const y2 = y0 + slope * (x2 - x0);
+
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(x1), toCanvasY(y1));
+    ctx.lineTo(toCanvasX(x2), toCanvasY(y2));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+
+    // Draw point
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.beginPath();
+    ctx.arc(toCanvasX(x0), toCanvasY(y0), 6, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Glow effect
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.2)';
+    ctx.beginPath();
+    ctx.arc(toCanvasX(x0), toCanvasY(y0), 12, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    const labelX = toCanvasX(x0) + 14;
+    const labelY = toCanvasY(y0) - 14;
+
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+    const txt = 'f\'(' + x0.toFixed(2).replace('.', ',') + ') \u2248 ' + slope.toFixed(3).replace('.', ',');
+    const tw = ctx.measureText(txt).width;
+    ctx.fillRect(labelX - 4, labelY - 13, tw + 8, 18);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fillText(txt, labelX, labelY);
+
+    // Also show f(x0)
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+    const txt2 = 'f(' + x0.toFixed(2).replace('.', ',') + ') \u2248 ' + y0.toFixed(3).replace('.', ',');
+    const tw2 = ctx.measureText(txt2).width;
+    ctx.fillRect(labelX - 4, labelY + 5, tw2 + 8, 18);
+
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fillText(txt2, labelX, labelY + 18);
+  }
+
+  function drawLegend() {
+    const lx = W - marginRight - 190;
+    const ly = marginTop + 10;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(lx, ly, 180, 52);
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    ctx.strokeRect(lx, ly, 180, 52);
+
+    // Function line
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(lx + 10, ly + 16);
+    ctx.lineTo(lx + 40, ly + 16);
+    ctx.stroke();
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('f(x)', lx + 48, ly + 20);
+
+    // Tangent line
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(lx + 10, ly + 38);
+    ctx.lineTo(lx + 40, ly + 38);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.fillText('Tangenta', lx + 48, ly + 42);
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    drawGrid();
+    drawAxes();
+    drawFunction();
+
+    const x0 = parseFloat(slider.value);
+    drawTangent(x0);
+    drawLegend();
+
+    // Title
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('f(x) = ln((x\u00B2 \u2212 1 + \u221A(x\u2074 + 1)) / x)', W / 2, H - 8);
+  }
+
+  slider.addEventListener('input', function() {
+    const val = parseFloat(this.value);
+    xValDisplay.textContent = val.toFixed(2).replace('.', ',');
+    render();
+  });
+
+  // Step click interaction
+  document.querySelectorAll('.step').forEach(function(step) {
+    step.addEventListener('click', function() {
+      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+      this.classList.add('active');
+    });
+  });
+
+  render();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); render(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

@@ -68,6 +68,14 @@ Answer: (A) 314
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Dijagram</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -166,6 +174,363 @@ Answer: (A) 314
     </div>
   </details>
 </div>
+
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  function f(x) {
+    return x * x * x + 3 * x * x - 72 * x + 90;
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    canvas.style.height = '500px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width;
+    const H = 500;
+
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Key points
+    var fNeg5 = f(-5);  // 400
+    var f4 = f(4);      // -86
+    var f5 = f(5);      // -70
+
+    // Plot range: slightly wider than [-5, 5] for context
+    var xMin = -6.5;
+    var xMax = 6.5;
+    var yMin = -120;
+    var yMax = 450;
+
+    var marginL = 70;
+    var marginR = 30;
+    var marginT = 50;
+    var marginB = 60;
+    var plotW = W - marginL - marginR;
+    var plotH = H - marginT - marginB;
+
+    function toCanvasX(x) { return marginL + (x - xMin) / (xMax - xMin) * plotW; }
+    function toCanvasY(y) { return marginT + plotH - (y - yMin) / (yMax - yMin) * plotH; }
+
+    // Title
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Grafik f(x) = x\u00B3 + 3x\u00B2 \u2212 72x + 90 na [\u22125, 5]', marginL, 28);
+
+    // Grid lines
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.06)') : c; })();
+    ctx.lineWidth = 1;
+    for (var gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      var cx = toCanvasX(gx);
+      ctx.beginPath();
+      ctx.moveTo(cx, marginT);
+      ctx.lineTo(cx, H - marginB);
+      ctx.stroke();
+    }
+    for (var gy = -100; gy <= 450; gy += 50) {
+      var cy = toCanvasY(gy);
+      if (cy >= marginT && cy <= H - marginB) {
+        ctx.beginPath();
+        ctx.moveTo(marginL, cy);
+        ctx.lineTo(W - marginR, cy);
+        ctx.stroke();
+      }
+    }
+
+    // Shade the segment [-5, 5]
+    var segLeft = toCanvasX(-5);
+    var segRight = toCanvasX(5);
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.04)') : c; })();
+    ctx.fillRect(segLeft, marginT, segRight - segLeft, plotH);
+
+    // Segment boundary lines
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.25)') : c; })();
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(segLeft, marginT);
+    ctx.lineTo(segLeft, H - marginB);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(segRight, marginT);
+    ctx.lineTo(segRight, H - marginB);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    var y0 = toCanvasY(0);
+    ctx.beginPath();
+    ctx.moveTo(marginL, y0);
+    ctx.lineTo(W - marginR, y0);
+    ctx.stroke();
+    var x0 = toCanvasX(0);
+    if (x0 >= marginL && x0 <= W - marginR) {
+      ctx.beginPath();
+      ctx.moveTo(x0, marginT);
+      ctx.lineTo(x0, H - marginB);
+      ctx.stroke();
+    }
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var lx = Math.ceil(xMin); lx <= Math.floor(xMax); lx++) {
+      var tx = toCanvasX(lx);
+      ctx.fillText(lx.toString(), tx, y0 + 18);
+      ctx.strokeStyle = cv('--sol-canvas-muted');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(tx, y0 - 3);
+      ctx.lineTo(tx, y0 + 3);
+      ctx.stroke();
+    }
+    ctx.textAlign = 'right';
+    for (var ly = -100; ly <= 450; ly += 100) {
+      var tcy = toCanvasY(ly);
+      if (tcy >= marginT && tcy <= H - marginB) {
+        ctx.fillText(ly.toString(), marginL - 8, tcy + 4);
+      }
+    }
+
+    // Axis names
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = 'italic 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x', W - marginR + 15, y0 + 5);
+    ctx.fillText('y', x0 - 2, marginT - 10);
+
+    // Draw curve outside segment (faded)
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.2)') : c; })();
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    var started = false;
+    for (var px = xMin; px <= -5; px += 0.03) {
+      var py = f(px);
+      var pcx = toCanvasX(px);
+      var pcy = toCanvasY(py);
+      if (pcy >= marginT - 10 && pcy <= H - marginB + 10) {
+        if (!started) { ctx.moveTo(pcx, pcy); started = true; }
+        else ctx.lineTo(pcx, pcy);
+      }
+    }
+    ctx.stroke();
+
+    ctx.beginPath();
+    started = false;
+    for (var px2 = 5; px2 <= xMax; px2 += 0.03) {
+      var py2 = f(px2);
+      var pcx2 = toCanvasX(px2);
+      var pcy2 = toCanvasY(py2);
+      if (pcy2 >= marginT - 10 && pcy2 <= H - marginB + 10) {
+        if (!started) { ctx.moveTo(pcx2, pcy2); started = true; }
+        else ctx.lineTo(pcx2, pcy2);
+      }
+    }
+    ctx.stroke();
+
+    // Draw curve on segment (bright)
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    started = false;
+    for (var px3 = -5; px3 <= 5; px3 += 0.02) {
+      var py3 = f(px3);
+      var pcx3 = toCanvasX(px3);
+      var pcy3 = toCanvasY(py3);
+      if (pcy3 >= marginT - 10 && pcy3 <= H - marginB + 10) {
+        if (!started) { ctx.moveTo(pcx3, pcy3); started = true; }
+        else ctx.lineTo(pcx3, pcy3);
+      }
+    }
+    ctx.stroke();
+
+    // Horizontal dashed lines at max and min values
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 1;
+
+    // Max line at y = 400
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.35)') : c; })();
+    ctx.beginPath();
+    ctx.moveTo(marginL, toCanvasY(400));
+    ctx.lineTo(toCanvasX(-5), toCanvasY(400));
+    ctx.stroke();
+
+    // Min line at y = -86
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-highlight'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.35)') : c; })();
+    ctx.beginPath();
+    ctx.moveTo(marginL, toCanvasY(-86));
+    ctx.lineTo(toCanvasX(4), toCanvasY(-86));
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // Mark key points
+    function drawPoint(x, y, label, sublabel, color, labelOffsetX, labelOffsetY) {
+      var pcx = toCanvasX(x);
+      var pcy = toCanvasY(y);
+
+      // Glow
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(pcx, pcy, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Dot
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(pcx, pcy, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // White center
+      ctx.fillStyle = cv('--sol-canvas-bg');
+      ctx.beginPath();
+      ctx.arc(pcx, pcy, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label background
+      var tx = pcx + labelOffsetX;
+      var ty = pcy + labelOffsetY;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      var textW = ctx.measureText(label).width;
+      var subW = sublabel ? ctx.measureText(sublabel).width : 0;
+      var maxW = Math.max(textW, subW);
+
+      ctx.fillStyle = (function(){ var c = cv('--sol-canvas-bg'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.85)') : c; })();
+      roundRect(ctx, tx - 6, ty - 16, maxW + 12, sublabel ? 38 : 22, 6);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      roundRect(ctx, tx - 6, ty - 16, maxW + 12, sublabel ? 38 : 22, 6);
+      ctx.stroke();
+
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(label, tx, ty);
+
+      if (sublabel) {
+        ctx.fillStyle = cv('--sol-canvas-text');
+        ctx.font = '12px Segoe UI, system-ui, sans-serif';
+        ctx.fillText(sublabel, tx, ty + 18);
+      }
+    }
+
+    // f(-5) = 400 (MAX)
+    drawPoint(-5, 400, 'f(\u22125) = 400', 'MAKSIMUM', cv('--sol-canvas-accent'), 15, -10);
+
+    // f(4) = -86 (MIN)
+    drawPoint(4, -86, 'f(4) = \u221286', 'MINIMUM', cv('--sol-canvas-highlight'), -120, 25);
+
+    // f(5) = -70
+    drawPoint(5, -70, 'f(5) = \u221270', null, cv('--sol-canvas-secondary'), -110, -20);
+
+    // Mark x = -6 outside segment
+    var x6cx = toCanvasX(-6);
+    if (x6cx >= marginL && x6cx <= W - marginR) {
+      ctx.fillStyle = (function(){ var c = cv('--sol-canvas-muted'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.3)') : c; })();
+      ctx.beginPath();
+      ctx.arc(x6cx, toCanvasY(0), 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = cv('--sol-canvas-muted');
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('x = \u22126', x6cx, toCanvasY(0) + 30);
+      ctx.fillText('(van segmenta)', x6cx, toCanvasY(0) + 44);
+    }
+
+    // Sum info box
+    var boxX = W - marginR - 230;
+    var boxY = marginT + 15;
+    var boxW2 = 220;
+    var boxH2 = 105;
+
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-grid'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.92)') : c; })();
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.4)') : c; })();
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, boxX, boxY, boxW2, boxH2, 10);
+    ctx.fill();
+    roundRect(ctx, boxX, boxY, boxW2, boxH2, 10);
+    ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Zbir ekstrema:', boxX + 14, boxY + 24);
+
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Max: f(\u22125) = 400', boxX + 14, boxY + 48);
+    ctx.fillText('Min: f(4) = \u221286', boxX + 14, boxY + 68);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('400 + (\u221286) = 314', boxX + 14, boxY + 94);
+
+    // Segment label at bottom
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Segment [\u22125, 5]', (segLeft + segRight) / 2, H - marginB + 20);
+
+    // Bracket ends
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(segLeft, H - marginB + 8);
+    ctx.lineTo(segLeft, H - marginB + 14);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(segRight, H - marginB + 8);
+    ctx.lineTo(segRight, H - marginB + 14);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(segLeft, H - marginB + 11);
+    ctx.lineTo(segRight, H - marginB + 11);
+    ctx.stroke();
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw() }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

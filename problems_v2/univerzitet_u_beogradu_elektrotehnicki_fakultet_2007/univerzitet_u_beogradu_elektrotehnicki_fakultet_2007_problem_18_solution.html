@@ -74,6 +74,14 @@ Answer: (E) f₂ = f₃ ≠ f₁ = f₄
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Dijagram</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -182,6 +190,307 @@ Answer: (E) f₂ = f₃ ≠ f₁ = f₄
     </div>
   </details>
 </div>
+
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  let showF1 = true, showF2 = true, showF3 = true, showF4 = true;
+
+  document.getElementById('btn-f1').addEventListener('click', function() {
+    showF1 = !showF1;
+    this.style.opacity = showF1 ? '1' : '0.35';
+    draw();
+  });
+  document.getElementById('btn-f2').addEventListener('click', function() {
+    showF2 = !showF2;
+    this.style.opacity = showF2 ? '1' : '0.35';
+    draw();
+  });
+  document.getElementById('btn-f3').addEventListener('click', function() {
+    showF3 = !showF3;
+    this.style.opacity = showF3 ? '1' : '0.35';
+    draw();
+  });
+  document.getElementById('btn-f4').addEventListener('click', function() {
+    showF4 = !showF4;
+    this.style.opacity = showF4 ? '1' : '0.35';
+    draw();
+  });
+
+  function draw() {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 500 * dpr;
+    canvas.style.height = '500px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var W = rect.width;
+    var H = 500;
+
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    var xMin = -5;
+    var xMax = 5;
+    var yMin = -5;
+    var yMax = 5;
+
+    var marginL = 60;
+    var marginR = 30;
+    var marginT = 50;
+    var marginB = 80;
+    var plotW = W - marginL - marginR;
+    var plotH = H - marginT - marginB;
+
+    function toX(x) { return marginL + (x - xMin) / (xMax - xMin) * plotW; }
+    function toY(y) { return marginT + plotH - (y - yMin) / (yMax - yMin) * plotH; }
+
+    // Title
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Grafici funkcija f\u2081, f\u2082, f\u2083, f\u2084 sa domenima', marginL, 28);
+
+    // Grid
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.06)') : c; })();
+    ctx.lineWidth = 1;
+    for (var gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+      var cx = toX(gx);
+      ctx.beginPath(); ctx.moveTo(cx, marginT); ctx.lineTo(cx, H - marginB); ctx.stroke();
+    }
+    for (var gy = Math.ceil(yMin); gy <= Math.floor(yMax); gy++) {
+      var cy = toY(gy);
+      ctx.beginPath(); ctx.moveTo(marginL, cy); ctx.lineTo(W - marginR, cy); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    var y0 = toY(0);
+    ctx.beginPath(); ctx.moveTo(marginL, y0); ctx.lineTo(W - marginR, y0); ctx.stroke();
+    var x0 = toX(0);
+    ctx.beginPath(); ctx.moveTo(x0, marginT); ctx.lineTo(x0, H - marginB); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var lx = Math.ceil(xMin); lx <= Math.floor(xMax); lx++) {
+      if (lx === 0) continue;
+      var tx = toX(lx);
+      ctx.fillText(lx.toString(), tx, y0 + 18);
+      ctx.strokeStyle = cv('--sol-canvas-muted'); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(tx, y0 - 3); ctx.lineTo(tx, y0 + 3); ctx.stroke();
+    }
+    ctx.textAlign = 'right';
+    for (var ly = Math.ceil(yMin); ly <= Math.floor(yMax); ly++) {
+      if (ly === 0) continue;
+      var tcy = toY(ly);
+      ctx.fillText(ly.toString(), marginL - 8, tcy + 4);
+      ctx.strokeStyle = cv('--sol-canvas-muted'); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x0 - 3, tcy); ctx.lineTo(x0 + 3, tcy); ctx.stroke();
+    }
+    ctx.fillText('0', marginL - 8, y0 + 4);
+    ctx.textAlign = 'center';
+    ctx.fillText('x', W - marginR + 15, y0 + 4);
+    ctx.fillText('y', x0, marginT - 10);
+
+    // Shade domain regions
+    // Left region (x < 0): only f2, f3 defined
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.04)') : c; })();
+    ctx.fillRect(marginL, marginT, toX(0) - marginL, plotH);
+
+    // Right region (x > 0): all four defined
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-secondary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.04)') : c; })();
+    ctx.fillRect(toX(0), marginT, W - marginR - toX(0), plotH);
+
+    // Domain labels at bottom
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    var leftMid = (marginL + toX(0)) / 2;
+    ctx.fillText('Samo f\u2082 i f\u2083 definisane', leftMid, H - marginB + 20);
+    ctx.fillText('(x < 0)', leftMid, H - marginB + 36);
+
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    var rightMid = (toX(0) + W - marginR) / 2;
+    ctx.fillText('Sve cetiri definisane', rightMid, H - marginB + 20);
+    ctx.fillText('(x > 0)', rightMid, H - marginB + 36);
+
+    // Vertical dashed line at x=0 to emphasize boundary
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-highlight'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.4)') : c; })();
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x0, marginT); ctx.lineTo(x0, H - marginB); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw functions (thicker lines, offset for visibility)
+
+    // f3: y = x, full range (blue, dashed to distinguish)
+    if (showF3) {
+      ctx.strokeStyle = cv('--sol-canvas-primary');
+      ctx.lineWidth = 3;
+      ctx.setLineDash([8, 4]);
+      ctx.beginPath();
+      ctx.moveTo(toX(xMin), toY(xMin));
+      ctx.lineTo(toX(xMax), toY(xMax));
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // f2: y = x, full range (green, solid, slightly offset for visibility)
+    if (showF2) {
+      ctx.strokeStyle = cv('--sol-canvas-accent');
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      var offset2 = 2;
+      ctx.moveTo(toX(xMin) - offset2, toY(xMin) + offset2);
+      ctx.lineTo(toX(xMax) - offset2, toY(xMax) + offset2);
+      ctx.stroke();
+    }
+
+    // f1: y = x, only x > 0 (pink)
+    if (showF1) {
+      ctx.strokeStyle = cv('--sol-canvas-highlight');
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      var startX1 = 0.01;
+      ctx.moveTo(toX(startX1), toY(startX1));
+      ctx.lineTo(toX(xMax), toY(xMax));
+      ctx.stroke();
+      // Open circle at x=0 to show not defined there
+      ctx.strokeStyle = cv('--sol-canvas-highlight');
+      ctx.lineWidth = 2;
+      ctx.fillStyle = cv('--sol-canvas-bg');
+      ctx.beginPath();
+      ctx.arc(toX(0), toY(0), 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // f4: y = x, only x > 0 (purple, slightly offset)
+    if (showF4) {
+      ctx.strokeStyle = cv('--sol-canvas-secondary');
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      var offset4 = -2;
+      ctx.beginPath();
+      ctx.moveTo(toX(0.01) + offset4, toY(0.01) + offset4);
+      ctx.lineTo(toX(xMax) + offset4, toY(xMax) + offset4);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Open circle at x=0
+      ctx.strokeStyle = cv('--sol-canvas-secondary');
+      ctx.lineWidth = 2;
+      ctx.fillStyle = cv('--sol-canvas-bg');
+      ctx.beginPath();
+      ctx.arc(toX(0) + offset4, toY(0) + offset4, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // Legend box
+    var legX = marginL + 10;
+    var legY = marginT + 10;
+    var legW = 210;
+    var legH = 110;
+
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-grid'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.92)') : c; })();
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.3)') : c; })();
+    ctx.lineWidth = 1;
+    roundRect(ctx, legX, legY, legW, legH, 8);
+    ctx.fill();
+    roundRect(ctx, legX, legY, legW, legH, 8);
+    ctx.stroke();
+
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    var legItems = [
+      { color: cv('--sol-canvas-highlight'), text: 'f\u2081: D = (0, +\u221E)', dash: false },
+      { color: cv('--sol-canvas-accent'), text: 'f\u2082: D = \u211D', dash: false },
+      { color: cv('--sol-canvas-primary'), text: 'f\u2083: D = \u211D', dash: true },
+      { color: cv('--sol-canvas-secondary'), text: 'f\u2084: D = (0, +\u221E)', dash: true }
+    ];
+    for (var i = 0; i < legItems.length; i++) {
+      var ly2 = legY + 22 + i * 24;
+      ctx.strokeStyle = legItems[i].color;
+      ctx.lineWidth = 3;
+      if (legItems[i].dash) ctx.setLineDash([5, 3]);
+      else ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(legX + 12, ly2);
+      ctx.lineTo(legX + 40, ly2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = legItems[i].color;
+      ctx.fillText(legItems[i].text, legX + 50, ly2 + 4);
+    }
+
+    // Equality info box
+    var eqX = W - marginR - 230;
+    var eqY = H - marginB - 90;
+    var eqW = 220;
+    var eqH = 80;
+
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-grid'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.92)') : c; })();
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.4)') : c; })();
+    ctx.lineWidth = 1;
+    roundRect(ctx, eqX, eqY, eqW, eqH, 8);
+    ctx.fill();
+    roundRect(ctx, eqX, eqY, eqW, eqH, 8);
+    ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Jednake funkcije:', eqX + 12, eqY + 24);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('f\u2082 = f\u2083   (D = \u211D)', eqX + 12, eqY + 46);
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.fillText('f\u2081 = f\u2084   (D = (0, +\u221E))', eqX + 12, eqY + 66);
+
+    // Note: x=0 boundary
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('x = 0', x0, H - marginB + 55);
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('(granica domena)', x0, H - marginB + 70);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw() }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

@@ -67,6 +67,14 @@ sqrt(2 + sqrt(5)) = sqrt(4.236) ≈ 2.058 ✓
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="420"></canvas>
+  </div>
+  <p class="canvas-caption">Lanac transformacija od \(x + \frac{1}{x}\) do \(\sqrt[4]{x} + \frac{1}{\sqrt[4]{x}}\)</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -183,6 +191,139 @@ sqrt(2 + sqrt(5)) = sqrt(4.236) ≈ 2.058 ✓
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  function draw() {
+    var k = 3;
+    var s = Math.sqrt(k + 2);
+    var t = Math.sqrt(s + 2);
+
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    var boxW = 180;
+    var boxH = 90;
+    var gap = 45;
+    var totalW = 3 * boxW + 2 * gap;
+    var startX = (W - totalW) / 2;
+    var centerY = H / 2 - 20;
+
+    var boxes = [
+      { label: 'x + 1/x', value: k, color: cv('--sol-canvas-primary'), x: startX },
+      { label: '\u221Ax + 1/\u221Ax', value: s, color: cv('--sol-canvas-secondary'), x: startX + boxW + gap },
+      { label: '\u2074\u221Ax + 1/\u2074\u221Ax', value: t, color: cv('--sol-canvas-accent'), x: startX + 2 * (boxW + gap) }
+    ];
+
+    boxes.forEach(function(box) {
+      ctx.strokeStyle = box.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      var r = 12;
+      var bx = box.x;
+      var by = centerY - boxH / 2;
+      ctx.moveTo(bx + r, by);
+      ctx.lineTo(bx + boxW - r, by);
+      ctx.quadraticCurveTo(bx + boxW, by, bx + boxW, by + r);
+      ctx.lineTo(bx + boxW, by + boxH - r);
+      ctx.quadraticCurveTo(bx + boxW, by + boxH, bx + boxW - r, by + boxH);
+      ctx.lineTo(bx + r, by + boxH);
+      ctx.quadraticCurveTo(bx, by + boxH, bx, by + boxH - r);
+      ctx.lineTo(bx, by + r);
+      ctx.quadraticCurveTo(bx, by, bx + r, by);
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.fillStyle = cv('--sol-canvas-grid');
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      ctx.fillStyle = box.color;
+      ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(box.label, bx + boxW / 2, centerY - 14);
+
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = 'bold 22px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(box.value.toFixed(4).replace('.', ','), bx + boxW / 2, centerY + 18);
+    });
+
+    // Arrows between boxes
+    for (var i = 0; i < 2; i++) {
+      var fromX = boxes[i].x + boxW;
+      var toX = boxes[i + 1].x;
+
+      ctx.strokeStyle = cv('--sol-canvas-muted');
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(fromX + 4, centerY);
+      ctx.lineTo(toX - 10, centerY);
+      ctx.stroke();
+
+      ctx.fillStyle = cv('--sol-canvas-muted');
+      ctx.beginPath();
+      ctx.moveTo(toX - 4, centerY);
+      ctx.lineTo(toX - 14, centerY - 6);
+      ctx.lineTo(toX - 14, centerY + 6);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Arrow labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    var arrow1MidX = (boxes[0].x + boxW + boxes[1].x) / 2;
+    ctx.fillText('s\u00B2 = k + 2', arrow1MidX, centerY - 10);
+    var arrow2MidX = (boxes[1].x + boxW + boxes[2].x) / 2;
+    ctx.fillText('t\u00B2 = s + 2', arrow2MidX, centerY - 10);
+
+    // Formulas below boxes
+    var formulaY = centerY + boxH / 2 + 50;
+
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('k = ' + k.toFixed(2).replace('.', ','), boxes[0].x + boxW / 2, formulaY);
+
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.fillText('s = \u221A(k + 2) = \u221A5 = ' + s.toFixed(4).replace('.', ','), boxes[1].x + boxW / 2, formulaY);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fillText('t = \u221A(s + 2) = \u221A(2 + \u221A5) = ' + t.toFixed(4).replace('.', ','), boxes[2].x + boxW / 2, formulaY);
+
+    // Highlight solution
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 16px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('k = 3: Re\u0161enje na\u0161eg zadatka!', W / 2, formulaY + 30);
+    ctx.font = '14px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('s = \u221A5 \u2248 2,2361    t = \u221A(2 + \u221A5) \u2248 2,0581', W / 2, formulaY + 55);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

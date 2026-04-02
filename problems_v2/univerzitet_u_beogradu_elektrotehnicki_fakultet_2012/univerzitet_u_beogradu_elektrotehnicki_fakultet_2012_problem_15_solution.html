@@ -64,6 +64,14 @@ Answer: (D) 2ε+1−2i
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Kompleksna ravan sa prikazom korena jedinice \(\varepsilon\), imaginarne jedinice \(i\), proizvoda \(\varepsilon i\) i rešenja \(x\)</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -165,6 +173,143 @@ Answer: (D) 2ε+1−2i
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+  var centerX = W / 2;
+  var centerY = H / 2 + 10;
+  var sc = 100;
+  var sqrt3 = Math.sqrt(3);
+
+  var eps = { re: -0.5, im: sqrt3 / 2 };
+  var epsi = { re: -eps.im, im: eps.re };
+  var xSol = { re: 2 * eps.re + 1, im: 2 * eps.im - 2 };
+
+  function toCanvas(re, im) {
+    return { x: centerX + re * sc, y: centerY - im * sc };
+  }
+
+  function drawPt(z, color, label, ox, oy) {
+    var p = toCanvas(z.re, z.im);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = cv('--sol-canvas-bg');
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    if (label) {
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, p.x + (ox || 10), p.y + (oy || -10));
+    }
+  }
+
+  function draw() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (var i = -3; i <= 3; i++) {
+      var gx = centerX + i * sc;
+      ctx.beginPath(); ctx.moveTo(gx, 20); ctx.lineTo(gx, H - 20); ctx.stroke();
+      var gy = centerY - i * sc;
+      if (gy > 20 && gy < H - 20) {
+        ctx.beginPath(); ctx.moveTo(20, gy); ctx.lineTo(W - 20, gy); ctx.stroke();
+      }
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(20, centerY); ctx.lineTo(W - 20, centerY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(centerX, 20); ctx.lineTo(centerX, H - 20); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (var j = -2; j <= 2; j++) {
+      if (j === 0) continue;
+      ctx.fillText(String(j), centerX + j * sc, centerY + 6);
+    }
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (var k = -2; k <= 2; k++) {
+      if (k === 0) continue;
+      ctx.fillText(k + 'i', centerX - 8, centerY - k * sc);
+    }
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.textAlign = 'left';
+    ctx.fillText('Re', W - 30, centerY + 18);
+    ctx.textAlign = 'center';
+    ctx.fillText('Im', centerX + 18, 25);
+
+    // Unit circle
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.globalAlpha = 0.15;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, sc, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Lines from origin to cube roots
+    ctx.strokeStyle = cv('--sol-canvas-secondary');
+    ctx.globalAlpha = 0.2;
+    ctx.lineWidth = 1;
+    [eps, { re: -0.5, im: -sqrt3 / 2 }, { re: 1, im: 0 }].forEach(function(p) {
+      var pc = toCanvas(p.re, p.im);
+      ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(pc.x, pc.y); ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+
+    // Draw key points
+    drawPt({ re: 1, im: 0 }, cv('--sol-canvas-muted'), '1', 8, 14);
+    drawPt(eps, cv('--sol-canvas-secondary'), '\u03B5', -30, -10);
+    drawPt({ re: -0.5, im: -sqrt3 / 2 }, cv('--sol-canvas-secondary'), '\u03B5\u0304', -30, 14);
+    drawPt({ re: 0, im: 1 }, cv('--sol-canvas-primary'), 'i', 10, -6);
+    drawPt(epsi, cv('--sol-canvas-highlight'), '\u03B5i', 10, -10);
+    drawPt(xSol, cv('--sol-canvas-accent'), 'x = 2\u03B5+1\u22122i', 10, -10);
+
+    // Dashed line from origin to x solution
+    var px = toCanvas(xSol.re, xSol.im);
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.lineTo(px.x, px.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

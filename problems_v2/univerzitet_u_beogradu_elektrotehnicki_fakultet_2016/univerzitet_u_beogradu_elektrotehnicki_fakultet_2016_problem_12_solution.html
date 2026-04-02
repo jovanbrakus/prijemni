@@ -41,6 +41,14 @@ Odgovor: (C) 455/a
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="400"></canvas>
+  </div>
+  <p class="canvas-caption">Eksponent od \(a\) u opštem članu razvoja binoma kao funkcija od \(k\), sa označenim \(k = 12\) gde je eksponent \(-1\)</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -114,6 +122,109 @@ Odgovor: (C) 455/a
     <div class="detail-content"><p>Najveći binomni koeficijent u razvoju sa \(n = 15\) je \(\binom{15}{7} = \binom{15}{8} = 6435\).</p></div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  var padL = 70, padR = 40, padT = 40, padB = 60;
+  var gW = W - padL - padR, gH = H - padT - padB;
+  var n = 15;
+
+  function exponent(k) { return (30 - 3 * k) / 6; }
+  function toX(k) { return padL + (k / n) * gW; }
+  function toY(e) { return padT + gH / 2 - e * (gH / 12); }
+
+  function draw() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid'); ctx.lineWidth = 1;
+    for (var e = -2; e <= 5; e++) {
+      ctx.beginPath(); ctx.moveTo(padL, toY(e)); ctx.lineTo(W - padR, toY(e)); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis'); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(padL, toY(0)); ctx.lineTo(W - padR, toY(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = cv('--sol-canvas-muted'); ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (var e2 = -2; e2 <= 5; e2++) ctx.fillText(String(e2), padL - 8, toY(e2));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (var k = 0; k <= 15; k += 3) ctx.fillText(String(k), toX(k), H - padB + 8);
+    ctx.fillText('k', padL + gW / 2, H - 15);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    ctx.fillText('eksponent od a', padL - 8, padT - 5);
+
+    // Plot exponent line
+    ctx.strokeStyle = cv('--sol-canvas-primary'); ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(exponent(0)));
+    ctx.lineTo(toX(15), toY(exponent(15)));
+    ctx.stroke();
+
+    // Plot points
+    for (var k2 = 0; k2 <= 15; k2++) {
+      var ex = exponent(k2);
+      var px = toX(k2), py = toY(ex);
+      ctx.beginPath(); ctx.arc(px, py, k2 === 12 ? 7 : 3, 0, 2 * Math.PI);
+      ctx.fillStyle = k2 === 12 ? cv('--sol-canvas-accent') : cv('--sol-canvas-primary');
+      ctx.fill();
+    }
+
+    // Highlight k=12
+    var px12 = toX(12), py12 = toY(-1);
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(px12, py12); ctx.lineTo(px12, toY(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px12, py12); ctx.lineTo(padL, py12); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('k = 12', px12, toY(0) + 4);
+
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('eksponent = \u22121 \u2192 a^(\u22121) = 1/a', px12 + 12, py12);
+
+    // Highlight e=-1 line
+    ctx.strokeStyle = cv('--sol-canvas-highlight');
+    ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, toY(-1)); ctx.lineTo(W - padR, toY(-1)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('traženi stepen: \u22121', W - padR - 5, toY(-1) - 4);
+
+    // Result
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('C(15,12) = 455 \u2192 455/a', 20, 15);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

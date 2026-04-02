@@ -63,6 +63,14 @@ Verification: 8·(0,9848)² − 2·1,7321·0,6428 − 2·0,7660 ≈ 4,001 ✓
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="600"></canvas>
+  </div>
+  <p class="canvas-caption">Jedinični krug sa ključnim uglovima 20°, 40°, 50°, 70° i 80° i njihovim vezama</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -162,6 +170,211 @@ Verification: 8·(0,9848)² − 2·1,7321·0,6428 − 2·0,7660 ≈ 4,001 ✓
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+  var cx = W / 2;
+  var cy = H / 2;
+  var R = 220;
+
+  function toRad(deg) { return deg * Math.PI / 180; }
+  function toCanvas(angle) {
+    var rad = toRad(angle);
+    return { x: cx + R * Math.cos(rad), y: cy - R * Math.sin(rad) };
+  }
+
+  function drawAngleArc(startDeg, endDeg, radius, color, label, labelRadius) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, -toRad(endDeg), -toRad(startDeg));
+    ctx.stroke();
+    if (label) {
+      var midDeg = (startDeg + endDeg) / 2;
+      var lr = labelRadius || (radius + 14);
+      var lx = cx + lr * Math.cos(toRad(midDeg));
+      var ly = cy - lr * Math.sin(toRad(midDeg));
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, lx, ly);
+    }
+  }
+
+  function drawPoint(angleDeg, color, label, offsetX, offsetY) {
+    var p = toCanvas(angleDeg);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+    if (label) {
+      ctx.fillStyle = color;
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, p.x + (offsetX || 0), p.y + (offsetY || 0));
+    }
+  }
+
+  function draw() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (var i = -250; i <= 250; i += 50) {
+      ctx.beginPath(); ctx.moveTo(cx + i, cy - 280); ctx.lineTo(cx + i, cy + 280); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx - 280, cy + i); ctx.lineTo(cx + 280, cy + i); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx - 270, cy); ctx.lineTo(cx + 270, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy - 270); ctx.lineTo(cx, cy + 270); ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('x', cx + 262, cy + 8);
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText('y', cx + 8, cy - 262);
+
+    // Unit circle
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Key angles
+    var angles = [
+      { deg: 20, color: cv('--sol-canvas-primary'), label: '20\u00B0' },
+      { deg: 40, color: cv('--sol-canvas-secondary'), label: '40\u00B0' },
+      { deg: 50, color: cv('--sol-canvas-highlight'), label: '50\u00B0' },
+      { deg: 70, color: cv('--sol-canvas-accent'), label: '70\u00B0' },
+      { deg: 80, color: cv('--sol-canvas-danger'), label: '80\u00B0' }
+    ];
+
+    // Draw radius lines
+    angles.forEach(function(a) {
+      var p = toCanvas(a.deg);
+      ctx.strokeStyle = a.color;
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    });
+
+    // Draw angle arcs
+    drawAngleArc(0, 20, 55, cv('--sol-canvas-primary'), '20\u00B0', 70);
+    drawAngleArc(0, 40, 42, cv('--sol-canvas-secondary'), '40\u00B0', 32);
+    drawAngleArc(0, 80, 68, cv('--sol-canvas-danger'), '80\u00B0', 82);
+
+    // Draw points
+    drawPoint(20, cv('--sol-canvas-primary'), '(cos20\u00B0, sin20\u00B0)', 0, -18);
+    drawPoint(40, cv('--sol-canvas-secondary'), '(cos40\u00B0, sin40\u00B0)', 0, -18);
+    drawPoint(80, cv('--sol-canvas-danger'), '(cos80\u00B0, sin80\u00B0)', -15, -18);
+
+    // sin80° vertical projection
+    var p80 = toCanvas(80);
+    ctx.strokeStyle = cv('--sol-canvas-danger');
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(p80.x, p80.y);
+    ctx.lineTo(p80.x, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cv('--sol-canvas-danger');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('sin 80\u00B0', p80.x - 8, (p80.y + cy) / 2);
+
+    // sin70° = cos20° annotation
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('sin 70\u00B0 = cos 20\u00B0', cx + R + 15, cy - R * Math.sin(toRad(70)) / 2);
+
+    // Draw 70° and 50° points
+    drawPoint(70, cv('--sol-canvas-accent'), '', 0, 0);
+    var p70 = toCanvas(70);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('70\u00B0', p70.x + 10, p70.y - 6);
+
+    drawPoint(50, cv('--sol-canvas-highlight'), '', 0, 0);
+    var p50 = toCanvas(50);
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('50\u00B0', p50.x + 10, p50.y + 2);
+
+    // Key relationships box
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.globalAlpha = 0.85;
+    var boxX = 15, boxY = H - 130, boxW = 260, boxH = 115;
+    ctx.fillRect(boxX, boxY, boxW, boxH);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Ključne veze:', boxX + 10, boxY + 20);
+
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.fillText('sin 80\u00B0 = cos 10\u00B0 (skoro 1)', boxX + 10, boxY + 42);
+    ctx.fillText('sin 70\u00B0 = cos 20\u00B0', boxX + 10, boxY + 62);
+    ctx.fillText('sin 50\u00B0 = cos 40\u00B0', boxX + 10, boxY + 82);
+    ctx.fillText('20\u00B0 + 70\u00B0 = 90\u00B0 (komplementarni)', boxX + 10, boxY + 102);
+
+    // Mark 1 and -1 on axes
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('1', cx + R, cy + 8);
+    ctx.fillText('\u22121', cx - R, cy + 8);
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('1', cx + 10, cy - R);
+    ctx.fillText('\u22121', cx + 14, cy + R);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

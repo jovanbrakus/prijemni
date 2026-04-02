@@ -47,6 +47,14 @@ Odgovor: (A) 4
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="400"></canvas>
+  </div>
+  <p class="canvas-caption">Grafički prikaz: nule delioca \(x^3 - x\) moraju biti i nule polinoma \(P(x)\)</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -136,6 +144,127 @@ Odgovor: (A) 4
     <div class="detail-content"><p>\(P(x) = x^{2013}(x^3+x^2-x-1) = x^{2013}(x-1)(x+1)^2\)</p></div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  var padL = 70, padR = 40, padT = 40, padB = 55;
+  var gW = W - padL - padR, gH = H - padT - padB;
+  var xMin = -2, xMax = 2, yMin = -3, yMax = 3;
+
+  function toX(x) { return padL + (x - xMin) / (xMax - xMin) * gW; }
+  function toY(y) { return padT + (yMax - y) / (yMax - yMin) * gH; }
+
+  function divisor(x) { return x * x * x - x; }
+  function poly(x) { return x * x * x + x * x - x - 1; }
+
+  function draw() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid'); ctx.lineWidth = 1;
+    for (var gx = -2; gx <= 2; gx++) {
+      ctx.beginPath(); ctx.moveTo(toX(gx), padT); ctx.lineTo(toX(gx), H - padB); ctx.stroke();
+    }
+    for (var gy = -3; gy <= 3; gy++) {
+      ctx.beginPath(); ctx.moveTo(padL, toY(gy)); ctx.lineTo(W - padR, toY(gy)); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis'); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(padL, toY(0)); ctx.lineTo(W - padR, toY(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(toX(0), padT); ctx.lineTo(toX(0), H - padB); ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle = cv('--sol-canvas-muted'); ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (var tx = -2; tx <= 2; tx++) { if (tx !== 0) ctx.fillText(String(tx), toX(tx), toY(0) + 4); }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (var ty = -2; ty <= 2; ty++) { if (ty !== 0) ctx.fillText(String(ty), padL - 8, toY(ty)); }
+
+    // Divisor curve (dashed)
+    ctx.strokeStyle = cv('--sol-canvas-primary'); ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    var started = false;
+    for (var px = 0; px <= gW; px++) {
+      var x = xMin + (px / gW) * (xMax - xMin);
+      var y = divisor(x);
+      if (y < yMin - 1 || y > yMax + 1) { started = false; continue; }
+      var cx = padL + px, cy = toY(y);
+      if (!started) { ctx.moveTo(cx, cy); started = true; } else ctx.lineTo(cx, cy);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+
+    // Polynomial curve (solid)
+    ctx.strokeStyle = cv('--sol-canvas-accent'); ctx.lineWidth = 2.5;
+    ctx.beginPath(); started = false;
+    for (var px2 = 0; px2 <= gW; px2++) {
+      var x2 = xMin + (px2 / gW) * (xMax - xMin);
+      var y2 = poly(x2);
+      if (y2 < yMin - 1 || y2 > yMax + 1) { started = false; continue; }
+      var cx2 = padL + px2, cy2 = toY(y2);
+      if (!started) { ctx.moveTo(cx2, cy2); started = true; } else ctx.lineTo(cx2, cy2);
+    }
+    ctx.stroke();
+
+    // Root points
+    var roots = [
+      { x: -1, color: cv('--sol-canvas-primary'), label: 'x = \u22121' },
+      { x: 0, color: cv('--sol-canvas-secondary'), label: 'x = 0' },
+      { x: 1, color: cv('--sol-canvas-highlight'), label: 'x = 1' }
+    ];
+
+    roots.forEach(function(r) {
+      var px3 = toX(r.x), py3 = toY(0);
+      ctx.beginPath(); ctx.arc(px3, py3, 7, 0, 2 * Math.PI);
+      ctx.fillStyle = r.color; ctx.fill();
+      ctx.strokeStyle = cv('--sol-canvas-text'); ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = r.color;
+      ctx.font = 'bold 13px Segoe UI, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(r.label, px3, py3 - 12);
+    });
+
+    // Legend
+    ctx.font = '12px Segoe UI, sans-serif'; ctx.textAlign = 'left';
+    var lx = W - padR - 200, ly = padT + 10;
+    ctx.strokeStyle = cv('--sol-canvas-primary'); ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 20, ly); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fillText('x\u00B3 \u2212 x (delilac)', lx + 26, ly + 4);
+    ly += 22;
+    ctx.strokeStyle = cv('--sol-canvas-accent'); ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 20, ly); ctx.stroke();
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fillText('P(x)/x\u00B2\u2070\u00B9\u00B3', lx + 26, ly + 4);
+
+    // Bottom text
+    ctx.fillStyle = cv('--sol-canvas-muted'); ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('P(0) = 0 \u21D2 c = 0    |    P(1) = 0 \u21D2 a \u2212 b = \u22121    |    P(\u22121) = 0 \u21D2 a + b = \u22121', W / 2, H - 20);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

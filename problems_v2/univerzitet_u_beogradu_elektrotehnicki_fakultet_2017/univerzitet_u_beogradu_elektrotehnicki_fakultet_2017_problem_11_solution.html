@@ -70,6 +70,15 @@ Odgovor: (D) 5(-21α + 53β)
   </details>
 </div>
 
+
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="420"></canvas>
+  </div>
+  <p class="canvas-caption">Koristite klizač ispod za promenu razlike d i posmatrajte kako se menja zbir</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -214,6 +223,250 @@ Odgovor: (D) 5(-21α + 53β)
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+const canvas = document.getElementById('diagram');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const slider = document.getElementById('d-slider');
+  const dValueSpan = document.getElementById('d-value');
+
+  let currentD = 5;
+  let a1 = 10;
+
+  function draw() {
+    currentD = parseInt(slider.value, 10);
+    dValueSpan.textContent = String(currentD);
+    a1 = 10;
+
+    // Compute key values
+    var alpha = a1 + 53 * currentD; // a_54
+    var beta = a1 + 69 * currentD;  // a_70
+    var a160 = a1 + 159 * currentD; // a_160
+
+    // S_160 using formula
+    var S160 = 80 * (2 * a1 + 159 * currentD);
+
+    // Also compute via our answer formula for verification
+    var S160check = 5 * (-21 * alpha + 53 * beta);
+
+    // Background
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw number line / sequence visualization
+    var padding = 60;
+    var plotAreaW = W - 2 * padding;
+    var plotAreaH = H - 2 * padding - 40;
+
+    // We'll plot a_n vs n for key points
+    var keyPoints = [
+      { n: 1, label: 'a\u2081', color: cv('--sol-canvas-primary') },
+      { n: 54, label: 'a\u2085\u2084 = \u03B1', color: cv('--sol-canvas-highlight') },
+      { n: 70, label: 'a\u2087\u2080 = \u03B2', color: cv('--sol-canvas-secondary') },
+      { n: 160, label: 'a\u2081\u2086\u2080', color: cv('--sol-canvas-primary') }
+    ];
+
+    var vals = keyPoints.map(function(p) { return a1 + (p.n - 1) * currentD; });
+    var allN = keyPoints.map(function(p) { return p.n; });
+
+    var minVal = Math.min.apply(null, vals);
+    var maxVal = Math.max.apply(null, vals);
+    if (minVal === maxVal) { minVal -= 10; maxVal += 10; }
+
+    var valRange = maxVal - minVal;
+    minVal -= valRange * 0.1;
+    maxVal += valRange * 0.1;
+
+    var minN = 0;
+    var maxN = 165;
+
+    function toCanvasX(n) {
+      return padding + (n - minN) / (maxN - minN) * plotAreaW;
+    }
+
+    function toCanvasY(v) {
+      return padding + 20 + plotAreaH - (v - minVal) / (maxVal - minVal) * plotAreaH;
+    }
+
+    // Grid lines
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+
+    // Horizontal grid
+    var ySteps = 5;
+    for (var yi = 0; yi <= ySteps; yi++) {
+      var yv = minVal + (maxVal - minVal) * yi / ySteps;
+      var cy = toCanvasY(yv);
+      ctx.beginPath();
+      ctx.moveTo(padding, cy);
+      ctx.lineTo(W - padding, cy);
+      ctx.stroke();
+    }
+
+    // Vertical grid at key n values
+    var nGridVals = [1, 20, 40, 54, 60, 70, 80, 100, 120, 140, 160];
+    for (var ni = 0; ni < nGridVals.length; ni++) {
+      var cx = toCanvasX(nGridVals[ni]);
+      ctx.beginPath();
+      ctx.moveTo(cx, padding + 20);
+      ctx.lineTo(cx, padding + 20 + plotAreaH);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1.5;
+
+    // X-axis
+    ctx.beginPath();
+    ctx.moveTo(padding, padding + 20 + plotAreaH);
+    ctx.lineTo(W - padding, padding + 20 + plotAreaH);
+    ctx.stroke();
+
+    // Y-axis
+    ctx.beginPath();
+    ctx.moveTo(padding, padding + 20);
+    ctx.lineTo(padding, padding + 20 + plotAreaH);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var nj = 0; nj < nGridVals.length; nj++) {
+      var nv = nGridVals[nj];
+      ctx.fillText(String(nv), toCanvasX(nv), padding + 20 + plotAreaH + 16);
+    }
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('n (redni broj člana)', W / 2, H - 10);
+
+    // Y-axis labels
+    ctx.textAlign = 'right';
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    for (var yk = 0; yk <= ySteps; yk++) {
+      var yvl = minVal + (maxVal - minVal) * yk / ySteps;
+      ctx.fillText(Math.round(yvl).toString(), padding - 8, toCanvasY(yvl) + 4);
+    }
+
+    // Draw the progression line
+    ctx.strokeStyle = 'rgba(96, 165, 250, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    var firstY = toCanvasY(a1);
+    var lastY = toCanvasY(a1 + 159 * currentD);
+    ctx.moveTo(toCanvasX(1), firstY);
+    ctx.lineTo(toCanvasX(160), lastY);
+    ctx.stroke();
+
+    // Shade area under the line (representing the sum) from n=1 to n=160
+    ctx.fillStyle = 'rgba(96, 165, 250, 0.06)';
+    var baseY = toCanvasY(0);
+    // Clamp baseY to plot area
+    var clampedBaseY = Math.max(padding + 20, Math.min(padding + 20 + plotAreaH, baseY));
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(1), clampedBaseY);
+    ctx.lineTo(toCanvasX(1), firstY);
+    ctx.lineTo(toCanvasX(160), lastY);
+    ctx.lineTo(toCanvasX(160), clampedBaseY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw key points
+    for (var ki = 0; ki < keyPoints.length; ki++) {
+      var kp = keyPoints[ki];
+      var kx = toCanvasX(kp.n);
+      var kval = a1 + (kp.n - 1) * currentD;
+      var ky = toCanvasY(kval);
+
+      // Dashed line down to axis
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = kp.color;
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(kx, ky);
+      ctx.lineTo(kx, padding + 20 + plotAreaH);
+      ctx.stroke();
+      ctx.globalAlpha = 1.0;
+      ctx.setLineDash([]);
+
+      // Point
+      ctx.beginPath();
+      ctx.arc(kx, ky, 7, 0, 2 * Math.PI);
+      ctx.fillStyle = kp.color;
+      ctx.fill();
+      ctx.strokeStyle = cv('--sol-canvas-bg');
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = kp.color;
+      ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      var labelOff = ki % 2 === 0 ? -18 : -18;
+      ctx.fillText(kp.label, kx, ky + labelOff);
+
+      // Value
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = '11px Segoe UI, system-ui, sans-serif';
+      ctx.fillText('= ' + Math.round(kval), kx, ky + labelOff - 14);
+    }
+
+    // Sum display
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('S\u2081\u2086\u2080 = ' + S160, padding + 10, padding + 12);
+
+    // Formula verification
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('5(-21\u03B1 + 53\u03B2) = ' + S160check, padding + 10, padding + 28);
+
+    // Legend
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+
+    // a1 fixed at 10 notice
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '11px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('(a\u2081 = ' + a1 + ', d = ' + currentD + ')', W - padding, padding + 12);
+  }
+
+  draw();
+
+  slider.addEventListener('input', draw);
+
+  // Step click interactivity
+  var steps = document.querySelectorAll('.step');
+  steps.forEach(function(step) {
+    step.addEventListener('click', function() {
+      steps.forEach(function(s) { s.classList.remove('active'); });
+      step.classList.add('active');
+    });
+  });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

@@ -76,6 +76,14 @@ Answer: (C) 4
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="520" height="520"></canvas>
+  </div>
+  <p class="canvas-caption">Preseci krivih u koordinatnom sistemu -- rešenja sistema jednačina</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -186,6 +194,219 @@ Answer: (C) 4
     </div>
   </details>
 </div>
+
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+// Answer option checking
+  window.checkAnswer = function(btn, val) {
+    const buttons = document.querySelectorAll('#answer-options .option-btn');
+    buttons.forEach(b => {
+      b.classList.remove('correct', 'wrong');
+      b.disabled = true;
+    });
+    if (val === 'C') {
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      buttons.forEach(b => {
+        if (b.dataset.val === 'C') b.classList.add('correct');
+      });
+    }
+  };
+
+  // Checkpoint checking
+  window.checkCP = function(btn, isCorrect) {
+    const parent = btn.parentElement;
+    const allBtns = parent.querySelectorAll('.checkpoint-btn');
+    allBtns.forEach(b => b.disabled = true);
+    if (isCorrect) {
+      btn.classList.add('cp-correct');
+    } else {
+      btn.classList.add('cp-wrong');
+      allBtns.forEach(b => {
+        if (!b.classList.contains('cp-wrong')) {
+          // find the correct one by trying onclick
+        }
+      });
+    }
+  };
+
+  // Collapsible
+  window.toggleCollapsible = function(btn) {
+    const content = btn.nextElementSibling;
+    content.classList.toggle('open');
+    btn.textContent = content.classList.contains('open')
+      ? '▾ Vijerov teorem i simetrične funkcije (klikni da sakriješ)'
+      : '▸ Vijerov teorem i simetrične funkcije (klikni da proširiš)';
+  };
+
+  // Canvas drawing
+  const canvas = document.getElementById('diagram');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // Coordinate system setup
+    const xMin = -2, xMax = 8, yMin = -2, yMax = 8;
+
+    function toCanvasX(x) { return (x - xMin) / (xMax - xMin) * W; }
+    function toCanvasY(y) { return H - (y - yMin) / (yMax - yMin) * H; }
+
+    // Background
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (let i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(i), 0);
+      ctx.lineTo(toCanvasX(i), H);
+      ctx.stroke();
+    }
+    for (let j = Math.ceil(yMin); j <= Math.floor(yMax); j++) {
+      ctx.beginPath();
+      ctx.moveTo(0, toCanvasY(j));
+      ctx.lineTo(W, toCanvasY(j));
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(xMin), toCanvasY(0));
+    ctx.lineTo(toCanvasX(xMax), toCanvasY(0));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), toCanvasY(yMin));
+    ctx.lineTo(toCanvasX(0), toCanvasY(yMax));
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    for (let i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+      if (i === 0) continue;
+      ctx.fillText(i.toString(), toCanvasX(i) - 4, toCanvasY(0) + 16);
+    }
+    for (let j = Math.ceil(yMin); j <= Math.floor(yMax); j++) {
+      if (j === 0) continue;
+      ctx.fillText(j.toString(), toCanvasX(0) + 6, toCanvasY(j) + 4);
+    }
+
+    // Plot curve 1: x + xy + y = 11 => y(1+x) = 11-x => y = (11-x)/(1+x) for x != -1
+    ctx.strokeStyle = cv('--sol-canvas-danger');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let started = false;
+    for (let px = 0; px < W; px++) {
+      const x = xMin + (px / W) * (xMax - xMin);
+      if (Math.abs(1 + x) < 0.01) { started = false; continue; }
+      const y = (11 - x) / (1 + x);
+      if (y < yMin || y > yMax) { started = false; continue; }
+      const cy = toCanvasY(y);
+      if (!started) { ctx.moveTo(px, cy); started = true; }
+      else ctx.lineTo(px, cy);
+    }
+    ctx.stroke();
+
+    // Plot curve 2: xy(x+y) = 30 => implicit plot
+    // We'll plot x*y*(x+y) = 30 by scanning
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    const step = 0.02;
+    for (let x = xMin; x <= xMax; x += step) {
+      for (let y = yMin; y <= yMax; y += step) {
+        const val = x * y * (x + y);
+        const val2 = (x + step) * y * (x + step + y);
+        const val3 = x * (y + step) * (x + y + step);
+        // Check if 30 is crossed
+        if ((val - 30) * (val2 - 30) < 0 || (val - 30) * (val3 - 30) < 0) {
+          const cx = toCanvasX(x);
+          const cy = toCanvasY(y);
+          ctx.fillStyle = cv('--sol-canvas-primary');
+          ctx.fillRect(cx, cy, 2, 2);
+        }
+      }
+    }
+
+    // Solution points
+    const solutions = [[1, 5], [5, 1], [2, 3], [3, 2]];
+    solutions.forEach(([sx, sy]) => {
+      const cx = toCanvasX(sx);
+      const cy = toCanvasY(sy);
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, 2 * Math.PI);
+      ctx.fillStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.25)') : c; })();
+      ctx.fill();
+
+      // Point
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = cv('--sol-canvas-accent');
+      ctx.fill();
+      ctx.strokeStyle = cv('--sol-canvas-text');
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+      ctx.fillText(`(${sx}, ${sy})`, cx + 10, cy - 8);
+    });
+
+    // Legend on canvas
+    ctx.font = '13px Segoe UI, system-ui, sans-serif';
+    // Curve 1
+    ctx.fillStyle = cv('--sol-canvas-danger');
+    ctx.fillRect(12, 14, 20, 3);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.fillText('x + xy + y = 11', 38, 20);
+    // Curve 2
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fillRect(12, 32, 20, 3);
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.fillText('x²y + xy² = 30', 38, 38);
+  }
+
+  // Wire up answer-option clicks
+  document.querySelectorAll('.answer-option').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      checkAnswer(this, this.dataset.option);
+    });
+  });
+
+  // Wire up checkpoint button clicks
+  document.querySelectorAll('.checkpoint-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      checkCP(this, this.dataset.correct === 'true');
+    });
+  });
+
+  // Wire up collapsible toggle clicks
+  document.querySelectorAll('.collapsible-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      toggleCollapsible(this);
+    });
+  });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); /* redraw */ }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

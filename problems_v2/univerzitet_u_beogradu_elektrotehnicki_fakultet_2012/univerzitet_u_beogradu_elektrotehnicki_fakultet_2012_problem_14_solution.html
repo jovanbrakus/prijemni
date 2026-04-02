@@ -75,6 +75,14 @@ Answer: (C) 6(√2+1)
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Trougao sa stranicama \(a = 21\), \(b = 9\sqrt{2}\), \(c = 15\), upisanim i opisanim krugom</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -173,6 +181,196 @@ Answer: (C) 6(√2+1)
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  var gammaRad = Math.PI / 4;
+  var scale = 16;
+  var cx_off = W / 2 - 100;
+  var cy_off = H / 2 + 80;
+
+  var Cx = 0, Cy = 0;
+  var Bx = 21, By = 0;
+  var Ax = 9, Ay = 9;
+
+  var a_side = 21, b_side = 9 * Math.SQRT2, c_side = 15;
+  var perimeter = a_side + b_side + c_side;
+  var Ix = (a_side * Ax + b_side * Bx + c_side * Cx) / perimeter;
+  var Iy = (a_side * Ay + b_side * By + c_side * Cy) / perimeter;
+  var r_val = (189 / 2) / ((36 + 9 * Math.SQRT2) / 2);
+  var R_val = 15 * Math.SQRT2 / 2;
+
+  var M1x = (Ax + Bx) / 2, M1y = (Ay + By) / 2;
+  var ABx = Bx - Ax, ABy = By - Ay;
+  var M2x = (Bx + Cx) / 2, M2y = (By + Cy) / 2;
+  var BCx = Cx - Bx, BCy = Cy - By;
+  var det = (-ABy) * BCx - ABx * (-BCy);
+  var t_val = ((M2x - M1x) * BCx - (M2y - M1y) * (-BCy)) / det;
+  var Ox = M1x + (-ABy) * t_val;
+  var Oy = M1y + ABx * t_val;
+
+  function toCanvas(x, y) {
+    return { x: cx_off + x * scale, y: cy_off - y * scale };
+  }
+
+  function draw() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    var pA = toCanvas(Ax, Ay);
+    var pB = toCanvas(Bx, By);
+    var pC = toCanvas(Cx, Cy);
+    var pI = toCanvas(Ix, Iy);
+    var pO = toCanvas(Ox, Oy);
+
+    // Circumscribed circle
+    ctx.beginPath();
+    ctx.arc(pO.x, pO.y, R_val * scale, 0, 2 * Math.PI);
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.04;
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Inscribed circle
+    ctx.beginPath();
+    ctx.arc(pI.x, pI.y, r_val * scale, 0, 2 * Math.PI);
+    ctx.strokeStyle = cv('--sol-canvas-secondary');
+    ctx.globalAlpha = 0.7;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Triangle
+    ctx.beginPath();
+    ctx.moveTo(pA.x, pA.y);
+    ctx.lineTo(pB.x, pB.y);
+    ctx.lineTo(pC.x, pC.y);
+    ctx.closePath();
+    ctx.strokeStyle = cv('--sol-canvas-text');
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Angle arc at C
+    var angleRadius = 35;
+    ctx.beginPath();
+    ctx.arc(pC.x, pC.y, angleRadius, -Math.atan2(Ay, Ax), 0, false);
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('45\u00B0', pC.x + 50, pC.y - 18);
+
+    // Radius labels
+    ctx.strokeStyle = cv('--sol-canvas-secondary');
+    ctx.globalAlpha = 0.6;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(pI.x, pI.y);
+    ctx.lineTo(pI.x, pC.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(pO.x, pO.y);
+    ctx.lineTo(pA.x, pA.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Vertex labels
+    var vertices = [
+      { p: pA, label: 'A', ox: -14, oy: -12 },
+      { p: pB, label: 'B', ox: 12, oy: 16 },
+      { p: pC, label: 'C', ox: -16, oy: 16 }
+    ];
+    vertices.forEach(function(v) {
+      ctx.beginPath();
+      ctx.arc(v.p.x, v.p.y, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = cv('--sol-canvas-primary');
+      ctx.fill();
+      ctx.fillStyle = cv('--sol-canvas-text');
+      ctx.font = 'bold 15px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(v.label, v.p.x + v.ox, v.p.y + v.oy);
+    });
+
+    // Side labels
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('a = 21', (pB.x + pC.x) / 2, (pB.y + pC.y) / 2 + 20);
+    ctx.fillText('b = 9\u221A2', (pA.x + pC.x) / 2 - 25, (pA.y + pC.y) / 2);
+    ctx.fillText('c = 15', (pA.x + pB.x) / 2 + 20, (pA.y + pB.y) / 2 - 5);
+
+    // Center labels
+    ctx.beginPath();
+    ctx.arc(pI.x, pI.y, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.fill();
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('r \u2248 3,88', pI.x + 8, pI.y - 4);
+
+    ctx.beginPath();
+    ctx.arc(pO.x, pO.y, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fill();
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('R \u2248 10,61', pO.x + 8, pO.y + 14);
+
+    // Legend
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('--- Opisani krug (R)', 20, 25);
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.fillText('--- Upisani krug (r)', 20, 45);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.fillText('r + R = 6(\u221A2 + 1) \u2248 14,49', 20, 70);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

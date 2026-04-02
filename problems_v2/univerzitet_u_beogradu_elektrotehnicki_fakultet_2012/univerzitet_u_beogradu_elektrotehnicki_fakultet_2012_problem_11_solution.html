@@ -61,6 +61,14 @@ Verification: m=0: (x−1)(x−5)=0, S=6, P=5, S+P=11 ✓
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Koreni \(x_1, x_2\), njihov zbir \(S\) i proizvod \(P\) kao funkcije parametra \(m\). Zbir \(S + P = 11\) je konstantan.</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -162,6 +170,170 @@ Verification: m=0: (x−1)(x−5)=0, S=6, P=5, S+P=11 ✓
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  function solveQuadratic(m) {
+    var a = 1 + m;
+    var b = -(6 + 5 * m);
+    var c = 5 + 6 * m;
+    var D = b * b - 4 * a * c;
+    var S = -b / a;
+    var P = c / a;
+    return { S: S, P: P, D: D };
+  }
+
+  function draw() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    var margin = { left: 70, right: 30, top: 50, bottom: 70 };
+    var gW = W - margin.left - margin.right;
+    var gH = H - margin.top - margin.bottom;
+
+    var mMin = -5, mMax = 10;
+    var yMin = -10, yMax = 20;
+
+    function toCanvasX(mv) { return margin.left + (mv - mMin) / (mMax - mMin) * gW; }
+    function toCanvasY(yv) { return margin.top + (yMax - yv) / (yMax - yMin) * gH; }
+
+    // Grid lines
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (var yv = -10; yv <= 20; yv += 5) {
+      ctx.beginPath();
+      ctx.moveTo(margin.left, toCanvasY(yv));
+      ctx.lineTo(W - margin.right, toCanvasY(yv));
+      ctx.stroke();
+    }
+    for (var mv = -4; mv <= 10; mv += 2) {
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(mv), margin.top);
+      ctx.lineTo(toCanvasX(mv), margin.top + gH);
+      ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(margin.left, toCanvasY(0));
+    ctx.lineTo(W - margin.right, toCanvasY(0));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(0), margin.top);
+    ctx.lineTo(toCanvasX(0), margin.top + gH);
+    ctx.stroke();
+
+    // Axis tick labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (var mv2 = -4; mv2 <= 10; mv2 += 2) {
+      if (mv2 === 0) continue;
+      ctx.fillText(String(mv2), toCanvasX(mv2), toCanvasY(0) + 4);
+    }
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (var yv2 = -5; yv2 <= 20; yv2 += 5) {
+      if (yv2 === 0) continue;
+      ctx.fillText(String(yv2), margin.left - 6, toCanvasY(yv2));
+    }
+
+    // Labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('m', W - margin.right - 10, toCanvasY(0) + 4);
+
+    // S+P = 11 horizontal line
+    var y11 = toCanvasY(11);
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath();
+    ctx.moveTo(margin.left, y11);
+    ctx.lineTo(W - margin.right, y11);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('S + P = 11 (konstantno!)', W - margin.right - 5, y11 - 6);
+
+    // Plot S(m) and P(m)
+    var curves = [
+      { label: 'S = x\u2081+x\u2082', color: cv('--sol-canvas-primary'), fn: function(m) { return solveQuadratic(m).S; } },
+      { label: 'P = x\u2081\u00B7x\u2082', color: cv('--sol-canvas-secondary'), fn: function(m) { return solveQuadratic(m).P; } }
+    ];
+
+    curves.forEach(function(curve) {
+      ctx.strokeStyle = curve.color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      var started = false;
+      for (var px = 0; px <= gW; px++) {
+        var m = mMin + (px / gW) * (mMax - mMin);
+        if (Math.abs(1 + m) < 0.05) { started = false; continue; }
+        var val = curve.fn(m);
+        if (val < yMin - 2 || val > yMax + 2) { started = false; continue; }
+        var cx = margin.left + px;
+        var cy = toCanvasY(val);
+        if (!started) { ctx.moveTo(cx, cy); started = true; }
+        else ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+    });
+
+    // Legend
+    var legX = margin.left + 10;
+    var legY = margin.top + 10;
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fillRect(legX, legY, 16, 3);
+    ctx.fillText(curves[0].label, legX + 22, legY + 4);
+    legY += 20;
+
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.fillRect(legX, legY, 16, 3);
+    ctx.fillText(curves[1].label, legX + 22, legY + 4);
+    legY += 20;
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(legX, legY);
+    ctx.lineTo(legX + 16, legY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillText('S + P = 11', legX + 22, legY + 4);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

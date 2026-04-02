@@ -57,6 +57,14 @@ Verification: 0,125 − 1,5 = −1,375 = −11/8 ✓
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Grafik funkcije \(f(x) = x^3 - 3x\) sa označenom tačkom \(x = \frac{1}{2}\) gde je \(f = -\frac{11}{8}\)</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -168,6 +176,142 @@ Verification: 0,125 − 1,5 = −1,375 = −11/8 ✓
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+  var originX = W / 2;
+  var originY = H / 2;
+  var scaleX = 80;
+  var scaleY = 55;
+
+  function toCanvas(mx, my) { return [originX + mx * scaleX, originY - my * scaleY]; }
+  function f(x) { return x * x * x - 3 * x; }
+
+  function draw() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid');
+    ctx.lineWidth = 1;
+    for (var i = -4; i <= 4; i++) {
+      var gx = toCanvas(i, 0)[0];
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
+    }
+    for (var j = -4; j <= 4; j++) {
+      var gy = toCanvas(0, j)[1];
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(W, originY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(originX, 0); ctx.lineTo(originX, H); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '14px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('x', W - 20, originY - 8);
+    ctx.textAlign = 'center';
+    ctx.fillText('y', originX + 16, 18);
+
+    // Tick marks
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '11px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    for (var ti = -3; ti <= 3; ti++) {
+      if (ti === 0) continue;
+      var tx = toCanvas(ti, 0);
+      ctx.fillText(String(ti), tx[0], tx[1] + 16);
+    }
+    ctx.textAlign = 'right';
+    for (var tj = -3; tj <= 3; tj++) {
+      if (tj === 0) continue;
+      var ty = toCanvas(0, tj);
+      ctx.fillText(String(tj), ty[0] - 8, ty[1] + 4);
+    }
+
+    // Plot f(x)
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    var started = false;
+    for (var px = 0; px < W; px++) {
+      var mx = (px - originX) / scaleX;
+      var my = f(mx);
+      var cy = originY - my * scaleY;
+      if (cy < -50 || cy > H + 50) { started = false; continue; }
+      if (!started) { ctx.moveTo(px, cy); started = true; } else ctx.lineTo(px, cy);
+    }
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 14px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    var lp = toCanvas(1.8, f(1.8));
+    ctx.fillText('f(x) = x\u00B3 \u2212 3x', lp[0] + 10, lp[1] - 10);
+
+    // Mark point at x = 0.5
+    var currentX = 0.5;
+    var fVal = f(currentX);
+    var pt = toCanvas(currentX, fVal);
+
+    // Dashed lines
+    ctx.strokeStyle = cv('--sol-canvas-highlight');
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(pt[0], pt[1]); ctx.lineTo(pt[0], originY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pt[0], pt[1]); ctx.lineTo(originX, pt[1]); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Point
+    ctx.beginPath();
+    ctx.arc(pt[0], pt[1], 6, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fill();
+    ctx.strokeStyle = cv('--sol-canvas-bg');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 13px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('(1/2 ; \u221211/8)', pt[0] + 12, pt[1] - 12);
+
+    // Mark g(2) = 1/2 on x-axis
+    ctx.fillStyle = cv('--sol-canvas-highlight');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('g(2) = 1/2', pt[0], originY + 32);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.textAlign = 'center';
+    ctx.fillText('f(g(2)) = \u221211/8', originX - 50, pt[1] - 4);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

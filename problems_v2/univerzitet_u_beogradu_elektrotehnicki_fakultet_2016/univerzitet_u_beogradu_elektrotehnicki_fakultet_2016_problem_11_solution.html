@@ -61,6 +61,14 @@ Odgovor: (A) 7
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="500"></canvas>
+  </div>
+  <p class="canvas-caption">Trougao ABC sa temenima A(-8,4), B(-2,1), C(1,-3), visinama i ortocentrom H(12,19)</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -148,6 +156,112 @@ Odgovor: (A) 7
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  var pts = { A: [-8, 4], B: [-2, 1], C: [1, -3], H: [12, 19] };
+  var xMin = -10, xMax = 15, yMin = -5, yMax = 22;
+  var padL = 50, padR = 30, padT = 30, padB = 40;
+  var gW = W - padL - padR, gH = H - padT - padB;
+
+  function toX(x) { return padL + (x - xMin) / (xMax - xMin) * gW; }
+  function toY(y) { return padT + (yMax - y) / (yMax - yMin) * gH; }
+
+  function draw() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = cv('--sol-canvas-grid'); ctx.lineWidth = 1;
+    for (var x = -10; x <= 15; x += 5) {
+      ctx.beginPath(); ctx.moveTo(toX(x), padT); ctx.lineTo(toX(x), H - padB); ctx.stroke();
+    }
+    for (var y = -5; y <= 20; y += 5) {
+      ctx.beginPath(); ctx.moveTo(padL, toY(y)); ctx.lineTo(W - padR, toY(y)); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis'); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(padL, toY(0)); ctx.lineTo(W - padR, toY(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(toX(0), padT); ctx.lineTo(toX(0), H - padB); ctx.stroke();
+
+    // Triangle
+    ctx.strokeStyle = cv('--sol-canvas-text'); ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(toX(pts.A[0]), toY(pts.A[1]));
+    ctx.lineTo(toX(pts.B[0]), toY(pts.B[1]));
+    ctx.lineTo(toX(pts.C[0]), toY(pts.C[1]));
+    ctx.closePath(); ctx.stroke();
+
+    // Heights (dashed)
+    ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+
+    // Height from A to BC: y = (3/4)x + 10
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.beginPath();
+    ctx.moveTo(toX(pts.A[0]), toY(pts.A[1]));
+    ctx.lineTo(toX(pts.H[0]), toY(pts.H[1]));
+    ctx.stroke();
+
+    // Height from B to AC: y = (9/7)x + 25/7
+    ctx.strokeStyle = cv('--sol-canvas-secondary');
+    ctx.beginPath();
+    ctx.moveTo(toX(pts.B[0]), toY(pts.B[1]));
+    ctx.lineTo(toX(pts.H[0]), toY(pts.H[1]));
+    ctx.stroke();
+
+    // Height from C to AB: y = 2x - 5
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.beginPath();
+    ctx.moveTo(toX(pts.C[0]), toY(pts.C[1]));
+    ctx.lineTo(toX(pts.H[0]), toY(pts.H[1]));
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // Points
+    var labels = [
+      { p: pts.A, label: 'A(-8,4)', color: cv('--sol-canvas-primary'), ox: -12, oy: -12 },
+      { p: pts.B, label: 'B(-2,1)', color: cv('--sol-canvas-primary'), ox: -12, oy: 16 },
+      { p: pts.C, label: 'C(1,-3)', color: cv('--sol-canvas-primary'), ox: 10, oy: 12 },
+      { p: pts.H, label: 'H(12,19)', color: cv('--sol-canvas-accent'), ox: -70, oy: -12 }
+    ];
+
+    labels.forEach(function(item) {
+      var px = toX(item.p[0]), py = toY(item.p[1]);
+      ctx.beginPath(); ctx.arc(px, py, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = item.color; ctx.fill();
+      ctx.fillStyle = item.color;
+      ctx.font = 'bold 12px Segoe UI, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(item.label, px + item.ox, py + item.oy);
+    });
+
+    // Result label
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 14px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('y\u2080 \u2212 x\u2080 = 19 \u2212 12 = 7', 20, 25);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

@@ -58,6 +58,14 @@ Answer: (A) √5
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="700" height="420"></canvas>
+  </div>
+  <p class="canvas-caption">Grafici funkcija \(|a + 1/a|\) i \(|a - 1/a|\) sa horizontalnim linijama na vrednostima 3 i \(\sqrt{5}\)</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -148,6 +156,226 @@ Answer: (A) √5
     </div>
   </details>
 </div>
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+  var canvas = document.getElementById('diagram');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width;
+  var H = canvas.height;
+
+  function formatNum(n) {
+    return n.toFixed(2).replace('.', ',');
+  }
+
+  function draw() {
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    var padLeft = 70;
+    var padRight = 30;
+    var padTop = 40;
+    var padBottom = 60;
+    var plotW = W - padLeft - padRight;
+    var plotH = H - padTop - padBottom;
+
+    // Draw axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padLeft, padTop);
+    ctx.lineTo(padLeft, padTop + plotH);
+    ctx.lineTo(padLeft + plotW, padTop + plotH);
+    ctx.stroke();
+
+    // Y-axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    var maxY = 10;
+    for (var i = 0; i <= maxY; i += 2) {
+      var y = padTop + plotH - (i / maxY) * plotH;
+      ctx.fillText(String(i), padLeft - 8, y);
+      ctx.strokeStyle = cv('--sol-canvas-grid');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padLeft, y);
+      ctx.lineTo(padLeft + plotW, y);
+      ctx.stroke();
+    }
+
+    var aMin = -5;
+    var aMax = 5;
+
+    function toX(aVal) {
+      return padLeft + ((aVal - aMin) / (aMax - aMin)) * plotW;
+    }
+    function toY(val) {
+      return padTop + plotH - (val / maxY) * plotH;
+    }
+
+    // The |a + 1/a| = 3 horizontal line
+    var y3 = toY(3);
+    ctx.strokeStyle = cv('--sol-canvas-primary');
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath();
+    ctx.moveTo(padLeft, y3);
+    ctx.lineTo(padLeft + plotW, y3);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('|a + 1/a| = 3', padLeft + plotW - 100, y3 - 8);
+
+    // The |a - 1/a| = sqrt(5) horizontal line
+    var ySqrt5 = toY(Math.sqrt(5));
+    ctx.strokeStyle = cv('--sol-canvas-accent');
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath();
+    ctx.moveTo(padLeft, ySqrt5);
+    ctx.lineTo(padLeft + plotW, ySqrt5);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('|a - 1/a| = \u221A5 \u2248 2,24', padLeft + plotW - 140, ySqrt5 - 8);
+
+    // X-axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (var j = -4; j <= 4; j++) {
+      if (j === 0) continue;
+      var x = toX(j);
+      ctx.fillText(String(j).replace('-', '\u2212'), x, padTop + plotH + 8);
+      ctx.strokeStyle = cv('--sol-canvas-grid');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, padTop);
+      ctx.lineTo(x, padTop + plotH);
+      ctx.stroke();
+    }
+
+    // Zero line vertical
+    var x0 = toX(0);
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x0, padTop);
+    ctx.lineTo(x0, padTop + plotH);
+    ctx.stroke();
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.fillText('0', x0, padTop + plotH + 8);
+
+    // Axis label
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '13px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('a', padLeft + plotW / 2, padTop + plotH + 35);
+
+    // Draw curves
+    var ranges = [
+      { min: -5, max: -0.15, color: cv('--sol-canvas-primary'), func: function(a) { return Math.abs(a + 1/a); } },
+      { min: 0.15, max: 5, color: cv('--sol-canvas-primary'), func: function(a) { return Math.abs(a + 1/a); } },
+      { min: -5, max: -0.15, color: cv('--sol-canvas-accent'), func: function(a) { return Math.abs(a - 1/a); } },
+      { min: 0.15, max: 5, color: cv('--sol-canvas-accent'), func: function(a) { return Math.abs(a - 1/a); } }
+    ];
+
+    ranges.forEach(function(r) {
+      ctx.strokeStyle = r.color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      var started = false;
+      for (var px = 0; px <= plotW; px += 1) {
+        var aVal = aMin + (px / plotW) * (aMax - aMin);
+        if (aVal < r.min || aVal > r.max) { started = false; continue; }
+        var val = r.func(aVal);
+        if (val > maxY) { started = false; continue; }
+        var cx = padLeft + px;
+        var cy = toY(val);
+        if (!started) { ctx.moveTo(cx, cy); started = true; }
+        else ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+    });
+
+    // Current a marker at (3+sqrt5)/2
+    var currentA = (3 + Math.sqrt(5)) / 2;
+    var inv = 1 / currentA;
+    var sumVal = Math.abs(currentA + inv);
+    var diffVal = Math.abs(currentA - inv);
+    var markerX = toX(currentA);
+
+    ctx.strokeStyle = cv('--sol-canvas-highlight');
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(markerX, padTop);
+    ctx.lineTo(markerX, padTop + plotH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Sum point
+    var sumY = toY(sumVal);
+    ctx.beginPath();
+    ctx.arc(markerX, sumY, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fill();
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(formatNum(sumVal), markerX + 12, sumY - 2);
+
+    // Diff point
+    var diffY = toY(diffVal);
+    ctx.beginPath();
+    ctx.arc(markerX, diffY, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fill();
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(formatNum(diffVal), markerX + 12, diffY - 2);
+
+    // Legend
+    var legX = padLeft + 8;
+    var legY = padTop + 14;
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.fillRect(legX, legY - 5, 16, 3);
+    ctx.fillText('|a + 1/a|', legX + 22, legY);
+    legY += 18;
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.fillRect(legX, legY - 5, 16, 3);
+    ctx.fillText('|a \u2212 1/a|', legX + 22, legY);
+  }
+
+  draw();
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw(); }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

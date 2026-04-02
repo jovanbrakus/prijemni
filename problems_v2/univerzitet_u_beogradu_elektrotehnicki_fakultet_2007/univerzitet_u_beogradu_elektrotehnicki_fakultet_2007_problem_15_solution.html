@@ -76,6 +76,14 @@ Answer: (A) 1287a³
   </details>
 </div>
 
+<div data-card="visual-aid" data-title="Vizuelni prikaz">
+  <h2>📐 Vizuelni prikaz</h2>
+  <div class="canvas-wrapper">
+    <canvas id="diagram" width="800" height="460"></canvas>
+  </div>
+  <p class="canvas-caption">Dijagram</p>
+</div>
+
 <div data-card="step-solution" data-title="Rešenje korak po korak">
   <h2>✏️ Rešenje korak po korak</h2>
 
@@ -196,6 +204,295 @@ Answer: (A) 1287a³
     </div>
   </details>
 </div>
+
+
+<script>
+(function() {
+  var root = document.documentElement;
+  var styles = getComputedStyle(root);
+  function cv(name) { return styles.getPropertyValue(name).trim(); }
+
+// === Canvas diagram: exponent of x as function of k ===
+  const canvas = document.getElementById('diagram');
+  const ctx = canvas.getContext('2d');
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 460 * dpr;
+    canvas.style.height = '460px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = rect.width;
+    const H = 460;
+
+    ctx.fillStyle = cv('--sol-canvas-bg');
+    ctx.fillRect(0, 0, W, H);
+
+    // Margins
+    var mL = 75, mR = 40, mT = 60, mB = 80;
+    var pW = W - mL - mR;
+    var pH = H - mT - mB;
+
+    // Data: for k = 0..13, exponent of x = (13-k)/4 - 2k/5
+    var data = [];
+    for (var k = 0; k <= 13; k++) {
+      var expX = (13 - k) / 4 - 2 * k / 5;
+      var expA = (13 - k) / 2 - k / 5;
+      data.push({ k: k, expX: expX, expA: expA });
+    }
+
+    // Range of expX
+    var minExpX = -6;
+    var maxExpX = 4;
+
+    function toX(k) { return mL + (k / 13) * pW; }
+    function toY(val) { return mT + pH - ((val - minExpX) / (maxExpX - minExpX)) * pH; }
+
+    // Title
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 15px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Stepen od x u zavisnosti od k u binomnom razvoju', mL, 30);
+
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Eksponent od x = (13\u2212k)/4 \u2212 2k/5', mL, 48);
+
+    // Grid
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.06)') : c; })();
+    ctx.lineWidth = 1;
+    for (var gk = 0; gk <= 13; gk++) {
+      var gx = toX(gk);
+      ctx.beginPath(); ctx.moveTo(gx, mT); ctx.lineTo(gx, H - mB); ctx.stroke();
+    }
+    for (var gy = minExpX; gy <= maxExpX; gy++) {
+      var gyy = toY(gy);
+      ctx.beginPath(); ctx.moveTo(mL, gyy); ctx.lineTo(W - mR, gyy); ctx.stroke();
+    }
+
+    // Zero line (horizontal)
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.4)') : c; })();
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    var zeroY = toY(0);
+    ctx.beginPath(); ctx.moveTo(mL, zeroY); ctx.lineTo(W - mR, zeroY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('stepen od x = 0', W - mR - 5, zeroY - 8);
+
+    // Axes
+    ctx.strokeStyle = cv('--sol-canvas-axis');
+    ctx.lineWidth = 2;
+    // x-axis at bottom
+    ctx.beginPath(); ctx.moveTo(mL, H - mB); ctx.lineTo(W - mR, H - mB); ctx.stroke();
+    // y-axis at left
+    ctx.beginPath(); ctx.moveTo(mL, mT); ctx.lineTo(mL, H - mB); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    for (var lk = 0; lk <= 13; lk++) {
+      var lx = toX(lk);
+      ctx.fillText(lk.toString(), lx, H - mB + 20);
+      ctx.strokeStyle = cv('--sol-canvas-muted');
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(lx, H - mB - 3); ctx.lineTo(lx, H - mB + 3); ctx.stroke();
+    }
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('k', W / 2, H - mB + 42);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = cv('--sol-canvas-muted');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    for (var lv = minExpX; lv <= maxExpX; lv++) {
+      var ly = toY(lv);
+      ctx.fillText(lv.toString(), mL - 10, ly + 4);
+    }
+
+    ctx.save();
+    ctx.translate(18, mT + pH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = cv('--sol-canvas-primary');
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Stepen od x', 0, 0);
+    ctx.restore();
+
+    // Draw connecting line
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-primary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.4)') : c; })();
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var i = 0; i < data.length; i++) {
+      var px = toX(data[i].k);
+      var py = toY(data[i].expX);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Draw dots
+    for (var j = 0; j < data.length; j++) {
+      var dx = toX(data[j].k);
+      var dy = toY(data[j].expX);
+      var isTarget = (data[j].k === 5);
+
+      if (isTarget) {
+        // Highlight k=5
+        ctx.fillStyle = cv('--sol-canvas-accent');
+        ctx.shadowColor = cv('--sol-canvas-accent');
+        ctx.shadowBlur = 18;
+        ctx.beginPath(); ctx.arc(dx, dy, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = cv('--sol-canvas-bg');
+        ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('5', dx, dy + 4);
+
+        // Annotation
+        ctx.fillStyle = cv('--sol-canvas-accent');
+        ctx.font = 'bold 14px Segoe UI, system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('k = 5 \u2192 T\u2086 = 1287a\u00B3', dx + 16, dy - 10);
+      } else {
+        ctx.fillStyle = cv('--sol-canvas-primary');
+        ctx.beginPath(); ctx.arc(dx, dy, 5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    // Info box
+    var bx = W - mR - 230;
+    var by = mT + 10;
+    var bw = 220;
+    var bh = 110;
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-grid'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.92)') : c; })();
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-secondary'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.4)') : c; })();
+    ctx.lineWidth = 1;
+    roundRect(ctx, bx, by, bw, bh, 10);
+    ctx.fill();
+    roundRect(ctx, bx, by, bw, bh, 10);
+    ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-secondary');
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Opsti clan:', bx + 14, by + 22);
+
+    ctx.fillStyle = cv('--sol-canvas-text');
+    ctx.font = '12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('u = a\u00B9\u2C0F\u00B2 \u00B7 x\u00B9\u2C0F\u2074', bx + 14, by + 44);
+    ctx.fillText('v = a\u207B\u00B9\u2C0F\u2075 \u00B7 x\u207B\u00B2\u2C0F\u2075', bx + 14, by + 64);
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 12px Segoe UI, system-ui, sans-serif';
+    ctx.fillText('Resenje: k = 5', bx + 14, by + 88);
+    ctx.fillText('T\u2086 = 1287a\u00B3', bx + 14, by + 104);
+
+    // Bottom summary box
+    ctx.fillStyle = (function(){ var c = cv('--sol-canvas-grid'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.9)') : c; })();
+    ctx.strokeStyle = (function(){ var c = cv('--sol-canvas-accent'); return c.indexOf('rgb(') === 0 ? c.replace('rgb(', 'rgba(').replace(')', ', 0.4)') : c; })();
+    ctx.lineWidth = 1;
+    var sbX = mL;
+    var sbY = H - mB + 50;
+    var sbW = W - mL - mR;
+    var sbH = 26;
+    roundRect(ctx, sbX, sbY, sbW, sbH, 6);
+    ctx.fill();
+    roundRect(ctx, sbX, sbY, sbW, sbH, 6);
+    ctx.stroke();
+
+    ctx.fillStyle = cv('--sol-canvas-accent');
+    ctx.font = 'bold 13px Segoe UI, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('(13\u2212k)/4 \u2212 2k/5 = 0   \u21D2   65 \u2212 13k = 0   \u21D2   k = 5   \u21D2   C(13,5)\u00B7a\u00B3 = 1287a\u00B3', W / 2, sbY + 18);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  draw();
+  window.addEventListener('resize', draw);
+
+  // === Populate table ===
+  function populateTable() {
+    var tbody = document.getElementById('binom-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    for (var k = 0; k <= 13; k++) {
+      var expX = (13 - k) / 4 - 2 * k / 5;
+      var expA = (13 - k) / 2 - k / 5;
+      var tr = document.createElement('tr');
+      if (k === 5) tr.className = 'highlight-row';
+
+      // Fraction display for expX
+      var numX = 5 * (13 - k) - 8 * k;
+      var expXStr = formatFrac(numX, 20);
+
+      // Fraction display for expA
+      var numA = 5 * (13 - k) - 2 * k;
+      var expAStr = formatFrac(numA, 10);
+
+      tr.innerHTML =
+        '<td>' + k + '</td>' +
+        '<td>\\(T_{' + (k + 1) + '}\\)</td>' +
+        '<td>\\(' + expXStr + '\\)</td>' +
+        '<td>\\(' + expAStr + '\\)</td>';
+      tbody.appendChild(tr);
+    }
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([tbody]);
+    }
+  }
+
+  function gcd(a, b) {
+    a = Math.abs(a); b = Math.abs(b);
+    while (b) { var t = b; b = a % b; a = t; }
+    return a;
+  }
+
+  function formatFrac(num, den) {
+    if (num === 0) return '0';
+    var sign = (num < 0) ? '-' : '';
+    num = Math.abs(num);
+    var g = gcd(num, den);
+    num /= g; den /= g;
+    if (den === 1) return sign + num;
+    return sign + '\\dfrac{' + num + '}{' + den + '}';
+  }
+
+  // Run after MathJax loads
+  if (document.readyState === 'complete') {
+    populateTable();
+  } else {
+    window.addEventListener('load', function() {
+      setTimeout(populateTable, 500);
+    });
+  }
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'matoteka-theme') {
+      setTimeout(function() { styles = getComputedStyle(root); draw() }, 50);
+    }
+  });
+})();
+</script>
 
 <!--BRAINSPARK_META
 {

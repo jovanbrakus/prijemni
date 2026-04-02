@@ -84,7 +84,7 @@ Every content section is a \`<div>\` with two required attributes:
 | \`key-insight\` | No | Highlighted "aha moment" insight |
 | \`final-answer\` | **Yes** | Final answer with all options, correct marked |
 | \`pitfalls\` | No | Common mistakes list |
-| \`challenge\` | No | Optional extension question with hint |
+| \`challenge\` | **Yes** | Follow-up question extending the solution |
 
 ### 5. Problem Statement Card
 
@@ -243,13 +243,15 @@ Every content section is a \`<div>\` with two required attributes:
 \`\`\`html
 <div data-card="challenge" data-title="Dodatni izazov">
   <h2>🏆 Dodatni izazov</h2>
-  <p>Variant question...</p>
+  <p>Follow-up question that extends the solution...</p>
   <details>
     <summary>Pogledaj nagoveštaj</summary>
     <div class="detail-content"><p>Hint.</p></div>
   </details>
 </div>
 \`\`\`
+- **Always include this card.** Pose a follow-up question that builds on the solution — e.g. "What if the parameter changed?", "Can you generalize this?", "What happens in the edge case?".
+- The question should deepen understanding, not just repeat the problem with different numbers.
 
 ## CSS Classes Reference
 
@@ -419,7 +421,7 @@ BRAINSPARK_META-->
 2. No \`<!DOCTYPE\`, \`<html>\`, \`<head>\`, \`<body>\` tags
 3. No \`<style>\` tags or inline \`style=\` attributes
 4. No MathJax script/config
-5. Required cards present: \`problem-statement\`, \`step-solution\`, \`final-answer\`
+5. Required cards present: \`problem-statement\`, \`step-solution\`, \`final-answer\`, \`challenge\`
 6. Every \`[data-card]\` has \`data-title\`
 7. Answer options use \`.answer-grid > .answer-option[data-option]\` with \`.answer-label\` + \`.answer-value\`
 8. Final answer has exactly one \`.answer-option.correct[data-option]\`
